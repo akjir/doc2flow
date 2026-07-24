@@ -12,7 +12,8 @@ Use `clap` (with the `derive` feature) for CLI argument parsing, `pulldown-cmark
 Implement features iteratively. Start with the CLI scaffolding and simple Markdown conversion before adding local image embedding and checklist interactivity.
 
 ## 4. Code Quality
-Ensure all Rust code passes `cargo clippy` without warnings and is formatted using `cargo fmt`. Prioritize idiomatic Rust and robust error handling.
+* **Linting & Formatting:** Ensure all Rust code passes `cargo clippy` without warnings and is formatted using `cargo fmt`. Prioritize idiomatic Rust and robust error handling.
+* **Rust Guidelines (`RUST.md`):** Whenever writing or modifying Rust code, `RUST.md` MUST be read and strictly adhered to. For tasks that do not involve writing or editing Rust code (e.g., HTML/CSS/JS template edits, documentation, configuration), reading `RUST.md` is not required.
 
 ## 5. Language Interaction
 The user will write in German, but you MUST always answer and write in English. Never use German for anything, neither in the code, nor in any files or artifacts you create.
@@ -24,5 +25,14 @@ The user will write in German, but you MUST always answer and write in English. 
 * **Testing:** Ensure all unit and integration tests pass via standard `cargo test` on Unix systems.
 
 ## 7. Git Commit Policy
-Only commit changes to Git when explicitly requested by the user. Do not make automatic git commits.
+Only commit changes to Git when explicitly requested by the user. Do not make automatic git commits. Even when requested, commits may ONLY be executed if all tests pass, or if the user explicitly confirms the commit after being informed of a failing test.
 
+## 8. Test-Driven & Quality First Policy
+* **Highest Priority:** Testing is the highest priority. Always write comprehensive unit and integration tests wherever possible and appropriate.
+* **Negative & Edge-Case Testing:** Proactively brainstorm potential failure modes, invalid inputs, and edge cases for functions, and write tests to verify proper handling.
+* **Mandatory Execution:** Always run the full test suite (`cargo test`) to verify changes before concluding a task.
+
+## 9. HTML Template & UI Guidelines
+* **Generic Templates:** `templates/base.html`, `templates/style.css`, and `templates/script.js` form the foundation of the output. They must remain completely generic and devoid of customer-specific text or hardcoded logic.
+* **Markdown Mapping:** When parsing the markdown into HTML using `pulldown-cmark`, ensure Level 2 headings (`##`) translate into collapsible sections with `.section` and `.sh`/`.sb` classes. Markdown unordered lists with checkboxes must be wrapped in `.check-item` classes.
+* **Placeholders:** Replace predefined generic placeholders (e.g., `{{TITLE}}`, `{{CUSTOMER}}`) in the `base.html` using the frontmatter or metadata parsed from the Markdown file.

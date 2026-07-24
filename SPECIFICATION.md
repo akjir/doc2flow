@@ -43,7 +43,11 @@ d2f.exe --version
 ## 3. Input Specification (Markdown Requirements)
 
 * **Standard:** GitHub Flavored Markdown (GFM).
-* **Checklists:** Support for interactive checkbox elements (`- [ ]` and `- [x]`).
+* **Frontmatter & Metadata:** The Markdown file can contain generic placeholders that map to document metadata (e.g., `{{TITLE}}`, `{{CUSTOMER}}`, `{{EMPLOYEE}}`, `{{TECHNICIAN}}`, `{{DATE}}`). These placeholders are used to populate the top info table in the generated HTML.
+* **Document Structure & Sections:** 
+  * Markdown Level 2 Headings (`##`) define the start of a new collapsible section block in the generated HTML.
+* **Checklists:** 
+  * Unordered list items starting with checkboxes (`- [ ]` and `- [x]`) correspond to interactive check items within their respective section block.
 * **Local Images:** Relatively linked images (e.g., `![Alt-Text](./images/graphic.png)`) must be resolved locally by `d2f` during processing, converted into **Base64**, and embedded directly as a `data:image/...;base64,...` URI in the `src` attribute of the HTML `<img>` tag.
 
 ---

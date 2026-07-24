@@ -1,34 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doc2Flow Guide</title>
-    <style>
-        /* CSS_PLACEHOLDER */
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{TITLE}}</title>
+<style>
+{{CSS}}
+</style>
 </head>
 <body>
-    <main class="container">
-        <!-- CONTENT_PLACEHOLDER -->
-    </main>
-    <script>
-        // Checklist state persistence in localStorage
-        document.addEventListener('DOMContentLoaded', () => {
-            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-            const pageId = window.location.pathname;
+<div class="doc-header">
+  <h1>{{TITLE}}</h1>
+  <div class="sub">{{SUBTITLE}}</div>
+  <div class="pb-wrap"><div class="pb" id="pb"></div></div>
+  <div class="pt" id="pt">Loading...</div>
+</div>
+<div class="doc-body">
 
-            checkboxes.forEach((cb, index) => {
-                const key = `d2f_cb_${pageId}_${index}`;
-                const saved = localStorage.getItem(key);
-                if (saved !== null) {
-                    cb.checked = saved === 'true';
-                }
-                cb.addEventListener('change', () => {
-                    localStorage.setItem(key, cb.checked);
-                });
-            });
-        });
-    </script>
+<table class="info-table">
+  <tr><th>Customer</th><th>Employee</th><th>Technician</th><th>Date</th></tr>
+  <tr>
+    <td>{{CUSTOMER}}</td>
+    <td>{{EMPLOYEE}}</td>
+    <td>{{TECHNICIAN}}</td>
+    <td>{{DATE}}</td>
+  </tr>
+</table>
+
+<!-- START GENERATED CONTENT -->
+{{CONTENT}}
+<!-- END GENERATED CONTENT -->
+
+<div class="finish">
+  <div class="big">&#x2714;</div>
+  <h2>Setup Completed</h2>
+  <div class="sigs">
+    <div><input type="text" class="sf persistent-field" id="f_sign_tech" placeholder="Name"><div style="margin-top:4px">Technician</div></div>
+    <div><input type="text" class="sf persistent-field" id="f_sign_date" placeholder="DD.MM.YYYY"><div style="margin-top:4px">Date</div></div>
+  </div>
+</div>
+<div class="btnrow">
+  <button class="btn-pdf" onclick="exportPDF()">&#x1F4C4; Export as PDF</button>
+  <button class="rst" onclick="resetAll()">&#x21BA; Reset all checkboxes</button>
+</div>
+
+</div><!-- /doc-body -->
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <span class="lb-x" onclick="closeLightbox()">&times;</span>
+  <img id="lb-img" src="" alt="">
+</div>
+
+<script>
+window.D2F_DOC_ID = '{{DOC_ID}}';
+{{JS}}
+</script>
 </body>
 </html>
