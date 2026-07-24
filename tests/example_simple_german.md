@@ -12,13 +12,13 @@ language: "de"
 
 > Dies ist ein blauer Hinweis.
 
->T Dies ist ein grüner Tipp.
+>+ Dies ist ein grüner Tipp.
 
->I Dies ist ein violetter wichtiger Hinweis.
+>! Dies ist ein violetter wichtiger Hinweis.
 
->! Dies ist eine gelbe Warnung.
+>!! Dies ist eine gelbe Warnung.
 
->!! Dies ist eine rote Vorsichtsmeldung.
+>!!! Dies ist eine rote Vorsichtsmeldung.
 
 > Dies ist eine sehr detaillierte mehrzeilige Anmerkung mit umfassenden Anweisungen und Richtlinien für den Benutzer, die sorgfältig gelesen werden sollten. Sie erstreckt sich über mehrere Zeilen, um sicherzustellen, dass alle notwendigen Informationen im Dokumentenlayout übersichtlich dargestellt und leicht lesbar sind.
 

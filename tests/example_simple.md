@@ -11,13 +11,13 @@ date: "2026-07-24"
 
 > This is a blue Note.
 
->T This is a green Tip.
+>+ This is a green Tip.
 
->I This is a purple Important note.
+>! This is a purple Important note.
 
->! This is a yellow Warning.
+>!! This is a yellow Warning.
 
->!! This is a red Caution.
+>!!! This is a red Caution.
 
 > This is a very detailed multi-line note containing comprehensive instructions and guidelines for the user to read carefully. It spans across multiple lines to ensure that all necessary information is clearly presented and easily readable within the document layout. Furthermore, this extra explanation guarantees that the note content reliably wraps across three full lines on standard screen resolutions.
 

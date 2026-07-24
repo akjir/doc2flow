@@ -6,11 +6,17 @@ use pulldown_cmark::{
 
 /// Escapes HTML special characters in code strings.
 fn html_escape(input: &str) -> String {
-    input
-        .replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('"', "&quot;")
+    let mut escaped = String::with_capacity(input.len());
+    for ch in input.chars() {
+        match ch {
+            '&' => escaped.push_str("&amp;"),
+            '<' => escaped.push_str("&lt;"),
+            '>' => escaped.push_str("&gt;"),
+            '"' => escaped.push_str("&quot;"),
+            _ => escaped.push(ch),
+        }
+    }
+    escaped
 }
 
 /// Frontmatter metadata extracted from Markdown header.
@@ -44,10 +50,9 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
         let body_start = start_len + end_idx + start_len;
 
         for line in frontmatter_text.lines() {
-            let parts: Vec<&str> = line.splitn(2, ':').collect();
-            if parts.len() == 2 {
-                let key = parts[0].trim();
-                let val = parts[1].trim().trim_matches('"');
+            if let Some((key, val)) = line.split_once(':') {
+                let key = key.trim();
+                let val = val.trim().trim_matches('"');
                 match key {
                     "title" => fm.title = val.to_string(),
                     "subtitle" => fm.subtitle = val.to_string(),
@@ -65,6 +70,28 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
     } else {
         (fm, md_content)
     }
+}
+
+/// Parses callout metadata (CSS class, inner text, callout label) from raw blockquote inner string.
+fn parse_callout<'a>(inner: &'a str, locale: &'a Locale) -> (&'static str, &'a str, &'a str) {
+    let prefixes: &[(&str, &'static str, &str)] = &[
+        ("!!! ", "note note-caution", &locale.callout_caution),
+        ("!!!", "note note-caution", &locale.callout_caution),
+        ("!! ", "note note-warning", &locale.callout_warning),
+        ("!!", "note note-warning", &locale.callout_warning),
+        ("! ", "note note-important", &locale.callout_important),
+        ("!", "note note-important", &locale.callout_important),
+        ("+ ", "note note-tip", &locale.callout_tip),
+        ("+", "note note-tip", &locale.callout_tip),
+    ];
+
+    for &(prefix, css_class, label) in prefixes {
+        if let Some(stripped) = inner.strip_prefix(prefix) {
+            return (css_class, stripped, label);
+        }
+    }
+
+    ("note", inner, &locale.callout_note)
 }
 
 /// Converts Markdown body into interactive HTML following doc2flow structure using default English locale.
@@ -154,7 +181,7 @@ pub fn convert_markdown_to_html_with_locale(
                 out.push_str(&format!("<div class=\"subh\">{}</div>\n", sub_html.trim()));
             }
 
-            // Blockquotes (> i Note text)
+            // Blockquotes (> Note, >+ Tip, >! Important, >!! Warning, >!!! Caution)
             Event::Start(Tag::BlockQuote(_)) => {
                 let mut bq_events = Vec::new();
                 idx += 1;
@@ -177,53 +204,31 @@ pub fn convert_markdown_to_html_with_locale(
                 let mut bq_html = String::new();
                 html::push_html(&mut bq_html, bq_events.into_iter());
                 let trimmed = bq_html.trim();
-                let inner = if trimmed.starts_with("<p>") && trimmed.ends_with("</p>") {
-                    &trimmed[3..trimmed.len() - 4]
-                } else {
-                    trimmed
-                };
 
                 let (note_cls, note_content, callout_label) =
-                    if let Some(stripped) = inner.strip_prefix("!! ") {
-                        ("note note-caution", stripped, &locale.callout_caution)
-                    } else if let Some(stripped) = inner.strip_prefix("!!") {
-                        ("note note-caution", stripped, &locale.callout_caution)
-                    } else if let Some(stripped) = inner.strip_prefix("caution ") {
-                        ("note note-caution", stripped, &locale.callout_caution)
-                    } else if let Some(stripped) = inner.strip_prefix("Caution ") {
-                        ("note note-caution", stripped, &locale.callout_caution)
-                    } else if let Some(stripped) = inner.strip_prefix("! ") {
-                        ("note note-warning", stripped, &locale.callout_warning)
-                    } else if let Some(stripped) = inner.strip_prefix("!") {
-                        ("note note-warning", stripped, &locale.callout_warning)
-                    } else if let Some(stripped) = inner.strip_prefix("warning ") {
-                        ("note note-warning", stripped, &locale.callout_warning)
-                    } else if let Some(stripped) = inner.strip_prefix("Warning ") {
-                        ("note note-warning", stripped, &locale.callout_warning)
-                    } else if let Some(stripped) = inner.strip_prefix("I ") {
-                        ("note note-important", stripped, &locale.callout_important)
-                    } else if let Some(stripped) = inner.strip_prefix("important ") {
-                        ("note note-important", stripped, &locale.callout_important)
-                    } else if let Some(stripped) = inner.strip_prefix("Important ") {
-                        ("note note-important", stripped, &locale.callout_important)
-                    } else if let Some(stripped) = inner.strip_prefix("T ") {
-                        ("note note-tip", stripped, &locale.callout_tip)
-                    } else if let Some(stripped) = inner.strip_prefix("tip ") {
-                        ("note note-tip", stripped, &locale.callout_tip)
-                    } else if let Some(stripped) = inner.strip_prefix("Tip ") {
-                        ("note note-tip", stripped, &locale.callout_tip)
-                    } else if let Some(stripped) = inner.strip_prefix("N ") {
-                        ("note", stripped, &locale.callout_note)
-                    } else if let Some(stripped) = inner.strip_prefix("note ") {
-                        ("note", stripped, &locale.callout_note)
-                    } else if let Some(stripped) = inner.strip_prefix("Note ") {
-                        ("note", stripped, &locale.callout_note)
-                    } else if let Some(stripped) = inner.strip_prefix("i ") {
-                        ("note", stripped, &locale.callout_note)
-                    } else if let Some(stripped) = inner.strip_prefix("info ") {
-                        ("note", stripped, &locale.callout_note)
+                    if trimmed.starts_with("<ul>") && trimmed.ends_with("</ul>") {
+                        // >+ Tip text is parsed by Markdown as an unordered list inside blockquote
+                        let inner_list = trimmed
+                            .strip_prefix("<ul>")
+                            .and_then(|s| s.strip_suffix("</ul>"))
+                            .unwrap_or(trimmed)
+                            .trim();
+                        let clean_inner = inner_list
+                            .strip_prefix("<li>")
+                            .and_then(|s| s.strip_suffix("</li>"))
+                            .unwrap_or(inner_list)
+                            .trim();
+                        let clean_inner = clean_inner
+                            .strip_prefix("<p>")
+                            .and_then(|s| s.strip_suffix("</p>"))
+                            .unwrap_or(clean_inner);
+                        ("note note-tip", clean_inner, locale.callout_tip.as_str())
                     } else {
-                        ("note", inner, &locale.callout_note)
+                        let inner = trimmed
+                            .strip_prefix("<p>")
+                            .and_then(|s| s.strip_suffix("</p>"))
+                            .unwrap_or(trimmed);
+                        parse_callout(inner, locale)
                     };
 
                 let escaped_label = html_escape(callout_label);
@@ -318,12 +323,10 @@ pub fn convert_markdown_to_html_with_locale(
                         let mut label_html = String::new();
                         html::push_html(&mut label_html, item_events.into_iter());
                         let trimmed = label_html.trim();
-                        let clean_label = if trimmed.starts_with("<p>") && trimmed.ends_with("</p>")
-                        {
-                            &trimmed[3..trimmed.len() - 4]
-                        } else {
-                            trimmed
-                        };
+                        let clean_label = trimmed
+                            .strip_prefix("<p>")
+                            .and_then(|s| s.strip_suffix("</p>"))
+                            .unwrap_or(trimmed);
 
                         let sec_num = if section_count == 0 { 1 } else { section_count };
                         let checked_attr = if is_checked { " checked" } else { "" };
@@ -369,11 +372,10 @@ pub fn convert_markdown_to_html_with_locale(
                     let mut label_html = String::new();
                     html::push_html(&mut label_html, item_events.into_iter());
                     let trimmed = label_html.trim();
-                    let clean_label = if trimmed.starts_with("<p>") && trimmed.ends_with("</p>") {
-                        &trimmed[3..trimmed.len() - 4]
-                    } else {
-                        trimmed
-                    };
+                    let clean_label = trimmed
+                        .strip_prefix("<p>")
+                        .and_then(|s| s.strip_suffix("</p>"))
+                        .unwrap_or(trimmed);
 
                     out.push_str("<div class=\"check-item simple-item\">\n");
                     out.push_str("  <span class=\"list-bullet\">&bull;</span>\n");
@@ -411,4 +413,53 @@ pub fn convert_markdown_to_html_with_locale(
     }
 
     Ok(out)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_html_escape() {
+        assert_eq!(
+            html_escape("a & b < c > d \" e"),
+            "a &amp; b &lt; c &gt; d &quot; e"
+        );
+        assert_eq!(html_escape("plain text"), "plain text");
+        assert_eq!(html_escape(""), "");
+    }
+
+    #[test]
+    fn test_parse_frontmatter_split_once() {
+        let input = "---\ntitle: \"My Title\"\nlanguage: de\n---\nBody text";
+        let (fm, body) = parse_frontmatter(input);
+        assert_eq!(fm.title, "My Title");
+        assert_eq!(fm.language, "de");
+        assert_eq!(body, "Body text");
+    }
+
+    #[test]
+    fn test_parse_callout() {
+        let locale = Locale::default();
+        assert_eq!(
+            parse_callout("!!! Danger zone", &locale),
+            ("note note-caution", "Danger zone", "Caution")
+        );
+        assert_eq!(
+            parse_callout("!! Be careful", &locale),
+            ("note note-warning", "Be careful", "Warning")
+        );
+        assert_eq!(
+            parse_callout("! Read this", &locale),
+            ("note note-important", "Read this", "Important")
+        );
+        assert_eq!(
+            parse_callout("+ Pro tip", &locale),
+            ("note note-tip", "Pro tip", "Tip")
+        );
+        assert_eq!(
+            parse_callout("Just text", &locale),
+            ("note", "Just text", "Note")
+        );
+    }
 }

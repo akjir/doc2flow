@@ -6,13 +6,13 @@ fn test_callout_variants_conversion() {
 
 > Standard Note text
 
->T Tip text
+>+ Tip text
 
->I Important text
+>! Important text
 
->! Warning text
+>!! Warning text
 
->!! Caution text
+>!!! Caution text
 "#;
 
     let html = convert_markdown_to_html(input).expect("conversion failed");
@@ -107,13 +107,13 @@ fn test_german_locale_conversion() {
 
 > Standard Hinweis
 
->T Tipp Text
+>+ Tipp Text
 
->I Wichtig Text
+>! Wichtig Text
 
->! Warnung Text
+>!! Warnung Text
 
->!! Achtung Text
+>!!! Achtung Text
 
 ```
 test code
