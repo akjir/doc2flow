@@ -1,5 +1,16 @@
 use anyhow::Result;
-use pulldown_cmark::{Event, HeadingLevel, Options, Parser as MarkdownParser, Tag, TagEnd, html};
+use pulldown_cmark::{
+    CodeBlockKind, Event, HeadingLevel, Options, Parser as MarkdownParser, Tag, TagEnd, html,
+};
+
+/// Escapes HTML special characters in code strings.
+fn html_escape(input: &str) -> String {
+    input
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+}
 
 /// Frontmatter metadata extracted from Markdown header.
 #[derive(Debug, Default)]
@@ -172,6 +183,58 @@ pub fn convert_markdown_to_html(markdown_body: &str) -> Result<String> {
                 out.push_str(&format!(
                     "<div class=\"note\">{}</div>\n",
                     note_content.trim()
+                ));
+            }
+
+            // Code Blocks (e.g. ```ini ... ```)
+            Event::Start(Tag::CodeBlock(kind)) => {
+                let lang_opt = match kind {
+                    CodeBlockKind::Fenced(lang) if !lang.is_empty() => Some(lang.to_string()),
+                    _ => None,
+                };
+
+                let mut code_events = Vec::new();
+                idx += 1;
+                let mut depth = 1;
+                while idx < events.len() {
+                    match &events[idx] {
+                        Event::Start(Tag::CodeBlock(_)) => depth += 1,
+                        Event::End(TagEnd::CodeBlock) => {
+                            depth -= 1;
+                            if depth == 0 {
+                                break;
+                            }
+                        }
+                        _ => {}
+                    }
+                    code_events.push(events[idx].clone());
+                    idx += 1;
+                }
+
+                let mut code_text = String::new();
+                for ev in code_events {
+                    if let Event::Text(text) = ev {
+                        code_text.push_str(&text);
+                    }
+                }
+
+                let escaped_code = html_escape(&code_text);
+                let lang_span = if let Some(ref lang) = lang_opt {
+                    format!("<span class=\"code-lang\">{}</span>", html_escape(lang))
+                } else {
+                    String::new()
+                };
+                let lang_cls = if let Some(ref lang) = lang_opt {
+                    format!(" language-{}", html_escape(lang))
+                } else {
+                    String::new()
+                };
+
+                let copy_icon = r#"<svg aria-hidden="true" class="svg-icon iconCopy" width="14" height="15" viewBox="0 0 17 18"><path fill="currentColor" d="M5 6c0-1.09.91-2 2-2h4.5L15 7.5V15c0 1.09-.91 2-2 2H7c-1.09 0-2-.91-2-2zm6-1.25V8h3.25z"/><path fill="currentColor" d="M10 1a2 2 0 0 1 2 2H6a2 2 0 0 0-2 2v9a2 2 0 0 1-2-2V4a3 3 0 0 1 3-3z" opacity=".4"/></svg>"#;
+
+                out.push_str(&format!(
+                    "<div class=\"code-block-wrap\"><div class=\"code-header\">{}<button class=\"copy-btn\" onclick=\"copyCode(this)\" title=\"Copy code\" aria-label=\"Copy code\">{}</button></div><pre class=\"code-block{}\"><code>{}</code></pre></div>\n",
+                    lang_span, copy_icon, lang_cls, escaped_code
                 ));
             }
 

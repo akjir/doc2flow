@@ -191,3 +191,40 @@ document.addEventListener('DOMContentLoaded', () => {
     loadState();
     updateProgress();
 });
+
+function copyCode(btn) {
+    const wrap = btn.closest('.code-block-wrap');
+    if (!wrap) return;
+    const codeEl = wrap.querySelector('code');
+    if (!codeEl) return;
+
+    const text = codeEl.innerText || codeEl.textContent;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+            showCopiedFeedback(btn);
+        }).catch(() => fallbackCopyText(text, btn));
+    } else {
+        fallbackCopyText(text, btn);
+    }
+}
+
+function fallbackCopyText(text, btn) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+        document.execCommand('copy');
+        showCopiedFeedback(btn);
+    } catch (e) {
+        console.error('Fallback copy failed', e);
+    }
+    document.body.removeChild(ta);
+}
+
+function showCopiedFeedback(btn) {
+    btn.classList.add('copied');
+    setTimeout(() => btn.classList.remove('copied'), 2000);
+}

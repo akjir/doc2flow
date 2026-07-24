@@ -53,8 +53,15 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 .bw-block .bwd { color: #555; margin-top: 3px; }
 .note { background: var(--obg); border-left: 3px solid #F4C430; border-radius: 0 6px 6px 0;
   padding: 7px 11px; margin: 5px 0 9px; font-size: 12px; color: var(--oc); font-style: italic; }
-.code-block { background: #1e1e1e; color: #d4d4d4; font-family: 'Courier New', monospace;
-  font-size: 11px; padding: 10px 14px; border-radius: 6px; margin: 7px 0 9px;
+.code-block-wrap { position: relative; margin: 8px 0 12px; }
+.code-block-wrap .code-block { margin: 0; }
+.code-header { position: absolute; top: 6px; right: 10px; display: flex; align-items: center; gap: 8px; z-index: 2; }
+.code-lang { font-size: 10px; font-weight: bold; font-family: Arial, sans-serif; color: #8c959f; user-select: none; }
+.copy-btn { background: transparent; border: none; cursor: pointer; color: #8c959f; padding: 2px 4px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: color .15s, background .15s; }
+.copy-btn:hover { color: var(--bd); background: rgba(0,0,0,.06); }
+.copy-btn.copied { color: #2da44e; }
+.code-block { background: #f0f2f5; color: #24292f; border: 1px solid #d0d7de; font-family: 'Courier New', monospace;
+  font-size: 11.5px; padding: 12px 16px; border-radius: 10px; margin: 8px 0 12px;
   white-space: pre; overflow-x: auto; line-height: 1.6; }
 .code-block .c { color: #6A9955; } .code-block .s { color: #CE9178; }
 .screenshot-wrap, .ss-wrap { margin: 8px 0 3px 24px; border: 1px solid #ddd; border-radius: 6px;
@@ -90,7 +97,7 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
   body { background: white; }
   .doc-header { position: static; box-shadow: none; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .doc-body { max-width: 100%; margin: 0; padding: 0; }
-  .btnrow, .stog { display: none !important; }
+  .btnrow, .stog, .copy-btn { display: none !important; }
   .sb.collapsed { display: block !important; }
   .section { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
   .sh { -webkit-print-color-adjust: exact; print-color-adjust: exact; cursor: default; }
