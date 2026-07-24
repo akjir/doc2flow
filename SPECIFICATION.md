@@ -74,7 +74,7 @@ To enable future expansions without requiring significant refactoring, the inter
 
 ## 6. Technical Framework & Quality Standards
 
-* **Programming Language:** Rust (Edition 2021).
+* **Programming Language:** Rust (Edition 2024).
 * **Target Platform:** Windows 64-Bit (`x86_64-pc-windows-msvc`).
 * **File Size:** Target size of `d2f.exe` should be `< 10 MB` (utilizing binary stripping, LTO, and release optimizations).
 * **Error Handling:**
