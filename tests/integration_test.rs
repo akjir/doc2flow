@@ -48,3 +48,29 @@ plain text block
     assert!(html.contains("<pre class=\"code-block\"><code>plain text block\n</code></pre>"));
     assert!(!html.contains("<span class=\"code-lang\">plain"));
 }
+
+#[test]
+fn test_simple_and_mixed_list_items_conversion() {
+    let input = r#"## Section 1
+
+- Simple item 1
+- Simple item 2
+
+## Section 2
+
+- [ ] Checkbox task
+- Simple item inside mixed section
+"#;
+
+    let (_frontmatter, body) = parse_frontmatter(input);
+    let html = convert_markdown_to_html(body).expect("conversion failed");
+
+    // Simple list items check
+    assert!(html.contains("<div class=\"check-item simple-item\">"));
+    assert!(html.contains("<span class=\"list-bullet\">&bull;</span>"));
+    assert!(html.contains("<span class=\"check-label\">Simple item 1</span>"));
+
+    // Checkbox item check
+    assert!(html.contains("<input type=\"checkbox\" id=\"cb_s2_1\">"));
+    assert!(html.contains("<label class=\"check-label\" for=\"cb_s2_1\">Checkbox task</label>"));
+}

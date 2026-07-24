@@ -35,13 +35,19 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 .sb.collapsed { display: none; }
 .subh { font-size: 12.5px; font-weight: bold; color: var(--bm); margin: 14px 0 7px;
   padding-bottom: 4px; border-bottom: 1px solid var(--bl); }
-.check-item { display: flex; align-items: flex-start; gap: 9px; padding: 6px 9px;
-  border-radius: 6px; margin-bottom: 3px; cursor: pointer; transition: background .15s; }
+.check-item { display: flex; align-items: flex-start; gap: 9px; padding: 3px 9px;
+  border-radius: 6px; margin-bottom: 2px; cursor: pointer; transition: background .15s; }
+.check-item:first-child, *:not(.check-item) + .check-item { margin-top: 3px; }
+.check-item:last-child, .check-item:not(:has(+ .check-item)) { margin-bottom: 6px; }
+.check-item.simple-item { cursor: default; }
 .check-item:hover { background: #f5f9ff; }
 .check-item.checked { background: var(--done); }
 .check-item.checked .check-label { text-decoration: line-through; color: #bbb; }
 .check-item input[type=checkbox] { width: 15px; height: 15px; min-width: 15px;
   margin-top: 2px; cursor: pointer; accent-color: var(--bm); }
+.list-bullet { display: inline-flex; align-items: center; justify-content: center;
+  width: 15px; min-width: 15px; height: 15px; margin-top: 2px; color: var(--bm);
+  font-size: 14px; line-height: 1; user-select: none; }
 .check-label { font-size: 13px; line-height: 1.5; }
 .check-label a { color: var(--bm); }
 .bw-block { background: var(--bbg); border-left: 3px solid var(--bm);

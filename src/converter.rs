@@ -238,15 +238,66 @@ pub fn convert_markdown_to_html(markdown_body: &str) -> Result<String> {
                 ));
             }
 
-            // Task List Items (- [ ] or - [x])
+            // Task List Items (- [ ] or - [x]) or Simple List Items (-)
             Event::Start(Tag::Item) => {
-                // Check if the next event is TaskListMarker
-                if let Some(Event::TaskListMarker(checked)) = events.get(idx + 1) {
-                    let is_checked = *checked;
-                    global_cb_count += 1;
+                let is_task = matches!(events.get(idx + 1), Some(Event::TaskListMarker(_)));
+                if is_task {
+                    if let Some(Event::TaskListMarker(checked)) = events.get(idx + 1) {
+                        let is_checked = *checked;
+                        global_cb_count += 1;
 
-                    // Advance past Start(Item) and TaskListMarker
-                    idx += 2;
+                        idx += 2;
+
+                        let mut item_events = Vec::new();
+                        let mut depth = 1;
+                        while idx < events.len() {
+                            match &events[idx] {
+                                Event::Start(Tag::Item) => depth += 1,
+                                Event::End(TagEnd::Item) => {
+                                    depth -= 1;
+                                    if depth == 0 {
+                                        break;
+                                    }
+                                }
+                                _ => {}
+                            }
+                            item_events.push(events[idx].clone());
+                            idx += 1;
+                        }
+
+                        let mut label_html = String::new();
+                        html::push_html(&mut label_html, item_events.into_iter());
+                        let trimmed = label_html.trim();
+                        let clean_label = if trimmed.starts_with("<p>") && trimmed.ends_with("</p>")
+                        {
+                            &trimmed[3..trimmed.len() - 4]
+                        } else {
+                            trimmed
+                        };
+
+                        let sec_num = if section_count == 0 { 1 } else { section_count };
+                        let checked_attr = if is_checked { " checked" } else { "" };
+                        let checked_cls = if is_checked { " checked" } else { "" };
+
+                        out.push_str(&format!(
+                            "<div class=\"check-item{}\" id=\"wrap-cb_s{sec_num}_{global_cb_count}\">\n",
+                            checked_cls
+                        ));
+                        out.push_str(&format!(
+                            "  <input type=\"checkbox\" id=\"cb_s{sec_num}_{global_cb_count}\"{checked_attr}>\n"
+                        ));
+                        out.push_str(&format!(
+                            "  <label class=\"check-label\" for=\"cb_s{sec_num}_{global_cb_count}\">{}</label>\n",
+                            clean_label.trim()
+                        ));
+                        out.push_str("</div>\n");
+
+                        idx += 1;
+                        continue;
+                    }
+                } else {
+                    // Simple list item without checkbox (- Item)
+                    idx += 1;
 
                     let mut item_events = Vec::new();
                     let mut depth = 1;
@@ -274,29 +325,17 @@ pub fn convert_markdown_to_html(markdown_body: &str) -> Result<String> {
                         trimmed
                     };
 
-                    let sec_num = if section_count == 0 { 1 } else { section_count };
-                    let checked_attr = if is_checked { " checked" } else { "" };
-                    let checked_cls = if is_checked { " checked" } else { "" };
-
+                    out.push_str("<div class=\"check-item simple-item\">\n");
+                    out.push_str("  <span class=\"list-bullet\">&bull;</span>\n");
                     out.push_str(&format!(
-                            "<div class=\"check-item{}\" id=\"wrap-cb_s{sec_num}_{global_cb_count}\">\n",
-                            checked_cls
-                        ));
-                    out.push_str(&format!(
-                            "  <input type=\"checkbox\" id=\"cb_s{sec_num}_{global_cb_count}\"{checked_attr}>\n"
-                        ));
-                    out.push_str(&format!(
-                            "  <label class=\"check-label\" for=\"cb_s{sec_num}_{global_cb_count}\">{}</label>\n",
-                            clean_label.trim()
-                        ));
+                        "  <span class=\"check-label\">{}</span>\n",
+                        clean_label.trim()
+                    ));
                     out.push_str("</div>\n");
 
                     idx += 1;
                     continue;
                 }
-
-                // Standard item (non-tasklist) fallback
-                out.push_str("<li>");
             }
 
             // Suppress <ul> and </ul> wrappers around tasklists if they only contain task items
