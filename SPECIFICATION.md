@@ -4,12 +4,12 @@
 > This file contains the authoritative project specifications. AI agents are strictly forbidden from modifying this file without explicit approval or instruction from the user.
 
 ## 1. Overview & Objectives
-Doc2Flow (`d2f`) is a command-line interface (CLI) tool built for Windows that converts Markdown files into fully self-contained HTML files. The generated HTML files serve as interactive guides, manuals, and checklists for end users.
+Doc2Flow (`d2f`) is a command-line interface (CLI) tool built for Windows that converts Markdown files into fully self-contained HTML files. The generated HTML files serve as interactive guides, manuals, protocols, and checklists for end users.
 
 ### Core Principles & Non-Negotiables
 - **Single Binary Output:** The build must result in a single executable file (`d2f.exe`) with no external runtime dependencies.
 - **Zero-Dependency HTML:** The generated HTML file must contain all necessary assets (CSS, JS, images via Base64) embedded directly within it. There must be absolutely no references to external servers or local directories.
-- **Integrated Templates:** All required HTML/CSS/JS templates must be embedded into the binary at compile time (e.g., using `include_str!`).
+- **Integrated Templates & Localization:** All required HTML/CSS/JS templates and i18n locale definitions must be embedded into the binary at compile time (e.g., using `include_str!`).
 
 ---
 
@@ -40,33 +40,68 @@ d2f.exe --version
 
 ---
 
-## 3. Input Specification (Markdown Requirements)
+## 3. Input Specification (Markdown & Extensions)
 
-* **Standard:** GitHub Flavored Markdown (GFM).
-* **Frontmatter & Metadata:** The Markdown file can contain generic placeholders that map to document metadata (e.g., `{{TITLE}}`, `{{CUSTOMER}}`, `{{EMPLOYEE}}`, `{{TECHNICIAN}}`, `{{DATE}}`). These placeholders are used to populate the top info table in the generated HTML.
-* **Document Structure & Sections:** 
-  * Markdown Level 2 Headings (`##`) define the start of a new collapsible section block in the generated HTML.
-* **Checklists:** 
-  * Unordered list items starting with checkboxes (`- [ ]` and `- [x]`) correspond to interactive check items within their respective section block.
-* **Local Images:** Relatively linked images (e.g., `![Alt-Text](./images/graphic.png)`) must be resolved locally by `d2f` during processing, converted into **Base64**, and embedded directly as a `data:image/...;base64,...` URI in the `src` attribute of the HTML `<img>` tag.
+* **Base Standard:** CommonMark with GitHub Flavored Markdown (GFM) extensions (`ENABLE_TASKLISTS`, `ENABLE_STRIKETHROUGH`, `ENABLE_TABLES`).
+* **YAML Frontmatter & Metadata:** The Markdown file can contain YAML-style frontmatter delimited by `---` at the beginning of the document:
+  ```yaml
+  ---
+  title: "Server Maintenance Guide"
+  subtitle: "Standard Operating Procedure"
+  customer: "Acme Corp"
+  employee: "John Doe"
+  technician: "Jane Smith"
+  date: "2026-07-25"
+  language: "de"
+  ---
+  ```
+  * `title`: Document main header title.
+  * `subtitle`: Document subtitle or description.
+  * `customer`, `employee`, `technician`, `date`: Populates metadata table fields in header.
+  * `language` / `lang`: Specifies locale code (`en`, `de`) for static UI translations.
+* **Callout / Note Box Annotations:** Blockquotes are transformed into styled visual alert panels using prefix conventions:
+  * `>` or `> Note`: Standard Note box (`.note`, neutral styling).
+  * `>+` or `>+ Tip`: Tip box (`.note-tip`, green accent).
+  * `>!` or `>! Important`: Important box (`.note-important`, blue accent).
+  * `>!!` or `>!! Warning`: Warning box (`.note-warning`, orange accent).
+  * `>!!!` or `>!!! Caution`: Caution / Danger box (`.note-caution`, red accent).
+* **Document Structure & Structural Mapping:**
+  * **Level 2 Headings (`##`):** Define the start of a collapsible section block (`.section`, `.sh`, `.sb`) with section completion badges and toggle indicators.
+  * **Level 3 Headings (`###`):** Define subheadings inside section blocks (`.subh`).
+* **Checklists & List Items:**
+  * **Task Items (`- [ ]`, `- [x]`):** Rendered as interactive checkboxes (`.check-item`) with dynamic completion tracking.
+  * **Bullet Items (`-`):** Rendered as clean, bulleted list entries (`.simple-item`).
+* **Code Blocks:**
+  * Fenced code blocks (` ```lang `) display language tags and include an interactive 1-click **Copy Code** button.
+* **Local Images:**
+  * Relatively linked images (e.g., `![Alt-Text](./images/graphic.png)`) are resolved locally by `d2f`, converted to Base64, and embedded directly as `data:image/...;base64,...` URIs.
 
 ---
 
 ## 4. Output Specification (HTML & UX)
 
-* **Self-Contained Document:** Generates a valid HTML5 document with fully embedded styling (`<style>`) and scripts (`<script>`).
-* **Interactivity (Checklists):**
-  * Checkboxes in the HTML view can be toggled (checked/unchecked) by the user.
-  * The state of these checkboxes must be stored in the browser's `localStorage` so that user progress is maintained upon reloading the page.
-* **Layout & Design:** Clean, modern, and responsive (optimized for both desktop and mobile views). Must include optimized print CSS for physical printing or PDF generation.
+* **Self-Contained Document:** Generates a single valid HTML5 document with fully embedded styling (`<style>`) and script logic (`<script>`).
+* **Internationalization & Localization (i18n):**
+  * Supports localized static UI elements based on the `language` frontmatter tag (English `en` default, German `de` supported).
+  * Automatically translates controls, buttons, metadata labels, progress indicators, callout header tags, and print titles.
+* **Interactivity & State Persistence:**
+  * Checkboxes can be toggled by end users.
+  * Checkbox states are persisted per section/document in browser `localStorage`.
+  * Section badges dynamically calculate checked vs. total items (e.g., `2/5 completed`).
+  * Reset button clears state after user confirmation in a modal overlay.
+* **Protocol & Sign-off Footer:**
+  * Provides technician signature input fields, completion date input, signature line, and a "Setup Completed" sign-off checkbox.
+* **Layout & Print Optimization:**
+  * Clean, modern, responsive CSS layout.
+  * Dedicated `@media print` rules automatically expand all sections, hide interactive buttons (copy, reset), and output clean printed pages or PDF exports.
 
 ---
 
 ## 5. Roadmap & Architecture Preparation (Multi-File & Directories)
 
-To enable future expansions without requiring significant refactoring, the internal processing pipeline should be designed with abstraction in mind:
+To enable future expansions without requiring significant refactoring, the internal processing pipeline is designed with abstraction in mind:
 
-* **Pipeline Design:** The engine should expect the Markdown input internally as a modular content stream with already resolved image paths, rather than a rigid single-file reference.
+* **Pipeline Design:** The engine expects Markdown input internally as a modular content stream with resolved image paths rather than a single static file reference.
 * **Phase 1 (MVP):** Processing of exactly one Markdown file.
 * **Phase 2 (Future):** Support for merging multiple files (`d2f m1.md m2.md -o out.html`) and processing entire directories (`d2f ./docs/`).
 
@@ -76,10 +111,11 @@ To enable future expansions without requiring significant refactoring, the inter
 
 * **Programming Language:** Rust (Edition 2024).
 * **Target Platform:** Windows 64-Bit (`x86_64-pc-windows-msvc`).
-* **File Size:** Target size of `d2f.exe` should be `< 10 MB` (utilizing binary stripping, LTO, and release optimizations).
+* **File Size:** Target size of `d2f.exe` `< 10 MB` (utilizing binary stripping, LTO, and release optimizations).
+* **Core Libraries:** `clap` (derive feature), `pulldown-cmark`, `base64`, `mime_guess`, `serde`, `serde_json`, `anyhow`.
 * **Error Handling:**
   * No panics or crashes when encountering invalid paths or missing permissions.
-  * Human-readable, color-coded error messages output to `stderr` (consider using crates like `anyhow` or `thiserror`).
+  * Human-readable, color-coded error messages output to `stderr`.
 * **Testing:**
-  * Unit tests for Markdown parsing and Base64 conversion of images.
-  * Integration tests for CLI input parameters and end-to-end HTML generation.
+  * Unit tests for Markdown parsing, frontmatter parsing, callout parsing, i18n locale resolution, and Base64 image embedding.
+  * Integration tests for CLI parameters and end-to-end HTML generation.
