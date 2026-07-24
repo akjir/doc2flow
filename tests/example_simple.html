@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simple Test</title>
+<style>
+:root {
+  --bd: #1F4E79; --bm: #2E75B6; --bl: #D6E4F0; --bbg: #EBF3FB;
+  --obg: #FFF2CC; --oc: #7F6000; --gc: #375623; --gbg: #E2EFDA;
+  --gray: #444; --done: #f0f9f0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); background: #eef2f7; }
+.doc-header {
+  background: var(--bd); color: white; padding: 16px 28px 12px;
+  position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.3);
+}
+.doc-header h1 { font-size: 20px; font-weight: bold; }
+.doc-header .sub { font-size: 12px; color: #BDD7EE; margin-top: 2px; }
+.pb-wrap { margin-top: 10px; background: rgba(255,255,255,.2); border-radius: 8px; height: 9px; overflow: hidden; }
+.pb { height: 100%; background: #70AD47; border-radius: 8px; transition: width .3s; width: 0%; }
+.pt { font-size: 11px; color: #BDD7EE; margin-top: 3px; text-align: right; }
+.doc-body { max-width: 840px; margin: 20px auto; padding: 0 14px 60px; }
+.info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; background: white;
+  border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+.info-table th { background: var(--bl); color: var(--bd); font-weight: bold; padding: 8px 14px;
+  border: 1px solid #BDD7EE; font-size: 12px; }
+.info-table td { padding: 8px 14px; border: 1px solid #ddd; font-size: 12px; }
+.info-table td input { width: 100%; border: none; outline: none; font-size: 12px; font-family: Arial; background: transparent; }
+.section { background: white; border-radius: 10px; margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.08); overflow: hidden; }
+.sh { background: var(--bd); color: white; padding: 11px 18px;
+  font-size: 15px; font-weight: bold; display: flex; align-items: center;
+  justify-content: space-between; cursor: pointer; user-select: none; }
+.sh:hover { background: #174070; }
+.sbadge { font-size: 11px; font-weight: normal; background: rgba(255,255,255,.2);
+  padding: 2px 7px; border-radius: 12px; white-space: nowrap; }
+.sbadge.done { background: #70AD47; }
+.stog { font-size: 16px; margin-left: 10px; transition: transform .2s; }
+.sb { padding: 14px 18px; }
+.sb.collapsed { display: none; }
+.subh { font-size: 12.5px; font-weight: bold; color: var(--bm); margin: 14px 0 7px;
+  padding-bottom: 4px; border-bottom: 1px solid var(--bl); }
+.check-item { display: flex; align-items: flex-start; gap: 9px; padding: 6px 9px;
+  border-radius: 6px; margin-bottom: 3px; cursor: pointer; transition: background .15s; }
+.check-item:hover { background: #f5f9ff; }
+.check-item.checked { background: var(--done); }
+.check-item.checked .check-label { text-decoration: line-through; color: #bbb; }
+.check-item input[type=checkbox] { width: 15px; height: 15px; min-width: 15px;
+  margin-top: 2px; cursor: pointer; accent-color: var(--bm); }
+.check-label { font-size: 13px; line-height: 1.5; }
+.check-label a { color: var(--bm); }
+.bw-block { background: var(--bbg); border-left: 3px solid var(--bm);
+  border-radius: 0 6px 6px 0; padding: 7px 11px; margin: 2px 0 8px 24px; font-size: 12px; }
+.bw-block .bwl { font-weight: bold; color: var(--bd); margin-bottom: 3px; }
+.bw-block .bwn { font-family: 'Courier New', monospace; color: var(--bd); background: white;
+  padding: 2px 6px; border-radius: 3px; border: 1px solid #BDD7EE; display: inline-block;
+  margin: 2px 0; font-size: 11.5px; word-break: break-all; }
+.bw-block .bwd { color: #555; margin-top: 3px; }
+.note { background: var(--obg); border-left: 3px solid #F4C430; border-radius: 0 6px 6px 0;
+  padding: 7px 11px; margin: 5px 0 9px; font-size: 12px; color: var(--oc); font-style: italic; }
+.code-block { background: #1e1e1e; color: #d4d4d4; font-family: 'Courier New', monospace;
+  font-size: 11px; padding: 10px 14px; border-radius: 6px; margin: 7px 0 9px;
+  white-space: pre; overflow-x: auto; line-height: 1.6; }
+.code-block .c { color: #6A9955; } .code-block .s { color: #CE9178; }
+.screenshot-wrap, .ss-wrap { margin: 8px 0 3px 24px; border: 1px solid #ddd; border-radius: 6px;
+  overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.1); display: inline-block;
+  max-width: 100%; cursor: zoom-in; }
+.screenshot-wrap img, .ss-wrap img { display: block; max-width: 100%; height: auto; }
+.screenshot-caption, .ss-cap { font-size: 11px; color: #888; font-style: italic; margin: 2px 0 9px 24px; }
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.88);
+  z-index: 999; align-items: center; justify-content: center; cursor: zoom-out; }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 94vw; max-height: 94vh; border-radius: 4px; box-shadow: 0 4px 32px rgba(0,0,0,.5); }
+.lb-x { position: fixed; top: 14px; right: 18px; color: white; font-size: 32px;
+  cursor: pointer; line-height: 1; font-weight: bold; }
+.finish { background: var(--gbg); border: 2px solid #70AD47; border-radius: 10px;
+  padding: 18px 22px; text-align: center; margin-top: 20px; }
+.finish .big { font-size: 34px; color: var(--gc); }
+.finish h2 { color: var(--gc); font-size: 17px; margin: 5px 0; }
+.finish .sigs { margin-top: 14px; font-size: 12px; color: #555; border-top: 1px solid #aaa;
+  padding-top: 12px; display: flex; justify-content: space-around; gap: 16px; }
+.finish .sf { border: none; border-bottom: 1px solid #555; min-width: 160px; padding-bottom: 3px;
+  background: transparent; font-family: Arial; font-size: 13px; text-align: center; color: var(--gc);
+  outline: none; }
+.finish .sf::placeholder { color: #9bbf86; }
+.btnrow { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+.btn-pdf { padding: 7px 18px; background: var(--bd); border: 1px solid var(--bd); border-radius: 6px;
+  color: white; font-size: 12px; cursor: pointer; font-family: Arial; }
+.btn-pdf:hover { background: #174070; }
+.rst { padding: 5px 16px; background: transparent;
+  border: 1px solid #aaa; border-radius: 6px; color: #666; font-size: 12px; cursor: pointer; }
+.rst:hover { background: #f0f0f0; }
+
+@media print {
+  body { background: white; }
+  .doc-header { position: static; box-shadow: none; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .doc-body { max-width: 100%; margin: 0; padding: 0; }
+  .btnrow, .stog { display: none !important; }
+  .sb.collapsed { display: block !important; }
+  .section { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+  .sh { -webkit-print-color-adjust: exact; print-color-adjust: exact; cursor: default; }
+  .sbadge, .pb, .pb-wrap, .note, .bw-block, .check-item.checked, .finish, .code-block {
+    -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .screenshot-wrap, .ss-wrap { break-inside: avoid; cursor: default; }
+  .screenshot-wrap img, .ss-wrap img { max-height: 8cm; width: auto; }
+  .check-item { break-inside: avoid; }
+  .subh { break-after: avoid; }
+  a { color: #2E75B6 !important; text-decoration: none; }
+  .info-table input, .finish .sf { border: none; }
+}
+
+</style>
+</head>
+<body>
+<div class="doc-header">
+  <h1>Simple Test</h1>
+  <div class="sub">Just a proof of concept</div>
+  <div class="pb-wrap"><div class="pb" id="pb"></div></div>
+  <div class="pt" id="pt">Loading...</div>
+</div>
+<div class="doc-body">
+
+<table class="info-table">
+  <tr><th>Customer</th><th>Employee</th><th>Technician</th><th>Date</th></tr>
+  <tr>
+    <td>ACME Corp</td>
+    <td>John Doe</td>
+    <td>Jane Smith</td>
+    <td>2026-07-24</td>
+  </tr>
+</table>
+
+<!-- START GENERATED CONTENT -->
+<!-- S1 -->
+<div class="section" id="s1">
+<div class="sh" onclick="toggleSection('s1')"><span>Section 1</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s1"></span><span class="stog" id="tog-s1">&#9660;</span></div></div>
+<div class="sb" id="body-s1">
+<div class="note">&#x24D8; This is a note.</div>
+<div class="check-item" id="wrap-cb_s1_1">
+  <input type="checkbox" id="cb_s1_1">
+  <label class="check-label" for="cb_s1_1">Task A</label>
+</div>
+<div class="check-item" id="wrap-cb_s1_2">
+  <input type="checkbox" id="cb_s1_2">
+  <label class="check-label" for="cb_s1_2">Task B</label>
+</div>
+</div></div>
+
+<!-- S2 -->
+<div class="section" id="s2">
+<div class="sh" onclick="toggleSection('s2')"><span>Section 2</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s2"></span><span class="stog" id="tog-s2">&#9660;</span></div></div>
+<div class="sb" id="body-s2">
+<div class="check-item" id="wrap-cb_s2_3">
+  <input type="checkbox" id="cb_s2_3">
+  <label class="check-label" for="cb_s2_3">Task C</label>
+</div>
+<div class="check-item" id="wrap-cb_s2_4">
+  <input type="checkbox" id="cb_s2_4">
+  <label class="check-label" for="cb_s2_4">Task D</label>
+</div>
+</div></div>
+
+<!-- END GENERATED CONTENT -->
+
+<div class="finish">
+  <div class="big">&#x2714;</div>
+  <h2>Setup Completed</h2>
+  <div class="sigs">
+    <div><input type="text" class="sf persistent-field" id="f_sign_tech" placeholder="Name"><div style="margin-top:4px">Technician</div></div>
+    <div><input type="text" class="sf persistent-field" id="f_sign_date" placeholder="DD.MM.YYYY"><div style="margin-top:4px">Date</div></div>
+  </div>
+</div>
+<div class="btnrow">
+  <button class="btn-pdf" onclick="exportPDF()">&#x1F4C4; Export as PDF</button>
+  <button class="rst" onclick="resetAll()">&#x21BA; Reset all checkboxes</button>
+</div>
+
+</div><!-- /doc-body -->
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <span class="lb-x" onclick="closeLightbox()">&times;</span>
+  <img id="lb-img" src="" alt="">
+</div>
+
+<script>
+window.D2F_DOC_ID = 'doc_poc_12345';
+// Doc2Flow Generic Checklist Logic
+
+// Use a unique ID injected by the generator, fallback to pathname
+const DOC_ID = window.D2F_DOC_ID || window.location.pathname.replace(/[^a-zA-Z0-9]/g, '_');
+const STATE_KEY = 'd2f_state_' + DOC_ID;
+
+function openLightbox(imgSrc) {
+    const lbImg = document.getElementById('lb-img');
+    const lightbox = document.getElementById('lightbox');
+    if (lbImg && lightbox) {
+        lbImg.src = imgSrc;
+        lightbox.classList.add('active');
+    }
+}
+
+function closeLightbox() {
+    const lightbox = document.getElementById('lightbox');
+    if (lightbox) lightbox.classList.remove('active');
+}
+
+document.addEventListener('keydown', e => { 
+    if(e.key === 'Escape') closeLightbox(); 
+});
+
+function toggleSection(headerElement) {
+    // Expect the next sibling to be the section body (.sb)
+    let body = headerElement.nextElementSibling;
+    while (body && !body.classList.contains('sb')) {
+        body = body.nextElementSibling;
+    }
+    
+    if (body) {
+        const isCollapsed = body.classList.toggle('collapsed');
+        const toggler = headerElement.querySelector('.stog');
+        if (toggler) {
+            toggler.innerHTML = isCollapsed ? '&#9650;' : '&#9660;';
+        }
+    }
+}
+
+function saveState() {
+    const state = {};
+    document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb, index) => {
+        // Use an index or an ID if available. d2f generator will try to assign unique IDs to checkboxes
+        const key = cb.id || ('cb_' + index);
+        state[key] = cb.checked;
+    });
+    
+    // Save any persistent inputs (e.g. signature fields)
+    const fields = {};
+    document.querySelectorAll('input.persistent-field').forEach((input, index) => {
+        const key = input.id || ('f_' + index);
+        fields[key] = input.value;
+    });
+
+    try { 
+        localStorage.setItem(STATE_KEY, JSON.stringify({ checks: state, fields: fields })); 
+    } catch(e) {
+        console.warn('Failed to save state to localStorage', e);
+    }
+}
+
+function loadState() {
+    try {
+        const raw = localStorage.getItem(STATE_KEY);
+        if (!raw) return;
+        
+        const data = JSON.parse(raw);
+        if (data.checks) {
+            document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb, index) => {
+                const key = cb.id || ('cb_' + index);
+                if (data.checks[key] !== undefined) { 
+                    cb.checked = data.checks[key]; 
+                    styleItem(cb); 
+                }
+            });
+        }
+        if (data.fields) {
+            document.querySelectorAll('input.persistent-field').forEach((input, index) => {
+                const key = input.id || ('f_' + index);
+                if (data.fields[key] !== undefined) {
+                    input.value = data.fields[key];
+                }
+            });
+        }
+    } catch(e) {
+        console.warn('Failed to load state from localStorage', e);
+    }
+}
+
+function styleItem(cb) {
+    const item = cb.closest('.check-item');
+    if (item) {
+        item.classList.toggle('checked', cb.checked);
+    }
+}
+
+function updateProgress() {
+    const sections = document.querySelectorAll('.section');
+    let total = 0, done = 0;
+    
+    sections.forEach(sec => {
+        const cbs = sec.querySelectorAll('input[type="checkbox"]');
+        if (cbs.length === 0) return;
+        
+        const checkedCount = [...cbs].filter(c => c.checked).length;
+        total += cbs.length;
+        done += checkedCount;
+        
+        const badge = sec.querySelector('.sbadge');
+        if (badge) { 
+            badge.textContent = checkedCount + ' / ' + cbs.length; 
+            badge.className = 'sbadge' + (checkedCount === cbs.length ? ' done' : ''); 
+        }
+    });
+    
+    const pct = total ? Math.round(done / total * 100) : 0;
+    const pb = document.getElementById('pb');
+    if (pb) pb.style.width = pct + '%';
+    
+    const pt = document.getElementById('pt');
+    if (pt) pt.textContent = done + ' of ' + total + ' tasks completed (' + pct + '%)';
+}
+
+function resetAll() {
+    if (!confirm('Are you sure you want to reset all checkboxes?')) return;
+    document.querySelectorAll('.check-item input[type="checkbox"]').forEach(c => { 
+        c.checked = false; 
+        styleItem(c); 
+    });
+    updateProgress(); 
+    saveState();
+}
+
+// Export the current state as PDF via the browser's "Save as PDF" print option.
+// Collapsed sections are temporarily expanded so nothing is hidden in the PDF.
+function exportPDF() {
+    const collapsed = [...document.querySelectorAll('.sb.collapsed')];
+    collapsed.forEach(el => el.classList.remove('collapsed'));
+    
+    const restore = () => {
+        collapsed.forEach(el => el.classList.add('collapsed'));
+        window.removeEventListener('afterprint', restore);
+    };
+    
+    window.addEventListener('afterprint', restore);
+    setTimeout(() => window.print(), 100);
+}
+
+// Setup Event Listeners
+document.addEventListener('DOMContentLoaded', () => {
+    // Bind checkbox clicks
+    document.querySelectorAll('.check-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            // Ignore if clicked on a link
+            if (e.target.tagName === 'A') return;
+            
+            const cb = this.querySelector('input[type="checkbox"]');
+            if (cb) {
+                // If clicked on the wrapper but not the checkbox directly, toggle it manually
+                if (e.target !== cb) cb.checked = !cb.checked;
+                styleItem(cb);
+                updateProgress();
+                saveState();
+            }
+        });
+    });
+
+    // Bind section header clicks
+    document.querySelectorAll('.sh').forEach(sh => {
+        sh.addEventListener('click', function() {
+            toggleSection(this);
+        });
+    });
+
+    // Bind image lightbox clicks
+    document.querySelectorAll('.screenshot-wrap img, .ss-wrap img, img.lightbox-trigger').forEach(img => {
+        img.style.cursor = 'zoom-in';
+        img.addEventListener('click', function(e) {
+            e.stopPropagation();
+            openLightbox(this.src);
+        });
+    });
+
+    // Bind persistent fields
+    document.querySelectorAll('input.persistent-field').forEach(input => {
+        input.addEventListener('input', saveState);
+    });
+
+    // Initialize state
+    loadState();
+    updateProgress();
+});
+
+</script>
+</body>
+</html>

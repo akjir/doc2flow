@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Onboarding Guide</title>
+<style>
+:root {
+  --bd: #1F4E79; --bm: #2E75B6; --bl: #D6E4F0; --bbg: #EBF3FB;
+  --obg: #FFF2CC; --oc: #7F6000; --gc: #375623; --gbg: #E2EFDA;
+  --gray: #444; --done: #f0f9f0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); background: #eef2f7; }
+.doc-header {
+  background: var(--bd); color: white; padding: 16px 28px 12px;
+  position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.3);
+}
+.doc-header h1 { font-size: 20px; font-weight: bold; }
+.doc-header .sub { font-size: 12px; color: #BDD7EE; margin-top: 2px; }
+.pb-wrap { margin-top: 10px; background: rgba(255,255,255,.2); border-radius: 8px; height: 9px; overflow: hidden; }
+.pb { height: 100%; background: #70AD47; border-radius: 8px; transition: width .3s; width: 0%; }
+.pt { font-size: 11px; color: #BDD7EE; margin-top: 3px; text-align: right; }
+.doc-body { max-width: 840px; margin: 20px auto; padding: 0 14px 60px; }
+.info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; background: white;
+  border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+.info-table th { background: var(--bl); color: var(--bd); font-weight: bold; padding: 8px 14px;
+  border: 1px solid #BDD7EE; font-size: 12px; }
+.info-table td { padding: 8px 14px; border: 1px solid #ddd; font-size: 12px; }
+.info-table td input { width: 100%; border: none; outline: none; font-size: 12px; font-family: Arial; background: transparent; }
+.section { background: white; border-radius: 10px; margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.08); overflow: hidden; }
+.sh { background: var(--bd); color: white; padding: 11px 18px;
+  font-size: 15px; font-weight: bold; display: flex; align-items: center;
+  justify-content: space-between; cursor: pointer; user-select: none; }
+.sh:hover { background: #174070; }
+.sbadge { font-size: 11px; font-weight: normal; background: rgba(255,255,255,.2);
+  padding: 2px 7px; border-radius: 12px; white-space: nowrap; }
+.sbadge.done { background: #70AD47; }
+.stog { font-size: 16px; margin-left: 10px; transition: transform .2s; }
+.sb { padding: 14px 18px; }
+.sb.collapsed { display: none; }
+.subh { font-size: 12.5px; font-weight: bold; color: var(--bm); margin: 14px 0 7px;
+  padding-bottom: 4px; border-bottom: 1px solid var(--bl); }
+.check-item { display: flex; align-items: flex-start; gap: 9px; padding: 6px 9px;
+  border-radius: 6px; margin-bottom: 3px; cursor: pointer; transition: background .15s; }
+.check-item:hover { background: #f5f9ff; }
+.check-item.checked { background: var(--done); }
+.check-item.checked .check-label { text-decoration: line-through; color: #bbb; }
+.check-item input[type=checkbox] { width: 15px; height: 15px; min-width: 15px;
+  margin-top: 2px; cursor: pointer; accent-color: var(--bm); }
+.check-label { font-size: 13px; line-height: 1.5; }
+.check-label a { color: var(--bm); }
+.bw-block { background: var(--bbg); border-left: 3px solid var(--bm);
+  border-radius: 0 6px 6px 0; padding: 7px 11px; margin: 2px 0 8px 24px; font-size: 12px; }
+.bw-block .bwl { font-weight: bold; color: var(--bd); margin-bottom: 3px; }
+.bw-block .bwn { font-family: 'Courier New', monospace; color: var(--bd); background: white;
+  padding: 2px 6px; border-radius: 3px; border: 1px solid #BDD7EE; display: inline-block;
+  margin: 2px 0; font-size: 11.5px; word-break: break-all; }
+.bw-block .bwd { color: #555; margin-top: 3px; }
+.note { background: var(--obg); border-left: 3px solid #F4C430; border-radius: 0 6px 6px 0;
+  padding: 7px 11px; margin: 5px 0 9px; font-size: 12px; color: var(--oc); font-style: italic; }
+.code-block { background: #1e1e1e; color: #d4d4d4; font-family: 'Courier New', monospace;
+  font-size: 11px; padding: 10px 14px; border-radius: 6px; margin: 7px 0 9px;
+  white-space: pre; overflow-x: auto; line-height: 1.6; }
+.code-block .c { color: #6A9955; } .code-block .s { color: #CE9178; }
+.screenshot-wrap, .ss-wrap { margin: 8px 0 3px 24px; border: 1px solid #ddd; border-radius: 6px;
+  overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.1); display: inline-block;
+  max-width: 100%; cursor: zoom-in; }
+.screenshot-wrap img, .ss-wrap img { display: block; max-width: 100%; height: auto; }
+.screenshot-caption, .ss-cap { font-size: 11px; color: #888; font-style: italic; margin: 2px 0 9px 24px; }
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.88);
+  z-index: 999; align-items: center; justify-content: center; cursor: zoom-out; }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 94vw; max-height: 94vh; border-radius: 4px; box-shadow: 0 4px 32px rgba(0,0,0,.5); }
+.lb-x { position: fixed; top: 14px; right: 18px; color: white; font-size: 32px;
+  cursor: pointer; line-height: 1; font-weight: bold; }
+.finish { background: var(--gbg); border: 2px solid #70AD47; border-radius: 10px;
+  padding: 18px 22px; text-align: center; margin-top: 20px; }
+.finish .big { font-size: 34px; color: var(--gc); }
+.finish h2 { color: var(--gc); font-size: 17px; margin: 5px 0; }
+.finish .sigs { margin-top: 14px; font-size: 12px; color: #555; border-top: 1px solid #aaa;
+  padding-top: 12px; display: flex; justify-content: space-around; gap: 16px; }
+.finish .sf { border: none; border-bottom: 1px solid #555; min-width: 160px; padding-bottom: 3px;
+  background: transparent; font-family: Arial; font-size: 13px; text-align: center; color: var(--gc);
+  outline: none; }
+.finish .sf::placeholder { color: #9bbf86; }
+.btnrow { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+.btn-pdf { padding: 7px 18px; background: var(--bd); border: 1px solid var(--bd); border-radius: 6px;
+  color: white; font-size: 12px; cursor: pointer; font-family: Arial; }
+.btn-pdf:hover { background: #174070; }
+.rst { padding: 5px 16px; background: transparent;
+  border: 1px solid #aaa; border-radius: 6px; color: #666; font-size: 12px; cursor: pointer; }
+.rst:hover { background: #f0f0f0; }
+
+@media print {
+  body { background: white; }
+  .doc-header { position: static; box-shadow: none; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .doc-body { max-width: 100%; margin: 0; padding: 0; }
+  .btnrow, .stog { display: none !important; }
+  .sb.collapsed { display: block !important; }
+  .section { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+  .sh { -webkit-print-color-adjust: exact; print-color-adjust: exact; cursor: default; }
+  .sbadge, .pb, .pb-wrap, .note, .bw-block, .check-item.checked, .finish, .code-block {
+    -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .screenshot-wrap, .ss-wrap { break-inside: avoid; cursor: default; }
+  .screenshot-wrap img, .ss-wrap img { max-height: 8cm; width: auto; }
+  .check-item { break-inside: avoid; }
+  .subh { break-after: avoid; }
+  a { color: #2E75B6 !important; text-decoration: none; }
+  .info-table input, .finish .sf { border: none; }
+}
+
+</style>
+</head>
+<body>
+<div class="doc-header">
+  <h1>Onboarding Guide</h1>
+  <div class="sub">Preparation Notebook & M365-User | Customer: NyriSys</div>
+  <div class="pb-wrap"><div class="pb" id="pb"></div></div>
+  <div class="pt" id="pt">Loading...</div>
+</div>
+<div class="doc-body">
+
+<table class="info-table">
+  <tr><th>Customer</th><th>Employee</th><th>Technician</th><th>Date</th></tr>
+  <tr>
+    <td>NyriSys Inc</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+</table>
+
+<!-- START GENERATED CONTENT -->
+<!-- S1 -->
+<div class="section" id="s1">
+<div class="sh" onclick="toggleSection('s1')"><span>1 | Goods Receipt &amp; Visual Inspection</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s1"></span><span class="stog" id="tog-s1">&#9660;</span></div></div>
+<div class="sb" id="body-s1">
+<div class="note">&#x24D8; New devices are ordered by the customer or Mr. Mueller directly to ATS in Falkenhain.</div>
+<div class="check-item" id="wrap-cb_s1_1">
+  <input type="checkbox" id="cb_s1_1">
+  <label class="check-label" for="cb_s1_1">Unpack notebook</label>
+</div>
+<div class="check-item" id="wrap-cb_s1_2">
+  <input type="checkbox" id="cb_s1_2">
+  <label class="check-label" for="cb_s1_2">Visual inspection: check housing, screen, ports for damage</label>
+</div>
+<div class="check-item" id="wrap-cb_s1_3">
+  <input type="checkbox" id="cb_s1_3">
+  <label class="check-label" for="cb_s1_3">Set up device in ATS lab</label>
+</div>
+<div class="check-item" id="wrap-cb_s1_4">
+  <input type="checkbox" id="cb_s1_4">
+  <label class="check-label" for="cb_s1_4">Connect to power and network</label>
+</div>
+<div class="check-item" id="wrap-cb_s1_5">
+  <input type="checkbox" id="cb_s1_5">
+  <label class="check-label" for="cb_s1_5">Test basic functions: image &amp; sound output</label>
+</div>
+<div class="check-item" id="wrap-cb_s1_6">
+  <input type="checkbox" id="cb_s1_6">
+  <label class="check-label" for="cb_s1_6">Test basic functions: charging function</label>
+</div>
+<div class="check-item" id="wrap-cb_s1_7">
+  <input type="checkbox" id="cb_s1_7">
+  <label class="check-label" for="cb_s1_7">Test basic functions: keyboard &amp; touchpad</label>
+</div>
+<div class="check-item" id="wrap-cb_s1_8">
+  <input type="checkbox" id="cb_s1_8">
+  <label class="check-label" for="cb_s1_8">Test camera &amp; microphone (only possible after Windows login)</label>
+</div>
+<div class="subh">Document hardware in ATS documentation</div>
+<div class="check-item" id="wrap-cb_s1_9">
+  <input type="checkbox" id="cb_s1_9">
+  <label class="check-label" for="cb_s1_9">Device name</label>
+</div>
+<div class="check-item" id="wrap-cb_s1_10">
+  <input type="checkbox" id="cb_s1_10">
+  <label class="check-label" for="cb_s1_10">Serial number</label>
+</div>
+<div class="check-item" id="wrap-cb_s1_11">
+  <input type="checkbox" id="cb_s1_11">
+  <label class="check-label" for="cb_s1_11">Product number</label>
+</div>
+<div class="check-item" id="wrap-cb_s1_12">
+  <input type="checkbox" id="cb_s1_12">
+  <label class="check-label" for="cb_s1_12">Device location (if known)</label>
+</div>
+<div class="check-item" id="wrap-cb_s1_13">
+  <input type="checkbox" id="cb_s1_13">
+  <label class="check-label" for="cb_s1_13">Take and insert a product photo of the device</label>
+</div>
+</div></div>
+
+<!-- S2 -->
+<div class="section" id="s2">
+<div class="sh" onclick="toggleSection('s2')"><span>2 | Windows Installation</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s2"></span><span class="stog" id="tog-s2">&#9660;</span></div></div>
+<div class="sb" id="body-s2">
+<div class="check-item" id="wrap-cb_s2_14">
+  <input type="checkbox" id="cb_s2_14">
+  <label class="check-label" for="cb_s2_14">Follow Windows installation wizard</label>
+</div>
+<div class="subh">Assign device name</div>
+<div class="note">&#x24D8; Schema: Last name (without umlauts) + year of purchase | Example: SCHNEIDER2026</div>
+<div class="check-item" id="wrap-cb_s2_15">
+  <input type="checkbox" id="cb_s2_15">
+  <label class="check-label" for="cb_s2_15">Enter device name according to schema</label>
+</div>
+<div class="subh">Create local user</div>
+<div class="check-item" id="wrap-cb_s2_16">
+  <input type="checkbox" id="cb_s2_16">
+  <label class="check-label" for="cb_s2_16">"How would you like to set up the device?" -&gt; For work or school -&gt; Next</label>
+</div>
+<div class="check-item" id="wrap-cb_s2_17">
+  <input type="checkbox" id="cb_s2_17">
+  <label class="check-label" for="cb_s2_17">Sign-in options -&gt; "Join a domain instead"</label>
+</div>
+<div class="check-item" id="wrap-cb_s2_18">
+  <input type="checkbox" id="cb_s2_18">
+  <label class="check-label" for="cb_s2_18">Username: ATSadmin</label>
+</div>
+<div class="check-item" id="wrap-cb_s2_19">
+  <input type="checkbox" id="cb_s2_19">
+  <label class="check-label" for="cb_s2_19">Password: leave empty (will be assigned later)</label>
+</div>
+<div class="subh">Adjust power plan</div>
+<div class="check-item" id="wrap-cb_s2_20">
+  <input type="checkbox" id="cb_s2_20">
+  <label class="check-label" for="cb_s2_20">Power plan -&gt; High performance / Ultimate performance</label>
+</div>
+</div></div>
+
+<!-- S3 -->
+<div class="section" id="s3">
+<div class="sh" onclick="toggleSection('s3')"><span>3 | Create admin users &amp; document in Bitwarden</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s3"></span><span class="stog" id="tog-s3">&#9660;</span></div></div>
+<div class="sb" id="body-s3">
+<div class="note">&#x24D8; Each device receives 2 local admin users: ATSadmin and DeviceAdmin.</div>
+<div class="subh">ATSadmin</div>
+<div class="check-item" id="wrap-cb_s3_21">
+  <input type="checkbox" id="cb_s3_21">
+  <label class="check-label" for="cb_s3_21">Create ATSadmin user</label>
+</div>
+<div class="check-item" id="wrap-cb_s3_22">
+  <input type="checkbox" id="cb_s3_22">
+  <label class="check-label" for="cb_s3_22">Set password</label>
+</div>
+<div class="check-item" id="wrap-cb_s3_23">
+  <input type="checkbox" id="cb_s3_23">
+  <label class="check-label" for="cb_s3_23"><strong>Create Bitwarden entry</strong>
+Entry name: <code>NyriSys - Clients - Laptop - "Device Name" - ATSadmin</code>
+Description: Local admin on notebook "Device Name" for ATS</label>
+</div>
+<div class="subh">DeviceAdmin</div>
+<div class="check-item" id="wrap-cb_s3_24">
+  <input type="checkbox" id="cb_s3_24">
+  <label class="check-label" for="cb_s3_24">Create DeviceAdmin user</label>
+</div>
+<div class="check-item" id="wrap-cb_s3_25">
+  <input type="checkbox" id="cb_s3_25">
+  <label class="check-label" for="cb_s3_25">Set password</label>
+</div>
+<div class="check-item" id="wrap-cb_s3_26">
+  <input type="checkbox" id="cb_s3_26">
+  <label class="check-label" for="cb_s3_26"><strong>Create Bitwarden entry</strong>
+Entry name: <code>NyriSys - Clients - Laptop - "Device Name" - DeviceAdmin</code>
+Description: Local admin on notebook "Device Name" for ATS</label>
+</div>
+</div></div>
+
+<!-- S4 -->
+<div class="section" id="s4">
+<div class="sh" onclick="toggleSection('s4')"><span>4 | Remote Access (TeamViewer)</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s4"></span><span class="stog" id="tog-s4">&#9660;</span></div></div>
+<div class="sb" id="body-s4">
+<div class="check-item" id="wrap-cb_s4_27">
+  <input type="checkbox" id="cb_s4_27">
+  <label class="check-label" for="cb_s4_27">Install TeamViewer</label>
+</div>
+<div class="check-item" id="wrap-cb_s4_28">
+  <input type="checkbox" id="cb_s4_28">
+  <label class="check-label" for="cb_s4_28">Set personal password</label>
+</div>
+<div class="check-item" id="wrap-cb_s4_29">
+  <input type="checkbox" id="cb_s4_29">
+  <label class="check-label" for="cb_s4_29">Note TeamViewer ID</label>
+</div>
+<div class="check-item" id="wrap-cb_s4_30">
+  <input type="checkbox" id="cb_s4_30">
+  <label class="check-label" for="cb_s4_30"><strong>Create Bitwarden entry</strong>
+Entry name: <code>NyriSys - Clients - Laptop - "Device Name" - TeamViewer - "ID"</code>
+Description: TeamViewer access for notebook "Device Name"</label>
+</div>
+</div></div>
+
+<!-- S5 -->
+<div class="section" id="s5">
+<div class="sh" onclick="toggleSection('s5')"><span>5 | Software Uninstallation</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s5"></span><span class="stog" id="tog-s5">&#9660;</span></div></div>
+<div class="sb" id="body-s5">
+<div class="note">&#x24D8; Remove all unnecessary pre-installed applications.</div>
+<div class="check-item" id="wrap-cb_s5_31">
+  <input type="checkbox" id="cb_s5_31">
+  <label class="check-label" for="cb_s5_31">Identify pre-installed bloatware</label>
+</div>
+<div class="check-item" id="wrap-cb_s5_32">
+  <input type="checkbox" id="cb_s5_32">
+  <label class="check-label" for="cb_s5_32">Completely uninstall unnecessary applications</label>
+</div>
+<div class="check-item" id="wrap-cb_s5_33">
+  <input type="checkbox" id="cb_s5_33">
+  <label class="check-label" for="cb_s5_33">Check program overview according to guidelines (see screenshot):</label>
+</div>
+<p><img src="./images/image1.png" alt="" />Fig. 1 - Target state program overview after uninstallation</p>
+</div></div>
+
+<!-- S6 -->
+<div class="section" id="s6">
+<div class="sh" onclick="toggleSection('s6')"><span>6 | Software Installation</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s6"></span><span class="stog" id="tog-s6">&#9660;</span></div></div>
+<div class="sb" id="body-s6">
+<div class="subh">Create installation folder</div>
+<div class="check-item" id="wrap-cb_s6_34">
+  <input type="checkbox" id="cb_s6_34">
+  <label class="check-label" for="cb_s6_34">Create folder: C:\INSTALL or C:\ATS\INSTALL</label>
+</div>
+<div class="check-item" id="wrap-cb_s6_35">
+  <input type="checkbox" id="cb_s6_35">
+  <label class="check-label" for="cb_s6_35">Place all installers in the folder</label>
+</div>
+<div class="note">&#x24D8; DO NOT delete installers after installation - NyriSys guideline!</div>
+<div class="subh">Install the following applications</div>
+<div class="check-item" id="wrap-cb_s6_36">
+  <input type="checkbox" id="cb_s6_36">
+  <label class="check-label" for="cb_s6_36">7-Zip</label>
+</div>
+<div class="check-item" id="wrap-cb_s6_37">
+  <input type="checkbox" id="cb_s6_37">
+  <label class="check-label" for="cb_s6_37">Adobe Acrobat Reader (Free)</label>
+</div>
+<div class="check-item" id="wrap-cb_s6_38">
+  <input type="checkbox" id="cb_s6_38">
+  <label class="check-label" for="cb_s6_38">Google Chrome</label>
+</div>
+<div class="check-item" id="wrap-cb_s6_39">
+  <input type="checkbox" id="cb_s6_39">
+  <label class="check-label" for="cb_s6_39">Greenshot</label>
+</div>
+<div class="check-item" id="wrap-cb_s6_40">
+  <input type="checkbox" id="cb_s6_40">
+  <label class="check-label" for="cb_s6_40">Notepad++</label>
+</div>
+<div class="check-item" id="wrap-cb_s6_41">
+  <input type="checkbox" id="cb_s6_41">
+  <label class="check-label" for="cb_s6_41">Paint.NET</label>
+</div>
+<div class="check-item" id="wrap-cb_s6_42">
+  <input type="checkbox" id="cb_s6_42">
+  <label class="check-label" for="cb_s6_42">PDF24</label>
+</div>
+<div class="check-item" id="wrap-cb_s6_43">
+  <input type="checkbox" id="cb_s6_43">
+  <label class="check-label" for="cb_s6_43">Trellix Endpoint Security</label>
+</div>
+<div class="check-item" id="wrap-cb_s6_44">
+  <input type="checkbox" id="cb_s6_44">
+  <label class="check-label" for="cb_s6_44">Canon Printer Driver (Neustadt)</label>
+</div>
+</div></div>
+
+<!-- S7 -->
+<div class="section" id="s7">
+<div class="sh" onclick="toggleSection('s7')"><span>7 | Entra Integration &amp; BitLocker</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s7"></span><span class="stog" id="tog-s7">&#9660;</span></div></div>
+<div class="sb" id="body-s7">
+<div class="check-item" id="wrap-cb_s7_45">
+  <input type="checkbox" id="cb_s7_45">
+  <label class="check-label" for="cb_s7_45">Join device to Entra with: ATSadmin@nyrisys.onmicrosoft.com</label>
+</div>
+<div class="check-item" id="wrap-cb_s7_46">
+  <input type="checkbox" id="cb_s7_46">
+  <label class="check-label" for="cb_s7_46">Restart device</label>
+</div>
+<div class="check-item" id="wrap-cb_s7_47">
+  <input type="checkbox" id="cb_s7_47">
+  <label class="check-label" for="cb_s7_47">Log in with ATSadmin@nyrisys.onmicrosoft.com</label>
+</div>
+<div class="check-item" id="wrap-cb_s7_48">
+  <input type="checkbox" id="cb_s7_48">
+  <label class="check-label" for="cb_s7_48">Set Windows Hello PIN</label>
+</div>
+<div class="check-item" id="wrap-cb_s7_49">
+  <input type="checkbox" id="cb_s7_49">
+  <label class="check-label" for="cb_s7_49"><strong>Create Bitwarden entry</strong>
+Entry name: <code>NyriSys - Clients - Laptop - "Device Name" - Windows Hello PIN - ATSadmin@nyrisys</code>
+Description: Windows Hello PIN login for ATSadmin@nyrisys.onmicrosoft.com on notebook</label>
+</div>
+<div class="check-item" id="wrap-cb_s7_50">
+  <input type="checkbox" id="cb_s7_50">
+  <label class="check-label" for="cb_s7_50">Print BitLocker key to PDF -&gt; save externally (e.g., at ATS)</label>
+</div>
+<div class="check-item" id="wrap-cb_s7_51">
+  <input type="checkbox" id="cb_s7_51">
+  <label class="check-label" for="cb_s7_51">Log out ATS user</label>
+</div>
+</div></div>
+
+<!-- S8 -->
+<div class="section" id="s8">
+<div class="sh" onclick="toggleSection('s8')"><span>8 | Create M365 User</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s8"></span><span class="stog" id="tog-s8">&#9660;</span></div></div>
+<div class="sb" id="body-s8">
+<div class="note">&#x24D8; NyriSys will provide: First name, Last name, Position, Email, Mobile number.</div>
+<div class="subh">Required Information</div>
+<div class="check-item" id="wrap-cb_s8_52">
+  <input type="checkbox" id="cb_s8_52">
+  <label class="check-label" for="cb_s8_52">First name</label>
+</div>
+<div class="check-item" id="wrap-cb_s8_53">
+  <input type="checkbox" id="cb_s8_53">
+  <label class="check-label" for="cb_s8_53">Last name</label>
+</div>
+<div class="check-item" id="wrap-cb_s8_54">
+  <input type="checkbox" id="cb_s8_54">
+  <label class="check-label" for="cb_s8_54">Position</label>
+</div>
+<div class="check-item" id="wrap-cb_s8_55">
+  <input type="checkbox" id="cb_s8_55">
+  <label class="check-label" for="cb_s8_55">Email address</label>
+</div>
+<div class="check-item" id="wrap-cb_s8_56">
+  <input type="checkbox" id="cb_s8_56">
+  <label class="check-label" for="cb_s8_56">Mobile number (SIM card comes with device)</label>
+</div>
+<div class="subh">Generate password</div>
+<div class="note">&#x24D8; NyriSys guideline: Generate a memorable password.</div>
+<div class="check-item" id="wrap-cb_s8_57">
+  <input type="checkbox" id="cb_s8_57">
+  <label class="check-label" for="cb_s8_57">Open password generator: <a href="https://www.codepalm.de/tools/passwort-generator/">codepalm.de/tools/passwort-generator</a></label>
+</div>
+<div class="check-item" id="wrap-cb_s8_58">
+  <input type="checkbox" id="cb_s8_58">
+  <label class="check-label" for="cb_s8_58">Generate password and store securely in Bitwarden</label>
+</div>
+<div class="check-item" id="wrap-cb_s8_59">
+  <input type="checkbox" id="cb_s8_59">
+  <label class="check-label" for="cb_s8_59"><strong>Create Bitwarden entry</strong>
+Entry name: <code>NyriSys - M365 - User - "firstname.lastname@nyrisys.de"</code>
+Description: M365 login for employee FIRSTNAME Lastname</label>
+</div>
+<div class="note">&#x24D8; Configure settings as shown in the screenshot.</div>
+<p><img src="./images/image2.png" alt="" />Fig. 2 - Password generator settings (Codepalm)</p>
+<div class="subh">License assignment</div>
+<div class="note">&#x24D8; Assign standard license (unless otherwise specified).</div>
+<div class="check-item" id="wrap-cb_s8_60">
+  <input type="checkbox" id="cb_s8_60">
+  <label class="check-label" for="cb_s8_60">License assigned in M365 portal</label>
+</div>
+<div class="subh">Teams Groups - add all new users to:</div>
+<div class="check-item" id="wrap-cb_s8_61">
+  <input type="checkbox" id="cb_s8_61">
+  <label class="check-label" for="cb_s8_61">NyriSys</label>
+</div>
+<div class="check-item" id="wrap-cb_s8_62">
+  <input type="checkbox" id="cb_s8_62">
+  <label class="check-label" for="cb_s8_62">RISK MANAGEMENT</label>
+</div>
+<div class="check-item" id="wrap-cb_s8_63">
+  <input type="checkbox" id="cb_s8_63">
+  <label class="check-label" for="cb_s8_63">PROCESS MANAGEMENT</label>
+</div>
+<div class="check-item" id="wrap-cb_s8_64">
+  <input type="checkbox" id="cb_s8_64">
+  <label class="check-label" for="cb_s8_64">HR PORTAL</label>
+</div>
+<div class="check-item" id="wrap-cb_s8_65">
+  <input type="checkbox" id="cb_s8_65">
+  <label class="check-label" for="cb_s8_65">CUSTOMERS</label>
+</div>
+<div class="check-item" id="wrap-cb_s8_66">
+  <input type="checkbox" id="cb_s8_66">
+  <label class="check-label" for="cb_s8_66">Strategy and Business Models</label>
+</div>
+<div class="check-item" id="wrap-cb_s8_67">
+  <input type="checkbox" id="cb_s8_67">
+  <label class="check-label" for="cb_s8_67">IT Management</label>
+</div>
+<div class="note">&#x24D8; Only add to additional groups after consulting with NyriSys.</div>
+</div></div>
+
+<!-- S9 -->
+<div class="section" id="s9">
+<div class="sh" onclick="toggleSection('s9')"><span>9 | End-User Setup (with M365 Login)</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s9"></span><span class="stog" id="tog-s9">&#9660;</span></div></div>
+<div class="sb" id="body-s9">
+<div class="check-item" id="wrap-cb_s9_68">
+  <input type="checkbox" id="cb_s9_68">
+  <label class="check-label" for="cb_s9_68">Run Windows setup wizard</label>
+</div>
+<div class="check-item" id="wrap-cb_s9_69">
+  <input type="checkbox" id="cb_s9_69">
+  <label class="check-label" for="cb_s9_69">Skip biometric setup (user's responsibility)</label>
+</div>
+<div class="check-item" id="wrap-cb_s9_70">
+  <input type="checkbox" id="cb_s9_70">
+  <label class="check-label" for="cb_s9_70">Set Windows Hello PIN</label>
+</div>
+<div class="check-item" id="wrap-cb_s9_71">
+  <input type="checkbox" id="cb_s9_71">
+  <label class="check-label" for="cb_s9_71"><strong>Create Bitwarden entry (User)</strong>
+Entry name: <code>NyriSys - Clients - Laptop - "Device Name" - Windows Hello PIN - firstname.lastname@nyrisys.de</code>
+Description: Windows Hello PIN login for firstname.lastname@nyrisys.de on notebook "Device Name"</label>
+</div>
+<div class="note">&#x24D8; If the smartphone is not yet available: create a TOTP entry for the user in Bitwarden!</div>
+<div class="subh">Set Greenshot to German</div>
+<div class="check-item" id="wrap-cb_s9_72">
+  <input type="checkbox" id="cb_s9_72">
+  <label class="check-label" for="cb_s9_72">Change language in Greenshot to German (see screenshot):</label>
+</div>
+<p><img src="./images/image3.png" alt="" />Fig. 3 - Greenshot language setting</p>
+<div class="subh">Display scaling</div>
+<div class="check-item" id="wrap-cb_s9_73">
+  <input type="checkbox" id="cb_s9_73">
+  <label class="check-label" for="cb_s9_73">Start -&gt; Settings -&gt; System -&gt; Display -&gt; Scaling = 125%</label>
+</div>
+<p><img src="./images/image4.png" alt="" />Fig. 4 - Scaling 125%</p>
+<div class="subh">Uninstall applications (new Windows user apps)</div>
+<div class="check-item" id="wrap-cb_s9_74">
+  <input type="checkbox" id="cb_s9_74">
+  <label class="check-label" for="cb_s9_74">Provider notification</label>
+</div>
+<div class="check-item" id="wrap-cb_s9_75">
+  <input type="checkbox" id="cb_s9_75">
+  <label class="check-label" for="cb_s9_75">Audio recorder</label>
+</div>
+<div class="check-item" id="wrap-cb_s9_76">
+  <input type="checkbox" id="cb_s9_76">
+  <label class="check-label" for="cb_s9_76">Family</label>
+</div>
+<div class="check-item" id="wrap-cb_s9_77">
+  <input type="checkbox" id="cb_s9_77">
+  <label class="check-label" for="cb_s9_77">Journal</label>
+</div>
+<div class="check-item" id="wrap-cb_s9_78">
+  <input type="checkbox" id="cb_s9_78">
+  <label class="check-label" for="cb_s9_78">Solitaire &amp; Casual Games</label>
+</div>
+<div class="check-item" id="wrap-cb_s9_79">
+  <input type="checkbox" id="cb_s9_79">
+  <label class="check-label" for="cb_s9_79">Start Experiences app</label>
+</div>
+<div class="check-item" id="wrap-cb_s9_80">
+  <input type="checkbox" id="cb_s9_80">
+  <label class="check-label" for="cb_s9_80">Xbox</label>
+</div>
+<div class="subh">Registry Entries: Disable Outlook New</div>
+<div class="note">&#x24D8; Import REG file to prevent automatic migration to Outlook New.</div>
+<div class="check-item" id="wrap-cb_s9_81">
+  <input type="checkbox" id="cb_s9_81">
+  <label class="check-label" for="cb_s9_81">Import REG value</label>
+</div>
+<pre><code class="language-ini">; Disable automatic migration to Microsoft Outlook new
+[HKEY_CURRENT_USER\Software\Microsoft\office\16.0\Outlook\Preferences]
+"NewOutlookMigrationUserSetting"=dword:00000000
+"UseNewOutlook"=dword:00000000
+
+[HKEY_CURRENT_USER\Software\Microsoft\office\16.0\Outlook\Options\General]
+"DoNewOutlookAutoMigration"=dword:00000000
+"NewOutlookAutoMigrationRetryIntervals"=dword:00000000
+"HideNewOutlookToggle"=dword:00000001
+</code></pre>
+<div class="subh">Configure &amp; sign in to applications</div>
+<div class="check-item" id="wrap-cb_s9_82">
+  <input type="checkbox" id="cb_s9_82">
+  <label class="check-label" for="cb_s9_82">Edge -&gt; Sign in M365 user</label>
+</div>
+<div class="check-item" id="wrap-cb_s9_83">
+  <input type="checkbox" id="cb_s9_83">
+  <label class="check-label" for="cb_s9_83">Teams -&gt; Sign in M365 user</label>
+</div>
+<div class="check-item" id="wrap-cb_s9_84">
+  <input type="checkbox" id="cb_s9_84">
+  <label class="check-label" for="cb_s9_84">Outlook Classic -&gt; Sign in M365 user</label>
+</div>
+<div class="check-item" id="wrap-cb_s9_85">
+  <input type="checkbox" id="cb_s9_85">
+  <label class="check-label" for="cb_s9_85">Disable Focused Inbox</label>
+</div>
+<div class="check-item" id="wrap-cb_s9_86">
+  <input type="checkbox" id="cb_s9_86">
+  <label class="check-label" for="cb_s9_86">Test email send &amp; receive</label>
+</div>
+<div class="check-item" id="wrap-cb_s9_87">
+  <input type="checkbox" id="cb_s9_87">
+  <label class="check-label" for="cb_s9_87">Install Zoom</label>
+</div>
+<div class="check-item" id="wrap-cb_s9_88">
+  <input type="checkbox" id="cb_s9_88">
+  <label class="check-label" for="cb_s9_88">Install Webex</label>
+</div>
+<div class="check-item" id="wrap-cb_s9_89">
+  <input type="checkbox" id="cb_s9_89">
+  <label class="check-label" for="cb_s9_89">Remove Webex from startup</label>
+</div>
+<div class="check-item" id="wrap-cb_s9_90">
+  <input type="checkbox" id="cb_s9_90">
+  <label class="check-label" for="cb_s9_90">Remove Microsoft Edge from taskbar</label>
+</div>
+<div class="check-item" id="wrap-cb_s9_91">
+  <input type="checkbox" id="cb_s9_91">
+  <label class="check-label" for="cb_s9_91">Pin Google Chrome to taskbar</label>
+</div>
+<div class="check-item" id="wrap-cb_s9_92">
+  <input type="checkbox" id="cb_s9_92">
+  <label class="check-label" for="cb_s9_92">Set Google Chrome as default application</label>
+</div>
+<div class="subh">Configure desktop icons</div>
+<div class="check-item" id="wrap-cb_s9_93">
+  <input type="checkbox" id="cb_s9_93">
+  <label class="check-label" for="cb_s9_93">Start -&gt; Settings -&gt; Personalization -&gt; Themes -&gt; Desktop icon settings (see screenshot):</label>
+</div>
+<p><img src="./images/image5.png" alt="" />Fig. 5 - Desktop icon settings</p>
+<div class="check-item" id="wrap-cb_s9_94">
+  <input type="checkbox" id="cb_s9_94">
+  <label class="check-label" for="cb_s9_94">Only show the following icons on the desktop (see screenshot):</label>
+</div>
+<p><img src="./images/image6.png" alt="" />Fig. 6 - Desktop icons</p>
+<div class="subh">Start menu power button &amp; folders</div>
+<div class="check-item" id="wrap-cb_s9_95">
+  <input type="checkbox" id="cb_s9_95">
+  <label class="check-label" for="cb_s9_95">Start menu -&gt; Settings -&gt; Personalization -&gt; Start -&gt; Folders</label>
+</div>
+<div class="check-item" id="wrap-cb_s9_96">
+  <input type="checkbox" id="cb_s9_96">
+  <label class="check-label" for="cb_s9_96">Enable all except Music and Video (see screenshot):</label>
+</div>
+<p><img src="./images/image7.png" alt="" />Fig. 7 - Start menu folder settings</p>
+<div class="check-item" id="wrap-cb_s9_97">
+  <input type="checkbox" id="cb_s9_97">
+  <label class="check-label" for="cb_s9_97">Enable power button icons - Start menu should look like this afterwards:</label>
+</div>
+<p><img src="./images/image8.png" alt="" />Fig. 8 - Start menu power button</p>
+<div class="subh">Pinned programs in Start menu</div>
+<div class="check-item" id="wrap-cb_s9_98">
+  <input type="checkbox" id="cb_s9_98">
+  <label class="check-label" for="cb_s9_98">Arrange pinned programs exactly according to guidelines (see screenshot):</label>
+</div>
+<p><img src="./images/image9.png" alt="" />Fig. 9 - Start menu pinned programs</p>
+<div class="subh">Configure taskbar</div>
+<div class="check-item" id="wrap-cb_s9_99">
+  <input type="checkbox" id="cb_s9_99">
+  <label class="check-label" for="cb_s9_99">Configure taskbar according to guidelines (see screenshot):</label>
+</div>
+<p><img src="./images/image10.png" alt="" />Fig. 10 - Taskbar settings</p>
+</div></div>
+
+<!-- S10 -->
+<div class="section" id="s10">
+<div class="sh" onclick="toggleSection('s10')"><span>10 | Handover &amp; Warranty Check</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s10"></span><span class="stog" id="tog-s10">&#9660;</span></div></div>
+<div class="sb" id="body-s10">
+<div class="check-item" id="wrap-cb_s10_100">
+  <input type="checkbox" id="cb_s10_100">
+  <label class="check-label" for="cb_s10_100">Open warranty check: <a href="https://pcsupport.lenovo.com/us/en/warranty-lookup">pcsupport.lenovo.com</a></label>
+</div>
+<div class="check-item" id="wrap-cb_s10_101">
+  <input type="checkbox" id="cb_s10_101">
+  <label class="check-label" for="cb_s10_101">Enter serial number and read warranty data</label>
+</div>
+<div class="check-item" id="wrap-cb_s10_102">
+  <input type="checkbox" id="cb_s10_102">
+  <label class="check-label" for="cb_s10_102">Enter values into handover document (similar to figure, see screenshot):</label>
+</div>
+<p><img src="./images/image11.png" alt="" />Fig. 11 - Lenovo warranty overview</p>
+<div class="check-item" id="wrap-cb_s10_103">
+  <input type="checkbox" id="cb_s10_103">
+  <label class="check-label" for="cb_s10_103">Completely fill out handover document (2026-MM-DD_Protocol_Lastname,Firstname_(Notebook).docx)</label>
+</div>
+<p><img src="./images/image12.png" alt="" />Fig. 12 - Example notebook protocol</p>
+<div class="check-item" id="wrap-cb_s10_104">
+  <input type="checkbox" id="cb_s10_104">
+  <label class="check-label" for="cb_s10_104">Print handover document and include with notebook</label>
+</div>
+</div></div>
+
+<!-- END GENERATED CONTENT -->
+
+<div class="finish">
+  <div class="big">&#x2714;</div>
+  <h2>Setup Completed</h2>
+  <div class="sigs">
+    <div><input type="text" class="sf persistent-field" id="f_sign_tech" placeholder="Name"><div style="margin-top:4px">Technician</div></div>
+    <div><input type="text" class="sf persistent-field" id="f_sign_date" placeholder="DD.MM.YYYY"><div style="margin-top:4px">Date</div></div>
+  </div>
+</div>
+<div class="btnrow">
+  <button class="btn-pdf" onclick="exportPDF()">&#x1F4C4; Export as PDF</button>
+  <button class="rst" onclick="resetAll()">&#x21BA; Reset all checkboxes</button>
+</div>
+
+</div><!-- /doc-body -->
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <span class="lb-x" onclick="closeLightbox()">&times;</span>
+  <img id="lb-img" src="" alt="">
+</div>
+
+<script>
+window.D2F_DOC_ID = 'doc_poc_12345';
+// Doc2Flow Generic Checklist Logic
+
+// Use a unique ID injected by the generator, fallback to pathname
+const DOC_ID = window.D2F_DOC_ID || window.location.pathname.replace(/[^a-zA-Z0-9]/g, '_');
+const STATE_KEY = 'd2f_state_' + DOC_ID;
+
+function openLightbox(imgSrc) {
+    const lbImg = document.getElementById('lb-img');
+    const lightbox = document.getElementById('lightbox');
+    if (lbImg && lightbox) {
+        lbImg.src = imgSrc;
+        lightbox.classList.add('active');
+    }
+}
+
+function closeLightbox() {
+    const lightbox = document.getElementById('lightbox');
+    if (lightbox) lightbox.classList.remove('active');
+}
+
+document.addEventListener('keydown', e => { 
+    if(e.key === 'Escape') closeLightbox(); 
+});
+
+function toggleSection(headerElement) {
+    // Expect the next sibling to be the section body (.sb)
+    let body = headerElement.nextElementSibling;
+    while (body && !body.classList.contains('sb')) {
+        body = body.nextElementSibling;
+    }
+    
+    if (body) {
+        const isCollapsed = body.classList.toggle('collapsed');
+        const toggler = headerElement.querySelector('.stog');
+        if (toggler) {
+            toggler.innerHTML = isCollapsed ? '&#9650;' : '&#9660;';
+        }
+    }
+}
+
+function saveState() {
+    const state = {};
+    document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb, index) => {
+        // Use an index or an ID if available. d2f generator will try to assign unique IDs to checkboxes
+        const key = cb.id || ('cb_' + index);
+        state[key] = cb.checked;
+    });
+    
+    // Save any persistent inputs (e.g. signature fields)
+    const fields = {};
+    document.querySelectorAll('input.persistent-field').forEach((input, index) => {
+        const key = input.id || ('f_' + index);
+        fields[key] = input.value;
+    });
+
+    try { 
+        localStorage.setItem(STATE_KEY, JSON.stringify({ checks: state, fields: fields })); 
+    } catch(e) {
+        console.warn('Failed to save state to localStorage', e);
+    }
+}
+
+function loadState() {
+    try {
+        const raw = localStorage.getItem(STATE_KEY);
+        if (!raw) return;
+        
+        const data = JSON.parse(raw);
+        if (data.checks) {
+            document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb, index) => {
+                const key = cb.id || ('cb_' + index);
+                if (data.checks[key] !== undefined) { 
+                    cb.checked = data.checks[key]; 
+                    styleItem(cb); 
+                }
+            });
+        }
+        if (data.fields) {
+            document.querySelectorAll('input.persistent-field').forEach((input, index) => {
+                const key = input.id || ('f_' + index);
+                if (data.fields[key] !== undefined) {
+                    input.value = data.fields[key];
+                }
+            });
+        }
+    } catch(e) {
+        console.warn('Failed to load state from localStorage', e);
+    }
+}
+
+function styleItem(cb) {
+    const item = cb.closest('.check-item');
+    if (item) {
+        item.classList.toggle('checked', cb.checked);
+    }
+}
+
+function updateProgress() {
+    const sections = document.querySelectorAll('.section');
+    let total = 0, done = 0;
+    
+    sections.forEach(sec => {
+        const cbs = sec.querySelectorAll('input[type="checkbox"]');
+        if (cbs.length === 0) return;
+        
+        const checkedCount = [...cbs].filter(c => c.checked).length;
+        total += cbs.length;
+        done += checkedCount;
+        
+        const badge = sec.querySelector('.sbadge');
+        if (badge) { 
+            badge.textContent = checkedCount + ' / ' + cbs.length; 
+            badge.className = 'sbadge' + (checkedCount === cbs.length ? ' done' : ''); 
+        }
+    });
+    
+    const pct = total ? Math.round(done / total * 100) : 0;
+    const pb = document.getElementById('pb');
+    if (pb) pb.style.width = pct + '%';
+    
+    const pt = document.getElementById('pt');
+    if (pt) pt.textContent = done + ' of ' + total + ' tasks completed (' + pct + '%)';
+}
+
+function resetAll() {
+    if (!confirm('Are you sure you want to reset all checkboxes?')) return;
+    document.querySelectorAll('.check-item input[type="checkbox"]').forEach(c => { 
+        c.checked = false; 
+        styleItem(c); 
+    });
+    updateProgress(); 
+    saveState();
+}
+
+// Export the current state as PDF via the browser's "Save as PDF" print option.
+// Collapsed sections are temporarily expanded so nothing is hidden in the PDF.
+function exportPDF() {
+    const collapsed = [...document.querySelectorAll('.sb.collapsed')];
+    collapsed.forEach(el => el.classList.remove('collapsed'));
+    
+    const restore = () => {
+        collapsed.forEach(el => el.classList.add('collapsed'));
+        window.removeEventListener('afterprint', restore);
+    };
+    
+    window.addEventListener('afterprint', restore);
+    setTimeout(() => window.print(), 100);
+}
+
+// Setup Event Listeners
+document.addEventListener('DOMContentLoaded', () => {
+    // Bind checkbox clicks
+    document.querySelectorAll('.check-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            // Ignore if clicked on a link
+            if (e.target.tagName === 'A') return;
+            
+            const cb = this.querySelector('input[type="checkbox"]');
+            if (cb) {
+                // If clicked on the wrapper but not the checkbox directly, toggle it manually
+                if (e.target !== cb) cb.checked = !cb.checked;
+                styleItem(cb);
+                updateProgress();
+                saveState();
+            }
+        });
+    });
+
+    // Bind section header clicks
+    document.querySelectorAll('.sh').forEach(sh => {
+        sh.addEventListener('click', function() {
+            toggleSection(this);
+        });
+    });
+
+    // Bind image lightbox clicks
+    document.querySelectorAll('.screenshot-wrap img, .ss-wrap img, img.lightbox-trigger').forEach(img => {
+        img.style.cursor = 'zoom-in';
+        img.addEventListener('click', function(e) {
+            e.stopPropagation();
+            openLightbox(this.src);
+        });
+    });
+
+    // Bind persistent fields
+    document.querySelectorAll('input.persistent-field').forEach(input => {
+        input.addEventListener('input', saveState);
+    });
+
+    // Initialize state
+    loadState();
+    updateProgress();
+});
+
+</script>
+</body>
+</html>

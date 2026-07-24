@@ -4,3 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+anyhow = "1.0"
+clap = { version = "4.4.11", features = ["derive"] }
+pulldown-cmark = "0.13.4"
+base64 = "0.23"
+mime_guess = "2.0"
