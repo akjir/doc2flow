@@ -1,24 +1,32 @@
 use doc2flow::converter::{convert_markdown_to_html, parse_frontmatter};
 
 #[test]
-fn test_frontmatter_and_blockquote_conversion() {
-    let input = r#"---
-title: "Test Guide"
-customer: "Acme Corp"
----
+fn test_callout_variants_conversion() {
+    let input = r#"## Section 1
 
-## Section 1
+> Standard Note text
 
-> i Note text
+>T Tip text
+
+>I Important text
+
+>! Warning text
+
+>!! Caution text
 "#;
 
-    let (frontmatter, body) = parse_frontmatter(input);
-    assert_eq!(frontmatter.title, "Test Guide");
-    assert_eq!(frontmatter.customer, "Acme Corp");
-
-    let html = convert_markdown_to_html(body).expect("conversion failed");
-    assert!(html.contains("<div class=\"section\" id=\"s1\">"));
-    assert!(html.contains("<div class=\"note\">&#x24D8; Note text</div>"));
+    let html = convert_markdown_to_html(input).expect("conversion failed");
+    assert!(html.contains("<div class=\"note\" data-label=\"Note\">Standard Note text</div>"));
+    assert!(html.contains("<div class=\"note note-tip\" data-label=\"Tip\">Tip text</div>"));
+    assert!(html.contains(
+        "<div class=\"note note-important\" data-label=\"Important\">Important text</div>"
+    ));
+    assert!(
+        html.contains("<div class=\"note note-warning\" data-label=\"Warning\">Warning text</div>")
+    );
+    assert!(
+        html.contains("<div class=\"note note-caution\" data-label=\"Caution\">Caution text</div>")
+    );
 }
 
 #[test]
@@ -73,4 +81,62 @@ fn test_simple_and_mixed_list_items_conversion() {
     // Checkbox item check
     assert!(html.contains("<input type=\"checkbox\" id=\"cb_s2_1\">"));
     assert!(html.contains("<label class=\"check-label\" for=\"cb_s2_1\">Checkbox task</label>"));
+}
+
+#[test]
+fn test_frontmatter_language_parsing() {
+    let input = r#"---
+title: "Test"
+language: "de"
+---
+## Section 1
+"#;
+
+    let (fm, _body) = parse_frontmatter(input);
+    assert_eq!(fm.language, "de");
+
+    let locale = doc2flow::i18n::Locale::from_lang_code(&fm.language);
+    assert_eq!(locale.lang_code, "de");
+    assert_eq!(locale.customer, "Kunde");
+    assert_eq!(locale.reset_all, "↺ Alle Kontrollkästchen zurücksetzen");
+}
+
+#[test]
+fn test_german_locale_conversion() {
+    let input = r#"## Section 1
+
+> Standard Hinweis
+
+>T Tipp Text
+
+>I Wichtig Text
+
+>! Warnung Text
+
+>!! Achtung Text
+
+```
+test code
+```
+"#;
+
+    let locale = doc2flow::i18n::Locale::german();
+    let html = doc2flow::converter::convert_markdown_to_html_with_locale(input, &locale)
+        .expect("conversion failed");
+
+    assert!(html.contains("<div class=\"note\" data-label=\"Hinweis\">Standard Hinweis</div>"));
+    assert!(html.contains("<div class=\"note note-tip\" data-label=\"Tipp\">Tipp Text</div>"));
+    assert!(
+        html.contains(
+            "<div class=\"note note-important\" data-label=\"Wichtig\">Wichtig Text</div>"
+        )
+    );
+    assert!(
+        html.contains("<div class=\"note note-warning\" data-label=\"Warnung\">Warnung Text</div>")
+    );
+    assert!(
+        html.contains("<div class=\"note note-caution\" data-label=\"Achtung\">Achtung Text</div>")
+    );
+    assert!(html.contains("title=\"Code kopieren\""));
+    assert!(html.contains("aria-label=\"Code kopieren\""));
 }

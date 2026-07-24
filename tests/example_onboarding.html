@@ -42,13 +42,19 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 .sb.collapsed { display: none; }
 .subh { font-size: 12.5px; font-weight: bold; color: var(--bm); margin: 14px 0 7px;
   padding-bottom: 4px; border-bottom: 1px solid var(--bl); }
-.check-item { display: flex; align-items: flex-start; gap: 9px; padding: 6px 9px;
-  border-radius: 6px; margin-bottom: 3px; cursor: pointer; transition: background .15s; }
+.check-item { display: flex; align-items: flex-start; gap: 9px; padding: 3px 9px;
+  border-radius: 6px; margin-bottom: 2px; cursor: pointer; transition: background .15s; }
+.check-item:first-child, *:not(.check-item) + .check-item { margin-top: 3px; }
+.check-item:last-child, .check-item:not(:has(+ .check-item)) { margin-bottom: 6px; }
+.check-item.simple-item { cursor: default; }
 .check-item:hover { background: #f5f9ff; }
 .check-item.checked { background: var(--done); }
 .check-item.checked .check-label { text-decoration: line-through; color: #bbb; }
 .check-item input[type=checkbox] { width: 15px; height: 15px; min-width: 15px;
   margin-top: 2px; cursor: pointer; accent-color: var(--bm); }
+.list-bullet { display: inline-flex; align-items: center; justify-content: center;
+  width: 15px; min-width: 15px; height: 15px; margin-top: 2px; color: var(--bm);
+  font-size: 14px; line-height: 1; user-select: none; }
 .check-label { font-size: 13px; line-height: 1.5; }
 .check-label a { color: var(--bm); }
 .bw-block { background: var(--bbg); border-left: 3px solid var(--bm);
@@ -58,8 +64,17 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
   padding: 2px 6px; border-radius: 3px; border: 1px solid #BDD7EE; display: inline-block;
   margin: 2px 0; font-size: 11.5px; word-break: break-all; }
 .bw-block .bwd { color: #555; margin-top: 3px; }
-.note { background: var(--obg); border-left: 3px solid #F4C430; border-radius: 0 6px 6px 0;
-  padding: 7px 11px; margin: 5px 0 9px; font-size: 12px; color: var(--oc); font-style: italic; }
+.note { position: relative; background: var(--bbg); border-left: 3px solid var(--bm); border-radius: 0 6px 6px 0;
+  padding: 7px 75px 7px 11px; margin: 5px 0 9px; font-size: 12px; color: var(--bd); font-style: italic;
+  --callout-accent: var(--bm); }
+.note::after { content: attr(data-label); position: absolute; top: 7px; right: 11px; font-size: 10px;
+  font-weight: bold; font-style: normal; text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--callout-accent); opacity: 0; pointer-events: none; transition: opacity .2s ease-in-out; }
+.note:hover::after { opacity: 1; }
+.note.note-tip { background: var(--gbg); border-left-color: #70AD47; color: var(--gc); --callout-accent: #70AD47; }
+.note.note-important { background: #F3E8FA; border-left-color: #8E44AD; color: #512E5F; --callout-accent: #8E44AD; }
+.note.note-warning { background: var(--obg); border-left-color: #F4C430; color: var(--oc); --callout-accent: #D4A017; }
+.note.note-caution { background: #FCE4D6; border-left-color: #C00000; color: #800000; --callout-accent: #C00000; }
 .code-block-wrap { position: relative; margin: 8px 0 12px; }
 .code-block-wrap .code-block { margin: 0; }
 .code-header { position: absolute; top: 6px; right: 10px; display: flex; align-items: center; gap: 8px; z-index: 2; }
@@ -110,6 +125,7 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
   .sh { -webkit-print-color-adjust: exact; print-color-adjust: exact; cursor: default; }
   .sbadge, .pb, .pb-wrap, .note, .bw-block, .check-item.checked, .finish, .code-block {
     -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .note::after { opacity: 1 !important; }
   .screenshot-wrap, .ss-wrap { break-inside: avoid; cursor: default; }
   .screenshot-wrap img, .ss-wrap img { max-height: 8cm; width: auto; }
   .check-item { break-inside: avoid; }
@@ -145,7 +161,7 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 <div class="sh" onclick="toggleSection('s1')"><span>1 | Goods Receipt &amp; Visual Inspection</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s1"></span><span class="stog" id="tog-s1">&#9660;</span></div></div>
 <div class="sb" id="body-s1">
-<div class="note">&#x24D8; New devices are ordered by the customer or Mr. Mueller directly to ATS in Falkenhain.</div>
+<div class="note" data-label="Note">New devices are ordered by the customer or Mr. Mueller directly to ATS in Falkenhain.</div>
 <div class="check-item" id="wrap-cb_s1_1">
   <input type="checkbox" id="cb_s1_1">
   <label class="check-label" for="cb_s1_1">Unpack notebook</label>
@@ -211,7 +227,7 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
   <label class="check-label" for="cb_s2_14">Follow Windows installation wizard</label>
 </div>
 <div class="subh">Assign device name</div>
-<div class="note">&#x24D8; Schema: Last name (without umlauts) + year of purchase | Example: SCHNEIDER2026</div>
+<div class="note" data-label="Note">Schema: Last name (without umlauts) + year of purchase | Example: SCHNEIDER2026</div>
 <div class="check-item" id="wrap-cb_s2_15">
   <input type="checkbox" id="cb_s2_15">
   <label class="check-label" for="cb_s2_15">Enter device name according to schema</label>
@@ -245,7 +261,7 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 <div class="sh" onclick="toggleSection('s3')"><span>3 | Create admin users &amp; document in Bitwarden</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s3"></span><span class="stog" id="tog-s3">&#9660;</span></div></div>
 <div class="sb" id="body-s3">
-<div class="note">&#x24D8; Each device receives 2 local admin users: ATSadmin and DeviceAdmin.</div>
+<div class="note" data-label="Note">Each device receives 2 local admin users: ATSadmin and DeviceAdmin.</div>
 <div class="subh">ATSadmin</div>
 <div class="check-item" id="wrap-cb_s3_21">
   <input type="checkbox" id="cb_s3_21">
@@ -308,7 +324,7 @@ Description: TeamViewer access for notebook "Device Name"</label>
 <div class="sh" onclick="toggleSection('s5')"><span>5 | Software Uninstallation</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s5"></span><span class="stog" id="tog-s5">&#9660;</span></div></div>
 <div class="sb" id="body-s5">
-<div class="note">&#x24D8; Remove all unnecessary pre-installed applications.</div>
+<div class="note" data-label="Note">Remove all unnecessary pre-installed applications.</div>
 <div class="check-item" id="wrap-cb_s5_31">
   <input type="checkbox" id="cb_s5_31">
   <label class="check-label" for="cb_s5_31">Identify pre-installed bloatware</label>
@@ -338,7 +354,7 @@ Description: TeamViewer access for notebook "Device Name"</label>
   <input type="checkbox" id="cb_s6_35">
   <label class="check-label" for="cb_s6_35">Place all installers in the folder</label>
 </div>
-<div class="note">&#x24D8; DO NOT delete installers after installation - NyriSys guideline!</div>
+<div class="note" data-label="Note">DO NOT delete installers after installation - NyriSys guideline!</div>
 <div class="subh">Install the following applications</div>
 <div class="check-item" id="wrap-cb_s6_36">
   <input type="checkbox" id="cb_s6_36">
@@ -420,7 +436,7 @@ Description: Windows Hello PIN login for ATSadmin@nyrisys.onmicrosoft.com on not
 <div class="sh" onclick="toggleSection('s8')"><span>8 | Create M365 User</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s8"></span><span class="stog" id="tog-s8">&#9660;</span></div></div>
 <div class="sb" id="body-s8">
-<div class="note">&#x24D8; NyriSys will provide: First name, Last name, Position, Email, Mobile number.</div>
+<div class="note" data-label="Note">NyriSys will provide: First name, Last name, Position, Email, Mobile number.</div>
 <div class="subh">Required Information</div>
 <div class="check-item" id="wrap-cb_s8_52">
   <input type="checkbox" id="cb_s8_52">
@@ -443,7 +459,7 @@ Description: Windows Hello PIN login for ATSadmin@nyrisys.onmicrosoft.com on not
   <label class="check-label" for="cb_s8_56">Mobile number (SIM card comes with device)</label>
 </div>
 <div class="subh">Generate password</div>
-<div class="note">&#x24D8; NyriSys guideline: Generate a memorable password.</div>
+<div class="note" data-label="Note">NyriSys guideline: Generate a memorable password.</div>
 <div class="check-item" id="wrap-cb_s8_57">
   <input type="checkbox" id="cb_s8_57">
   <label class="check-label" for="cb_s8_57">Open password generator: <a href="https://www.codepalm.de/tools/passwort-generator/">codepalm.de/tools/passwort-generator</a></label>
@@ -458,10 +474,10 @@ Description: Windows Hello PIN login for ATSadmin@nyrisys.onmicrosoft.com on not
 Entry name: <code>NyriSys - M365 - User - "firstname.lastname@nyrisys.de"</code>
 Description: M365 login for employee FIRSTNAME Lastname</label>
 </div>
-<div class="note">&#x24D8; Configure settings as shown in the screenshot.</div>
+<div class="note" data-label="Note">Configure settings as shown in the screenshot.</div>
 <p><img src="./images/image2.png" alt="" />Fig. 2 - Password generator settings (Codepalm)</p>
 <div class="subh">License assignment</div>
-<div class="note">&#x24D8; Assign standard license (unless otherwise specified).</div>
+<div class="note" data-label="Note">Assign standard license (unless otherwise specified).</div>
 <div class="check-item" id="wrap-cb_s8_60">
   <input type="checkbox" id="cb_s8_60">
   <label class="check-label" for="cb_s8_60">License assigned in M365 portal</label>
@@ -495,7 +511,7 @@ Description: M365 login for employee FIRSTNAME Lastname</label>
   <input type="checkbox" id="cb_s8_67">
   <label class="check-label" for="cb_s8_67">IT Management</label>
 </div>
-<div class="note">&#x24D8; Only add to additional groups after consulting with NyriSys.</div>
+<div class="note" data-label="Note">Only add to additional groups after consulting with NyriSys.</div>
 </div></div>
 
 <!-- S9 -->
@@ -521,7 +537,7 @@ Description: M365 login for employee FIRSTNAME Lastname</label>
 Entry name: <code>NyriSys - Clients - Laptop - "Device Name" - Windows Hello PIN - firstname.lastname@nyrisys.de</code>
 Description: Windows Hello PIN login for firstname.lastname@nyrisys.de on notebook "Device Name"</label>
 </div>
-<div class="note">&#x24D8; If the smartphone is not yet available: create a TOTP entry for the user in Bitwarden!</div>
+<div class="note" data-label="Note">If the smartphone is not yet available: create a TOTP entry for the user in Bitwarden!</div>
 <div class="subh">Set Greenshot to German</div>
 <div class="check-item" id="wrap-cb_s9_72">
   <input type="checkbox" id="cb_s9_72">
@@ -564,7 +580,7 @@ Description: Windows Hello PIN login for firstname.lastname@nyrisys.de on notebo
   <label class="check-label" for="cb_s9_80">Xbox</label>
 </div>
 <div class="subh">Registry Entries: Disable Outlook New</div>
-<div class="note">&#x24D8; Import REG file to prevent automatic migration to Outlook New.</div>
+<div class="note" data-label="Note">Import REG file to prevent automatic migration to Outlook New.</div>
 <div class="check-item" id="wrap-cb_s9_81">
   <input type="checkbox" id="cb_s9_81">
   <label class="check-label" for="cb_s9_81">Import REG value</label>
@@ -704,8 +720,8 @@ Description: Windows Hello PIN login for firstname.lastname@nyrisys.de on notebo
   </div>
 </div>
 <div class="btnrow">
-  <button class="btn-pdf" onclick="exportPDF()">&#x1F4C4; Export as PDF</button>
-  <button class="rst" onclick="resetAll()">&#x21BA; Reset all checkboxes</button>
+  <button class="btn-pdf" onclick="exportPDF()">📄 Export as PDF</button>
+  <button class="rst" onclick="resetAll()">↺ Reset all checkboxes</button>
 </div>
 
 </div><!-- /doc-body -->
@@ -717,6 +733,7 @@ Description: Windows Hello PIN login for firstname.lastname@nyrisys.de on notebo
 
 <script>
 window.D2F_DOC_ID = 'doc_poc_12345';
+window.D2F_I18N = {"lang_code":"en","customer":"Customer","employee":"Employee","technician":"Technician","date":"Date","setup_completed":"Setup Completed","name_placeholder":"Name","signature_technician":"Technician","date_placeholder":"DD.MM.YYYY","signature_date":"Date","export_pdf":"📄 Export as PDF","reset_all":"↺ Reset all checkboxes","copy_code":"Copy code","copied":"Copied!","progress_template":"{done} of {total} tasks completed ({pct}%)","loading":"Loading...","confirm_reset":"Are you sure you want to reset all checkboxes?","callout_note":"Note","callout_tip":"Tip","callout_important":"Important","callout_warning":"Warning","callout_caution":"Caution"};
 // Doc2Flow Generic Checklist Logic
 
 // Use a unique ID injected by the generator, fallback to pathname
@@ -838,11 +855,17 @@ function updateProgress() {
     if (pb) pb.style.width = pct + '%';
     
     const pt = document.getElementById('pt');
-    if (pt) pt.textContent = done + ' of ' + total + ' tasks completed (' + pct + '%)';
+    if (pt) {
+        const i18n = window.D2F_I18N || {};
+        const tmpl = i18n.progress_template || '{done} of {total} tasks completed ({pct}%)';
+        pt.textContent = tmpl.replace('{done}', done).replace('{total}', total).replace('{pct}', pct);
+    }
 }
 
 function resetAll() {
-    if (!confirm('Are you sure you want to reset all checkboxes?')) return;
+    const i18n = window.D2F_I18N || {};
+    const msg = i18n.confirm_reset || 'Are you sure you want to reset all checkboxes?';
+    if (!confirm(msg)) return;
     document.querySelectorAll('.check-item input[type="checkbox"]').forEach(c => { 
         c.checked = false; 
         styleItem(c); 

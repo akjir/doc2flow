@@ -9,7 +9,7 @@ date: ""
 
 ## 1 | Goods Receipt & Visual Inspection
 
-> i New devices are ordered by the customer or Mr. Mueller directly to ATS in Falkenhain.
+> New devices are ordered by the customer or Mr. Mueller directly to ATS in Falkenhain.
 
 - [ ] Unpack notebook
 - [ ] Visual inspection: check housing, screen, ports for damage
@@ -32,7 +32,7 @@ date: ""
 - [ ] Follow Windows installation wizard
 
 ### Assign device name
-> i Schema: Last name (without umlauts) + year of purchase | Example: SCHNEIDER2026
+> Schema: Last name (without umlauts) + year of purchase | Example: SCHNEIDER2026
 
 - [ ] Enter device name according to schema
 
@@ -47,7 +47,7 @@ date: ""
 
 ## 3 | Create admin users & document in Bitwarden
 
-> i Each device receives 2 local admin users: ATSadmin and DeviceAdmin.
+> Each device receives 2 local admin users: ATSadmin and DeviceAdmin.
 
 ### ATSadmin
 - [ ] Create ATSadmin user
@@ -74,7 +74,7 @@ date: ""
 
 ## 5 | Software Uninstallation
 
-> i Remove all unnecessary pre-installed applications.
+> Remove all unnecessary pre-installed applications.
 
 - [ ] Identify pre-installed bloatware
 - [ ] Completely uninstall unnecessary applications
@@ -88,7 +88,7 @@ date: ""
 - [ ] Create folder: C:\INSTALL or C:\ATS\INSTALL
 - [ ] Place all installers in the folder
 
-> i DO NOT delete installers after installation - NyriSys guideline!
+> DO NOT delete installers after installation - NyriSys guideline!
 
 ### Install the following applications
 - [ ] 7-Zip
@@ -115,7 +115,7 @@ date: ""
 
 ## 8 | Create M365 User
 
-> i NyriSys will provide: First name, Last name, Position, Email, Mobile number.
+> NyriSys will provide: First name, Last name, Position, Email, Mobile number.
 
 ### Required Information
 - [ ] First name
@@ -125,7 +125,7 @@ date: ""
 - [ ] Mobile number (SIM card comes with device)
 
 ### Generate password
-> i NyriSys guideline: Generate a memorable password.
+> NyriSys guideline: Generate a memorable password.
 
 - [ ] Open password generator: [codepalm.de/tools/passwort-generator](https://www.codepalm.de/tools/passwort-generator/)
 - [ ] Generate password and store securely in Bitwarden
@@ -133,12 +133,12 @@ date: ""
   Entry name: `NyriSys - M365 - User - "firstname.lastname@nyrisys.de"`
   Description: M365 login for employee FIRSTNAME Lastname
 
-> i Configure settings as shown in the screenshot.
+> Configure settings as shown in the screenshot.
 
 ![Fig. 2 - Password generator settings (Codepalm)](./images/image2.png)
 
 ### License assignment
-> i Assign standard license (unless otherwise specified).
+> Assign standard license (unless otherwise specified).
 
 - [ ] License assigned in M365 portal
 
@@ -151,7 +151,7 @@ date: ""
 - [ ] Strategy and Business Models
 - [ ] IT Management
 
-> i Only add to additional groups after consulting with NyriSys.
+> Only add to additional groups after consulting with NyriSys.
 
 ## 9 | End-User Setup (with M365 Login)
 
@@ -162,7 +162,7 @@ date: ""
   Entry name: `NyriSys - Clients - Laptop - "Device Name" - Windows Hello PIN - firstname.lastname@nyrisys.de`
   Description: Windows Hello PIN login for firstname.lastname@nyrisys.de on notebook "Device Name"
 
-> i If the smartphone is not yet available: create a TOTP entry for the user in Bitwarden!
+> If the smartphone is not yet available: create a TOTP entry for the user in Bitwarden!
 
 ### Set Greenshot to German
 - [ ] Change language in Greenshot to German (see screenshot):
@@ -184,7 +184,7 @@ date: ""
 - [ ] Xbox
 
 ### Registry Entries: Disable Outlook New
-> i Import REG file to prevent automatic migration to Outlook New.
+> Import REG file to prevent automatic migration to Outlook New.
 
 - [ ] Import REG value
 

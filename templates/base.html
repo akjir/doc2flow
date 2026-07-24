@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{LANG_CODE}}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,12 +13,12 @@
   <h1>{{TITLE}}</h1>
   <div class="sub">{{SUBTITLE}}</div>
   <div class="pb-wrap"><div class="pb" id="pb"></div></div>
-  <div class="pt" id="pt">Loading...</div>
+  <div class="pt" id="pt">{{L_LOADING}}</div>
 </div>
 <div class="doc-body">
 
 <table class="info-table">
-  <tr><th>Customer</th><th>Employee</th><th>Technician</th><th>Date</th></tr>
+  <tr><th>{{L_CUSTOMER}}</th><th>{{L_EMPLOYEE}}</th><th>{{L_TECHNICIAN}}</th><th>{{L_DATE}}</th></tr>
   <tr>
     <td>{{CUSTOMER}}</td>
     <td>{{EMPLOYEE}}</td>
@@ -33,15 +33,15 @@
 
 <div class="finish">
   <div class="big">&#x2714;</div>
-  <h2>Setup Completed</h2>
+  <h2>{{L_SETUP_COMPLETED}}</h2>
   <div class="sigs">
-    <div><input type="text" class="sf persistent-field" id="f_sign_tech" placeholder="Name"><div style="margin-top:4px">Technician</div></div>
-    <div><input type="text" class="sf persistent-field" id="f_sign_date" placeholder="DD.MM.YYYY"><div style="margin-top:4px">Date</div></div>
+    <div><input type="text" class="sf persistent-field" id="f_sign_tech" placeholder="{{L_NAME_PLACEHOLDER}}"><div style="margin-top:4px">{{L_SIGNATURE_TECHNICIAN}}</div></div>
+    <div><input type="text" class="sf persistent-field" id="f_sign_date" placeholder="{{L_DATE_PLACEHOLDER}}"><div style="margin-top:4px">{{L_SIGNATURE_DATE}}</div></div>
   </div>
 </div>
 <div class="btnrow">
-  <button class="btn-pdf" onclick="exportPDF()">&#x1F4C4; Export as PDF</button>
-  <button class="rst" onclick="resetAll()">&#x21BA; Reset all checkboxes</button>
+  <button class="btn-pdf" onclick="exportPDF()">{{L_EXPORT_PDF}}</button>
+  <button class="rst" onclick="resetAll()">{{L_RESET_ALL}}</button>
 </div>
 
 </div><!-- /doc-body -->
@@ -53,6 +53,7 @@
 
 <script>
 window.D2F_DOC_ID = '{{DOC_ID}}';
+window.D2F_I18N = {{I18N_JSON}};
 {{JS}}
 </script>
 </body>

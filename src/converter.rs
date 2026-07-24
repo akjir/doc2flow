@@ -1,3 +1,4 @@
+use crate::i18n::Locale;
 use anyhow::Result;
 use pulldown_cmark::{
     CodeBlockKind, Event, HeadingLevel, Options, Parser as MarkdownParser, Tag, TagEnd, html,
@@ -21,6 +22,7 @@ pub struct Frontmatter {
     pub employee: String,
     pub technician: String,
     pub date: String,
+    pub language: String,
 }
 
 /// Parses YAML-style frontmatter delimited by `---`.
@@ -53,6 +55,7 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
                     "employee" => fm.employee = val.to_string(),
                     "technician" => fm.technician = val.to_string(),
                     "date" => fm.date = val.to_string(),
+                    "language" | "lang" => fm.language = val.to_string(),
                     _ => {}
                 }
             }
@@ -64,8 +67,16 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
     }
 }
 
-/// Converts Markdown body into interactive HTML following doc2flow structure.
+/// Converts Markdown body into interactive HTML following doc2flow structure using default English locale.
 pub fn convert_markdown_to_html(markdown_body: &str) -> Result<String> {
+    convert_markdown_to_html_with_locale(markdown_body, &Locale::default())
+}
+
+/// Converts Markdown body into interactive HTML following doc2flow structure using specified locale.
+pub fn convert_markdown_to_html_with_locale(
+    markdown_body: &str,
+    locale: &Locale,
+) -> Result<String> {
     let mut options = Options::empty();
     options.insert(Options::ENABLE_TASKLISTS);
     options.insert(Options::ENABLE_STRIKETHROUGH);
@@ -172,16 +183,54 @@ pub fn convert_markdown_to_html(markdown_body: &str) -> Result<String> {
                     trimmed
                 };
 
-                let note_content = if let Some(stripped) = inner.strip_prefix("i ") {
-                    format!("&#x24D8; {}", stripped)
-                } else if let Some(stripped) = inner.strip_prefix("info ") {
-                    format!("&#x24D8; {}", stripped)
-                } else {
-                    inner.to_string()
-                };
+                let (note_cls, note_content, callout_label) =
+                    if let Some(stripped) = inner.strip_prefix("!! ") {
+                        ("note note-caution", stripped, &locale.callout_caution)
+                    } else if let Some(stripped) = inner.strip_prefix("!!") {
+                        ("note note-caution", stripped, &locale.callout_caution)
+                    } else if let Some(stripped) = inner.strip_prefix("caution ") {
+                        ("note note-caution", stripped, &locale.callout_caution)
+                    } else if let Some(stripped) = inner.strip_prefix("Caution ") {
+                        ("note note-caution", stripped, &locale.callout_caution)
+                    } else if let Some(stripped) = inner.strip_prefix("! ") {
+                        ("note note-warning", stripped, &locale.callout_warning)
+                    } else if let Some(stripped) = inner.strip_prefix("!") {
+                        ("note note-warning", stripped, &locale.callout_warning)
+                    } else if let Some(stripped) = inner.strip_prefix("warning ") {
+                        ("note note-warning", stripped, &locale.callout_warning)
+                    } else if let Some(stripped) = inner.strip_prefix("Warning ") {
+                        ("note note-warning", stripped, &locale.callout_warning)
+                    } else if let Some(stripped) = inner.strip_prefix("I ") {
+                        ("note note-important", stripped, &locale.callout_important)
+                    } else if let Some(stripped) = inner.strip_prefix("important ") {
+                        ("note note-important", stripped, &locale.callout_important)
+                    } else if let Some(stripped) = inner.strip_prefix("Important ") {
+                        ("note note-important", stripped, &locale.callout_important)
+                    } else if let Some(stripped) = inner.strip_prefix("T ") {
+                        ("note note-tip", stripped, &locale.callout_tip)
+                    } else if let Some(stripped) = inner.strip_prefix("tip ") {
+                        ("note note-tip", stripped, &locale.callout_tip)
+                    } else if let Some(stripped) = inner.strip_prefix("Tip ") {
+                        ("note note-tip", stripped, &locale.callout_tip)
+                    } else if let Some(stripped) = inner.strip_prefix("N ") {
+                        ("note", stripped, &locale.callout_note)
+                    } else if let Some(stripped) = inner.strip_prefix("note ") {
+                        ("note", stripped, &locale.callout_note)
+                    } else if let Some(stripped) = inner.strip_prefix("Note ") {
+                        ("note", stripped, &locale.callout_note)
+                    } else if let Some(stripped) = inner.strip_prefix("i ") {
+                        ("note", stripped, &locale.callout_note)
+                    } else if let Some(stripped) = inner.strip_prefix("info ") {
+                        ("note", stripped, &locale.callout_note)
+                    } else {
+                        ("note", inner, &locale.callout_note)
+                    };
 
+                let escaped_label = html_escape(callout_label);
                 out.push_str(&format!(
-                    "<div class=\"note\">{}</div>\n",
+                    "<div class=\"{}\" data-label=\"{}\">{}</div>\n",
+                    note_cls,
+                    escaped_label,
                     note_content.trim()
                 ));
             }
@@ -232,9 +281,10 @@ pub fn convert_markdown_to_html(markdown_body: &str) -> Result<String> {
 
                 let copy_icon = r#"<svg aria-hidden="true" class="svg-icon iconCopy" width="14" height="15" viewBox="0 0 17 18"><path fill="currentColor" d="M5 6c0-1.09.91-2 2-2h4.5L15 7.5V15c0 1.09-.91 2-2 2H7c-1.09 0-2-.91-2-2zm6-1.25V8h3.25z"/><path fill="currentColor" d="M10 1a2 2 0 0 1 2 2H6a2 2 0 0 0-2 2v9a2 2 0 0 1-2-2V4a3 3 0 0 1 3-3z" opacity=".4"/></svg>"#;
 
+                let copy_label = html_escape(&locale.copy_code);
                 out.push_str(&format!(
-                    "<div class=\"code-block-wrap\"><div class=\"code-header\">{}<button class=\"copy-btn\" onclick=\"copyCode(this)\" title=\"Copy code\" aria-label=\"Copy code\">{}</button></div><pre class=\"code-block{}\"><code>{}</code></pre></div>\n",
-                    lang_span, copy_icon, lang_cls, escaped_code
+                    "<div class=\"code-block-wrap\"><div class=\"code-header\">{}<button class=\"copy-btn\" onclick=\"copyCode(this)\" title=\"{}\" aria-label=\"{}\">{}</button></div><pre class=\"code-block{}\"><code>{}</code></pre></div>\n",
+                    lang_span, copy_label, copy_label, copy_icon, lang_cls, escaped_code
                 ));
             }
 

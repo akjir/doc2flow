@@ -57,8 +57,17 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
   padding: 2px 6px; border-radius: 3px; border: 1px solid #BDD7EE; display: inline-block;
   margin: 2px 0; font-size: 11.5px; word-break: break-all; }
 .bw-block .bwd { color: #555; margin-top: 3px; }
-.note { background: var(--obg); border-left: 3px solid #F4C430; border-radius: 0 6px 6px 0;
-  padding: 7px 11px; margin: 5px 0 9px; font-size: 12px; color: var(--oc); font-style: italic; }
+.note { position: relative; background: var(--bbg); border-left: 3px solid var(--bm); border-radius: 0 6px 6px 0;
+  padding: 7px 75px 7px 11px; margin: 5px 0 9px; font-size: 12px; color: var(--bd); font-style: italic;
+  --callout-accent: var(--bm); }
+.note::after { content: attr(data-label); position: absolute; top: 7px; right: 11px; font-size: 10px;
+  font-weight: bold; font-style: normal; text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--callout-accent); opacity: 0; pointer-events: none; transition: opacity .2s ease-in-out; }
+.note:hover::after { opacity: 1; }
+.note.note-tip { background: var(--gbg); border-left-color: #70AD47; color: var(--gc); --callout-accent: #70AD47; }
+.note.note-important { background: #F3E8FA; border-left-color: #8E44AD; color: #512E5F; --callout-accent: #8E44AD; }
+.note.note-warning { background: var(--obg); border-left-color: #F4C430; color: var(--oc); --callout-accent: #D4A017; }
+.note.note-caution { background: #FCE4D6; border-left-color: #C00000; color: #800000; --callout-accent: #C00000; }
 .code-block-wrap { position: relative; margin: 8px 0 12px; }
 .code-block-wrap .code-block { margin: 0; }
 .code-header { position: absolute; top: 6px; right: 10px; display: flex; align-items: center; gap: 8px; z-index: 2; }
@@ -109,6 +118,7 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
   .sh { -webkit-print-color-adjust: exact; print-color-adjust: exact; cursor: default; }
   .sbadge, .pb, .pb-wrap, .note, .bw-block, .check-item.checked, .finish, .code-block {
     -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .note::after { opacity: 1 !important; }
   .screenshot-wrap, .ss-wrap { break-inside: avoid; cursor: default; }
   .screenshot-wrap img, .ss-wrap img { max-height: 8cm; width: auto; }
   .check-item { break-inside: avoid; }

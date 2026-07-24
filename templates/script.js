@@ -119,11 +119,17 @@ function updateProgress() {
     if (pb) pb.style.width = pct + '%';
     
     const pt = document.getElementById('pt');
-    if (pt) pt.textContent = done + ' of ' + total + ' tasks completed (' + pct + '%)';
+    if (pt) {
+        const i18n = window.D2F_I18N || {};
+        const tmpl = i18n.progress_template || '{done} of {total} tasks completed ({pct}%)';
+        pt.textContent = tmpl.replace('{done}', done).replace('{total}', total).replace('{pct}', pct);
+    }
 }
 
 function resetAll() {
-    if (!confirm('Are you sure you want to reset all checkboxes?')) return;
+    const i18n = window.D2F_I18N || {};
+    const msg = i18n.confirm_reset || 'Are you sure you want to reset all checkboxes?';
+    if (!confirm(msg)) return;
     document.querySelectorAll('.check-item input[type="checkbox"]').forEach(c => { 
         c.checked = false; 
         styleItem(c); 
