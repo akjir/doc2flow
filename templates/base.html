@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doc2Flow Guide</title>
+    <style>
+        /* CSS_PLACEHOLDER */
+    </style>
+</head>
+<body>
+    <main class="container">
+        <!-- CONTENT_PLACEHOLDER -->
+    </main>
+    <script>
+        // Checklist state persistence in localStorage
+        document.addEventListener('DOMContentLoaded', () => {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const pageId = window.location.pathname;
+
+            checkboxes.forEach((cb, index) => {
+                const key = `d2f_cb_${pageId}_${index}`;
+                const saved = localStorage.getItem(key);
+                if (saved !== null) {
+                    cb.checked = saved === 'true';
+                }
+                cb.addEventListener('change', () => {
+                    localStorage.setItem(key, cb.checked);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,3 +1,7 @@
+mod converter;
+mod image_embedder;
+mod utils;
+
 fn main() {
-    println!("Hello, world!");
+    println!("Doc2Flow CLI");
 }
