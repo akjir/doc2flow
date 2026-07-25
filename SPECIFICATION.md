@@ -61,7 +61,7 @@ d2f.exe --version
   * `language` / `lang`: Specifies locale code (`en`, `de`) for static UI translations.
 * **Callout / Note Box Annotations:** Blockquotes are transformed into styled visual alert panels using prefix conventions:
   * `>` or `> Note`: Standard Note box (`.note`, neutral styling).
-  * `>+` or `>+ Tip`: Tip box (`.note-tip`, green accent).
+  * `>?` or `>? Tip`: Tip box (`.note-tip`, green accent).
   * `>!` or `>! Important`: Important box (`.note-important`, blue accent).
   * `>!!` or `>!! Warning`: Warning box (`.note-warning`, orange accent).
   * `>!!!` or `>!!! Caution`: Caution / Danger box (`.note-caution`, red accent).

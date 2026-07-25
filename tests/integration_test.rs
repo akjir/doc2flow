@@ -6,7 +6,7 @@ fn test_callout_variants_conversion() {
 
 > Standard Note text
 
->+ Tip text
+>? Tip text
 
 >! Important text
 
@@ -110,7 +110,7 @@ fn test_german_locale_conversion() {
 
 > Standard Hinweis
 
->+ Tipp Text
+>? Tipp Text
 
 >! Wichtig Text
 

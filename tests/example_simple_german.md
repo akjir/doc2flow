@@ -12,7 +12,7 @@ language: "de"
 
 > Dies ist ein blauer Hinweis.
 
->+ Dies ist ein grüner Tipp.
+>? Dies ist ein grüner Tipp.
 
 >! Dies ist ein violetter wichtiger Hinweis.
 

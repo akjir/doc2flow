@@ -34,5 +34,5 @@ Only commit changes to Git when explicitly requested by the user. Do not make au
 
 ## 9. HTML Template & UI Guidelines
 * **Generic Templates:** `templates/base.html`, `templates/style.css`, and `templates/script.js` form the foundation of the output. They must remain completely generic and devoid of customer-specific text or hardcoded logic.
-* **Markdown Mapping:** When parsing the markdown into HTML using `pulldown-cmark`, ensure Level 2 headings (`##`) translate into collapsible sections with `.section` and `.sh`/`.sb` classes. Markdown unordered lists with checkboxes must be wrapped in `.check-item` classes.
+* **Markdown Mapping:** When parsing the markdown into HTML using `pulldown-cmark`, ensure Level 2 headings (`##`) translate into collapsible sections with `.section` and `.sh`/`.sb` classes. Markdown unordered lists with checkboxes must be wrapped in `.check-item` classes. Callout annotations must map blockquote prefixes (`>`/`> Note`, `>?`/`>? Tip`, `>!`/`>! Important`, `>!!`/`>!! Warning`, `>!!!`/`>!!! Caution`) to visual alert panels (`.note`, `.note-tip`, `.note-important`, `.note-warning`, `.note-caution`).
 * **Placeholders:** Replace predefined generic placeholders (e.g., `{{TITLE}}`, `{{CUSTOMER}}`) in the `base.html` using the frontmatter or metadata parsed from the Markdown file.

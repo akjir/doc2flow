@@ -11,7 +11,7 @@ date: "2026-07-24"
 
 > This is a blue Note.
 
->+ This is a green Tip.
+>? This is a green Tip.
 
 >! This is a purple Important note.
 

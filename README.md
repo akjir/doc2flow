@@ -102,7 +102,7 @@ Format blockquotes with specific prefixes to render color-coded callout boxes:
 ```markdown
 > Standard note message box.
 
->+ Pro Tip: Use keyboard shortcuts for faster navigation.
+>? Pro Tip: Use keyboard shortcuts for faster navigation.
 
 >! Important: Back up all data before proceeding.
 
@@ -114,7 +114,7 @@ Format blockquotes with specific prefixes to render color-coded callout boxes:
 | Syntax | Alert Type | Badge Label (EN / DE) | Visual Theme |
 | --- | --- | --- | --- |
 | `>` | Note | Note / Hinweis | Neutral Grey |
-| `>+` | Tip | Tip / Tipp | Green |
+| `>?` | Tip | Tip / Tipp | Green |
 | `>!` | Important | Important / Wichtig | Blue |
 | `>!!` | Warning | Warning / Warnung | Orange |
 | `>!!!` | Caution | Caution / Achtung | Red |

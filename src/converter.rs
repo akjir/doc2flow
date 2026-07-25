@@ -83,8 +83,8 @@ fn parse_callout<'a>(inner: &'a str, locale: &'a Locale) -> (&'static str, &'a s
         ("!!", "note note-warning", locale.get("callout_warning")),
         ("! ", "note note-important", locale.get("callout_important")),
         ("!", "note note-important", locale.get("callout_important")),
-        ("+ ", "note note-tip", locale.get("callout_tip")),
-        ("+", "note note-tip", locale.get("callout_tip")),
+        ("? ", "note note-tip", locale.get("callout_tip")),
+        ("?", "note note-tip", locale.get("callout_tip")),
     ];
 
     for &(prefix, css_class, label) in prefixes {
@@ -183,7 +183,7 @@ pub fn convert_markdown_to_html_with_locale(
                 out.push_str(&format!("<div class=\"subh\">{}</div>\n", sub_html.trim()));
             }
 
-            // Blockquotes (> Note, >+ Tip, >! Important, >!! Warning, >!!! Caution)
+            // Blockquotes (> Note, >? Tip, >! Important, >!! Warning, >!!! Caution)
             Event::Start(Tag::BlockQuote(_)) => {
                 let mut bq_events = Vec::new();
                 idx += 1;
@@ -207,31 +207,11 @@ pub fn convert_markdown_to_html_with_locale(
                 html::push_html(&mut bq_html, bq_events.into_iter());
                 let trimmed = bq_html.trim();
 
-                let (note_cls, note_content, callout_label) =
-                    if trimmed.starts_with("<ul>") && trimmed.ends_with("</ul>") {
-                        // >+ Tip text is parsed by Markdown as an unordered list inside blockquote
-                        let inner_list = trimmed
-                            .strip_prefix("<ul>")
-                            .and_then(|s| s.strip_suffix("</ul>"))
-                            .unwrap_or(trimmed)
-                            .trim();
-                        let clean_inner = inner_list
-                            .strip_prefix("<li>")
-                            .and_then(|s| s.strip_suffix("</li>"))
-                            .unwrap_or(inner_list)
-                            .trim();
-                        let clean_inner = clean_inner
-                            .strip_prefix("<p>")
-                            .and_then(|s| s.strip_suffix("</p>"))
-                            .unwrap_or(clean_inner);
-                        ("note note-tip", clean_inner, locale.get("callout_tip"))
-                    } else {
-                        let inner = trimmed
-                            .strip_prefix("<p>")
-                            .and_then(|s| s.strip_suffix("</p>"))
-                            .unwrap_or(trimmed);
-                        parse_callout(inner, locale)
-                    };
+                let inner = trimmed
+                    .strip_prefix("<p>")
+                    .and_then(|s| s.strip_suffix("</p>"))
+                    .unwrap_or(trimmed);
+                let (note_cls, note_content, callout_label) = parse_callout(inner, locale);
 
                 let escaped_label = html_escape(callout_label);
                 out.push_str(&format!(
@@ -456,7 +436,7 @@ mod tests {
             ("note note-important", "Read this", "Important")
         );
         assert_eq!(
-            parse_callout("+ Pro tip", &locale),
+            parse_callout("? Pro tip", &locale),
             ("note note-tip", "Pro tip", "Tip")
         );
         assert_eq!(
