@@ -13,6 +13,8 @@ language: "en"
 
 This is an arbitrary text paragraph in the section body. It provides general instructions and information for the operator to review before starting the procedure.
 
+<!-- Test comment: This comment must not appear in the generated HTML -->
+
 > This is a neutral Note callout box providing standard context.
 
 >? This is a green Tip box offering recommendations or best practices.

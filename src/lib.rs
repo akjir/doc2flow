@@ -6,4 +6,5 @@ pub mod hasher;
 pub mod i18n;
 pub mod image_embedder;
 pub mod template;
+pub mod template_generator;
 pub mod utils;

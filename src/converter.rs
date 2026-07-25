@@ -36,42 +36,66 @@ pub struct Frontmatter {
 pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
     let mut fm = Frontmatter::default();
 
-    let search_str = if md_content.starts_with("---\r\n") {
-        "---\r\n"
-    } else if md_content.starts_with("---\n") {
-        "---\n"
-    } else {
-        return (fm, md_content);
-    };
+    for (start_idx, _) in md_content.match_indices("---") {
+        if start_idx == 0 || md_content[..start_idx].ends_with('\n') {
+            let prefix = md_content[..start_idx].trim();
+            let is_valid_prefix =
+                prefix.is_empty() || (prefix.starts_with("<!--") && prefix.ends_with("-->"));
 
-    let start_len = search_str.len();
+            if is_valid_prefix {
+                let after_first = start_idx + 3;
+                let rest = &md_content[after_first..];
+                let content_start = rest
+                    .strip_prefix("\r\n")
+                    .or_else(|| rest.strip_prefix("\n"))
+                    .map(|s| md_content.len() - s.len())
+                    .unwrap_or(after_first);
 
-    if let Some(end_idx) = md_content[start_len..].find(search_str) {
-        let frontmatter_text = &md_content[start_len..start_len + end_idx];
-        let body_start = start_len + end_idx + start_len;
+                if let Some((close_rel_idx, _)) = md_content[content_start..]
+                    .match_indices("---")
+                    .find(|(idx, _)| {
+                        let abs_idx = content_start + idx;
+                        (abs_idx == 0 || md_content[..abs_idx].ends_with('\n'))
+                            && (md_content[abs_idx + 3..].starts_with("\r\n")
+                                || md_content[abs_idx + 3..].starts_with('\n')
+                                || md_content[abs_idx + 3..].is_empty())
+                    })
+                {
+                    let close_idx = content_start + close_rel_idx;
+                    let frontmatter_text = &md_content[content_start..close_idx];
 
-        for line in frontmatter_text.lines() {
-            if let Some((key, val)) = line.split_once(':') {
-                let key = key.trim();
-                let val = val.trim().trim_matches('"');
-                match key {
-                    "title" => fm.title = val.to_string(),
-                    "subtitle" => fm.subtitle = val.to_string(),
-                    "customer" => fm.customer = val.to_string(),
-                    "employee" => fm.employee = val.to_string(),
-                    "technician" => fm.technician = val.to_string(),
-                    "date" => fm.date = val.to_string(),
-                    "version" => fm.version = val.to_string(),
-                    "language" | "lang" => fm.language = val.to_string(),
-                    _ => {}
+                    let after_close = close_idx + 3;
+                    let body_start = md_content[after_close..]
+                        .strip_prefix("\r\n")
+                        .or_else(|| md_content[after_close..].strip_prefix("\n"))
+                        .map(|s| md_content.len() - s.len())
+                        .unwrap_or(after_close);
+
+                    for line in frontmatter_text.lines() {
+                        if let Some((key, val)) = line.split_once(':') {
+                            let key = key.trim();
+                            let val = val.trim().trim_matches('"');
+                            match key {
+                                "title" => fm.title = val.to_string(),
+                                "subtitle" => fm.subtitle = val.to_string(),
+                                "customer" => fm.customer = val.to_string(),
+                                "employee" => fm.employee = val.to_string(),
+                                "technician" => fm.technician = val.to_string(),
+                                "date" => fm.date = val.to_string(),
+                                "version" => fm.version = val.to_string(),
+                                "language" | "lang" => fm.language = val.to_string(),
+                                _ => {}
+                            }
+                        }
+                    }
+
+                    return (fm, &md_content[body_start..]);
                 }
             }
         }
-
-        (fm, &md_content[body_start..])
-    } else {
-        (fm, md_content)
     }
+
+    (fm, md_content)
 }
 
 /// Parses callout metadata (CSS class, inner text, callout label) from raw blockquote inner string.
@@ -97,6 +121,54 @@ fn parse_callout<'a>(inner: &'a str, locale: &'a Locale) -> (&'static str, &'a s
 }
 
 /// Converts Markdown body into interactive HTML following doc2flow structure using default English locale.
+/// Filters out HTML comments (both single-line and multiline) from a vector of Markdown events.
+fn filter_comment_events(events: Vec<Event>) -> Vec<Event> {
+    let mut filtered = Vec::with_capacity(events.len());
+    let mut in_comment = false;
+
+    for ev in events {
+        match &ev {
+            Event::Html(text) | Event::InlineHtml(text) => {
+                let s = text.as_ref();
+                if in_comment {
+                    if s.contains("-->") {
+                        in_comment = false;
+                    }
+                    continue;
+                } else if let Some(start_idx) = s.find("<!--") {
+                    if let Some(end_idx) = s[start_idx..].find("-->") {
+                        let _ = end_idx;
+                        // Single-line or self-contained comment in this event
+                        continue;
+                    } else {
+                        // Start of multiline comment
+                        in_comment = true;
+                        continue;
+                    }
+                }
+            }
+            _ => {
+                if in_comment {
+                    continue;
+                }
+            }
+        }
+        filtered.push(ev);
+    }
+
+    filtered
+}
+
+/// Strips enclosing `<p>` and `</p>` HTML tags if present.
+#[inline]
+fn strip_paragraph_tags(input: &str) -> &str {
+    input
+        .strip_prefix("<p>")
+        .and_then(|s| s.strip_suffix("</p>"))
+        .unwrap_or(input)
+}
+
+/// Converts Markdown body into interactive HTML following doc2flow structure using default English locale.
 pub fn convert_markdown_to_html(markdown_body: &str) -> Result<String> {
     convert_markdown_to_html_with_locale(markdown_body, &Locale::default())
 }
@@ -112,9 +184,9 @@ pub fn convert_markdown_to_html_with_locale(
     options.insert(Options::ENABLE_TABLES);
 
     let parser = MarkdownParser::new_ext(markdown_body, options);
-    let events: Vec<Event> = parser.collect();
+    let events: Vec<Event> = filter_comment_events(parser.collect());
 
-    let mut out = String::new();
+    let mut out = String::with_capacity(markdown_body.len() * 2);
     let mut section_count = 0usize;
     let mut global_cb_count = 0usize;
     let mut global_txt_count = 0usize;
@@ -208,10 +280,7 @@ pub fn convert_markdown_to_html_with_locale(
                 html::push_html(&mut bq_html, bq_events.into_iter());
                 let trimmed = bq_html.trim();
 
-                let inner = trimmed
-                    .strip_prefix("<p>")
-                    .and_then(|s| s.strip_suffix("</p>"))
-                    .unwrap_or(trimmed);
+                let inner = strip_paragraph_tags(trimmed);
                 let (note_cls, note_content, callout_label) = parse_callout(inner, locale);
 
                 let escaped_label = html_escape(callout_label);
@@ -306,10 +375,7 @@ pub fn convert_markdown_to_html_with_locale(
                         let mut label_html = String::new();
                         html::push_html(&mut label_html, item_events.into_iter());
                         let trimmed = label_html.trim();
-                        let clean_label = trimmed
-                            .strip_prefix("<p>")
-                            .and_then(|s| s.strip_suffix("</p>"))
-                            .unwrap_or(trimmed);
+                        let clean_label = strip_paragraph_tags(trimmed);
 
                         let sec_num = if section_count == 0 { 1 } else { section_count };
                         let checked_attr = if is_checked { " checked" } else { "" };
@@ -355,10 +421,7 @@ pub fn convert_markdown_to_html_with_locale(
                     let mut label_html = String::new();
                     html::push_html(&mut label_html, item_events.into_iter());
                     let trimmed = label_html.trim();
-                    let clean_label = trimmed
-                        .strip_prefix("<p>")
-                        .and_then(|s| s.strip_suffix("</p>"))
-                        .unwrap_or(trimmed);
+                    let clean_label = strip_paragraph_tags(trimmed);
 
                     out.push_str("<div class=\"check-item simple-item\">\n");
                     out.push_str("  <span class=\"list-bullet\">&bull;</span>\n");
@@ -397,7 +460,9 @@ pub fn convert_markdown_to_html_with_locale(
                 html::push_html(&mut para_html, para_events.into_iter());
                 let trimmed = para_html.trim();
 
-                if !trimmed.is_empty() {
+                let clean_content = strip_paragraph_tags(trimmed).trim();
+
+                if !clean_content.is_empty() {
                     global_txt_count += 1;
                     let sec_num = if section_count == 0 { 1 } else { section_count };
                     out.push_str(&format!(
@@ -460,6 +525,15 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_frontmatter_with_leading_comments() {
+        let input = "<!-- Leading comment -->\n\n---\ntitle: \"Header Title\"\nlanguage: en\n---\nBody content";
+        let (fm, body) = parse_frontmatter(input);
+        assert_eq!(fm.title, "Header Title");
+        assert_eq!(fm.language, "en");
+        assert_eq!(body, "Body content");
+    }
+
+    #[test]
     fn test_parse_callout() {
         let locale = Locale::default();
         assert_eq!(
@@ -492,5 +566,35 @@ mod tests {
         assert!(
             html.contains("<span class=\"text-content\">This is a standard text paragraph.</span>")
         );
+    }
+
+    #[test]
+    fn test_html_comments_ignored() {
+        let input = "## Section 1\n\n<!-- Secret internal comment -->\n\nThis is visible content.\n<!-- Another hidden comment -->\n";
+        let html = convert_markdown_to_html(input).expect("conversion failed");
+        assert!(!html.contains("Secret internal comment"));
+        assert!(!html.contains("Another hidden comment"));
+        assert!(html.contains("This is visible content."));
+        // Ensure comments don't create dummy text-items
+        assert_eq!(html.matches("class=\"check-item text-item\"").count(), 1);
+    }
+
+    #[test]
+    fn test_strip_paragraph_tags() {
+        assert_eq!(strip_paragraph_tags("<p>Hello</p>"), "Hello");
+        assert_eq!(strip_paragraph_tags("<p>World"), "<p>World");
+        assert_eq!(strip_paragraph_tags("Plain text</p>"), "Plain text</p>");
+        assert_eq!(strip_paragraph_tags("No tags"), "No tags");
+        assert_eq!(strip_paragraph_tags("<p></p>"), "");
+    }
+
+    #[test]
+    fn test_multiline_html_comments_ignored() {
+        let input = "## Section 1\n\n<!--\nMultline comment block\nLine 2\n-->\n\nThis is visible content.\n";
+        let html = convert_markdown_to_html(input).expect("conversion failed");
+        assert!(!html.contains("Multline comment block"));
+        assert!(!html.contains("Line 2"));
+        assert!(html.contains("This is visible content."));
+        assert_eq!(html.matches("class=\"check-item text-item\"").count(), 1);
     }
 }

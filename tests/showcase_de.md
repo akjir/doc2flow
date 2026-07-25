@@ -13,6 +13,8 @@ language: "de"
 
 Dies ist ein beliebiger Textabsatz im Abschnitts-Hauptteil. Er liefert allgemeine Anweisungen und Informationen für den Techniker, die vor Beginn des Verfahrens durchgelesen werden sollten.
 
+<!-- Test-Kommentar: Dieser Hinweis darf nicht im HTML erscheinen -->
+
 > Dies ist eine neutrale Hinweis-Box mit Standard-Kontext.
 
 >? Dies ist eine grüne Tipp-Box mit Empfehlungen oder Best Practices.

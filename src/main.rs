@@ -3,6 +3,7 @@ use clap::Parser;
 use doc2flow::converter;
 use doc2flow::i18n::Locale;
 use doc2flow::template;
+use doc2flow::template_generator;
 use std::fs;
 use std::path::PathBuf;
 
@@ -10,16 +11,40 @@ use std::path::PathBuf;
 #[command(author, version, about, long_about = None)]
 struct Args {
     #[arg(help = "Path to the input Markdown file")]
-    input: PathBuf,
+    input: Option<PathBuf>,
 
     #[arg(short, long, help = "Path to the output HTML file (optional)")]
     output: Option<PathBuf>,
+
+    #[arg(
+        short = 'i',
+        long = "init",
+        num_args = 0..=1,
+        default_missing_value = "template.md",
+        help = "Generate a starter template Markdown file (optional target path, default: template.md)"
+    )]
+    init: Option<PathBuf>,
 }
 
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    let input_path = args.input;
+    if let Some(init_path) = args.init {
+        let template_content = template_generator::generate_template_markdown();
+        fs::write(&init_path, template_content).with_context(|| {
+            format!("Failed to generate template file: {}", init_path.display())
+        })?;
+        println!("Successfully generated template {}", init_path.display());
+        return Ok(());
+    }
+
+    let input_path = match args.input {
+        Some(path) => path,
+        None => anyhow::bail!(
+            "Missing input file. Specify input path or use --init to generate a template."
+        ),
+    };
+
     let output_path = args.output.unwrap_or_else(|| {
         let mut p = input_path.clone();
         p.set_extension("html");

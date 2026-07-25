@@ -1,0 +1,86 @@
+<!--
+===============================================================================
+DOC2FLOW (D2F) - TEMPLATE & USAGE GUIDE
+===============================================================================
+
+1. FRONTMATTER METADATA:
+   - title: Main document title.
+   - subtitle: Subtitle or document description.
+   - customer: Customer or client organization name.
+   - employee: Responsible employee name.
+   - technician: Executing technician name.
+   - date: Protocol date (YYYY-MM-DD).
+   - version: Document version.
+   - language / lang: Language code for static UI translation ('en', 'de').
+
+2. DOCUMENT STRUCTURE:
+   - Level 2 Headings (## Heading): Define collapsible sections with progress badges.
+   - Level 3 Headings (### Subheading): Define subheadings within sections.
+
+3. CHECKLISTS & BULLETS:
+   - Task items (- [ ] or - [x]): Interactive checkboxes saved in browser localStorage.
+   - Bullet items (- Item): Standard bullet list entries.
+
+4. CALLOUT / NOTE BOXES:
+   - > Note: Neutral information panel.
+   - >? Tip: Success / tip panel (green accent).
+   - >! Important: Important note panel (blue accent).
+   - >!! Warning: Warning alert panel (orange accent).
+   - >!!! Caution: Danger / caution panel (red accent).
+
+5. CODE BLOCKS:
+   - Fenced code blocks (```lang ... ```) render with language tags and copy button.
+
+6. LOCAL IMAGES:
+   - Relative images (![Alt text](./path/to/image.png)) are automatically embedded as Base64.
+
+7. COMMENTS:
+   - HTML comments (like this) are ignored during parsing and omitted from output HTML.
+===============================================================================
+-->
+---
+title: "Doc2Flow Standard Operating Procedure"
+subtitle: "Interactive Setup & Maintenance Protocol"
+customer: "Acme Corporation"
+employee: "Jane Doe"
+technician: "John Smith"
+version: "1.0.0"
+date: "2026-07-25"
+language: "en"
+---
+
+## Section 1: Initial System Verification
+
+<!-- Verification of baseline prerequisites -->
+
+### Prerequisites Checklist
+
+- [ ] Check operating system compatibility and network connectivity
+- [x] Verify administrator credentials and execution permissions
+- [ ] Confirm target directory layout and storage capacity
+
+### Essential Information
+
+> Note: All actions in this procedure are logged and stored locally.
+
+>? Tip: You can toggle section completion by checking off all interactive items.
+
+## Section 2: Configuration & Service Deployment
+
+### Environment Setup
+
+>! Important: Ensure configuration settings are validated before starting services.
+
+Execute the setup command:
+
+```bash
+# Initialize system configuration
+d2f --init custom_guide.md
+```
+
+>!! Warning: Modifying environment settings will cause a service restart.
+
+>!!! Caution: Do not delete existing database volumes without a verified backup.
+
+- Standard bullet item 1: Verify log directory permissions
+- Standard bullet item 2: Backup system configuration before final sign-off
