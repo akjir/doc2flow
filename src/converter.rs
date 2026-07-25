@@ -28,6 +28,7 @@ pub struct Frontmatter {
     pub employee: String,
     pub technician: String,
     pub date: String,
+    pub version: String,
     pub language: String,
 }
 
@@ -60,6 +61,7 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
                     "employee" => fm.employee = val.to_string(),
                     "technician" => fm.technician = val.to_string(),
                     "date" => fm.date = val.to_string(),
+                    "version" => fm.version = val.to_string(),
                     "language" | "lang" => fm.language = val.to_string(),
                     _ => {}
                 }
@@ -75,14 +77,14 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
 /// Parses callout metadata (CSS class, inner text, callout label) from raw blockquote inner string.
 fn parse_callout<'a>(inner: &'a str, locale: &'a Locale) -> (&'static str, &'a str, &'a str) {
     let prefixes: &[(&str, &'static str, &str)] = &[
-        ("!!! ", "note note-caution", &locale.callout_caution),
-        ("!!!", "note note-caution", &locale.callout_caution),
-        ("!! ", "note note-warning", &locale.callout_warning),
-        ("!!", "note note-warning", &locale.callout_warning),
-        ("! ", "note note-important", &locale.callout_important),
-        ("!", "note note-important", &locale.callout_important),
-        ("+ ", "note note-tip", &locale.callout_tip),
-        ("+", "note note-tip", &locale.callout_tip),
+        ("!!! ", "note note-caution", locale.get("callout_caution")),
+        ("!!!", "note note-caution", locale.get("callout_caution")),
+        ("!! ", "note note-warning", locale.get("callout_warning")),
+        ("!!", "note note-warning", locale.get("callout_warning")),
+        ("! ", "note note-important", locale.get("callout_important")),
+        ("!", "note note-important", locale.get("callout_important")),
+        ("+ ", "note note-tip", locale.get("callout_tip")),
+        ("+", "note note-tip", locale.get("callout_tip")),
     ];
 
     for &(prefix, css_class, label) in prefixes {
@@ -91,7 +93,7 @@ fn parse_callout<'a>(inner: &'a str, locale: &'a Locale) -> (&'static str, &'a s
         }
     }
 
-    ("note", inner, &locale.callout_note)
+    ("note", inner, locale.get("callout_note"))
 }
 
 /// Converts Markdown body into interactive HTML following doc2flow structure using default English locale.
@@ -222,7 +224,7 @@ pub fn convert_markdown_to_html_with_locale(
                             .strip_prefix("<p>")
                             .and_then(|s| s.strip_suffix("</p>"))
                             .unwrap_or(clean_inner);
-                        ("note note-tip", clean_inner, locale.callout_tip.as_str())
+                        ("note note-tip", clean_inner, locale.get("callout_tip"))
                     } else {
                         let inner = trimmed
                             .strip_prefix("<p>")
@@ -286,7 +288,7 @@ pub fn convert_markdown_to_html_with_locale(
 
                 let copy_icon = r#"<svg aria-hidden="true" class="svg-icon iconCopy" width="14" height="15" viewBox="0 0 17 18"><path fill="currentColor" d="M5 6c0-1.09.91-2 2-2h4.5L15 7.5V15c0 1.09-.91 2-2 2H7c-1.09 0-2-.91-2-2zm6-1.25V8h3.25z"/><path fill="currentColor" d="M10 1a2 2 0 0 1 2 2H6a2 2 0 0 0-2 2v9a2 2 0 0 1-2-2V4a3 3 0 0 1 3-3z" opacity=".4"/></svg>"#;
 
-                let copy_label = html_escape(&locale.copy_code);
+                let copy_label = html_escape(locale.get("copy_code"));
                 out.push_str(&format!(
                     "<div class=\"code-block-wrap\"><div class=\"code-header\">{}<button class=\"copy-btn\" onclick=\"copyCode(this)\" title=\"{}\" aria-label=\"{}\">{}</button></div><pre class=\"code-block{}\"><code>{}</code></pre></div>\n",
                     lang_span, copy_label, copy_label, copy_icon, lang_cls, escaped_code

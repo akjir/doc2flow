@@ -1,63 +1,97 @@
 //! Internationalization module for Doc2Flow static UI terms.
 
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
-/// Represents localized static terms for generated HTML UI layout.
+include!(concat!(env!("OUT_DIR"), "/locales_gen.rs"));
+
+/// Localized terms for generated HTML UI layout.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Locale {
+    /// Language identifier for the locale.
     pub lang_code: String,
-    pub customer: String,
-    pub employee: String,
-    pub technician: String,
-    pub date: String,
-    pub setup_completed: String,
-    pub name_placeholder: String,
-    pub signature_technician: String,
-    pub date_placeholder: String,
-    pub signature_date: String,
-    pub export_pdf: String,
-    pub reset_all: String,
-    pub copy_code: String,
-    pub copied: String,
-    pub progress_template: String,
-    pub loading: String,
-    pub confirm_reset: String,
-    pub callout_note: String,
-    pub callout_tip: String,
-    pub callout_important: String,
-    pub callout_warning: String,
-    pub callout_caution: String,
+    /// Dynamic key-value pairs for localized UI terms.
+    pub entries: HashMap<String, String>,
 }
 
 impl Locale {
-    /// Loads English locale embedded at compile time.
-    pub fn english() -> Self {
-        let json_str = include_str!("../locales/en.json");
-        serde_json::from_str(json_str).expect("Failed to deserialize embedded English locale")
-    }
-
-    /// Loads German locale embedded at compile time.
-    pub fn german() -> Self {
-        let json_str = include_str!("../locales/de.json");
-        serde_json::from_str(json_str).expect("Failed to deserialize embedded German locale")
-    }
-
-    /// Returns a locale based on the given language code string.
+    /// Constructs a `Locale` by parsing a raw JSON string.
     ///
-    /// If the language code is unknown, empty, or set to English variations,
-    /// this function defaults to English.
+    /// # Examples
+    ///
+    /// ```
+    /// use doc2flow::i18n::Locale;
+    ///
+    /// let json = r#"{"lang_code": "en", "customer": "Customer"}"#;
+    /// let locale = Locale::from_json(json);
+    /// assert_eq!(locale.get("customer"), "Customer");
+    /// ```
+    pub fn from_json(json_str: &str) -> Self {
+        let entries: HashMap<String, String> =
+            serde_json::from_str(json_str).expect("Failed to deserialize locale JSON");
+        let lang_code = entries
+            .get("lang_code")
+            .cloned()
+            .unwrap_or_else(|| "en".to_string());
+        Locale { lang_code, entries }
+    }
+
+    /// Loads an embedded locale corresponding to the normalized language code.
+    ///
+    /// Normalizes `code` by trimming whitespace and converting to lowercase. If no matching
+    /// locale file is embedded, falls back to default English (`"en"`).
     pub fn from_lang_code(code: &str) -> Self {
         let normalized = code.trim().to_lowercase();
-        match normalized.as_str() {
-            "de" | "de-de" | "de_de" | "german" | "deutsch" => Self::german(),
-            _ => Self::english(),
+        if let Some(json_str) = get_embedded_locale(&normalized) {
+            Self::from_json(json_str)
+        } else if let Some(fallback_str) = get_embedded_locale("en") {
+            Self::from_json(fallback_str)
+        } else {
+            Locale {
+                lang_code: normalized,
+                entries: HashMap::new(),
+            }
         }
+    }
+
+    /// Safe getter returning the string entry for `key`, or empty string if missing.
+    pub fn get(&self, key: &str) -> &str {
+        self.entries.get(key).map(|s| s.as_str()).unwrap_or("")
     }
 }
 
 impl Default for Locale {
     fn default() -> Self {
-        Self::english()
+        Self::from_lang_code("en")
+    }
+}
+
+/// Validates that all `{{L_KEY}}` placeholders in `template` exist in `locale.entries`.
+///
+/// Prints a non-blocking warning message to `stderr` for any missing key.
+/// Performs zero heap allocations during scanning.
+pub fn validate_locale_coverage(template: &str, locale: &Locale) {
+    let mut cursor = 0;
+    while let Some(start) = template[cursor..].find("{{L_") {
+        let abs_start = cursor + start;
+        if let Some(end) = template[abs_start + 4..].find("}}") {
+            let abs_end = abs_start + 4 + end;
+            let key_name = &template[abs_start + 4..abs_end];
+
+            if !locale
+                .entries
+                .keys()
+                .any(|k| k.eq_ignore_ascii_case(key_name))
+            {
+                eprintln!(
+                    "Warning: Missing translation key 'L_{}' in locale '{}'",
+                    key_name, locale.lang_code
+                );
+            }
+            cursor = abs_end + 2;
+        } else {
+            break;
+        }
     }
 }
 
@@ -66,12 +100,49 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_from_lang_code() {
-        assert_eq!(Locale::from_lang_code("de").lang_code, "de");
-        assert_eq!(Locale::from_lang_code("DE-DE").lang_code, "de");
-        assert_eq!(Locale::from_lang_code("german").lang_code, "de");
-        assert_eq!(Locale::from_lang_code("en").lang_code, "en");
-        assert_eq!(Locale::from_lang_code("").lang_code, "en");
-        assert_eq!(Locale::from_lang_code("unknown").lang_code, "en");
+    fn test_from_json_dynamic_loading() {
+        let json = r#"{
+            "lang_code": "fr",
+            "custom_key": "Bonjour",
+            "customer": "Client"
+        }"#;
+        let locale = Locale::from_json(json);
+        assert_eq!(locale.lang_code, "fr");
+        assert_eq!(locale.get("custom_key"), "Bonjour");
+        assert_eq!(locale.get("customer"), "Client");
+    }
+
+    #[test]
+    fn test_from_lang_code_resolution() {
+        let de_locale = Locale::from_lang_code("de");
+        assert_eq!(de_locale.lang_code, "de");
+        assert_eq!(de_locale.get("customer"), "Kunde");
+
+        let en_locale = Locale::from_lang_code("en");
+        assert_eq!(en_locale.lang_code, "en");
+        assert_eq!(en_locale.get("customer"), "Customer");
+
+        let unknown = Locale::from_lang_code("xyz");
+        assert_eq!(unknown.lang_code, "en");
+    }
+
+    #[test]
+    fn test_get_fallback_unknown_key() {
+        let locale = Locale::from_lang_code("de");
+        assert_eq!(locale.get("nonexistent_key_123"), "");
+    }
+
+    #[test]
+    fn test_validate_locale_coverage() {
+        let mut entries = HashMap::new();
+        entries.insert("customer".into(), "Kunde".into());
+        let locale = Locale {
+            lang_code: "de".into(),
+            entries,
+        };
+
+        let tmpl = "<div>{{L_CUSTOMER}}</div><div>{{L_MISSING_KEY}}</div>";
+        // Call validation; missing key prints to stderr without panicking
+        validate_locale_coverage(tmpl, &locale);
     }
 }

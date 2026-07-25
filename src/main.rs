@@ -34,8 +34,8 @@ fn main() -> Result<()> {
 
     let html_content = converter::convert_markdown_to_html_with_locale(markdown_body, &locale)?;
 
-    let doc_id = "doc_poc_12345";
-    let final_html = template::render(&frontmatter, &locale, &html_content, doc_id)?;
+    let d2f_id = doc2flow::d2f_id::generate_d2f_id(&frontmatter)?;
+    let final_html = template::render(&frontmatter, &locale, &html_content, &d2f_id)?;
 
     fs::write(&output_path, final_html)
         .with_context(|| format!("Failed to write output file: {}", output_path.display()))?;

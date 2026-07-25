@@ -97,8 +97,11 @@ language: "de"
 
     let locale = doc2flow::i18n::Locale::from_lang_code(&fm.language);
     assert_eq!(locale.lang_code, "de");
-    assert_eq!(locale.customer, "Kunde");
-    assert_eq!(locale.reset_all, "↺ Alle Kontrollkästchen zurücksetzen");
+    assert_eq!(locale.get("customer"), "Kunde");
+    assert_eq!(
+        locale.get("reset_all"),
+        "↺ Alle Kontrollkästchen zurücksetzen"
+    );
 }
 
 #[test]
@@ -120,7 +123,7 @@ test code
 ```
 "#;
 
-    let locale = doc2flow::i18n::Locale::german();
+    let locale = doc2flow::i18n::Locale::from_lang_code("de");
     let html = doc2flow::converter::convert_markdown_to_html_with_locale(input, &locale)
         .expect("conversion failed");
 

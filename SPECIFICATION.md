@@ -82,7 +82,10 @@ d2f.exe --version
 
 * **Self-Contained Document:** Generates a single valid HTML5 document with fully embedded styling (`<style>`) and script logic (`<script>`).
 * **Internationalization & Localization (i18n):**
-  * Supports localized static UI elements based on the `language` frontmatter tag (English `en` default, German `de` supported).
+  * Supports localized static UI elements based on the `language` frontmatter tag (matching the lowercased code to embedded locale JSON files, defaulting to `en`).
+  * **Dynamic Resource Loading:** Locale resources are loaded dynamically into a `HashMap<String, String>` from flat JSON key-value files.
+  * **Template Replacement Scheme:** Placeholders in HTML templates formatted as `{{L_KEY}}` automatically map to the lowercased key `"key"` in the respective locale JSON file (e.g. `{{L_CUSTOMER}}` maps to `"customer"`).
+  * **Missing Key Handling:** Template placeholders missing from the target locale emit a non-blocking warning message on `stderr` during rendering without causing panic or termination.
   * Automatically translates controls, buttons, metadata labels, progress indicators, callout header tags, and print titles.
 * **Interactivity & State Persistence:**
   * Checkboxes can be toggled by end users.

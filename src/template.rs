@@ -1,7 +1,7 @@
 //! HTML rendering and template substitution module for Doc2Flow documents.
 
 use crate::converter::Frontmatter;
-use crate::i18n::Locale;
+use crate::i18n::{Locale, validate_locale_coverage};
 use anyhow::{Context, Result};
 use std::collections::HashMap;
 
@@ -56,7 +56,7 @@ pub fn substitute_template(template: &str, vars: &HashMap<&str, &str>) -> String
 ///
 /// # Errors
 ///
-/// Returns an error if the locale cannot be serialized to JSON.
+/// Returns an error if the locale entries cannot be serialized to JSON.
 pub fn render(
     frontmatter: &Frontmatter,
     locale: &Locale,
@@ -67,10 +67,22 @@ pub fn render(
     let style_css = include_str!("../templates/style.css");
     let script_js = include_str!("../templates/script.js");
 
-    let i18n_json = serde_json::to_string(locale)
-        .context("Failed to serialize locale to JSON for template rendering")?;
+    validate_locale_coverage(base_html, locale);
 
-    let mut vars = HashMap::with_capacity(24);
+    let i18n_json = serde_json::to_string(&locale.entries)
+        .context("Failed to serialize locale entries to JSON for template rendering")?;
+
+    let dynamic_placeholders: Vec<(String, &str)> = locale
+        .entries
+        .iter()
+        .map(|(k, v)| (format!("L_{}", k.to_uppercase()), v.as_str()))
+        .collect();
+
+    let mut vars = HashMap::with_capacity(16 + dynamic_placeholders.len());
+    for (placeholder, val) in &dynamic_placeholders {
+        vars.insert(placeholder.as_str(), *val);
+    }
+
     vars.insert("LANG_CODE", locale.lang_code.as_str());
     vars.insert("TITLE", frontmatter.title.as_str());
     vars.insert("SUBTITLE", frontmatter.subtitle.as_str());
@@ -78,21 +90,6 @@ pub fn render(
     vars.insert("EMPLOYEE", frontmatter.employee.as_str());
     vars.insert("TECHNICIAN", frontmatter.technician.as_str());
     vars.insert("DATE", frontmatter.date.as_str());
-    vars.insert("L_CUSTOMER", locale.customer.as_str());
-    vars.insert("L_EMPLOYEE", locale.employee.as_str());
-    vars.insert("L_TECHNICIAN", locale.technician.as_str());
-    vars.insert("L_DATE", locale.date.as_str());
-    vars.insert("L_SETUP_COMPLETED", locale.setup_completed.as_str());
-    vars.insert("L_NAME_PLACEHOLDER", locale.name_placeholder.as_str());
-    vars.insert(
-        "L_SIGNATURE_TECHNICIAN",
-        locale.signature_technician.as_str(),
-    );
-    vars.insert("L_DATE_PLACEHOLDER", locale.date_placeholder.as_str());
-    vars.insert("L_SIGNATURE_DATE", locale.signature_date.as_str());
-    vars.insert("L_EXPORT_PDF", locale.export_pdf.as_str());
-    vars.insert("L_RESET_ALL", locale.reset_all.as_str());
-    vars.insert("L_LOADING", locale.loading.as_str());
     vars.insert("I18N_JSON", i18n_json.as_str());
     vars.insert("CSS", style_css);
     vars.insert("JS", script_js);
@@ -143,7 +140,7 @@ mod tests {
             ..Frontmatter::default()
         };
 
-        let locale = Locale::german();
+        let locale = Locale::from_lang_code("de");
         let body = "<p>Body Content</p>";
         let doc_id = "test_id_99";
 
@@ -154,5 +151,7 @@ mod tests {
         assert!(html.contains("test_id_99"));
         assert!(!html.contains("{{TITLE}}"));
         assert!(!html.contains("{{CONTENT}}"));
+        assert!(!html.contains("{{L_CUSTOMER}}"));
+        assert!(html.contains("Kunde"));
     }
 }
