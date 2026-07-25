@@ -138,6 +138,30 @@ function updateProgress() {
         const tmpl = i18n.progress_template || '{done} of {total} tasks completed ({pct}%)';
         pt.textContent = tmpl.replace('{done}', done).replace('{total}', total).replace('{pct}', pct);
     }
+
+    const finishBox = document.getElementById('finish-box');
+    const finishIcon = document.getElementById('finish-icon');
+    const finishTitle = document.getElementById('finish-title');
+    const btnPdf = document.getElementById('btn-pdf');
+    const i18n = window.D2F_I18N || {};
+
+    if (finishBox) {
+        finishBox.classList.remove('completed', 'pending', 'no-tasks');
+        if (total === 0) {
+            finishBox.classList.add('no-tasks');
+            if (btnPdf) btnPdf.disabled = false;
+        } else if (done < total) {
+            finishBox.classList.add('pending');
+            if (finishIcon) finishIcon.innerHTML = '&#x29D6;';
+            if (finishTitle) finishTitle.textContent = i18n.setup_in_progress || 'Setup in Progress';
+            if (btnPdf) btnPdf.disabled = true;
+        } else {
+            finishBox.classList.add('completed');
+            if (finishIcon) finishIcon.innerHTML = '&#x2714;';
+            if (finishTitle) finishTitle.textContent = i18n.setup_completed || 'Setup Completed';
+            if (btnPdf) btnPdf.disabled = false;
+        }
+    }
 }
 
 function resetAll() {
@@ -158,6 +182,9 @@ function resetAll() {
 // Export the current state as PDF via the browser's "Save as PDF" print option.
 // Collapsed sections are temporarily expanded so nothing is hidden in the PDF.
 function exportPDF() {
+    const btnPdf = document.getElementById('btn-pdf');
+    if (btnPdf && btnPdf.disabled) return;
+
     const collapsed = [...document.querySelectorAll('.sb.collapsed')];
     collapsed.forEach(el => el.classList.remove('collapsed'));
     

@@ -5,6 +5,7 @@
   "technician": "Techniker",
   "date": "Datum",
   "setup_completed": "Einrichtung abgeschlossen",
+  "setup_in_progress": "Einrichtung in Durchführung",
   "name_placeholder": "Name",
   "signature_technician": "Techniker",
   "date_placeholder": "TT.MM.JJJJ",

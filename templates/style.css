@@ -93,7 +93,7 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 .lb-x { position: fixed; top: 14px; right: 18px; color: white; font-size: 32px;
   cursor: pointer; line-height: 1; font-weight: bold; }
 .finish { background: var(--gbg); border: 2px solid #70AD47; border-radius: 10px;
-  padding: 18px 22px; text-align: center; margin-top: 20px; }
+  padding: 18px 22px; text-align: center; margin-top: 20px; transition: background .2s, border-color .2s; }
 .finish .big { font-size: 34px; color: var(--gc); }
 .finish h2 { color: var(--gc); font-size: 17px; margin: 5px 0; }
 .finish .sigs { margin-top: 14px; font-size: 12px; color: #555; border-top: 1px solid #aaa;
@@ -102,10 +102,25 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
   background: transparent; font-family: Arial; font-size: 13px; text-align: center; color: var(--gc);
   outline: none; }
 .finish .sf::placeholder { color: #9bbf86; }
+
+.finish.completed { background: var(--gbg); border: 2px solid #70AD47; }
+.finish.completed .big, .finish.completed h2, .finish.completed .sf { color: var(--gc); }
+.finish.completed .sf::placeholder { color: #9bbf86; }
+
+.finish.pending { background: #f0f4f8; border: 2px solid #b0bec5; }
+.finish.pending .big, .finish.pending h2, .finish.pending .sf { color: var(--bd); }
+.finish.pending .sf::placeholder { color: #90a4ae; }
+
+.finish.no-tasks { background: white; border: 1px solid var(--bl); }
+.finish.no-tasks .big, .finish.no-tasks h2 { display: none; }
+.finish.no-tasks .sf { color: var(--bd); }
+.finish.no-tasks .sf::placeholder { color: #90a4ae; }
+
 .btnrow { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
 .btn-pdf { padding: 7px 18px; background: var(--bd); border: 1px solid var(--bd); border-radius: 6px;
   color: white; font-size: 12px; cursor: pointer; font-family: Arial; }
 .btn-pdf:hover { background: #174070; }
+.btn-pdf:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; background: #88a4c2; border-color: #88a4c2; }
 .rst { padding: 5px 16px; background: transparent;
   border: 1px solid #aaa; border-radius: 6px; color: #666; font-size: 12px; cursor: pointer; }
 .rst:hover { background: #f0f0f0; }

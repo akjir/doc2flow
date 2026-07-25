@@ -30,16 +30,16 @@
 {{CONTENT}}
 <!-- END GENERATED CONTENT -->
 
-<div class="finish">
-  <div class="big">&#x2714;</div>
-  <h2>{{L_SETUP_COMPLETED}}</h2>
+<div class="finish" id="finish-box">
+  <div class="big" id="finish-icon">&#x2714;</div>
+  <h2 id="finish-title">{{L_SETUP_COMPLETED}}</h2>
   <div class="sigs">
     <div><input type="text" class="sf persistent-field" id="f_sign_tech" placeholder="{{L_NAME_PLACEHOLDER}}"><div style="margin-top:4px">{{L_SIGNATURE_TECHNICIAN}}</div></div>
     <div><input type="text" class="sf persistent-field" id="f_sign_date" placeholder="{{L_DATE_PLACEHOLDER}}"><div style="margin-top:4px">{{L_SIGNATURE_DATE}}</div></div>
   </div>
 </div>
 <div class="btnrow">
-  <button class="btn-pdf" onclick="exportPDF()">{{L_EXPORT_PDF}}</button>
+  <button class="btn-pdf" id="btn-pdf" onclick="exportPDF()">{{L_EXPORT_PDF}}</button>
   <button class="rst" onclick="resetAll()">{{L_RESET_ALL}}</button>
 </div>
 

@@ -170,6 +170,10 @@ language: "de"
     assert!(final_html.contains("Test Corp"));
     assert!(final_html.contains("doc_test_123"));
     assert!(final_html.contains("<input type=\"checkbox\" id=\"cb_s1_1\">"));
+    assert!(final_html.contains("id=\"finish-box\""));
+    assert!(final_html.contains("id=\"finish-icon\""));
+    assert!(final_html.contains("id=\"finish-title\""));
+    assert!(final_html.contains("id=\"btn-pdf\""));
 }
 
 #[test]

@@ -31,6 +31,7 @@ Only commit changes to Git when explicitly requested by the user. Do not make au
 * **Highest Priority:** Testing is the highest priority. Always write comprehensive unit and integration tests wherever possible and appropriate.
 * **Negative & Edge-Case Testing:** Proactively brainstorm potential failure modes, invalid inputs, and edge cases for functions, and write tests to verify proper handling.
 * **Mandatory Execution:** Always run the full test suite (`cargo test`) to verify changes before concluding a task.
+* **Showcase Regeneration:** Whenever significant changes are made to the renderer, templates, CSS, JS, or converter logic, always regenerate the showcase HTML files (`tests/showcase_de.html` and `tests/showcase_en.html`) using `cargo run`.
 
 ## 9. HTML Template & UI Guidelines
 * **Generic Templates:** `templates/base.html`, `templates/style.css`, and `templates/script.js` form the foundation of the output. They must remain completely generic and devoid of customer-specific text or hardcoded logic.
