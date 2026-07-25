@@ -8,22 +8,30 @@ use std::collections::HashMap;
 /// Performs single-pass template placeholder substitution using standard library tools.
 ///
 /// Replaces placeholders formatted as `{{KEY}}` in the template string with corresponding
-/// values provided in the `vars` map. Unknown placeholders are left untouched in the output.
+/// values provided in `vars` or `locale`. Unknown placeholders are left untouched in output.
 ///
 /// # Examples
 ///
 /// ```
 /// use std::collections::HashMap;
 /// use doc2flow::template::substitute_template;
+/// use doc2flow::i18n::Locale;
 ///
 /// let mut vars = HashMap::new();
 /// vars.insert("NAME", "World");
-/// let result = substitute_template("Hello {{NAME}}!", &vars);
+/// let result = substitute_template("Hello {{NAME}}!", &vars, None);
 /// assert_eq!(result, "Hello World!");
 /// ```
-pub fn substitute_template(template: &str, vars: &HashMap<&str, &str>) -> String {
-    let total_values_len: usize = vars.values().map(|v| v.len()).sum();
-    let mut result = String::with_capacity(template.len() + total_values_len);
+pub fn substitute_template(
+    template: &str,
+    vars: &HashMap<&str, &str>,
+    locale: Option<&Locale>,
+) -> String {
+    let total_vars_len: usize = vars.values().map(|v| v.len()).sum();
+    let total_locale_len: usize = locale
+        .map(|l| l.entries.values().map(|v| v.len()).sum())
+        .unwrap_or(0);
+    let mut result = String::with_capacity(template.len() + total_vars_len + total_locale_len);
 
     let mut cursor = 0;
     while let Some(start) = template[cursor..].find("{{") {
@@ -36,6 +44,12 @@ pub fn substitute_template(template: &str, vars: &HashMap<&str, &str>) -> String
 
             if let Some(val) = vars.get(key) {
                 result.push_str(val);
+            } else if let Some(key_name) = key.strip_prefix("L_") {
+                if let Some(val) = locale.and_then(|loc| loc.get_ignore_ascii_case(key_name)) {
+                    result.push_str(val);
+                } else {
+                    result.push_str(&template[abs_start..abs_end + 2]);
+                }
             } else {
                 result.push_str(&template[abs_start..abs_end + 2]);
             }
@@ -72,17 +86,7 @@ pub fn render(
     let i18n_json = serde_json::to_string(&locale.entries)
         .context("Failed to serialize locale entries to JSON for template rendering")?;
 
-    let dynamic_placeholders: Vec<(String, &str)> = locale
-        .entries
-        .iter()
-        .map(|(k, v)| (format!("L_{}", k.to_uppercase()), v.as_str()))
-        .collect();
-
-    let mut vars = HashMap::with_capacity(16 + dynamic_placeholders.len());
-    for (placeholder, val) in &dynamic_placeholders {
-        vars.insert(placeholder.as_str(), *val);
-    }
-
+    let mut vars = HashMap::with_capacity(12);
     vars.insert("LANG_CODE", locale.lang_code.as_str());
     vars.insert("TITLE", frontmatter.title.as_str());
     vars.insert("SUBTITLE", frontmatter.subtitle.as_str());
@@ -96,7 +100,7 @@ pub fn render(
     vars.insert("CONTENT", html_content);
     vars.insert("DOC_ID", doc_id);
 
-    Ok(substitute_template(base_html, &vars))
+    Ok(substitute_template(base_html, &vars, Some(locale)))
 }
 
 #[cfg(test)]
@@ -110,7 +114,7 @@ mod tests {
         vars.insert("AUTHOR", "Alice");
 
         let tmpl = "<h1>{{TITLE}}</h1><p>By {{AUTHOR}}</p>";
-        let res = substitute_template(tmpl, &vars);
+        let res = substitute_template(tmpl, &vars, None);
         assert_eq!(res, "<h1>Test Title</h1><p>By Alice</p>");
     }
 
@@ -120,7 +124,7 @@ mod tests {
         vars.insert("KNOWN", "Value");
 
         let tmpl = "{{KNOWN}} - {{UNKNOWN}} - {{UNCLOSED";
-        let res = substitute_template(tmpl, &vars);
+        let res = substitute_template(tmpl, &vars, None);
         assert_eq!(res, "Value - {{UNKNOWN}} - {{UNCLOSED");
     }
 
@@ -128,7 +132,7 @@ mod tests {
     fn test_substitute_template_no_placeholders() {
         let vars = HashMap::new();
         let tmpl = "Plain string with no tags.";
-        let res = substitute_template(tmpl, &vars);
+        let res = substitute_template(tmpl, &vars, None);
         assert_eq!(res, tmpl);
     }
 
@@ -153,5 +157,23 @@ mod tests {
         assert!(!html.contains("{{CONTENT}}"));
         assert!(!html.contains("{{L_CUSTOMER}}"));
         assert!(html.contains("Kunde"));
+    }
+
+    #[test]
+    fn test_render_dynamic_locale_keys() {
+        let json = r#"{
+            "lang_code": "fr",
+            "custom_dynamic_key": "Bonjour Le Monde",
+            "another_new_field": "Valeur Dynamique"
+        }"#;
+        let locale = Locale::from_json(json);
+        let tmpl = "<div>{{L_CUSTOM_DYNAMIC_KEY}}</div><span>{{L_ANOTHER_NEW_FIELD}}</span>";
+        let vars = HashMap::new();
+
+        let rendered = substitute_template(tmpl, &vars, Some(&locale));
+        assert_eq!(
+            rendered,
+            "<div>Bonjour Le Monde</div><span>Valeur Dynamique</span>"
+        );
     }
 }

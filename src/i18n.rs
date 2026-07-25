@@ -1,6 +1,5 @@
 //! Internationalization module for Doc2Flow static UI terms.
 
-use crate::error::print_warning;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -59,6 +58,14 @@ impl Locale {
     pub fn get(&self, key: &str) -> &str {
         self.entries.get(key).map(|s| s.as_str()).unwrap_or("")
     }
+
+    /// Returns the localized entry value for `key` ignoring ASCII case.
+    pub fn get_ignore_ascii_case(&self, key: &str) -> Option<&str> {
+        self.entries
+            .iter()
+            .find(|(k, _)| k.eq_ignore_ascii_case(key))
+            .map(|(_, v)| v.as_str())
+    }
 }
 
 impl Default for Locale {
@@ -79,15 +86,11 @@ pub fn validate_locale_coverage(template: &str, locale: &Locale) {
             let abs_end = abs_start + 4 + end;
             let key_name = &template[abs_start + 4..abs_end];
 
-            if !locale
-                .entries
-                .keys()
-                .any(|k| k.eq_ignore_ascii_case(key_name))
-            {
-                print_warning(&format!(
-                    "Missing translation key 'L_{}' in locale '{}'",
+            if locale.get_ignore_ascii_case(key_name).is_none() {
+                eprintln!(
+                    "Warning: Missing translation key 'L_{}' in locale '{}'",
                     key_name, locale.lang_code
-                ));
+                );
             }
             cursor = abs_end + 2;
         } else {
