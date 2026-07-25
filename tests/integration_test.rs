@@ -87,6 +87,7 @@ fn test_simple_and_mixed_list_items_conversion() {
 fn test_frontmatter_language_parsing() {
     let input = r#"---
 title: "Test"
+customer: "Test Corp"
 language: "de"
 ---
 ## Section 1
@@ -232,4 +233,62 @@ fn test_template_generator_conversion() {
     assert!(html.contains("Section 1: Initial System Verification"));
     assert!(html.contains("Prerequisites Checklist"));
     assert!(html.contains("Configuration &amp; Service Deployment"));
+}
+
+#[test]
+fn test_frontmatter_customer_validation_success() {
+    let input = r#"---
+title: "Valid Spec"
+customer: "ACME Corp"
+date: "2026-07-25"
+---
+## Section 1
+"#;
+
+    let (fm, _body) = doc2flow::converter::parse_and_validate_frontmatter(input, Some("test.md"))
+        .expect("validation failed for valid customer");
+    assert_eq!(fm.customer, "ACME Corp");
+}
+
+#[test]
+fn test_frontmatter_customer_validation_missing_error_feedback() {
+    let input = r#"---
+title: "Missing Company Spec"
+date: "2026-07-25"
+---
+## Section 1
+"#;
+
+    let err =
+        doc2flow::converter::parse_and_validate_frontmatter(input, Some("invalid.md")).unwrap_err();
+    let err_msg = err.to_string();
+
+    assert!(err_msg.contains("error: missing required frontmatter field 'customer'"));
+    assert!(err_msg.contains("--> invalid.md:1:1"));
+    assert!(err_msg.contains("1 | ---"));
+    assert!(
+        err_msg.contains("^^^ frontmatter block defined here is missing required field 'customer'")
+    );
+    assert!(err_msg.contains("= help: add 'customer: \"Company Name\"'"));
+}
+
+#[test]
+fn test_frontmatter_customer_validation_empty_error_feedback() {
+    let input = r#"---
+title: "Empty Customer Spec"
+customer: ""
+date: "2026-07-25"
+---
+## Section 1
+"#;
+
+    let err =
+        doc2flow::converter::parse_and_validate_frontmatter(input, Some("empty.md")).unwrap_err();
+    let err_msg = err.to_string();
+
+    assert!(err_msg.contains("error: required frontmatter field 'customer' cannot be empty"));
+    assert!(err_msg.contains("--> empty.md:3:1"));
+    assert!(err_msg.contains("3 | customer: \"\""));
+    assert!(err_msg.contains("^^^^^^^^^^^^ 'customer' field value cannot be empty"));
+    assert!(err_msg.contains("= help: provide a valid company name"));
 }

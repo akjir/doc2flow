@@ -2,6 +2,7 @@
 
 pub mod converter;
 pub mod d2f_id;
+pub mod error;
 pub mod hasher;
 pub mod i18n;
 pub mod image_embedder;

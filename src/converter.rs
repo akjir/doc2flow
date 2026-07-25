@@ -1,3 +1,4 @@
+use crate::error::DiagnosticError;
 use crate::i18n::Locale;
 use anyhow::Result;
 use pulldown_cmark::{
@@ -32,10 +33,8 @@ pub struct Frontmatter {
     pub language: String,
 }
 
-/// Parses YAML-style frontmatter delimited by `---`.
-pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
-    let mut fm = Frontmatter::default();
-
+/// Finds the character indices for frontmatter block delimiters `---`.
+fn find_frontmatter_bounds(md_content: &str) -> Option<(usize, usize, usize, usize)> {
     for (start_idx, _) in md_content.match_indices("---") {
         if start_idx == 0 || md_content[..start_idx].ends_with('\n') {
             let prefix = md_content[..start_idx].trim();
@@ -62,8 +61,6 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
                     })
                 {
                     let close_idx = content_start + close_rel_idx;
-                    let frontmatter_text = &md_content[content_start..close_idx];
-
                     let after_close = close_idx + 3;
                     let body_start = md_content[after_close..]
                         .strip_prefix("\r\n")
@@ -71,31 +68,107 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
                         .map(|s| md_content.len() - s.len())
                         .unwrap_or(after_close);
 
-                    for line in frontmatter_text.lines() {
-                        if let Some((key, val)) = line.split_once(':') {
-                            let key = key.trim();
-                            let val = val.trim().trim_matches('"');
-                            match key {
-                                "title" => fm.title = val.to_string(),
-                                "subtitle" => fm.subtitle = val.to_string(),
-                                "customer" => fm.customer = val.to_string(),
-                                "employee" => fm.employee = val.to_string(),
-                                "technician" => fm.technician = val.to_string(),
-                                "date" => fm.date = val.to_string(),
-                                "version" => fm.version = val.to_string(),
-                                "language" | "lang" => fm.language = val.to_string(),
-                                _ => {}
-                            }
-                        }
-                    }
-
-                    return (fm, &md_content[body_start..]);
+                    return Some((start_idx, content_start, close_idx, body_start));
                 }
             }
         }
     }
+    None
+}
+
+/// Parses YAML-style frontmatter delimited by `---`.
+pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
+    let mut fm = Frontmatter::default();
+
+    if let Some((_, content_start, close_idx, body_start)) = find_frontmatter_bounds(md_content) {
+        let frontmatter_text = &md_content[content_start..close_idx];
+
+        for line in frontmatter_text.lines() {
+            if let Some((key, val)) = line.split_once(':') {
+                let key = key.trim();
+                let val = val.trim().trim_matches('"').trim_matches('\'');
+                match key {
+                    "title" => fm.title = val.to_string(),
+                    "subtitle" => fm.subtitle = val.to_string(),
+                    "customer" => fm.customer = val.to_string(),
+                    "employee" => fm.employee = val.to_string(),
+                    "technician" => fm.technician = val.to_string(),
+                    "date" => fm.date = val.to_string(),
+                    "version" => fm.version = val.to_string(),
+                    "language" | "lang" => fm.language = val.to_string(),
+                    _ => {}
+                }
+            }
+        }
+
+        return (fm, &md_content[body_start..]);
+    }
 
     (fm, md_content)
+}
+
+/// Validates frontmatter metadata for required fields, returning a compiler-style diagnostic error if invalid.
+///
+/// Ensures the `customer` (company) field is present and non-empty.
+///
+/// # Errors
+///
+/// Returns an error formatted like a Rust compiler diagnostic if `customer` is missing or empty.
+pub fn validate_frontmatter(
+    frontmatter: &Frontmatter,
+    md_content: &str,
+    file_name: Option<&str>,
+) -> Result<()> {
+    if !frontmatter.customer.trim().is_empty() {
+        return Ok(());
+    }
+
+    let file_path = file_name.unwrap_or("input.md");
+
+    if let Some((start_idx, content_start, close_idx, _)) = find_frontmatter_bounds(md_content) {
+        let frontmatter_text = &md_content[content_start..close_idx];
+        let mut customer_line_info = None;
+
+        for (idx, line) in frontmatter_text.lines().enumerate() {
+            if matches!(line.split_once(':'), Some((key, _)) if key.trim() == "customer") {
+                let line_no = md_content[..content_start].lines().count() + idx + 1;
+                customer_line_info = Some((line_no, line.to_string()));
+                break;
+            }
+        }
+
+        if let Some((line_no, line_content)) = customer_line_info {
+            Err(DiagnosticError::empty_frontmatter_field(
+                file_path,
+                line_no,
+                &line_content,
+            ))
+        } else {
+            let start_line = (md_content[..start_idx].lines().count() + 1).max(1);
+            Err(DiagnosticError::missing_frontmatter_field(
+                file_path, start_line,
+            ))
+        }
+    } else {
+        let first_line = md_content.lines().next().unwrap_or("");
+        Err(DiagnosticError::missing_frontmatter_block(
+            file_path, first_line,
+        ))
+    }
+}
+
+/// Parses and validates YAML frontmatter from Markdown content.
+///
+/// # Errors
+///
+/// Returns a compiler-style diagnostic error if required fields like `customer` are missing or empty.
+pub fn parse_and_validate_frontmatter<'a>(
+    md_content: &'a str,
+    file_name: Option<&str>,
+) -> Result<(Frontmatter, &'a str)> {
+    let (fm, body) = parse_frontmatter(md_content);
+    validate_frontmatter(&fm, md_content, file_name)?;
+    Ok((fm, body))
 }
 
 /// Parses callout metadata (CSS class, inner text, callout label) from raw blockquote inner string.
@@ -596,5 +669,63 @@ mod tests {
         assert!(!html.contains("Line 2"));
         assert!(html.contains("This is visible content."));
         assert_eq!(html.matches("class=\"check-item text-item\"").count(), 1);
+    }
+
+    #[test]
+    fn test_validate_frontmatter_valid_customer() {
+        let input = "---\ntitle: \"Guide\"\ncustomer: \"Acme Corp\"\n---\n## Section 1";
+        let (fm, body) = parse_and_validate_frontmatter(input, Some("guide.md")).unwrap();
+        assert_eq!(fm.customer, "Acme Corp");
+        assert_eq!(body, "## Section 1");
+    }
+
+    #[test]
+    fn test_validate_frontmatter_missing_customer_field() {
+        let input = "---\ntitle: \"Guide\"\ndate: \"2026-07-25\"\n---\n## Section 1";
+        let (fm, _) = parse_frontmatter(input);
+        let err = validate_frontmatter(&fm, input, Some("guide.md")).unwrap_err();
+        let err_str = err.to_string();
+
+        assert!(err_str.contains("error: missing required frontmatter field 'customer'"));
+        assert!(err_str.contains("--> guide.md:1:1"));
+        assert!(err_str.contains("1 | ---"));
+        assert!(
+            err_str.contains(
+                "^^^ frontmatter block defined here is missing required field 'customer'"
+            )
+        );
+        assert!(err_str.contains("= help: add 'customer: \"Company Name\"'"));
+    }
+
+    #[test]
+    fn test_validate_frontmatter_empty_customer_field() {
+        let input =
+            "---\ntitle: \"Guide\"\ncustomer: \"\"\ndate: \"2026-07-25\"\n---\n## Section 1";
+        let (fm, _) = parse_frontmatter(input);
+        let err = validate_frontmatter(&fm, input, Some("guide.md")).unwrap_err();
+        let err_str = err.to_string();
+
+        assert!(err_str.contains("error: required frontmatter field 'customer' cannot be empty"));
+        assert!(err_str.contains("--> guide.md:3:1"));
+        assert!(err_str.contains("3 | customer: \"\""));
+        assert!(err_str.contains("^^^^^^^^^^^^ 'customer' field value cannot be empty"));
+        assert!(err_str.contains("= help: provide a valid company name"));
+    }
+
+    #[test]
+    fn test_validate_frontmatter_missing_block() {
+        let input = "# No Frontmatter Document\n\nContent paragraph.";
+        let fm = Frontmatter::default();
+        let err = validate_frontmatter(&fm, input, Some("doc.md")).unwrap_err();
+        let err_str = err.to_string();
+
+        assert!(
+            err_str
+                .contains("error: missing YAML frontmatter block with required field 'customer'")
+        );
+        assert!(err_str.contains("--> doc.md:1:1"));
+        assert!(err_str.contains("1 | # No Frontmatter Document"));
+        assert!(err_str.contains("^ missing frontmatter section '---'"));
+        assert!(err_str.contains("= help: add YAML frontmatter"));
     }
 }

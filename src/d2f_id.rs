@@ -1,6 +1,7 @@
 //! Dynamic `d2f_id` generator module for Doc2Flow.
 
 use crate::converter::Frontmatter;
+use crate::error::print_warning;
 use crate::hasher::sha256;
 use anyhow::{Result, bail};
 
@@ -48,13 +49,13 @@ pub fn generate_d2f_id(frontmatter: &Frontmatter) -> Result<String> {
     }
 
     if missing_count == 1 {
-        eprintln!(
-            "Warning: One of the identity fields (title, version, date) is missing in frontmatter. Generating d2f_id with available metadata."
+        print_warning(
+            "One of the identity fields (title, version, date) is missing in frontmatter. Generating d2f_id with available metadata.",
         );
     }
 
     let norm_version = if raw_version.chars().count() > 12 {
-        eprintln!("Warning: 'version' field exceeds 12 characters. Truncating to 12 characters.");
+        print_warning("'version' field exceeds 12 characters. Truncating to 12 characters.");
         raw_version.chars().take(12).collect::<String>()
     } else {
         raw_version

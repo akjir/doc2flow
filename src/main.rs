@@ -54,7 +54,9 @@ fn main() -> Result<()> {
     let md_content = fs::read_to_string(&input_path)
         .with_context(|| format!("Failed to read input file: {}", input_path.display()))?;
 
-    let (frontmatter, markdown_body) = converter::parse_frontmatter(&md_content);
+    let file_name = input_path.to_str();
+    let (frontmatter, markdown_body) =
+        converter::parse_and_validate_frontmatter(&md_content, file_name)?;
     let locale = Locale::from_lang_code(&frontmatter.language);
 
     let html_content = converter::convert_markdown_to_html_with_locale(markdown_body, &locale)?;

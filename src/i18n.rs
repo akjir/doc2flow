@@ -1,5 +1,6 @@
 //! Internationalization module for Doc2Flow static UI terms.
 
+use crate::error::print_warning;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -83,10 +84,10 @@ pub fn validate_locale_coverage(template: &str, locale: &Locale) {
                 .keys()
                 .any(|k| k.eq_ignore_ascii_case(key_name))
             {
-                eprintln!(
-                    "Warning: Missing translation key 'L_{}' in locale '{}'",
+                print_warning(&format!(
+                    "Missing translation key 'L_{}' in locale '{}'",
                     key_name, locale.lang_code
-                );
+                ));
             }
             cursor = abs_end + 2;
         } else {
