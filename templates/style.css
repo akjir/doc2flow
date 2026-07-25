@@ -121,6 +121,9 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
   color: white; font-size: 12px; cursor: pointer; font-family: Arial; }
 .btn-pdf:hover { background: #174070; }
 .btn-pdf:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; background: #88a4c2; border-color: #88a4c2; }
+.btn-save { padding: 7px 18px; background: var(--bm); border: 1px solid var(--bm); border-radius: 6px;
+  color: white; font-size: 12px; cursor: pointer; font-family: Arial; }
+.btn-save:hover { background: var(--bd); }
 .rst { padding: 5px 16px; background: transparent;
   border: 1px solid #aaa; border-radius: 6px; color: #666; font-size: 12px; cursor: pointer; }
 .rst:hover { background: #f0f0f0; }

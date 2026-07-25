@@ -1,8 +1,9 @@
 // Doc2Flow Generic Checklist Logic
 
-// Use a unique ID injected by the generator, fallback to pathname
-const DOC_ID = window.D2F_DOC_ID || window.location.pathname.replace(/[^a-zA-Z0-9]/g, '_');
-const STATE_KEY = 'd2f_state_' + DOC_ID;
+const DOC_ID = window.D2F_DOC_ID || '';
+const rawFilename = window.location.pathname.split('/').pop() || 'index.html';
+const FILENAME = decodeURIComponent(rawFilename);
+const STATE_KEY = 'd2f_state_' + (DOC_ID ? (DOC_ID + '_') : '') + FILENAME;
 
 function openLightbox(imgSrc) {
     const lbImg = document.getElementById('lb-img');
@@ -177,6 +178,35 @@ function resetAll() {
     });
     updateProgress(); 
     saveState();
+}
+
+// Saves current state into DOM attributes and downloads the updated HTML file.
+function saveDocumentState() {
+    saveState();
+
+    document.querySelectorAll('.check-item input[type="checkbox"]').forEach(cb => {
+        if (cb.checked) {
+            cb.setAttribute('checked', 'checked');
+        } else {
+            cb.removeAttribute('checked');
+        }
+        styleItem(cb);
+    });
+
+    document.querySelectorAll('input.persistent-field, .info-table input').forEach(input => {
+        input.setAttribute('value', input.value);
+    });
+
+    const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = FILENAME;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }
 
 // Export the current state as PDF via the browser's "Save as PDF" print option.

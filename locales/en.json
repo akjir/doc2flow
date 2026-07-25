@@ -17,6 +17,7 @@
   "progress_template": "{done} of {total} tasks completed ({pct}%)",
   "loading": "Loading...",
   "confirm_reset": "Are you sure you want to reset all checkboxes?",
+  "save_state": "💾 Save State",
   "callout_note": "Note",
   "callout_tip": "Tip",
   "callout_important": "Important",

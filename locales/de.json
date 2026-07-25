@@ -17,6 +17,7 @@
   "progress_template": "{done} von {total} Aufgaben erledigt ({pct}%)",
   "loading": "Lade...",
   "confirm_reset": "Sind Sie sicher, dass Sie alle Kontrollkästchen zurücksetzen möchten?",
+  "save_state": "💾 Stand sichern",
   "callout_note": "Hinweis",
   "callout_tip": "Tipp",
   "callout_important": "Wichtig",

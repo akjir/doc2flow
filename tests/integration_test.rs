@@ -175,6 +175,8 @@ language: "de"
     assert!(final_html.contains("id=\"finish-icon\""));
     assert!(final_html.contains("id=\"finish-title\""));
     assert!(final_html.contains("id=\"btn-pdf\""));
+    assert!(final_html.contains("id=\"btn-save\""));
+    assert!(final_html.contains("Stand sichern"));
 }
 
 #[test]

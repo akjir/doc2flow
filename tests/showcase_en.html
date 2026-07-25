@@ -128,6 +128,9 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
   color: white; font-size: 12px; cursor: pointer; font-family: Arial; }
 .btn-pdf:hover { background: #174070; }
 .btn-pdf:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; background: #88a4c2; border-color: #88a4c2; }
+.btn-save { padding: 7px 18px; background: var(--bm); border: 1px solid var(--bm); border-radius: 6px;
+  color: white; font-size: 12px; cursor: pointer; font-family: Arial; }
+.btn-save:hover { background: var(--bd); }
 .rst { padding: 5px 16px; background: transparent;
   border: 1px solid #aaa; border-radius: 6px; color: #666; font-size: 12px; cursor: pointer; }
 .rst:hover { background: #f0f0f0; }
@@ -272,6 +275,7 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 </div>
 <div class="btnrow">
   <button class="btn-pdf" id="btn-pdf" onclick="exportPDF()">📄 Export as PDF</button>
+  <button class="btn-save" id="btn-save" onclick="saveDocumentState()">💾 Save State</button>
   <button class="rst" onclick="resetAll()">↺ Reset all checkboxes</button>
 </div>
 
@@ -284,12 +288,13 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 
 <script>
 window.D2F_DOC_ID = 'd2f_id_c9c539743b5bb460';
-window.D2F_I18N = {"signature_technician":"Technician","date":"Date","signature_date":"Date","setup_in_progress":"Setup in Progress","customer":"Customer","name_placeholder":"Name","copied":"Copied!","progress_template":"{done} of {total} tasks completed ({pct}%)","callout_note":"Note","callout_tip":"Tip","callout_caution":"Caution","callout_important":"Important","confirm_reset":"Are you sure you want to reset all checkboxes?","technician":"Technician","callout_warning":"Warning","setup_completed":"Setup Completed","date_placeholder":"DD.MM.YYYY","reset_all":"↺ Reset all checkboxes","loading":"Loading...","employee":"Employee","copy_code":"Copy code","lang_code":"en","export_pdf":"📄 Export as PDF"};
+window.D2F_I18N = {"setup_in_progress":"Setup in Progress","confirm_reset":"Are you sure you want to reset all checkboxes?","copied":"Copied!","export_pdf":"📄 Export as PDF","save_state":"💾 Save State","signature_date":"Date","employee":"Employee","customer":"Customer","reset_all":"↺ Reset all checkboxes","copy_code":"Copy code","setup_completed":"Setup Completed","date":"Date","name_placeholder":"Name","progress_template":"{done} of {total} tasks completed ({pct}%)","technician":"Technician","signature_technician":"Technician","callout_note":"Note","callout_tip":"Tip","loading":"Loading...","callout_important":"Important","callout_warning":"Warning","callout_caution":"Caution","date_placeholder":"DD.MM.YYYY","lang_code":"en"};
 // Doc2Flow Generic Checklist Logic
 
-// Use a unique ID injected by the generator, fallback to pathname
-const DOC_ID = window.D2F_DOC_ID || window.location.pathname.replace(/[^a-zA-Z0-9]/g, '_');
-const STATE_KEY = 'd2f_state_' + DOC_ID;
+const DOC_ID = window.D2F_DOC_ID || '';
+const rawFilename = window.location.pathname.split('/').pop() || 'index.html';
+const FILENAME = decodeURIComponent(rawFilename);
+const STATE_KEY = 'd2f_state_' + (DOC_ID ? (DOC_ID + '_') : '') + FILENAME;
 
 function openLightbox(imgSrc) {
     const lbImg = document.getElementById('lb-img');
@@ -464,6 +469,35 @@ function resetAll() {
     });
     updateProgress(); 
     saveState();
+}
+
+// Saves current state into DOM attributes and downloads the updated HTML file.
+function saveDocumentState() {
+    saveState();
+
+    document.querySelectorAll('.check-item input[type="checkbox"]').forEach(cb => {
+        if (cb.checked) {
+            cb.setAttribute('checked', 'checked');
+        } else {
+            cb.removeAttribute('checked');
+        }
+        styleItem(cb);
+    });
+
+    document.querySelectorAll('input.persistent-field, .info-table input').forEach(input => {
+        input.setAttribute('value', input.value);
+    });
+
+    const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = FILENAME;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }
 
 // Export the current state as PDF via the browser's "Save as PDF" print option.
