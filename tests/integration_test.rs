@@ -140,3 +140,31 @@ test code
     assert!(html.contains("title=\"Code kopieren\""));
     assert!(html.contains("aria-label=\"Code kopieren\""));
 }
+
+#[test]
+fn test_end_to_end_template_rendering() {
+    let input = r#"---
+title: "End-to-End Test"
+customer: "Test Corp"
+language: "de"
+---
+## Test Section
+
+- [ ] Task 1
+"#;
+
+    let (fm, body) = doc2flow::converter::parse_frontmatter(input);
+    let locale = doc2flow::i18n::Locale::from_lang_code(&fm.language);
+    let html_body = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale)
+        .expect("body conversion failed");
+
+    let final_html = doc2flow::template::render(&fm, &locale, &html_body, "doc_test_123")
+        .expect("template rendering failed");
+
+    assert!(final_html.contains("<!DOCTYPE html>"));
+    assert!(final_html.contains("<html lang=\"de\">"));
+    assert!(final_html.contains("End-to-End Test"));
+    assert!(final_html.contains("Test Corp"));
+    assert!(final_html.contains("doc_test_123"));
+    assert!(final_html.contains("<input type=\"checkbox\" id=\"cb_s1_1\">"));
+}
