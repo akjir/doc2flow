@@ -46,6 +46,12 @@ function saveState() {
         state[key] = cb.checked;
     });
     
+    const textStates = {};
+    document.querySelectorAll('.check-item.text-item').forEach((item, index) => {
+        const key = item.id || ('txt_' + index);
+        textStates[key] = item.classList.contains('checked');
+    });
+
     // Save any persistent inputs (e.g. signature fields)
     const fields = {};
     document.querySelectorAll('input.persistent-field').forEach((input, index) => {
@@ -54,7 +60,7 @@ function saveState() {
     });
 
     try { 
-        localStorage.setItem(STATE_KEY, JSON.stringify({ checks: state, fields: fields })); 
+        localStorage.setItem(STATE_KEY, JSON.stringify({ checks: state, texts: textStates, fields: fields })); 
     } catch(e) {
         console.warn('Failed to save state to localStorage', e);
     }
@@ -72,6 +78,14 @@ function loadState() {
                 if (data.checks[key] !== undefined) { 
                     cb.checked = data.checks[key]; 
                     styleItem(cb); 
+                }
+            });
+        }
+        if (data.texts) {
+            document.querySelectorAll('.check-item.text-item').forEach((item, index) => {
+                const key = item.id || ('txt_' + index);
+                if (data.texts[key] !== undefined) {
+                    item.classList.toggle('checked', data.texts[key]);
                 }
             });
         }
@@ -134,6 +148,9 @@ function resetAll() {
         c.checked = false; 
         styleItem(c); 
     });
+    document.querySelectorAll('.check-item.text-item').forEach(item => {
+        item.classList.remove('checked');
+    });
     updateProgress(); 
     saveState();
 }
@@ -155,7 +172,7 @@ function exportPDF() {
 
 // Setup Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
-    // Bind checkbox clicks
+    // Bind checkbox and text item clicks
     document.querySelectorAll('.check-item').forEach(item => {
         item.addEventListener('click', function(e) {
             // Ignore if clicked on a link
@@ -167,6 +184,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (e.target !== cb) cb.checked = !cb.checked;
                 styleItem(cb);
                 updateProgress();
+                saveState();
+            } else if (this.classList.contains('text-item')) {
+                this.classList.toggle('checked');
                 saveState();
             }
         });

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simple Test</title>
+<title>Doc2Flow English Showcase</title>
 <style>
 :root {
   --bd: #1F4E79; --bm: #2E75B6; --bl: #D6E4F0; --bbg: #EBF3FB;
@@ -50,13 +50,15 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 .check-item:hover { background: #f5f9ff; }
 .check-item.checked { background: var(--done); }
 .check-item.checked .check-label { text-decoration: line-through; color: #bbb; }
+.check-item.text-item.checked .text-content,
+.check-item.text-item.checked .check-label { text-decoration: none; color: var(--gray); }
 .check-item input[type=checkbox] { width: 15px; height: 15px; min-width: 15px;
   margin-top: 2px; cursor: pointer; accent-color: var(--bm); }
 .list-bullet { display: inline-flex; align-items: center; justify-content: center;
   width: 15px; min-width: 15px; height: 15px; margin-top: 2px; color: var(--bm);
   font-size: 14px; line-height: 1; user-select: none; }
-.check-label { font-size: 13px; line-height: 1.5; }
-.check-label a { color: var(--bm); }
+.check-label, .text-content { font-size: 13px; line-height: 1.5; }
+.check-label a, .text-content a { color: var(--bm); }
 .bw-block { background: var(--bbg); border-left: 3px solid var(--bm);
   border-radius: 0 6px 6px 0; padding: 7px 11px; margin: 2px 0 8px 24px; font-size: 12px; }
 .bw-block .bwl { font-weight: bold; color: var(--bd); margin-bottom: 3px; }
@@ -138,114 +140,108 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 </head>
 <body>
 <div class="doc-header">
-  <h1>Simple Test</h1>
-  <div class="sub">Just a proof of concept</div>
+  <h1>Doc2Flow English Showcase</h1>
+  <div class="sub">Comprehensive test document for all present and future features</div>
   <div class="pb-wrap"><div class="pb" id="pb"></div></div>
   <div class="pt" id="pt">Loading...</div>
 </div>
 <div class="doc-body">
 
 <table class="info-table">
-  <tr><th>Customer</th><th>Employee</th><th>Technician</th><th>Date</th></tr>
+  <tr><th>Customer</th><th>Employee</th><th>Technician</th></tr>
   <tr>
-    <td>ACME Corp</td>
+    <td>ACME Global Corp</td>
     <td>John Doe</td>
     <td>Jane Smith</td>
-    <td>2026-07-24</td>
   </tr>
 </table>
 
 <!-- START GENERATED CONTENT -->
 <!-- S1 -->
 <div class="section" id="s1">
-<div class="sh" onclick="toggleSection('s1')"><span>Section 1</span>
+<div class="sh" onclick="toggleSection('s1')"><span>Section 1: Overview &amp; Guidelines</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s1"></span><span class="stog" id="tog-s1">&#9660;</span></div></div>
 <div class="sb" id="body-s1">
-<div class="note" data-label="Note">This is a blue Note.</div>
-<div class="note note-tip" data-label="Tip">This is a green Tip.</div>
-<div class="note note-important" data-label="Important">This is a purple Important note.</div>
-<div class="note note-warning" data-label="Warning">This is a yellow Warning.</div>
-<div class="note note-caution" data-label="Caution">This is a red Caution.</div>
-<div class="note" data-label="Note">This is a very detailed multi-line note containing comprehensive instructions and guidelines for the user to read carefully. It spans across multiple lines to ensure that all necessary information is clearly presented and easily readable within the document layout. Furthermore, this extra explanation guarantees that the note content reliably wraps across three full lines on standard screen resolutions.</div>
-<div class="check-item" id="wrap-cb_s1_1">
-  <input type="checkbox" id="cb_s1_1">
-  <label class="check-label" for="cb_s1_1">Task A</label>
+<div class="check-item text-item" id="txt_s1_1">
+  <span class="text-content">This is an arbitrary text paragraph in the section body. It provides general instructions and information for the operator to review before starting the procedure.</span>
 </div>
-<div class="check-item" id="wrap-cb_s1_2">
-  <input type="checkbox" id="cb_s1_2">
-  <label class="check-label" for="cb_s1_2">Task B</label>
-</div>
+<div class="note" data-label="Note">This is a neutral Note callout box providing standard context.</div>
+<div class="note note-tip" data-label="Tip">This is a green Tip box offering recommendations or best practices.</div>
+<div class="note note-important" data-label="Important">This is a purple Important box highlighting critical requirements.</div>
+<div class="note note-warning" data-label="Warning">This is a yellow Warning box advising caution for potential issues.</div>
+<div class="note note-caution" data-label="Caution">This is a red Caution box warning against dangerous operations or data loss.</div>
+<div class="note" data-label="Note">This is a multi-line callout box containing detailed background information and comprehensive instructions for the end user. It spans across multiple sentences to demonstrate fluid text wrapping and clean alignment within visual callout containers.</div>
 </div></div>
 
 <!-- S2 -->
 <div class="section" id="s2">
-<div class="sh" onclick="toggleSection('s2')"><span>Section 2</span>
+<div class="sh" onclick="toggleSection('s2')"><span>Section 2: Task Checklist</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s2"></span><span class="stog" id="tog-s2">&#9660;</span></div></div>
 <div class="sb" id="body-s2">
-<div class="check-item" id="wrap-cb_s2_3">
-  <input type="checkbox" id="cb_s2_3">
-  <label class="check-label" for="cb_s2_3">Task C</label>
+<div class="subh">Setup &amp; Preparation</div>
+<div class="check-item text-item" id="txt_s2_2">
+  <span class="text-content">This arbitrary text paragraph describes the preliminary setup steps that must be fulfilled before marking individual items as completed.</span>
 </div>
+<div class="check-item" id="wrap-cb_s2_1">
+  <input type="checkbox" id="cb_s2_1">
+  <label class="check-label" for="cb_s2_1">Unpack hardware and verify components</label>
+</div>
+<div class="check-item" id="wrap-cb_s2_2">
+  <input type="checkbox" id="cb_s2_2">
+  <label class="check-label" for="cb_s2_2">Connect network and power supply</label>
+</div>
+<div class="check-item checked" id="wrap-cb_s2_3">
+  <input type="checkbox" id="cb_s2_3" checked>
+  <label class="check-label" for="cb_s2_3">Initial power-on check completed</label>
+</div>
+<div class="subh">Software Configuration</div>
 <div class="check-item" id="wrap-cb_s2_4">
   <input type="checkbox" id="cb_s2_4">
-  <label class="check-label" for="cb_s2_4">Task D</label>
+  <label class="check-label" for="cb_s2_4">Install latest system updates</label>
+</div>
+<div class="check-item" id="wrap-cb_s2_5">
+  <input type="checkbox" id="cb_s2_5">
+  <label class="check-label" for="cb_s2_5">Configure firewall rules according to company policy</label>
+</div>
+<div class="check-item checked" id="wrap-cb_s2_6">
+  <input type="checkbox" id="cb_s2_6" checked>
+  <label class="check-label" for="cb_s2_6">Verify remote access service</label>
 </div>
 </div></div>
 
 <!-- S3 -->
 <div class="section" id="s3">
-<div class="sh" onclick="toggleSection('s3')"><span>Section 3</span>
+<div class="sh" onclick="toggleSection('s3')"><span>Section 3: Reference &amp; Code Blocks</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s3"></span><span class="stog" id="tog-s3">&#9660;</span></div></div>
 <div class="sb" id="body-s3">
-<div class="check-item simple-item">
-  <span class="list-bullet">&bull;</span>
-  <span class="check-label">Simple list item 1</span>
+<div class="subh">System Registry Settings</div>
+<div class="check-item text-item" id="txt_s3_3">
+  <span class="text-content">The following configuration snippet must be applied to disable automatic updates:</span>
 </div>
-<div class="check-item simple-item">
-  <span class="list-bullet">&bull;</span>
-  <span class="check-label">Simple list item 2</span>
-</div>
-<div class="check-item simple-item">
-  <span class="list-bullet">&bull;</span>
-  <span class="check-label">Simple list item 3</span>
-</div>
-<div class="check-item simple-item">
-  <span class="list-bullet">&bull;</span>
-  <span class="check-label">Simple list item 4</span>
-</div>
+<div class="code-block-wrap"><div class="code-header"><span class="code-lang">ini</span><button class="copy-btn" onclick="copyCode(this)" title="Copy code" aria-label="Copy code"><svg aria-hidden="true" class="svg-icon iconCopy" width="14" height="15" viewBox="0 0 17 18"><path fill="currentColor" d="M5 6c0-1.09.91-2 2-2h4.5L15 7.5V15c0 1.09-.91 2-2 2H7c-1.09 0-2-.91-2-2zm6-1.25V8h3.25z"/><path fill="currentColor" d="M10 1a2 2 0 0 1 2 2H6a2 2 0 0 0-2 2v9a2 2 0 0 1-2-2V4a3 3 0 0 1 3-3z" opacity=".4"/></svg></button></div><pre class="code-block language-ini"><code>[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate]
+&quot;DisableWindowsUpdateAccess&quot;=dword:00000001
+</code></pre></div>
+<div class="subh">Unlabelled Script Block</div>
+<div class="code-block-wrap"><div class="code-header"><button class="copy-btn" onclick="copyCode(this)" title="Copy code" aria-label="Copy code"><svg aria-hidden="true" class="svg-icon iconCopy" width="14" height="15" viewBox="0 0 17 18"><path fill="currentColor" d="M5 6c0-1.09.91-2 2-2h4.5L15 7.5V15c0 1.09-.91 2-2 2H7c-1.09 0-2-.91-2-2zm6-1.25V8h3.25z"/><path fill="currentColor" d="M10 1a2 2 0 0 1 2 2H6a2 2 0 0 0-2 2v9a2 2 0 0 1-2-2V4a3 3 0 0 1 3-3z" opacity=".4"/></svg></button></div><pre class="code-block"><code>echo &quot;Initializing Doc2Flow showcase environment...&quot;
+</code></pre></div>
 </div></div>
 
 <!-- S4 -->
 <div class="section" id="s4">
-<div class="sh" onclick="toggleSection('s4')"><span>Section 4</span>
+<div class="sh" onclick="toggleSection('s4')"><span>Section 4: Informational Lists</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s4"></span><span class="stog" id="tog-s4">&#9660;</span></div></div>
 <div class="sb" id="body-s4">
 <div class="check-item simple-item">
   <span class="list-bullet">&bull;</span>
-  <span class="check-label">Single simple list item</span>
-</div>
-</div></div>
-
-<!-- S5 -->
-<div class="section" id="s5">
-<div class="sh" onclick="toggleSection('s5')"><span>Section 5</span>
-<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s5"></span><span class="stog" id="tog-s5">&#9660;</span></div></div>
-<div class="sb" id="body-s5">
-<div class="check-item" id="wrap-cb_s5_5">
-  <input type="checkbox" id="cb_s5_5">
-  <label class="check-label" for="cb_s5_5">Interactive task item A</label>
+  <span class="check-label">General bullet point entry A</span>
 </div>
 <div class="check-item simple-item">
   <span class="list-bullet">&bull;</span>
-  <span class="check-label">Simple informational list item 1</span>
-</div>
-<div class="check-item checked" id="wrap-cb_s5_6">
-  <input type="checkbox" id="cb_s5_6" checked>
-  <label class="check-label" for="cb_s5_6">Completed task item B</label>
+  <span class="check-label">General bullet point entry B</span>
 </div>
 <div class="check-item simple-item">
   <span class="list-bullet">&bull;</span>
-  <span class="check-label">Simple informational list item 2</span>
+  <span class="check-label">General bullet point entry C</span>
 </div>
 </div></div>
 
@@ -272,8 +268,8 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 </div>
 
 <script>
-window.D2F_DOC_ID = 'doc_poc_12345';
-window.D2F_I18N = {"lang_code":"en","customer":"Customer","employee":"Employee","technician":"Technician","date":"Date","setup_completed":"Setup Completed","name_placeholder":"Name","signature_technician":"Technician","date_placeholder":"DD.MM.YYYY","signature_date":"Date","export_pdf":"📄 Export as PDF","reset_all":"↺ Reset all checkboxes","copy_code":"Copy code","copied":"Copied!","progress_template":"{done} of {total} tasks completed ({pct}%)","loading":"Loading...","confirm_reset":"Are you sure you want to reset all checkboxes?","callout_note":"Note","callout_tip":"Tip","callout_important":"Important","callout_warning":"Warning","callout_caution":"Caution"};
+window.D2F_DOC_ID = 'd2f_id_c9c539743b5bb460';
+window.D2F_I18N = {"reset_all":"↺ Reset all checkboxes","confirm_reset":"Are you sure you want to reset all checkboxes?","copy_code":"Copy code","loading":"Loading...","lang_code":"en","signature_technician":"Technician","employee":"Employee","callout_warning":"Warning","callout_caution":"Caution","customer":"Customer","date":"Date","copied":"Copied!","callout_note":"Note","setup_completed":"Setup Completed","date_placeholder":"DD.MM.YYYY","technician":"Technician","export_pdf":"📄 Export as PDF","progress_template":"{done} of {total} tasks completed ({pct}%)","callout_tip":"Tip","callout_important":"Important","signature_date":"Date","name_placeholder":"Name"};
 // Doc2Flow Generic Checklist Logic
 
 // Use a unique ID injected by the generator, fallback to pathname
@@ -322,6 +318,12 @@ function saveState() {
         state[key] = cb.checked;
     });
     
+    const textStates = {};
+    document.querySelectorAll('.check-item.text-item').forEach((item, index) => {
+        const key = item.id || ('txt_' + index);
+        textStates[key] = item.classList.contains('checked');
+    });
+
     // Save any persistent inputs (e.g. signature fields)
     const fields = {};
     document.querySelectorAll('input.persistent-field').forEach((input, index) => {
@@ -330,7 +332,7 @@ function saveState() {
     });
 
     try { 
-        localStorage.setItem(STATE_KEY, JSON.stringify({ checks: state, fields: fields })); 
+        localStorage.setItem(STATE_KEY, JSON.stringify({ checks: state, texts: textStates, fields: fields })); 
     } catch(e) {
         console.warn('Failed to save state to localStorage', e);
     }
@@ -348,6 +350,14 @@ function loadState() {
                 if (data.checks[key] !== undefined) { 
                     cb.checked = data.checks[key]; 
                     styleItem(cb); 
+                }
+            });
+        }
+        if (data.texts) {
+            document.querySelectorAll('.check-item.text-item').forEach((item, index) => {
+                const key = item.id || ('txt_' + index);
+                if (data.texts[key] !== undefined) {
+                    item.classList.toggle('checked', data.texts[key]);
                 }
             });
         }
@@ -410,6 +420,9 @@ function resetAll() {
         c.checked = false; 
         styleItem(c); 
     });
+    document.querySelectorAll('.check-item.text-item').forEach(item => {
+        item.classList.remove('checked');
+    });
     updateProgress(); 
     saveState();
 }
@@ -431,7 +444,7 @@ function exportPDF() {
 
 // Setup Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
-    // Bind checkbox clicks
+    // Bind checkbox and text item clicks
     document.querySelectorAll('.check-item').forEach(item => {
         item.addEventListener('click', function(e) {
             // Ignore if clicked on a link
@@ -443,6 +456,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (e.target !== cb) cb.checked = !cb.checked;
                 styleItem(cb);
                 updateProgress();
+                saveState();
+            } else if (this.classList.contains('text-item')) {
+                this.classList.toggle('checked');
                 saveState();
             }
         });

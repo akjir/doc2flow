@@ -171,3 +171,41 @@ language: "de"
     assert!(final_html.contains("doc_test_123"));
     assert!(final_html.contains("<input type=\"checkbox\" id=\"cb_s1_1\">"));
 }
+
+#[test]
+fn test_showcase_en_fixture_conversion() {
+    let md_content = std::fs::read_to_string("tests/showcase_en.md")
+        .expect("Failed to read tests/showcase_en.md");
+    let (fm, body) = doc2flow::converter::parse_frontmatter(&md_content);
+    let locale = doc2flow::i18n::Locale::from_lang_code(&fm.language);
+    let html_body = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale)
+        .expect("conversion failed");
+    let d2f_id = doc2flow::d2f_id::generate_d2f_id(&fm).expect("id gen failed");
+    let html =
+        doc2flow::template::render(&fm, &locale, &html_body, &d2f_id).expect("rendering failed");
+
+    assert!(html.contains("Doc2Flow English Showcase"));
+    assert!(html.contains("<div class=\"check-item text-item\" id=\"txt_s1_1\">"));
+    assert!(html.contains("<div class=\"note\" data-label=\"Note\">"));
+    assert!(html.contains("<div class=\"note note-tip\" data-label=\"Tip\">"));
+    assert!(html.contains("<input type=\"checkbox\" id=\"cb_s2_1\">"));
+}
+
+#[test]
+fn test_showcase_de_fixture_conversion() {
+    let md_content = std::fs::read_to_string("tests/showcase_de.md")
+        .expect("Failed to read tests/showcase_de.md");
+    let (fm, body) = doc2flow::converter::parse_frontmatter(&md_content);
+    let locale = doc2flow::i18n::Locale::from_lang_code(&fm.language);
+    let html_body = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale)
+        .expect("conversion failed");
+    let d2f_id = doc2flow::d2f_id::generate_d2f_id(&fm).expect("id gen failed");
+    let html =
+        doc2flow::template::render(&fm, &locale, &html_body, &d2f_id).expect("rendering failed");
+
+    assert!(html.contains("Doc2Flow Deutscher Showcase"));
+    assert!(html.contains("<div class=\"check-item text-item\" id=\"txt_s1_1\">"));
+    assert!(html.contains("<div class=\"note\" data-label=\"Hinweis\">"));
+    assert!(html.contains("<div class=\"note note-tip\" data-label=\"Tipp\">"));
+    assert!(html.contains("<input type=\"checkbox\" id=\"cb_s2_1\">"));
+}

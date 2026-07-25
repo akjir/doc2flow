@@ -43,13 +43,15 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 .check-item:hover { background: #f5f9ff; }
 .check-item.checked { background: var(--done); }
 .check-item.checked .check-label { text-decoration: line-through; color: #bbb; }
+.check-item.text-item.checked .text-content,
+.check-item.text-item.checked .check-label { text-decoration: none; color: var(--gray); }
 .check-item input[type=checkbox] { width: 15px; height: 15px; min-width: 15px;
   margin-top: 2px; cursor: pointer; accent-color: var(--bm); }
 .list-bullet { display: inline-flex; align-items: center; justify-content: center;
   width: 15px; min-width: 15px; height: 15px; margin-top: 2px; color: var(--bm);
   font-size: 14px; line-height: 1; user-select: none; }
-.check-label { font-size: 13px; line-height: 1.5; }
-.check-label a { color: var(--bm); }
+.check-label, .text-content { font-size: 13px; line-height: 1.5; }
+.check-label a, .text-content a { color: var(--bm); }
 .bw-block { background: var(--bbg); border-left: 3px solid var(--bm);
   border-radius: 0 6px 6px 0; padding: 7px 11px; margin: 2px 0 8px 24px; font-size: 12px; }
 .bw-block .bwl { font-weight: bold; color: var(--bd); margin-bottom: 3px; }

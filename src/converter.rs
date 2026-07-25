@@ -117,6 +117,7 @@ pub fn convert_markdown_to_html_with_locale(
     let mut out = String::new();
     let mut section_count = 0usize;
     let mut global_cb_count = 0usize;
+    let mut global_txt_count = 0usize;
     let mut in_section = false;
 
     let mut idx = 0;
@@ -372,6 +373,44 @@ pub fn convert_markdown_to_html_with_locale(
                 }
             }
 
+            // Standalone Text Paragraphs
+            Event::Start(Tag::Paragraph) => {
+                let mut para_events = Vec::new();
+                idx += 1;
+                let mut depth = 1;
+                while idx < events.len() {
+                    match &events[idx] {
+                        Event::Start(Tag::Paragraph) => depth += 1,
+                        Event::End(TagEnd::Paragraph) => {
+                            depth -= 1;
+                            if depth == 0 {
+                                break;
+                            }
+                        }
+                        _ => {}
+                    }
+                    para_events.push(events[idx].clone());
+                    idx += 1;
+                }
+
+                let mut para_html = String::new();
+                html::push_html(&mut para_html, para_events.into_iter());
+                let trimmed = para_html.trim();
+
+                if !trimmed.is_empty() {
+                    global_txt_count += 1;
+                    let sec_num = if section_count == 0 { 1 } else { section_count };
+                    out.push_str(&format!(
+                        "<div class=\"check-item text-item\" id=\"txt_s{sec_num}_{global_txt_count}\">\n"
+                    ));
+                    out.push_str(&format!(
+                        "  <span class=\"text-content\">{}</span>\n",
+                        trimmed
+                    ));
+                    out.push_str("</div>\n");
+                }
+            }
+
             // Suppress <ul> and </ul> wrappers around tasklists if they only contain task items
             Event::Start(Tag::List(_)) => {
                 // Do not output <ul> for task lists
@@ -442,6 +481,16 @@ mod tests {
         assert_eq!(
             parse_callout("Just text", &locale),
             ("note", "Just text", "Note")
+        );
+    }
+
+    #[test]
+    fn test_text_paragraph_conversion() {
+        let input = "## Section 1\n\nThis is a standard text paragraph.\n";
+        let html = convert_markdown_to_html(input).expect("conversion failed");
+        assert!(html.contains("<div class=\"check-item text-item\" id=\"txt_s1_1\">"));
+        assert!(
+            html.contains("<span class=\"text-content\">This is a standard text paragraph.</span>")
         );
     }
 }

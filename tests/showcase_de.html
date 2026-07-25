@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Einfacher Test</title>
+<title>Doc2Flow Deutscher Showcase</title>
 <style>
 :root {
   --bd: #1F4E79; --bm: #2E75B6; --bl: #D6E4F0; --bbg: #EBF3FB;
@@ -50,13 +50,15 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 .check-item:hover { background: #f5f9ff; }
 .check-item.checked { background: var(--done); }
 .check-item.checked .check-label { text-decoration: line-through; color: #bbb; }
+.check-item.text-item.checked .text-content,
+.check-item.text-item.checked .check-label { text-decoration: none; color: var(--gray); }
 .check-item input[type=checkbox] { width: 15px; height: 15px; min-width: 15px;
   margin-top: 2px; cursor: pointer; accent-color: var(--bm); }
 .list-bullet { display: inline-flex; align-items: center; justify-content: center;
   width: 15px; min-width: 15px; height: 15px; margin-top: 2px; color: var(--bm);
   font-size: 14px; line-height: 1; user-select: none; }
-.check-label { font-size: 13px; line-height: 1.5; }
-.check-label a { color: var(--bm); }
+.check-label, .text-content { font-size: 13px; line-height: 1.5; }
+.check-label a, .text-content a { color: var(--bm); }
 .bw-block { background: var(--bbg); border-left: 3px solid var(--bm);
   border-radius: 0 6px 6px 0; padding: 7px 11px; margin: 2px 0 8px 24px; font-size: 12px; }
 .bw-block .bwl { font-weight: bold; color: var(--bd); margin-bottom: 3px; }
@@ -138,114 +140,108 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 </head>
 <body>
 <div class="doc-header">
-  <h1>Einfacher Test</h1>
-  <div class="sub">Ein Machbarkeitsnachweis</div>
+  <h1>Doc2Flow Deutscher Showcase</h1>
+  <div class="sub">Umfassendes Testdokument für alle aktuellen und zukünftigen Funktionen</div>
   <div class="pb-wrap"><div class="pb" id="pb"></div></div>
   <div class="pt" id="pt">Lade...</div>
 </div>
 <div class="doc-body">
 
 <table class="info-table">
-  <tr><th>Kunde</th><th>Mitarbeiter</th><th>Techniker</th><th>Datum</th></tr>
+  <tr><th>Kunde</th><th>Mitarbeiter</th><th>Techniker</th></tr>
   <tr>
-    <td>ACME Corp</td>
+    <td>ACME Deutschland GmbH</td>
     <td>Max Mustermann</td>
     <td>Erika Musterfrau</td>
-    <td>24.07.2026</td>
   </tr>
 </table>
 
 <!-- START GENERATED CONTENT -->
 <!-- S1 -->
 <div class="section" id="s1">
-<div class="sh" onclick="toggleSection('s1')"><span>Abschnitt 1</span>
+<div class="sh" onclick="toggleSection('s1')"><span>Abschnitt 1: Übersicht &amp; Richtlinien</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s1"></span><span class="stog" id="tog-s1">&#9660;</span></div></div>
 <div class="sb" id="body-s1">
-<div class="note" data-label="Hinweis">Dies ist ein blauer Hinweis.</div>
-<div class="note note-tip" data-label="Tipp">Dies ist ein grüner Tipp.</div>
-<div class="note note-important" data-label="Wichtig">Dies ist ein violetter wichtiger Hinweis.</div>
-<div class="note note-warning" data-label="Warnung">Dies ist eine gelbe Warnung.</div>
-<div class="note note-caution" data-label="Achtung">Dies ist eine rote Vorsichtsmeldung.</div>
-<div class="note" data-label="Hinweis">Dies ist eine sehr detaillierte mehrzeilige Anmerkung mit umfassenden Anweisungen und Richtlinien für den Benutzer, die sorgfältig gelesen werden sollten. Sie erstreckt sich über mehrere Zeilen, um sicherzustellen, dass alle notwendigen Informationen im Dokumentenlayout übersichtlich dargestellt und leicht lesbar sind.</div>
-<div class="check-item" id="wrap-cb_s1_1">
-  <input type="checkbox" id="cb_s1_1">
-  <label class="check-label" for="cb_s1_1">Aufgabe A</label>
+<div class="check-item text-item" id="txt_s1_1">
+  <span class="text-content">Dies ist ein beliebiger Textabsatz im Abschnitts-Hauptteil. Er liefert allgemeine Anweisungen und Informationen für den Techniker, die vor Beginn des Verfahrens durchgelesen werden sollten.</span>
 </div>
-<div class="check-item" id="wrap-cb_s1_2">
-  <input type="checkbox" id="cb_s1_2">
-  <label class="check-label" for="cb_s1_2">Aufgabe B</label>
-</div>
+<div class="note" data-label="Hinweis">Dies ist eine neutrale Hinweis-Box mit Standard-Kontext.</div>
+<div class="note note-tip" data-label="Tipp">Dies ist eine grüne Tipp-Box mit Empfehlungen oder Best Practices.</div>
+<div class="note note-important" data-label="Wichtig">Dies ist eine violette Wichtig-Box, die auf kritische Anforderungen hinweist.</div>
+<div class="note note-warning" data-label="Warnung">Dies ist eine gelbe Warnung-Box, die zur Vorsicht bei potenziellen Problemen rät.</div>
+<div class="note note-caution" data-label="Achtung">Dies ist eine rote Achtung-Box, die vor gefährlichen Aktionen oder Datenverlust warnt.</div>
+<div class="note" data-label="Hinweis">Dies ist eine mehrzeilige Hinweis-Box mit detaillierten Hintergrundinformationen und umfassenden Anweisungen für den Endbenutzer. Sie erstreckt sich über mehrere Sätze, um einen flüssigen Textumbruch und eine saubere Ausrichtung in visuellen Hinweisfeldern zu demonstrieren.</div>
 </div></div>
 
 <!-- S2 -->
 <div class="section" id="s2">
-<div class="sh" onclick="toggleSection('s2')"><span>Abschnitt 2</span>
+<div class="sh" onclick="toggleSection('s2')"><span>Abschnitt 2: Aufgaben-Checkliste</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s2"></span><span class="stog" id="tog-s2">&#9660;</span></div></div>
 <div class="sb" id="body-s2">
-<div class="check-item" id="wrap-cb_s2_3">
-  <input type="checkbox" id="cb_s2_3">
-  <label class="check-label" for="cb_s2_3">Aufgabe C</label>
+<div class="subh">Einrichtung &amp; Vorbereitung</div>
+<div class="check-item text-item" id="txt_s2_2">
+  <span class="text-content">Dieser beliebige Textabsatz beschreibt die vorbereitenden Schritte, die erfüllt sein müssen, bevor einzelne Aufgaben als erledigt markiert werden.</span>
 </div>
+<div class="check-item" id="wrap-cb_s2_1">
+  <input type="checkbox" id="cb_s2_1">
+  <label class="check-label" for="cb_s2_1">Hardware auspacken und Komponenten überprüfen</label>
+</div>
+<div class="check-item" id="wrap-cb_s2_2">
+  <input type="checkbox" id="cb_s2_2">
+  <label class="check-label" for="cb_s2_2">Netzwerk und Stromversorgung anschließen</label>
+</div>
+<div class="check-item checked" id="wrap-cb_s2_3">
+  <input type="checkbox" id="cb_s2_3" checked>
+  <label class="check-label" for="cb_s2_3">Initialer Einschalttest abgeschlossen</label>
+</div>
+<div class="subh">Software-Konfiguration</div>
 <div class="check-item" id="wrap-cb_s2_4">
   <input type="checkbox" id="cb_s2_4">
-  <label class="check-label" for="cb_s2_4">Aufgabe D</label>
+  <label class="check-label" for="cb_s2_4">Neueste Systemupdates installieren</label>
+</div>
+<div class="check-item" id="wrap-cb_s2_5">
+  <input type="checkbox" id="cb_s2_5">
+  <label class="check-label" for="cb_s2_5">Firewall-Regeln gemäß Unternehmensrichtlinie konfigurieren</label>
+</div>
+<div class="check-item checked" id="wrap-cb_s2_6">
+  <input type="checkbox" id="cb_s2_6" checked>
+  <label class="check-label" for="cb_s2_6">Fernzugriffs-Dienst überprüfen</label>
 </div>
 </div></div>
 
 <!-- S3 -->
 <div class="section" id="s3">
-<div class="sh" onclick="toggleSection('s3')"><span>Abschnitt 3</span>
+<div class="sh" onclick="toggleSection('s3')"><span>Abschnitt 3: Referenz &amp; Code-Blöcke</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s3"></span><span class="stog" id="tog-s3">&#9660;</span></div></div>
 <div class="sb" id="body-s3">
-<div class="check-item simple-item">
-  <span class="list-bullet">&bull;</span>
-  <span class="check-label">Einfacher Listeneintrag 1</span>
+<div class="subh">System-Registrierungseinstellungen</div>
+<div class="check-item text-item" id="txt_s3_3">
+  <span class="text-content">Der folgende Konfigurationsauszug muss angewendet werden, um automatische Updates zu deaktivieren:</span>
 </div>
-<div class="check-item simple-item">
-  <span class="list-bullet">&bull;</span>
-  <span class="check-label">Einfacher Listeneintrag 2</span>
-</div>
-<div class="check-item simple-item">
-  <span class="list-bullet">&bull;</span>
-  <span class="check-label">Einfacher Listeneintrag 3</span>
-</div>
-<div class="check-item simple-item">
-  <span class="list-bullet">&bull;</span>
-  <span class="check-label">Einfacher Listeneintrag 4</span>
-</div>
+<div class="code-block-wrap"><div class="code-header"><span class="code-lang">ini</span><button class="copy-btn" onclick="copyCode(this)" title="Code kopieren" aria-label="Code kopieren"><svg aria-hidden="true" class="svg-icon iconCopy" width="14" height="15" viewBox="0 0 17 18"><path fill="currentColor" d="M5 6c0-1.09.91-2 2-2h4.5L15 7.5V15c0 1.09-.91 2-2 2H7c-1.09 0-2-.91-2-2zm6-1.25V8h3.25z"/><path fill="currentColor" d="M10 1a2 2 0 0 1 2 2H6a2 2 0 0 0-2 2v9a2 2 0 0 1-2-2V4a3 3 0 0 1 3-3z" opacity=".4"/></svg></button></div><pre class="code-block language-ini"><code>[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate]
+&quot;DisableWindowsUpdateAccess&quot;=dword:00000001
+</code></pre></div>
+<div class="subh">Unbeschrifteter Skript-Block</div>
+<div class="code-block-wrap"><div class="code-header"><button class="copy-btn" onclick="copyCode(this)" title="Code kopieren" aria-label="Code kopieren"><svg aria-hidden="true" class="svg-icon iconCopy" width="14" height="15" viewBox="0 0 17 18"><path fill="currentColor" d="M5 6c0-1.09.91-2 2-2h4.5L15 7.5V15c0 1.09-.91 2-2 2H7c-1.09 0-2-.91-2-2zm6-1.25V8h3.25z"/><path fill="currentColor" d="M10 1a2 2 0 0 1 2 2H6a2 2 0 0 0-2 2v9a2 2 0 0 1-2-2V4a3 3 0 0 1 3-3z" opacity=".4"/></svg></button></div><pre class="code-block"><code>echo &quot;Doc2Flow Showcase-Umgebung wird initialisiert...&quot;
+</code></pre></div>
 </div></div>
 
 <!-- S4 -->
 <div class="section" id="s4">
-<div class="sh" onclick="toggleSection('s4')"><span>Abschnitt 4</span>
+<div class="sh" onclick="toggleSection('s4')"><span>Abschnitt 4: Informationslisten</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s4"></span><span class="stog" id="tog-s4">&#9660;</span></div></div>
 <div class="sb" id="body-s4">
 <div class="check-item simple-item">
   <span class="list-bullet">&bull;</span>
-  <span class="check-label">Einzelner einfacher Listeneintrag</span>
-</div>
-</div></div>
-
-<!-- S5 -->
-<div class="section" id="s5">
-<div class="sh" onclick="toggleSection('s5')"><span>Abschnitt 5</span>
-<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s5"></span><span class="stog" id="tog-s5">&#9660;</span></div></div>
-<div class="sb" id="body-s5">
-<div class="check-item" id="wrap-cb_s5_5">
-  <input type="checkbox" id="cb_s5_5">
-  <label class="check-label" for="cb_s5_5">Interaktive Aufgabe A</label>
+  <span class="check-label">Allgemeiner Listenpunkt A</span>
 </div>
 <div class="check-item simple-item">
   <span class="list-bullet">&bull;</span>
-  <span class="check-label">Einfacher Informations-Listeneintrag 1</span>
-</div>
-<div class="check-item checked" id="wrap-cb_s5_6">
-  <input type="checkbox" id="cb_s5_6" checked>
-  <label class="check-label" for="cb_s5_6">Abgeschlossene Aufgabe B</label>
+  <span class="check-label">Allgemeiner Listenpunkt B</span>
 </div>
 <div class="check-item simple-item">
   <span class="list-bullet">&bull;</span>
-  <span class="check-label">Einfacher Informations-Listeneintrag 2</span>
+  <span class="check-label">Allgemeiner Listenpunkt C</span>
 </div>
 </div></div>
 
@@ -272,8 +268,8 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 </div>
 
 <script>
-window.D2F_DOC_ID = 'doc_poc_12345';
-window.D2F_I18N = {"lang_code":"de","customer":"Kunde","employee":"Mitarbeiter","technician":"Techniker","date":"Datum","setup_completed":"Einrichtung abgeschlossen","name_placeholder":"Name","signature_technician":"Techniker","date_placeholder":"TT.MM.JJJJ","signature_date":"Datum","export_pdf":"📄 Als PDF exportieren","reset_all":"↺ Alle Kontrollkästchen zurücksetzen","copy_code":"Code kopieren","copied":"Kopiert!","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","loading":"Lade...","confirm_reset":"Sind Sie sicher, dass Sie alle Kontrollkästchen zurücksetzen möchten?","callout_note":"Hinweis","callout_tip":"Tipp","callout_important":"Wichtig","callout_warning":"Warnung","callout_caution":"Achtung"};
+window.D2F_DOC_ID = 'd2f_id_468e65bc2ccf89b4';
+window.D2F_I18N = {"callout_note":"Hinweis","reset_all":"↺ Alle Kontrollkästchen zurücksetzen","technician":"Techniker","export_pdf":"📄 Als PDF exportieren","customer":"Kunde","employee":"Mitarbeiter","signature_technician":"Techniker","loading":"Lade...","copy_code":"Code kopieren","copied":"Kopiert!","lang_code":"de","callout_important":"Wichtig","callout_warning":"Warnung","callout_caution":"Achtung","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","callout_tip":"Tipp","signature_date":"Datum","setup_completed":"Einrichtung abgeschlossen","name_placeholder":"Name","date":"Datum","date_placeholder":"TT.MM.JJJJ","confirm_reset":"Sind Sie sicher, dass Sie alle Kontrollkästchen zurücksetzen möchten?"};
 // Doc2Flow Generic Checklist Logic
 
 // Use a unique ID injected by the generator, fallback to pathname
@@ -322,6 +318,12 @@ function saveState() {
         state[key] = cb.checked;
     });
     
+    const textStates = {};
+    document.querySelectorAll('.check-item.text-item').forEach((item, index) => {
+        const key = item.id || ('txt_' + index);
+        textStates[key] = item.classList.contains('checked');
+    });
+
     // Save any persistent inputs (e.g. signature fields)
     const fields = {};
     document.querySelectorAll('input.persistent-field').forEach((input, index) => {
@@ -330,7 +332,7 @@ function saveState() {
     });
 
     try { 
-        localStorage.setItem(STATE_KEY, JSON.stringify({ checks: state, fields: fields })); 
+        localStorage.setItem(STATE_KEY, JSON.stringify({ checks: state, texts: textStates, fields: fields })); 
     } catch(e) {
         console.warn('Failed to save state to localStorage', e);
     }
@@ -348,6 +350,14 @@ function loadState() {
                 if (data.checks[key] !== undefined) { 
                     cb.checked = data.checks[key]; 
                     styleItem(cb); 
+                }
+            });
+        }
+        if (data.texts) {
+            document.querySelectorAll('.check-item.text-item').forEach((item, index) => {
+                const key = item.id || ('txt_' + index);
+                if (data.texts[key] !== undefined) {
+                    item.classList.toggle('checked', data.texts[key]);
                 }
             });
         }
@@ -410,6 +420,9 @@ function resetAll() {
         c.checked = false; 
         styleItem(c); 
     });
+    document.querySelectorAll('.check-item.text-item').forEach(item => {
+        item.classList.remove('checked');
+    });
     updateProgress(); 
     saveState();
 }
@@ -431,7 +444,7 @@ function exportPDF() {
 
 // Setup Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
-    // Bind checkbox clicks
+    // Bind checkbox and text item clicks
     document.querySelectorAll('.check-item').forEach(item => {
         item.addEventListener('click', function(e) {
             // Ignore if clicked on a link
@@ -443,6 +456,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (e.target !== cb) cb.checked = !cb.checked;
                 styleItem(cb);
                 updateProgress();
+                saveState();
+            } else if (this.classList.contains('text-item')) {
+                this.classList.toggle('checked');
                 saveState();
             }
         });
