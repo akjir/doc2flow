@@ -187,7 +187,7 @@ fn test_showcase_en_fixture_conversion() {
     let locale = doc2flow::i18n::Locale::from_lang_code(&fm.language);
     let html_body = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale)
         .expect("conversion failed");
-    let d2f_id = doc2flow::d2f_id::generate_d2f_id(&fm).expect("id gen failed");
+    let d2f_id = doc2flow::id::generate_d2f_id(&fm).expect("id gen failed");
     let html =
         doc2flow::template::render(&fm, &locale, &html_body, &d2f_id).expect("rendering failed");
 
@@ -207,7 +207,7 @@ fn test_showcase_de_fixture_conversion() {
     let locale = doc2flow::i18n::Locale::from_lang_code(&fm.language);
     let html_body = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale)
         .expect("conversion failed");
-    let d2f_id = doc2flow::d2f_id::generate_d2f_id(&fm).expect("id gen failed");
+    let d2f_id = doc2flow::id::generate_d2f_id(&fm).expect("id gen failed");
     let html =
         doc2flow::template::render(&fm, &locale, &html_body, &d2f_id).expect("rendering failed");
 
@@ -221,12 +221,12 @@ fn test_showcase_de_fixture_conversion() {
 
 #[test]
 fn test_template_generator_conversion() {
-    let template_md = doc2flow::template_generator::generate_template_markdown();
+    let template_md = doc2flow::template::generate_template_markdown();
     let (fm, body) = doc2flow::converter::parse_frontmatter(template_md);
     let locale = doc2flow::i18n::Locale::from_lang_code(&fm.language);
     let html_body = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale)
         .expect("conversion failed");
-    let d2f_id = doc2flow::d2f_id::generate_d2f_id(&fm).expect("id gen failed");
+    let d2f_id = doc2flow::id::generate_d2f_id(&fm).expect("id gen failed");
     let html =
         doc2flow::template::render(&fm, &locale, &html_body, &d2f_id).expect("rendering failed");
 

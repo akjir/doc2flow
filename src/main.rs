@@ -3,7 +3,6 @@ use clap::Parser;
 use doc2flow::converter;
 use doc2flow::i18n::Locale;
 use doc2flow::template;
-use doc2flow::template_generator;
 use std::fs;
 use std::path::PathBuf;
 
@@ -30,7 +29,7 @@ fn main() -> Result<()> {
     let args = Args::parse();
 
     if let Some(init_path) = args.init {
-        let template_content = template_generator::generate_template_markdown();
+        let template_content = template::generate_template_markdown();
         fs::write(&init_path, template_content).with_context(|| {
             format!("Failed to generate template file: {}", init_path.display())
         })?;
@@ -61,7 +60,7 @@ fn main() -> Result<()> {
 
     let html_content = converter::convert_markdown_to_html_with_locale(markdown_body, &locale)?;
 
-    let d2f_id = doc2flow::d2f_id::generate_d2f_id(&frontmatter)?;
+    let d2f_id = doc2flow::id::generate_d2f_id(&frontmatter)?;
     let final_html = template::render(&frontmatter, &locale, &html_content, &d2f_id)?;
 
     fs::write(&output_path, final_html)

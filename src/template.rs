@@ -1,9 +1,27 @@
-//! HTML rendering and template substitution module for Doc2Flow documents.
+//! HTML rendering, template substitution, and starter document generation module for Doc2Flow.
 
 use crate::converter::Frontmatter;
 use crate::i18n::{Locale, validate_locale_coverage};
 use anyhow::{Context, Result};
 use std::collections::HashMap;
+
+/// Returns the pre-populated default starter Markdown template string.
+///
+/// Contains frontmatter metadata fields, HTML comments with usage instructions,
+/// and a showcase document structure.
+///
+/// # Examples
+///
+/// ```
+/// use doc2flow::template::generate_template_markdown;
+///
+/// let template = generate_template_markdown();
+/// assert!(template.contains("title:"));
+/// assert!(template.contains("## Section 1: Initial System Verification"));
+/// ```
+pub fn generate_template_markdown() -> &'static str {
+    include_str!("../templates/template.md")
+}
 
 /// Performs single-pass template placeholder substitution using standard library tools.
 ///
@@ -14,8 +32,8 @@ use std::collections::HashMap;
 ///
 /// ```
 /// use std::collections::HashMap;
-/// use doc2flow::template::substitute_template;
 /// use doc2flow::i18n::Locale;
+/// use doc2flow::template::substitute_template;
 ///
 /// let mut vars = HashMap::new();
 /// vars.insert("NAME", "World");
@@ -106,6 +124,28 @@ pub fn render(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_generate_template_markdown_contains_required_sections() {
+        let content = generate_template_markdown();
+        assert!(content.contains("title:"));
+        assert!(content.contains("subtitle:"));
+        assert!(content.contains("company:"));
+        assert!(content.contains("contact:"));
+        assert!(content.contains("agent:"));
+        assert!(content.contains("date:"));
+        assert!(content.contains("version:"));
+        assert!(content.contains("language:"));
+        assert!(content.contains("## Section 1: Initial System Verification"));
+        assert!(content.contains("### Prerequisites Checklist"));
+        assert!(content.contains("<!--"));
+        assert!(content.contains("-->"));
+        assert!(content.contains("> Note:"));
+        assert!(content.contains(">? Tip:"));
+        assert!(content.contains(">! Important:"));
+        assert!(content.contains(">!! Warning:"));
+        assert!(content.contains(">!!! Caution:"));
+    }
 
     #[test]
     fn test_substitute_template_basic() {

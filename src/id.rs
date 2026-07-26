@@ -19,7 +19,7 @@ use anyhow::{Result, bail};
 ///
 /// ```
 /// use doc2flow::converter::Frontmatter;
-/// use doc2flow::d2f_id::generate_d2f_id;
+/// use doc2flow::id::generate_d2f_id;
 ///
 /// let fm = Frontmatter {
 ///     title: "Server Guide".into(),
