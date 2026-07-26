@@ -6,9 +6,9 @@ DOC2FLOW (D2F) - TEMPLATE & USAGE GUIDE
 1. FRONTMATTER METADATA:
    - title: Main document title.
    - subtitle: Subtitle or document description.
-   - customer: Customer or client organization name.
-   - employee: Responsible employee name.
-   - technician: Executing technician name.
+   - company: Company organization name.
+   - contact: Responsible contact person name.
+   - agent: Executing agent name.
    - date: Protocol date (YYYY-MM-DD).
    - version: Document version.
    - language / lang: Language code for static UI translation ('en', 'de').
@@ -41,9 +41,9 @@ DOC2FLOW (D2F) - TEMPLATE & USAGE GUIDE
 ---
 title: "Doc2Flow Standard Operating Procedure"
 subtitle: "Interactive Setup & Maintenance Protocol"
-customer: "Acme Corporation"
-employee: "Jane Doe"
-technician: "John Smith"
+company: "Acme Corporation"
+contact: "Jane Doe"
+agent: "John Smith"
 version: "1.0.0"
 date: "2026-07-25"
 language: "en"

@@ -1,8 +1,5 @@
 # Project Specification: Doc2Flow (d2f)
 
-> [!IMPORTANT]
-> This file contains the authoritative project specifications. AI agents are strictly forbidden from modifying this file without explicit approval or instruction from the user.
-
 ## 1. Overview & Objectives
 Doc2Flow (`d2f`) is a command-line interface (CLI) tool built for Windows that converts Markdown files into fully self-contained HTML files. The generated HTML files serve as interactive guides, manuals, protocols, and checklists for end users.
 
@@ -48,17 +45,20 @@ d2f.exe --version
   ---
   title: "Server Maintenance Guide"
   subtitle: "Standard Operating Procedure"
-  customer: "Acme Corp"
-  employee: "John Doe"
-  technician: "Jane Smith"
+  company: "Acme Corp"
+  contact: "John Doe"
+  agent: "Jane Smith"
   date: "2026-07-25"
   language: "de"
   ---
   ```
   * `title`: Document main header title.
   * `subtitle`: Document subtitle or description.
-  * `customer`, `employee`, `technician`, `date`: Populates metadata table fields in header.
+  * `company`: Company organization name (required).
+  * `contact`, `agent`: Populates contact and agent metadata table fields in header.
+  * `date`: Document date (used for `d2f_id` document identity generation).
   * `language` / `lang`: Specifies locale code (`en`, `de`) for static UI translations.
+  * **Upper Metadata Table:** Header table renders Company (`{{COMPANY}}`), Contact (`{{CONTACT}}`), Agent (`{{AGENT}}`), and an interactive persistent Date input field (the frontmatter `date` is not populated into this table cell).
 * **Callout / Note Box Annotations:** Blockquotes are transformed into styled visual alert panels using prefix conventions:
   * `>` or `> Note`: Standard Note box (`.note`, neutral styling).
   * `>?` or `>? Tip`: Tip box (`.note-tip`, green accent).
@@ -84,7 +84,7 @@ d2f.exe --version
 * **Internationalization & Localization (i18n):**
   * Supports localized static UI elements based on the `language` frontmatter tag (matching the lowercased code to embedded locale JSON files, defaulting to `en`).
   * **Dynamic Resource Loading:** Locale resources are loaded dynamically into a `HashMap<String, String>` from flat JSON key-value files.
-  * **Template Replacement Scheme:** Placeholders in HTML templates formatted as `{{L_KEY}}` automatically map to the lowercased key `"key"` in the respective locale JSON file (e.g. `{{L_CUSTOMER}}` maps to `"customer"`).
+  * **Template Replacement Scheme:** Placeholders in HTML templates formatted as `{{L_KEY}}` automatically map to the lowercased key `"key"` in the respective locale JSON file (e.g. `{{L_COMPANY}}` maps to `"company"`).
   * **Missing Key Handling:** Template placeholders missing from the target locale emit a non-blocking warning message on `stderr` during rendering without causing panic or termination.
   * Automatically translates controls, buttons, metadata labels, progress indicators, callout header tags, and print titles.
 * **Interactivity & State Persistence:**
@@ -93,7 +93,7 @@ d2f.exe --version
   * Section badges dynamically calculate checked vs. total items (e.g., `2/5 completed`).
   * Reset button clears state after user confirmation in a modal overlay.
 * **Protocol & Sign-off Footer:**
-  * Provides technician signature input fields, completion date input, signature line, and a "Setup Completed" sign-off checkbox.
+  * Provides agent signature input fields, completion date input, signature line, and a "Process Completed" / "Vorgang abgeschlossen" sign-off box.
 * **Layout & Print Optimization:**
   * Clean, modern, responsive CSS layout.
   * Dedicated `@media print` rules automatically expand all sections, hide interactive buttons (copy, reset), and output clean printed pages or PDF exports.

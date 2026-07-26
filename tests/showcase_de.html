@@ -166,11 +166,12 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 <div class="doc-body">
 
 <table class="info-table">
-  <tr><th>Kunde</th><th>Mitarbeiter</th><th>Techniker</th></tr>
+  <tr><th>Firma</th><th>Ansprechpartner</th><th>Bearbeiter</th><th>Datum</th></tr>
   <tr>
     <td>ACME Deutschland GmbH</td>
     <td>Max Mustermann</td>
     <td>Erika Musterfrau</td>
+    <td><input type="text" class="sf persistent-field" id="f_info_date" placeholder="TT.MM.JJJJ"></td>
   </tr>
 </table>
 
@@ -181,7 +182,7 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s1"></span><span class="stog" id="tog-s1">&#9660;</span></div></div>
 <div class="sb" id="body-s1">
 <div class="check-item text-item" id="txt_s1_1">
-  <span class="text-content">Dies ist ein beliebiger Textabsatz im Abschnitts-Hauptteil. Er liefert allgemeine Anweisungen und Informationen für den Techniker, die vor Beginn des Verfahrens durchgelesen werden sollten.</span>
+  <span class="text-content">Dies ist ein beliebiger Textabsatz im Abschnitts-Hauptteil. Er liefert allgemeine Anweisungen und Informationen für den Bearbeiter, die vor Beginn des Verfahrens durchgelesen werden sollten.</span>
 </div>
 <div class="note" data-label="Hinweis">Dies ist eine neutrale Hinweis-Box mit Standard-Kontext.</div>
 <div class="note note-tip" data-label="Tipp">Dies ist eine grüne Tipp-Box mit Empfehlungen oder Best Practices.</div>
@@ -267,9 +268,9 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 
 <div class="finish" id="finish-box">
   <div class="big" id="finish-icon">&#x2714;</div>
-  <h2 id="finish-title">Einrichtung abgeschlossen</h2>
+  <h2 id="finish-title">Vorgang abgeschlossen</h2>
   <div class="sigs">
-    <div><input type="text" class="sf persistent-field" id="f_sign_tech" placeholder="Name"><div style="margin-top:4px">Techniker</div></div>
+    <div><input type="text" class="sf persistent-field" id="f_sign_agent" placeholder="Name"><div style="margin-top:4px">Bearbeiter</div></div>
     <div><input type="text" class="sf persistent-field" id="f_sign_date" placeholder="TT.MM.JJJJ"><div style="margin-top:4px">Datum</div></div>
   </div>
 </div>
@@ -288,7 +289,7 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 
 <script>
 window.D2F_DOC_ID = 'd2f_id_468e65bc2ccf89b4';
-window.D2F_I18N = {"date":"Datum","copy_code":"Code kopieren","lang_code":"de","callout_note":"Hinweis","export_pdf":"📄 Als PDF exportieren","setup_completed":"Einrichtung abgeschlossen","setup_in_progress":"Einrichtung in Durchführung","name_placeholder":"Name","customer":"Kunde","loading":"Lade...","callout_tip":"Tipp","signature_technician":"Techniker","reset_all":"↺ Alle Kontrollkästchen zurücksetzen","callout_important":"Wichtig","callout_warning":"Warnung","callout_caution":"Achtung","save_state":"💾 Stand sichern","confirm_reset":"Sind Sie sicher, dass Sie alle Kontrollkästchen zurücksetzen möchten?","date_placeholder":"TT.MM.JJJJ","signature_date":"Datum","employee":"Mitarbeiter","technician":"Techniker","copied":"Kopiert!","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)"};
+window.D2F_I18N = {"lang_code":"de","setup_in_progress":"Vorgang in Bearbeitung","agent":"Bearbeiter","name_placeholder":"Name","date":"Datum","setup_completed":"Vorgang abgeschlossen","callout_important":"Wichtig","confirm_reset":"Sind Sie sicher, dass Sie alle Kontrollkästchen zurücksetzen möchten?","loading":"Lade...","company":"Firma","signature_date":"Datum","reset_all":"↺ Alle Kontrollkästchen zurücksetzen","copy_code":"Code kopieren","callout_caution":"Achtung","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","copied":"Kopiert!","save_state":"💾 Stand sichern","callout_note":"Hinweis","export_pdf":"📄 Als PDF exportieren","contact":"Ansprechpartner","callout_tip":"Tipp","callout_warning":"Warnung","date_placeholder":"TT.MM.JJJJ"};
 // Doc2Flow Generic Checklist Logic
 
 const DOC_ID = window.D2F_DOC_ID || '';

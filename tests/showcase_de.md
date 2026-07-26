@@ -1,9 +1,9 @@
 ---
 title: "Doc2Flow Deutscher Showcase"
 subtitle: "Umfassendes Testdokument für alle aktuellen und zukünftigen Funktionen"
-customer: "ACME Deutschland GmbH"
-employee: "Max Mustermann"
-technician: "Erika Musterfrau"
+company: "ACME Deutschland GmbH"
+contact: "Max Mustermann"
+agent: "Erika Musterfrau"
 date: "25.07.2026"
 version: "1.0.0"
 language: "de"
@@ -11,7 +11,7 @@ language: "de"
 
 ## Abschnitt 1: Übersicht & Richtlinien
 
-Dies ist ein beliebiger Textabsatz im Abschnitts-Hauptteil. Er liefert allgemeine Anweisungen und Informationen für den Techniker, die vor Beginn des Verfahrens durchgelesen werden sollten.
+Dies ist ein beliebiger Textabsatz im Abschnitts-Hauptteil. Er liefert allgemeine Anweisungen und Informationen für den Bearbeiter, die vor Beginn des Verfahrens durchgelesen werden sollten.
 
 <!-- Test-Kommentar: Dieser Hinweis darf nicht im HTML erscheinen -->
 

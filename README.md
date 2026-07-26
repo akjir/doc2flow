@@ -23,7 +23,7 @@ The generated HTML files are completely self-contained—embedding all CSS styli
 - 💻 **Enhanced Code Blocks:**
   - Syntax-aware code block containers with language tag headers and 1-click **Copy Code** buttons.
 - 📝 **Protocol Sign-Off & Signature Footer:**
-  - Built-in form fields for technician names, completion dates, signature lines, and a final protocol approval checkbox.
+  - Built-in form fields for agent names, completion dates, signature lines, and a final protocol approval status box.
 - 🖨️ **Print & PDF Optimized:**
   - Dedicated print stylesheet (`@media print`) that auto-expands all collapsible sections and hides interactive buttons for clean physical printouts or PDF exports.
 
@@ -61,9 +61,9 @@ Place YAML metadata at the very top of your `.md` file to populate the header ta
 ---
 title: "Server Deployment Guide"
 subtitle: "Standard Operating Procedure"
-customer: "Acme Corporation"
-employee: "Jane Doe"
-technician: "John Smith"
+company: "Acme Corporation"
+contact: "Jane Doe"
+agent: "John Smith"
 date: "2026-07-25"
 language: "de"
 ---

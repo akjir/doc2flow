@@ -166,11 +166,12 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 <div class="doc-body">
 
 <table class="info-table">
-  <tr><th>Customer</th><th>Employee</th><th>Technician</th></tr>
+  <tr><th>Company</th><th>Contact</th><th>Agent</th><th>Date</th></tr>
   <tr>
     <td>ACME Global Corp</td>
     <td>John Doe</td>
     <td>Jane Smith</td>
+    <td><input type="text" class="sf persistent-field" id="f_info_date" placeholder="DD.MM.YYYY"></td>
   </tr>
 </table>
 
@@ -267,9 +268,9 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 
 <div class="finish" id="finish-box">
   <div class="big" id="finish-icon">&#x2714;</div>
-  <h2 id="finish-title">Setup Completed</h2>
+  <h2 id="finish-title">Process Completed</h2>
   <div class="sigs">
-    <div><input type="text" class="sf persistent-field" id="f_sign_tech" placeholder="Name"><div style="margin-top:4px">Technician</div></div>
+    <div><input type="text" class="sf persistent-field" id="f_sign_agent" placeholder="Name"><div style="margin-top:4px">Agent</div></div>
     <div><input type="text" class="sf persistent-field" id="f_sign_date" placeholder="DD.MM.YYYY"><div style="margin-top:4px">Date</div></div>
   </div>
 </div>
@@ -288,7 +289,7 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 
 <script>
 window.D2F_DOC_ID = 'd2f_id_c9c539743b5bb460';
-window.D2F_I18N = {"setup_in_progress":"Setup in Progress","confirm_reset":"Are you sure you want to reset all checkboxes?","copied":"Copied!","export_pdf":"📄 Export as PDF","save_state":"💾 Save State","signature_date":"Date","employee":"Employee","customer":"Customer","reset_all":"↺ Reset all checkboxes","copy_code":"Copy code","setup_completed":"Setup Completed","date":"Date","name_placeholder":"Name","progress_template":"{done} of {total} tasks completed ({pct}%)","technician":"Technician","signature_technician":"Technician","callout_note":"Note","callout_tip":"Tip","loading":"Loading...","callout_important":"Important","callout_warning":"Warning","callout_caution":"Caution","date_placeholder":"DD.MM.YYYY","lang_code":"en"};
+window.D2F_I18N = {"setup_completed":"Process Completed","callout_warning":"Warning","callout_caution":"Caution","callout_note":"Note","callout_tip":"Tip","date":"Date","signature_date":"Date","name_placeholder":"Name","confirm_reset":"Are you sure you want to reset all checkboxes?","callout_important":"Important","reset_all":"↺ Reset all checkboxes","setup_in_progress":"Process in Progress","loading":"Loading...","copy_code":"Copy code","date_placeholder":"DD.MM.YYYY","company":"Company","copied":"Copied!","agent":"Agent","export_pdf":"📄 Export as PDF","progress_template":"{done} of {total} tasks completed ({pct}%)","contact":"Contact","save_state":"💾 Save State","lang_code":"en"};
 // Doc2Flow Generic Checklist Logic
 
 const DOC_ID = window.D2F_DOC_ID || '';

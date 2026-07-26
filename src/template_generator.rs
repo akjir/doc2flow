@@ -25,9 +25,9 @@ mod tests {
         let content = generate_template_markdown();
         assert!(content.contains("title:"));
         assert!(content.contains("subtitle:"));
-        assert!(content.contains("customer:"));
-        assert!(content.contains("employee:"));
-        assert!(content.contains("technician:"));
+        assert!(content.contains("company:"));
+        assert!(content.contains("contact:"));
+        assert!(content.contains("agent:"));
         assert!(content.contains("date:"));
         assert!(content.contains("version:"));
         assert!(content.contains("language:"));

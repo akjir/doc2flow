@@ -90,9 +90,9 @@ pub fn render(
     vars.insert("LANG_CODE", locale.lang_code.as_str());
     vars.insert("TITLE", frontmatter.title.as_str());
     vars.insert("SUBTITLE", frontmatter.subtitle.as_str());
-    vars.insert("CUSTOMER", frontmatter.customer.as_str());
-    vars.insert("EMPLOYEE", frontmatter.employee.as_str());
-    vars.insert("TECHNICIAN", frontmatter.technician.as_str());
+    vars.insert("COMPANY", frontmatter.company.as_str());
+    vars.insert("CONTACT", frontmatter.contact.as_str());
+    vars.insert("AGENT", frontmatter.agent.as_str());
     vars.insert("DATE", frontmatter.date.as_str());
     vars.insert("I18N_JSON", i18n_json.as_str());
     vars.insert("CSS", style_css);
@@ -155,8 +155,8 @@ mod tests {
         assert!(html.contains("test_id_99"));
         assert!(!html.contains("{{TITLE}}"));
         assert!(!html.contains("{{CONTENT}}"));
-        assert!(!html.contains("{{L_CUSTOMER}}"));
-        assert!(html.contains("Kunde"));
+        assert!(!html.contains("{{L_COMPANY}}"));
+        assert!(html.contains("Firma"));
     }
 
     #[test]

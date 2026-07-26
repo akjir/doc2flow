@@ -87,7 +87,7 @@ fn test_simple_and_mixed_list_items_conversion() {
 fn test_frontmatter_language_parsing() {
     let input = r#"---
 title: "Test"
-customer: "Test Corp"
+company: "Test Corp"
 language: "de"
 ---
 ## Section 1
@@ -98,7 +98,7 @@ language: "de"
 
     let locale = doc2flow::i18n::Locale::from_lang_code(&fm.language);
     assert_eq!(locale.lang_code, "de");
-    assert_eq!(locale.get("customer"), "Kunde");
+    assert_eq!(locale.get("company"), "Firma");
     assert_eq!(
         locale.get("reset_all"),
         "↺ Alle Kontrollkästchen zurücksetzen"
@@ -149,7 +149,7 @@ test code
 fn test_end_to_end_template_rendering() {
     let input = r#"---
 title: "End-to-End Test"
-customer: "Test Corp"
+company: "Test Corp"
 language: "de"
 ---
 ## Test Section
@@ -238,22 +238,22 @@ fn test_template_generator_conversion() {
 }
 
 #[test]
-fn test_frontmatter_customer_validation_success() {
+fn test_frontmatter_company_validation_success() {
     let input = r#"---
 title: "Valid Spec"
-customer: "ACME Corp"
+company: "ACME Corp"
 date: "2026-07-25"
 ---
 ## Section 1
 "#;
 
     let (fm, _body) = doc2flow::converter::parse_and_validate_frontmatter(input, Some("test.md"))
-        .expect("validation failed for valid customer");
-    assert_eq!(fm.customer, "ACME Corp");
+        .expect("validation failed for valid company");
+    assert_eq!(fm.company, "ACME Corp");
 }
 
 #[test]
-fn test_frontmatter_customer_validation_missing_error_feedback() {
+fn test_frontmatter_company_validation_missing_error_feedback() {
     let input = r#"---
 title: "Missing Company Spec"
 date: "2026-07-25"
@@ -265,20 +265,20 @@ date: "2026-07-25"
         doc2flow::converter::parse_and_validate_frontmatter(input, Some("invalid.md")).unwrap_err();
     let err_msg = err.to_string();
 
-    assert!(err_msg.contains("error: missing required frontmatter field 'customer'"));
+    assert!(err_msg.contains("error: missing required frontmatter field 'company'"));
     assert!(err_msg.contains("--> invalid.md:1:1"));
     assert!(err_msg.contains("1 | ---"));
     assert!(
-        err_msg.contains("^^^ frontmatter block defined here is missing required field 'customer'")
+        err_msg.contains("^^^ frontmatter block defined here is missing required field 'company'")
     );
-    assert!(err_msg.contains("= help: add 'customer: \"Company Name\"'"));
+    assert!(err_msg.contains("= help: add 'company: \"Company Name\"'"));
 }
 
 #[test]
-fn test_frontmatter_customer_validation_empty_error_feedback() {
+fn test_frontmatter_company_validation_empty_error_feedback() {
     let input = r#"---
-title: "Empty Customer Spec"
-customer: ""
+title: "Empty Company Spec"
+company: ""
 date: "2026-07-25"
 ---
 ## Section 1
@@ -288,9 +288,9 @@ date: "2026-07-25"
         doc2flow::converter::parse_and_validate_frontmatter(input, Some("empty.md")).unwrap_err();
     let err_msg = err.to_string();
 
-    assert!(err_msg.contains("error: required frontmatter field 'customer' cannot be empty"));
+    assert!(err_msg.contains("error: required frontmatter field 'company' cannot be empty"));
     assert!(err_msg.contains("--> empty.md:3:1"));
-    assert!(err_msg.contains("3 | customer: \"\""));
-    assert!(err_msg.contains("^^^^^^^^^^^^ 'customer' field value cannot be empty"));
+    assert!(err_msg.contains("3 | company: \"\""));
+    assert!(err_msg.contains("^^^^^^^^^^^ 'company' field value cannot be empty"));
     assert!(err_msg.contains("= help: provide a valid company name"));
 }

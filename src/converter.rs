@@ -25,9 +25,9 @@ fn html_escape(input: &str) -> String {
 pub struct Frontmatter {
     pub title: String,
     pub subtitle: String,
-    pub customer: String,
-    pub employee: String,
-    pub technician: String,
+    pub company: String,
+    pub contact: String,
+    pub agent: String,
     pub date: String,
     pub version: String,
     pub language: String,
@@ -90,9 +90,9 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
                 match key {
                     "title" => fm.title = val.to_string(),
                     "subtitle" => fm.subtitle = val.to_string(),
-                    "customer" => fm.customer = val.to_string(),
-                    "employee" => fm.employee = val.to_string(),
-                    "technician" => fm.technician = val.to_string(),
+                    "company" => fm.company = val.to_string(),
+                    "contact" => fm.contact = val.to_string(),
+                    "agent" => fm.agent = val.to_string(),
                     "date" => fm.date = val.to_string(),
                     "version" => fm.version = val.to_string(),
                     "language" | "lang" => fm.language = val.to_string(),
@@ -109,17 +109,17 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
 
 /// Validates frontmatter metadata for required fields, returning a compiler-style diagnostic error if invalid.
 ///
-/// Ensures the `customer` (company) field is present and non-empty.
+/// Ensures the `company` field is present and non-empty.
 ///
 /// # Errors
 ///
-/// Returns an error formatted like a Rust compiler diagnostic if `customer` is missing or empty.
+/// Returns an error formatted like a Rust compiler diagnostic if `company` is missing or empty.
 pub fn validate_frontmatter(
     frontmatter: &Frontmatter,
     md_content: &str,
     file_name: Option<&str>,
 ) -> Result<()> {
-    if !frontmatter.customer.trim().is_empty() {
+    if !frontmatter.company.trim().is_empty() {
         return Ok(());
     }
 
@@ -127,17 +127,17 @@ pub fn validate_frontmatter(
 
     if let Some((start_idx, content_start, close_idx, _)) = find_frontmatter_bounds(md_content) {
         let frontmatter_text = &md_content[content_start..close_idx];
-        let mut customer_line_info = None;
+        let mut company_line_info = None;
 
         for (idx, line) in frontmatter_text.lines().enumerate() {
-            if matches!(line.split_once(':'), Some((key, _)) if key.trim() == "customer") {
+            if matches!(line.split_once(':'), Some((key, _)) if key.trim() == "company") {
                 let line_no = md_content[..content_start].lines().count() + idx + 1;
-                customer_line_info = Some((line_no, line.to_string()));
+                company_line_info = Some((line_no, line.to_string()));
                 break;
             }
         }
 
-        if let Some((line_no, line_content)) = customer_line_info {
+        if let Some((line_no, line_content)) = company_line_info {
             Err(DiagnosticError::empty_frontmatter_field(
                 file_path,
                 line_no,
@@ -161,7 +161,7 @@ pub fn validate_frontmatter(
 ///
 /// # Errors
 ///
-/// Returns a compiler-style diagnostic error if required fields like `customer` are missing or empty.
+/// Returns a compiler-style diagnostic error if required fields like `company` are missing or empty.
 pub fn parse_and_validate_frontmatter<'a>(
     md_content: &'a str,
     file_name: Option<&str>,
@@ -672,43 +672,41 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_frontmatter_valid_customer() {
-        let input = "---\ntitle: \"Guide\"\ncustomer: \"Acme Corp\"\n---\n## Section 1";
+    fn test_validate_frontmatter_valid_company() {
+        let input = "---\ntitle: \"Guide\"\ncompany: \"Acme Corp\"\n---\n## Section 1";
         let (fm, body) = parse_and_validate_frontmatter(input, Some("guide.md")).unwrap();
-        assert_eq!(fm.customer, "Acme Corp");
+        assert_eq!(fm.company, "Acme Corp");
         assert_eq!(body, "## Section 1");
     }
 
     #[test]
-    fn test_validate_frontmatter_missing_customer_field() {
+    fn test_validate_frontmatter_missing_company_field() {
         let input = "---\ntitle: \"Guide\"\ndate: \"2026-07-25\"\n---\n## Section 1";
         let (fm, _) = parse_frontmatter(input);
         let err = validate_frontmatter(&fm, input, Some("guide.md")).unwrap_err();
         let err_str = err.to_string();
 
-        assert!(err_str.contains("error: missing required frontmatter field 'customer'"));
+        assert!(err_str.contains("error: missing required frontmatter field 'company'"));
         assert!(err_str.contains("--> guide.md:1:1"));
         assert!(err_str.contains("1 | ---"));
         assert!(
-            err_str.contains(
-                "^^^ frontmatter block defined here is missing required field 'customer'"
-            )
+            err_str
+                .contains("^^^ frontmatter block defined here is missing required field 'company'")
         );
-        assert!(err_str.contains("= help: add 'customer: \"Company Name\"'"));
+        assert!(err_str.contains("= help: add 'company: \"Company Name\"'"));
     }
 
     #[test]
-    fn test_validate_frontmatter_empty_customer_field() {
-        let input =
-            "---\ntitle: \"Guide\"\ncustomer: \"\"\ndate: \"2026-07-25\"\n---\n## Section 1";
+    fn test_validate_frontmatter_empty_company_field() {
+        let input = "---\ntitle: \"Guide\"\ncompany: \"\"\ndate: \"2026-07-25\"\n---\n## Section 1";
         let (fm, _) = parse_frontmatter(input);
         let err = validate_frontmatter(&fm, input, Some("guide.md")).unwrap_err();
         let err_str = err.to_string();
 
-        assert!(err_str.contains("error: required frontmatter field 'customer' cannot be empty"));
+        assert!(err_str.contains("error: required frontmatter field 'company' cannot be empty"));
         assert!(err_str.contains("--> guide.md:3:1"));
-        assert!(err_str.contains("3 | customer: \"\""));
-        assert!(err_str.contains("^^^^^^^^^^^^ 'customer' field value cannot be empty"));
+        assert!(err_str.contains("3 | company: \"\""));
+        assert!(err_str.contains("^^^^^^^^^^^ 'company' field value cannot be empty"));
         assert!(err_str.contains("= help: provide a valid company name"));
     }
 
@@ -720,8 +718,7 @@ mod tests {
         let err_str = err.to_string();
 
         assert!(
-            err_str
-                .contains("error: missing YAML frontmatter block with required field 'customer'")
+            err_str.contains("error: missing YAML frontmatter block with required field 'company'")
         );
         assert!(err_str.contains("--> doc.md:1:1"));
         assert!(err_str.contains("1 | # No Frontmatter Document"));

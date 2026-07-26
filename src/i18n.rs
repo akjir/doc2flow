@@ -22,9 +22,9 @@ impl Locale {
     /// ```
     /// use doc2flow::i18n::Locale;
     ///
-    /// let json = r#"{"lang_code": "en", "customer": "Customer"}"#;
+    /// let json = r#"{"lang_code": "en", "company": "Company"}"#;
     /// let locale = Locale::from_json(json);
-    /// assert_eq!(locale.get("customer"), "Customer");
+    /// assert_eq!(locale.get("company"), "Company");
     /// ```
     pub fn from_json(json_str: &str) -> Self {
         let entries: HashMap<String, String> =
@@ -108,23 +108,23 @@ mod tests {
         let json = r#"{
             "lang_code": "fr",
             "custom_key": "Bonjour",
-            "customer": "Client"
+            "company": "Client"
         }"#;
         let locale = Locale::from_json(json);
         assert_eq!(locale.lang_code, "fr");
         assert_eq!(locale.get("custom_key"), "Bonjour");
-        assert_eq!(locale.get("customer"), "Client");
+        assert_eq!(locale.get("company"), "Client");
     }
 
     #[test]
     fn test_from_lang_code_resolution() {
         let de_locale = Locale::from_lang_code("de");
         assert_eq!(de_locale.lang_code, "de");
-        assert_eq!(de_locale.get("customer"), "Kunde");
+        assert_eq!(de_locale.get("company"), "Firma");
 
         let en_locale = Locale::from_lang_code("en");
         assert_eq!(en_locale.lang_code, "en");
-        assert_eq!(en_locale.get("customer"), "Customer");
+        assert_eq!(en_locale.get("company"), "Company");
 
         let unknown = Locale::from_lang_code("xyz");
         assert_eq!(unknown.lang_code, "en");
@@ -139,13 +139,13 @@ mod tests {
     #[test]
     fn test_validate_locale_coverage() {
         let mut entries = HashMap::new();
-        entries.insert("customer".into(), "Kunde".into());
+        entries.insert("company".into(), "Firma".into());
         let locale = Locale {
             lang_code: "de".into(),
             entries,
         };
 
-        let tmpl = "<div>{{L_CUSTOMER}}</div><div>{{L_MISSING_KEY}}</div>";
+        let tmpl = "<div>{{L_COMPANY}}</div><div>{{L_MISSING_KEY}}</div>";
         // Call validation; missing key prints to stderr without panicking
         validate_locale_coverage(tmpl, &locale);
     }

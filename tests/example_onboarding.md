@@ -1,9 +1,9 @@
 ---
 title: "Onboarding Guide"
 subtitle: "Preparation Notebook & M365-User | Customer: NyriSys"
-customer: "NyriSys Inc"
-employee: ""
-technician: ""
+company: "NyriSys Inc"
+contact: ""
+agent: ""
 date: ""
 ---
 
