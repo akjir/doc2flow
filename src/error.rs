@@ -1,8 +1,71 @@
 //! Error handling and diagnostic reporting module for Doc2Flow.
 
-use anyhow::Error;
 use std::borrow::Cow;
-use std::fmt::Write;
+use std::fmt::{self, Display, Formatter, Write};
+use std::path::PathBuf;
+
+/// Result type alias for Doc2Flow operations.
+pub type Result<T, E = Doc2FlowError> = std::result::Result<T, E>;
+
+/// Centralized domain error type for all Doc2Flow operations.
+#[derive(Debug)]
+pub enum Doc2FlowError {
+    /// Rendered compiler-style diagnostic error string.
+    Diagnostic(String),
+    /// Missing or insufficient identity fields (title, version, date).
+    MissingIdentityFields,
+    /// Image resource not found or unreadable.
+    ImageNotFound(PathBuf),
+    /// Image processing or encoding error.
+    ImageProcess(String),
+    /// Standard I/O operation error.
+    Io {
+        path: Option<PathBuf>,
+        source: std::io::Error,
+    },
+    /// JSON serialization or deserialization error.
+    Json(String),
+    /// General application CLI or processing message error.
+    Message(String),
+}
+
+impl Display for Doc2FlowError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Doc2FlowError::Diagnostic(msg) => write!(f, "{msg}"),
+            Doc2FlowError::MissingIdentityFields => write!(
+                f,
+                "Fatal: At least 2 of the required identity fields (title, version, date) are missing in frontmatter."
+            ),
+            Doc2FlowError::ImageNotFound(path) => write!(f, "Image file not found: {}", path.display()),
+            Doc2FlowError::ImageProcess(msg) => write!(f, "{msg}"),
+            Doc2FlowError::Io { path: Some(path), source } => {
+                write!(f, "I/O error at {}: {}", path.display(), source)
+            }
+            Doc2FlowError::Io { path: None, source } => write!(f, "I/O error: {source}"),
+            Doc2FlowError::Json(msg) => write!(f, "{msg}"),
+            Doc2FlowError::Message(msg) => write!(f, "{msg}"),
+        }
+    }
+}
+
+impl std::error::Error for Doc2FlowError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Doc2FlowError::Io { source, .. } => Some(source),
+            _ => None,
+        }
+    }
+}
+
+impl From<std::io::Error> for Doc2FlowError {
+    fn from(err: std::io::Error) -> Self {
+        Doc2FlowError::Io {
+            path: None,
+            source: err,
+        }
+    }
+}
 
 /// Static buffer of carets for zero-allocation caret borrowing on typical line lengths.
 const STATIC_CARETS: &str =
@@ -65,13 +128,18 @@ impl<'a> DiagnosticError<'a> {
         out
     }
 
+    /// Converts the diagnostic error into a `Doc2FlowError`.
+    pub fn to_doc2flow(&self) -> Doc2FlowError {
+        Doc2FlowError::Diagnostic(self.render())
+    }
+
     /// Converts the diagnostic error into an `anyhow::Error`.
-    pub fn to_anyhow(&self) -> Error {
+    pub fn to_anyhow(&self) -> anyhow::Error {
         anyhow::anyhow!("{}", self.render())
     }
 
     /// Builder for missing frontmatter field errors.
-    pub fn missing_frontmatter_field(file_path: &'a str, line_no: usize) -> Error {
+    pub fn missing_frontmatter_field(file_path: &'a str, line_no: usize) -> Doc2FlowError {
         DiagnosticError {
             message: Cow::Borrowed("missing required frontmatter field 'company'"),
             file_path: Cow::Borrowed(file_path),
@@ -86,7 +154,7 @@ impl<'a> DiagnosticError<'a> {
                 "add 'company: \"Company Name\"' to the YAML frontmatter block at the top of your Markdown file.",
             ),
         }
-        .to_anyhow()
+        .to_doc2flow()
     }
 
     /// Builder for empty frontmatter field errors.
@@ -94,7 +162,7 @@ impl<'a> DiagnosticError<'a> {
         file_path: &'a str,
         line_no: usize,
         line_content: &'a str,
-    ) -> Error {
+    ) -> Doc2FlowError {
         let line_len = line_content
             .trim_end()
             .len()
@@ -112,11 +180,11 @@ impl<'a> DiagnosticError<'a> {
             annotation_text: Cow::Borrowed("'company' field value cannot be empty"),
             help_text: Cow::Borrowed("provide a valid company name, e.g. company: \"Acme Corp\""),
         }
-        .to_anyhow()
+        .to_doc2flow()
     }
 
     /// Builder for missing frontmatter block errors.
-    pub fn missing_frontmatter_block(file_path: &'a str, first_line: &'a str) -> Error {
+    pub fn missing_frontmatter_block(file_path: &'a str, first_line: &'a str) -> Doc2FlowError {
         DiagnosticError {
             message: Cow::Borrowed(
                 "missing YAML frontmatter block with required field 'company'",
@@ -133,7 +201,7 @@ impl<'a> DiagnosticError<'a> {
                 "add YAML frontmatter at the top of your Markdown file:\n          ---\n          title: \"Document Title\"\n          company: \"Company Name\"\n          date: \"YYYY-MM-DD\"\n          ---",
             ),
         }
-        .to_anyhow()
+        .to_doc2flow()
     }
 
     /// Builder for local image size exceeding maximum limit errors.
@@ -144,7 +212,7 @@ impl<'a> DiagnosticError<'a> {
         line_snippet: &'a str,
         src_val: &'a str,
         size_bytes: u64,
-    ) -> Error {
+    ) -> Doc2FlowError {
         let size_kb = size_bytes as f64 / 1024.0;
         let line_len = line_snippet.len().max(1);
 
@@ -183,7 +251,7 @@ impl<'a> DiagnosticError<'a> {
                 "reduce image resolution or compress '{src_val}' below 250 KB before embedding."
             )),
         }
-        .to_anyhow()
+        .to_doc2flow()
     }
 }
 
@@ -263,4 +331,39 @@ mod tests {
         assert!(err_str.contains("^^^^^^^^^^^^^^^^^^^ local image size (300.0 KB) exceeds 250 KB limit"));
         assert!(err_str.contains("= help: reduce image resolution or compress 'images/large_photo.png' below 250 KB before embedding."));
     }
+
+    #[test]
+    fn test_diagnostic_error_render_multi_digit_lines() {
+        let diag_2digit = DiagnosticError {
+            message: "2 digit line".into(),
+            file_path: "spec.md".into(),
+            line_number: 42,
+            col_number: 5,
+            line_snippet: "company: ''".into(),
+            annotation_carets: "^^^^^^^^^^^".into(),
+            annotation_text: "empty".into(),
+            help_text: "fix company".into(),
+        };
+        let rendered_2 = diag_2digit.render();
+        assert!(rendered_2.contains("42 | company: ''"));
+
+        let diag_4digit = DiagnosticError {
+            message: "4 digit line".into(),
+            file_path: "large_spec.md".into(),
+            line_number: 1234,
+            col_number: 1,
+            line_snippet: "some text".into(),
+            annotation_carets: "^".into(),
+            annotation_text: "text".into(),
+            help_text: "fix text".into(),
+        };
+        let rendered_4 = diag_4digit.render();
+        assert!(rendered_4.contains("1234 | some text"));
+    }
+
+    #[test]
+    fn test_print_warning_does_not_panic() {
+        print_warning("Test warning message");
+    }
 }
+

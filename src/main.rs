@@ -1,6 +1,6 @@
-use anyhow::{Context, Result};
 use clap::Parser;
 use doc2flow::converter;
+use doc2flow::error::{Doc2FlowError, Result};
 use doc2flow::i18n::Locale;
 use doc2flow::template;
 use std::fs;
@@ -36,8 +36,9 @@ fn main() -> Result<()> {
 
     if let Some(init_path) = args.init {
         let template_content = template::generate_template_markdown();
-        fs::write(&init_path, template_content).with_context(|| {
-            format!("Failed to generate template file: {}", init_path.display())
+        fs::write(&init_path, template_content).map_err(|e| Doc2FlowError::Io {
+            path: Some(init_path.clone()),
+            source: e,
         })?;
         println!("Successfully generated template {}", init_path.display());
         return Ok(());
@@ -45,9 +46,12 @@ fn main() -> Result<()> {
 
     let input_path = match args.input {
         Some(path) => path,
-        None => anyhow::bail!(
-            "Missing input file. Specify input path or use --init to generate a template."
-        ),
+        None => {
+            return Err(Doc2FlowError::Message(
+                "Missing input file. Specify input path or use --init to generate a template."
+                    .to_string(),
+            ));
+        }
     };
 
     let output_path = args.output.unwrap_or_else(|| {
@@ -56,8 +60,10 @@ fn main() -> Result<()> {
         p
     });
 
-    let md_content = fs::read_to_string(&input_path)
-        .with_context(|| format!("Failed to read input file: {}", input_path.display()))?;
+    let md_content = fs::read_to_string(&input_path).map_err(|e| Doc2FlowError::Io {
+        path: Some(input_path.clone()),
+        source: e,
+    })?;
 
     let file_name = input_path.to_str();
     let (frontmatter, markdown_body) =
@@ -78,8 +84,10 @@ fn main() -> Result<()> {
         args.auto_scale,
     )?;
 
-    fs::write(&output_path, final_html)
-        .with_context(|| format!("Failed to write output file: {}", output_path.display()))?;
+    fs::write(&output_path, final_html).map_err(|e| Doc2FlowError::Io {
+        path: Some(output_path.clone()),
+        source: e,
+    })?;
 
     println!("Successfully generated {}", output_path.display());
     Ok(())

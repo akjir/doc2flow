@@ -16,6 +16,7 @@ pub struct Locale {
 
 impl Locale {
     /// Constructs a `Locale` by parsing a raw JSON string.
+    /// Returns default fallback on invalid JSON instead of panicking.
     ///
     /// # Examples
     ///
@@ -27,13 +28,21 @@ impl Locale {
     /// assert_eq!(locale.get("company"), "Company");
     /// ```
     pub fn from_json(json_str: &str) -> Self {
-        let entries: HashMap<String, String> =
-            serde_json::from_str(json_str).expect("Failed to deserialize locale JSON");
+        Self::try_from_json(json_str).unwrap_or_else(|_| Locale {
+            lang_code: "en".to_string(),
+            entries: HashMap::new(),
+        })
+    }
+
+    /// Fallibly parses a `Locale` from a JSON string.
+    pub fn try_from_json(json_str: &str) -> crate::error::Result<Self> {
+        let entries: HashMap<String, String> = serde_json::from_str(json_str)
+            .map_err(|e| crate::error::Doc2FlowError::Json(e.to_string()))?;
         let lang_code = entries
             .get("lang_code")
             .cloned()
             .unwrap_or_else(|| "en".to_string());
-        Locale { lang_code, entries }
+        Ok(Locale { lang_code, entries })
     }
 
     /// Loads an embedded locale corresponding to the normalized language code.
@@ -60,7 +69,11 @@ impl Locale {
     }
 
     /// Returns the localized entry value for `key` ignoring ASCII case.
+    /// Uses O(1) exact hash match fast path before case-insensitive fallback.
     pub fn get_ignore_ascii_case(&self, key: &str) -> Option<&str> {
+        if let Some(v) = self.entries.get(key) {
+            return Some(v.as_str());
+        }
         self.entries
             .iter()
             .find(|(k, _)| k.eq_ignore_ascii_case(key))
@@ -149,4 +162,28 @@ mod tests {
         // Call validation; missing key prints to stderr without panicking
         validate_locale_coverage(tmpl, &locale);
     }
+
+    #[test]
+    fn test_from_lang_code_uppercase_and_whitespace() {
+        let de_upper = Locale::from_lang_code("  DE ");
+        assert_eq!(de_upper.lang_code, "de");
+        assert_eq!(de_upper.get("company"), "Firma");
+    }
+
+    #[test]
+    fn test_get_ignore_ascii_case() {
+        let locale = Locale::from_lang_code("en");
+        assert_eq!(locale.get_ignore_ascii_case("COMPANY"), Some("Company"));
+        assert_eq!(locale.get_ignore_ascii_case("Company"), Some("Company"));
+        assert_eq!(locale.get_ignore_ascii_case("company"), Some("Company"));
+        assert_eq!(locale.get_ignore_ascii_case("NONEXISTENT"), None);
+    }
+
+    #[test]
+    fn test_locale_default_impl() {
+        let default_loc = Locale::default();
+        assert_eq!(default_loc.lang_code, "en");
+        assert_eq!(default_loc.get("company"), "Company");
+    }
 }
+

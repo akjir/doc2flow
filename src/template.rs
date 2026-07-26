@@ -1,8 +1,6 @@
-//! HTML rendering, template substitution, and starter document generation module for Doc2Flow.
-
 use crate::converter::Frontmatter;
+use crate::error::{Doc2FlowError, Result};
 use crate::i18n::{Locale, validate_locale_coverage};
-use anyhow::{Context, Result};
 use std::collections::HashMap;
 
 /// Default embedded SVG header logo.
@@ -104,7 +102,7 @@ pub fn render(
     validate_locale_coverage(base_html, locale);
 
     let i18n_json = serde_json::to_string(&locale.entries)
-        .context("Failed to serialize locale entries to JSON for template rendering")?;
+        .map_err(|e| Doc2FlowError::Json(e.to_string()))?;
 
     let mut vars = HashMap::with_capacity(13);
     vars.insert("LANG_CODE", locale.lang_code.as_str());
@@ -221,4 +219,22 @@ mod tests {
             "<div>Bonjour Le Monde</div><span>Valeur Dynamique</span>"
         );
     }
+
+    #[test]
+    fn test_substitute_template_var_precedence_over_locale() {
+        let mut vars = HashMap::new();
+        vars.insert("L_COMPANY", "Overridden Company");
+        let locale = Locale::from_lang_code("de"); // has "company": "Firma"
+
+        let tmpl = "<div>{{L_COMPANY}}</div>";
+        let res = substitute_template(tmpl, &vars, Some(&locale));
+        assert_eq!(res, "<div>Overridden Company</div>");
+    }
+
+    #[test]
+    fn test_default_logo_svg_constant() {
+        assert!(DEFAULT_LOGO_SVG.contains("<svg"));
+        assert!(DEFAULT_LOGO_SVG.contains("</svg>"));
+    }
 }
+

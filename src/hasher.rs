@@ -15,19 +15,10 @@ const H0: [u32; 8] = [
     0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
 ];
 
-/// Computes the SHA-256 hash of input bytes and returns a 64-character hexadecimal string.
-///
-/// Uses pre-allocated exact buffer capacity to eliminate re-allocations during padding.
-///
-/// # Examples
-///
-/// ```
-/// use doc2flow::hasher::sha256;
-///
-/// let digest = sha256(b"abc");
-/// assert_eq!(digest, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
-/// ```
-pub fn sha256(data: &[u8]) -> String {
+const HEX_CHARS: &[u8; 16] = b"0123456789abcdef";
+
+/// Computes the SHA-256 digest of `data` and returns the 32-byte hash array directly.
+pub fn sha256_bytes(data: &[u8]) -> [u8; 32] {
     let mut h = H0;
 
     let data_len = data.len();
@@ -105,10 +96,33 @@ pub fn sha256(data: &[u8]) -> String {
         h[7] = h[7].wrapping_add(h_var);
     }
 
-    format!(
-        "{:08x}{:08x}{:08x}{:08x}{:08x}{:08x}{:08x}{:08x}",
-        h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7]
-    )
+    let mut out = [0u8; 32];
+    for (i, val) in h.iter().enumerate() {
+        out[i * 4..i * 4 + 4].copy_from_slice(&val.to_be_bytes());
+    }
+    out
+}
+
+/// Computes the SHA-256 hash of input bytes and returns a 64-character hexadecimal string.
+///
+/// Uses pre-allocated exact buffer capacity to eliminate re-allocations during padding.
+///
+/// # Examples
+///
+/// ```
+/// use doc2flow::hasher::sha256;
+///
+/// let digest = sha256(b"abc");
+/// assert_eq!(digest, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+/// ```
+pub fn sha256(data: &[u8]) -> String {
+    let digest = sha256_bytes(data);
+    let mut s = String::with_capacity(64);
+    for b in digest {
+        s.push(HEX_CHARS[(b >> 4) as usize] as char);
+        s.push(HEX_CHARS[(b & 0x0f) as usize] as char);
+    }
+    s
 }
 
 /// Generates a compact `doc_id` for browser `localStorage` in the format `"doc_<HEX_PREFIX>"`.
@@ -126,8 +140,14 @@ pub fn sha256(data: &[u8]) -> String {
 /// assert_eq!(doc_id.len(), 20);
 /// ```
 pub fn generate_doc_id(input: &str) -> String {
-    let hash = sha256(input.as_bytes());
-    format!("doc_{}", &hash[..16])
+    let digest = sha256_bytes(input.as_bytes());
+    let mut doc_id = String::with_capacity(20);
+    doc_id.push_str("doc_");
+    for b in &digest[..8] {
+        doc_id.push(HEX_CHARS[(b >> 4) as usize] as char);
+        doc_id.push(HEX_CHARS[(b & 0x0f) as usize] as char);
+    }
+    doc_id
 }
 
 #[cfg(test)]
@@ -170,4 +190,47 @@ mod tests {
         let full_hash = sha256(b"sample_document");
         assert_eq!(doc_id, format!("doc_{}", &full_hash[..16]));
     }
+
+    #[test]
+    fn test_sha256_padding_boundary_55_bytes() {
+        let data = b"1234567890123456789012345678901234567890123456789012345";
+        assert_eq!(data.len(), 55);
+        let digest = sha256(data);
+        assert_eq!(digest.len(), 64);
+    }
+
+    #[test]
+    fn test_sha256_padding_overflow_56_bytes() {
+        // 56 bytes + 1 byte (0x80) + 8 bytes (len) = 65 bytes > 64 -> forces second 64-byte block
+        let data = b"12345678901234567890123456789012345678901234567890123456";
+        assert_eq!(data.len(), 56);
+        let digest = sha256(data);
+        assert_eq!(digest.len(), 64);
+    }
+
+    #[test]
+    fn test_sha256_exact_64_bytes() {
+        let data = b"1234567890123456789012345678901234567890123456789012345678901234";
+        assert_eq!(data.len(), 64);
+        let digest = sha256(data);
+        assert_eq!(digest.len(), 64);
+    }
+
+    #[test]
+    fn test_sha256_large_input_1000_bytes() {
+        let data = vec![b'a'; 1000];
+        let digest = sha256(&data);
+        assert_eq!(digest.len(), 64);
+        // Multi-call determinism check
+        assert_eq!(sha256(&data), digest);
+    }
+
+    #[test]
+    fn test_generate_doc_id_determinism() {
+        let id1 = generate_doc_id("test_doc_id_input");
+        let id2 = generate_doc_id("test_doc_id_input");
+        assert_eq!(id1, id2);
+        assert_ne!(id1, generate_doc_id("different_input"));
+    }
 }
+

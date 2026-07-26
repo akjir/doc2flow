@@ -1,16 +1,19 @@
-use crate::error::DiagnosticError;
+use crate::error::{DiagnosticError, Result};
 use crate::i18n::Locale;
-use anyhow::Result;
 use pulldown_cmark::{
     CodeBlockKind, Event, HeadingLevel, Options, Parser as MarkdownParser, Tag, TagEnd, html,
 };
+use std::borrow::Cow;
 
 /// SVG icon rendered on hover for clickable elements.
 pub const COMMENT_ICON_SVG: &str = r#"<span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><g fill="currentColor" transform="translate(-204, -255)"><path d="M228,267 C226.896,267 226,267.896 226,269 C226,270.104 226.896,271 228,271 C229.104,271 230,270.104 230,269 C230,267.896 229.104,267 228,267 L228,267 Z M220,281 C218.832,281 217.704,280.864 216.62,280.633 L211.912,283.463 L211.975,278.824 C208.366,276.654 206,273.066 206,269 C206,262.373 212.268,257 220,257 C227.732,257 234,262.373 234,269 C234,275.628 227.732,281 220,281 L220,281 Z M220,255 C211.164,255 204,261.269 204,269 C204,273.419 206.345,277.354 210,279.919 L210,287 L217.009,282.747 C217.979,282.907 218.977,283 220,283 C228.836,283 236,276.732 236,269 C236,261.269 228.836,255 220,255 L220,255 Z M212,267 C210.896,267 210,267.896 210,269 C210,270.104 210.896,271 212,271 C213.104,271 214,270.104 214,269 C214,267.896 213.104,267 212,267 L212,267 Z M220,267 C218.896,267 218,267.896 218,269 C218,270.104 218.896,271 220,271 C221.104,271 222,270.104 222,269 C222,267.896 221.104,267 220,267 L220,267 Z"/></g></svg></span>"#;
 
-/// Escapes HTML special characters in code strings.
-fn html_escape(input: &str) -> String {
-    let mut escaped = String::with_capacity(input.len());
+/// Escapes HTML special characters in code strings. Returns Cow::Borrowed if no escaping is needed.
+fn html_escape(input: &str) -> Cow<'_, str> {
+    if !input.bytes().any(|b| matches!(b, b'&' | b'<' | b'>' | b'"')) {
+        return Cow::Borrowed(input);
+    }
+    let mut escaped = String::with_capacity(input.len() + 8);
     for ch in input.chars() {
         match ch {
             '&' => escaped.push_str("&amp;"),
@@ -20,7 +23,7 @@ fn html_escape(input: &str) -> String {
             _ => escaped.push(ch),
         }
     }
-    escaped
+    Cow::Owned(escaped)
 }
 
 /// Frontmatter metadata extracted from Markdown header.
@@ -31,9 +34,16 @@ enum ListKind {
 }
 
 /// Converts a 1-based number to alphabetic representation (1 -> a, 2 -> b, ..., 26 -> z).
-fn to_alpha(mut n: u64) -> String {
+fn to_alpha(mut n: u64) -> Cow<'static, str> {
     if n == 0 {
-        return "a".to_string();
+        return Cow::Borrowed("a");
+    }
+    if n <= 26 {
+        const ALPHAS: &[&str; 26] = &[
+            "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q",
+            "r", "s", "t", "u", "v", "w", "x", "y", "z",
+        ];
+        return Cow::Borrowed(ALPHAS[(n - 1) as usize]);
     }
     let mut result = String::new();
     while n > 0 {
@@ -42,11 +52,15 @@ fn to_alpha(mut n: u64) -> String {
         result.insert(0, (b'a' + rem) as char);
         n /= 26;
     }
-    result
+    Cow::Owned(result)
 }
 
 /// Converts a 1-based number to lowercase Roman numerals (1 -> i, 2 -> ii, 3 -> iii...).
-fn to_roman(n: u64) -> String {
+fn to_roman(n: u64) -> Cow<'static, str> {
+    if (1..=10).contains(&n) {
+        const ROMANS: &[&str; 10] = &["i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"];
+        return Cow::Borrowed(ROMANS[(n - 1) as usize]);
+    }
     let mapping = [
         (1000, "m"),
         (900, "cm"),
@@ -71,25 +85,25 @@ fn to_roman(n: u64) -> String {
         }
     }
     if result.is_empty() {
-        "i".to_string()
+        Cow::Borrowed("i")
     } else {
-        result
+        Cow::Owned(result)
     }
 }
 
 /// Formats bullet symbol or ordered number based on list kind and nesting depth.
-fn format_bullet(kind: &mut ListKind, depth: usize) -> String {
+fn format_bullet(kind: &mut ListKind, depth: usize) -> Cow<'static, str> {
     match kind {
         ListKind::Ordered { current } => {
             let num = *current;
             *current += 1;
             match depth % 3 {
-                0 => format!("{num}."),
-                1 => format!("{}.", to_alpha(num)),
-                _ => format!("{}.", to_roman(num)),
+                0 => Cow::Owned(format!("{num}.")),
+                1 => Cow::Owned(format!("{}.", to_alpha(num))),
+                _ => Cow::Owned(format!("{}.", to_roman(num))),
             }
         }
-        ListKind::Unordered => "&bull;".to_string(),
+        ListKind::Unordered => Cow::Borrowed("&bull;"),
     }
 }
 
@@ -281,8 +295,7 @@ fn filter_comment_events(events: Vec<Event>) -> Vec<Event> {
                     }
                     continue;
                 } else if let Some(start_idx) = s.find("<!--") {
-                    if let Some(end_idx) = s[start_idx..].find("-->") {
-                        let _ = end_idx;
+                    if s[start_idx..].contains("-->") {
                         // Single-line or self-contained comment in this event
                         continue;
                     } else {
@@ -583,7 +596,7 @@ pub fn convert_markdown_to_html_with_locale(
                 } else {
                     let bullet = match list_stack.last_mut() {
                         Some(kind) => format_bullet(kind, list_depth),
-                        None => "&bull;".to_string(),
+                        None => Cow::Borrowed("&bull;"),
                     };
 
                     global_item_count += 1;
@@ -949,4 +962,107 @@ mod tests {
         assert!(html.contains(r#"<div class="subh">Sub 5</div>"#));
         assert!(html.contains(r#"<div class="subh">Sub 6</div>"#));
     }
+
+    #[test]
+    fn test_frontmatter_windows_crlf_line_endings() {
+        let input = "---\r\ntitle: \"CRLF Title\"\r\ncompany: \"CRLF Corp\"\r\nlanguage: de\r\n---\r\n## Section 1\r\nBody line";
+        let (fm, body) = parse_frontmatter(input);
+        assert_eq!(fm.title, "CRLF Title");
+        assert_eq!(fm.company, "CRLF Corp");
+        assert_eq!(fm.language, "de");
+        assert_eq!(body, "## Section 1\r\nBody line");
+    }
+
+    #[test]
+    fn test_frontmatter_quoted_and_unquoted_fields() {
+        let input = "---\ntitle: 'Single Quoted'\nsubtitle: \"Double Quoted\"\ncompany:   Unquoted Spaced   \ncontact: 'person@example.com'\nagent: \"Agent 007\"\ndate: 2026-07-26\nversion: '1.2.3'\nlang: en\n---\nBody";
+        let (fm, _) = parse_frontmatter(input);
+        assert_eq!(fm.title, "Single Quoted");
+        assert_eq!(fm.subtitle, "Double Quoted");
+        assert_eq!(fm.company, "Unquoted Spaced");
+        assert_eq!(fm.contact, "person@example.com");
+        assert_eq!(fm.agent, "Agent 007");
+        assert_eq!(fm.date, "2026-07-26");
+        assert_eq!(fm.version, "1.2.3");
+        assert_eq!(fm.language, "en");
+    }
+
+    #[test]
+    fn test_to_alpha_and_to_roman() {
+        assert_eq!(to_alpha(0), "a");
+        assert_eq!(to_alpha(1), "a");
+        assert_eq!(to_alpha(2), "b");
+        assert_eq!(to_alpha(26), "z");
+        assert_eq!(to_alpha(27), "aa");
+
+        assert_eq!(to_roman(0), "i");
+        assert_eq!(to_roman(1), "i");
+        assert_eq!(to_roman(2), "ii");
+        assert_eq!(to_roman(4), "iv");
+        assert_eq!(to_roman(9), "ix");
+        assert_eq!(to_roman(14), "xiv");
+        assert_eq!(to_roman(40), "xl");
+        assert_eq!(to_roman(90), "xc");
+        assert_eq!(to_roman(400), "cd");
+        assert_eq!(to_roman(900), "cm");
+        assert_eq!(to_roman(1984), "mcmlxxxiv");
+    }
+
+    #[test]
+    fn test_callout_parsing_variants_and_formatting() {
+        let locale = Locale::default();
+        // Check "!" vs "! " vs "!! " vs "!!! " vs "?" vs "? "
+        let (cls, text, lbl) = parse_callout("!Important message", &locale);
+        assert_eq!(cls, "note note-important");
+        assert_eq!(text, "Important message");
+        assert_eq!(lbl, "Important");
+
+        let (cls, text, lbl) = parse_callout("?Tip without space", &locale);
+        assert_eq!(cls, "note note-tip");
+        assert_eq!(text, "Tip without space");
+        assert_eq!(lbl, "Tip");
+
+        let (cls, text, lbl) = parse_callout("!!Warning without space", &locale);
+        assert_eq!(cls, "note note-warning");
+        assert_eq!(text, "Warning without space");
+        assert_eq!(lbl, "Warning");
+
+        let (cls, text, lbl) = parse_callout("!!!Caution without space", &locale);
+        assert_eq!(cls, "note note-caution");
+        assert_eq!(text, "Caution without space");
+        assert_eq!(lbl, "Caution");
+    }
+
+    #[test]
+    fn test_deeply_nested_lists_up_to_level_4() {
+        let input = r#"## Section 1
+
+1. Level 1 Item 1
+   1. Level 2 Item 1
+      1. Level 3 Item 1
+         1. Level 4 Item 1
+"#;
+        let html = convert_markdown_to_html(input).expect("conversion failed");
+
+        // Level 1: 1.
+        assert!(html.contains(r#"<span class="list-bullet">1.</span>"#));
+        // Level 2: a. (--indent: 1)
+        assert!(html.contains(r#"<span class="list-bullet">a.</span>"#));
+        // Level 3: i. (--indent: 2)
+        assert!(html.contains(r#"<span class="list-bullet">i.</span>"#));
+        // Level 4: 1. (--indent: 3)
+        assert!(html.contains(r#"<span class="list-bullet">1.</span>"#));
+    }
+
+    #[test]
+    fn test_html_escaping_in_code_and_headings() {
+        let input = "## Header `<script>alert(1)</script>` & More\n\n```html\n<div id=\"app\">&amp;</div>\n```";
+        let html = convert_markdown_to_html(input).expect("conversion failed");
+
+        assert!(html.contains("&lt;script&gt;alert(1)&lt;/script&gt;"));
+        assert!(html.contains("&amp; More"));
+        assert!(html.contains("&lt;div id=&quot;app&quot;&gt;&amp;amp;&lt;/div&gt;"));
+    }
 }
+
+

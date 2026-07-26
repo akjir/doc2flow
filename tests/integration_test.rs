@@ -413,3 +413,70 @@ date: "2026-07-26"
 
     assert!(html.contains("data:image/webp;base64,"));
 }
+
+#[test]
+fn test_full_pipeline_multi_language_and_callouts() {
+    let input = r#"---
+title: "Pipeline Callouts & Multilang"
+company: "Global Tech"
+language: "de"
+version: "2.1.0"
+date: "2026-07-26"
+---
+# Main Section
+
+> Standard Hinweis
+
+>? Tipp Text
+
+>! Wichtig Text
+
+>!! Warnung Text
+
+>!!! Achtung Text
+
+- [ ] Task 1
+- [x] Task 2 Completed
+"#;
+
+    let (fm, body) = doc2flow::converter::parse_and_validate_frontmatter(input, Some("pipeline.md")).unwrap();
+    let locale = doc2flow::i18n::Locale::from_lang_code(&fm.language);
+    let html_body = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
+    let d2f_id = doc2flow::id::generate_d2f_id(&fm).unwrap();
+    let html = doc2flow::template::render(&fm, &locale, &html_body, &d2f_id).unwrap();
+
+    assert!(html.contains("<html lang=\"de\">"));
+    assert!(html.contains("data-label=\"Hinweis\""));
+    assert!(html.contains("data-label=\"Tipp\""));
+    assert!(html.contains("data-label=\"Wichtig\""));
+    assert!(html.contains("data-label=\"Warnung\""));
+    assert!(html.contains("data-label=\"Achtung\""));
+    assert!(html.contains("id=\"wrap-cb_s1_1\""));
+    assert!(html.contains("id=\"wrap-cb_s1_2\""));
+}
+
+#[test]
+fn test_non_image_resource_link_wrapper_integration() {
+    let input = r#"---
+title: "PDF Resource Spec"
+company: "Docs Inc"
+date: "2026-07-26"
+---
+## Attachments
+
+![Specification PDF](files/spec.pdf)
+"#;
+
+    let (fm, body) = doc2flow::converter::parse_and_validate_frontmatter(input, Some("pdf_spec.md")).unwrap();
+    let locale = doc2flow::i18n::Locale::from_lang_code(&fm.language);
+    let html_body = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
+    let d2f_id = doc2flow::id::generate_d2f_id(&fm).unwrap();
+    let rendered = doc2flow::template::render(&fm, &locale, &html_body, &d2f_id).unwrap();
+    let html = doc2flow::image::embed_images_as_base64(&rendered, None).unwrap();
+
+    assert!(html.contains("<div class=\"check-item text-item\">"));
+    assert!(html.contains("<a href=\"files/spec.pdf\" target=\"_blank\" rel=\"noopener noreferrer\">Specification PDF</a>"));
+    assert!(!html.contains("src=\"files/spec.pdf\""));
+}
+
+

@@ -1,10 +1,10 @@
 //! Dynamic `d2f_id` generator module for Doc2Flow.
 
 use crate::converter::Frontmatter;
-use crate::error::print_warning;
-use crate::hasher::sha256;
-use anyhow::{Result, bail};
+use crate::error::{Doc2FlowError, Result, print_warning};
 use std::borrow::Cow;
+
+const HEX_CHARS: &[u8; 16] = b"0123456789abcdef";
 
 /// Generates a dynamic, deterministic, and collision-free `d2f_id` for a document.
 ///
@@ -48,9 +48,7 @@ pub fn generate_d2f_id(frontmatter: &Frontmatter) -> Result<String> {
         1 => print_warning(
             "One of the identity fields (title, version, date) is missing in frontmatter. Generating d2f_id with available metadata.",
         ),
-        _ => bail!(
-            "Fatal: At least 2 of the required identity fields (title, version, date) are missing in frontmatter."
-        ),
+        _ => return Err(Doc2FlowError::MissingIdentityFields),
     }
 
     let norm_version = if let Some((idx, _)) = raw_version.char_indices().nth(12) {
@@ -68,11 +66,14 @@ pub fn generate_d2f_id(frontmatter: &Frontmatter) -> Result<String> {
     composite_key.push(':');
     composite_key.push_str(&norm_date);
 
-    let hash_hex = sha256(composite_key.as_bytes());
+    let digest = crate::hasher::sha256_bytes(composite_key.as_bytes());
 
     let mut result = String::with_capacity(23);
     result.push_str("d2f_id_");
-    result.push_str(&hash_hex[..16]);
+    for b in &digest[..8] {
+        result.push(HEX_CHARS[(b >> 4) as usize] as char);
+        result.push(HEX_CHARS[(b & 0x0f) as usize] as char);
+    }
     Ok(result)
 }
 
@@ -210,4 +211,60 @@ mod tests {
         let result = generate_d2f_id(&fm);
         assert!(result.is_err());
     }
+
+    #[test]
+    fn test_generate_d2f_id_exact_12_char_version() {
+        let fm = Frontmatter {
+            title: "System Spec".into(),
+            version: "123456789012".into(), // exactly 12 chars
+            date: "2026-07-26".into(),
+            ..Default::default()
+        };
+
+        let result = generate_d2f_id(&fm).unwrap();
+        assert!(result.starts_with("d2f_id_"));
+    }
+
+    #[test]
+    fn test_generate_d2f_id_emoji_unicode_truncation() {
+        let fm = Frontmatter {
+            title: "Unicode Test".into(),
+            version: "v1.0.0-🚀🌟✨🎉🎈🎊".into(), // > 12 unicode characters (multi-byte)
+            date: "2026-07-26".into(),
+            ..Default::default()
+        };
+
+        let result = generate_d2f_id(&fm);
+        assert!(result.is_ok(), "d2f_id generation should handle multi-byte emoji truncation safely");
+        let id = result.unwrap();
+        assert!(id.starts_with("d2f_id_"));
+        assert_eq!(id.len(), 23);
+    }
+
+    #[test]
+    fn test_generate_d2f_id_missing_title_allowed() {
+        let fm = Frontmatter {
+            title: "".into(), // missing
+            version: "v1.0".into(),
+            date: "2026-07-26".into(),
+            ..Default::default()
+        };
+
+        let result = generate_d2f_id(&fm);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_generate_d2f_id_missing_version_allowed() {
+        let fm = Frontmatter {
+            title: "Title Only".into(),
+            version: "".into(), // missing
+            date: "2026-07-26".into(),
+            ..Default::default()
+        };
+
+        let result = generate_d2f_id(&fm);
+        assert!(result.is_ok());
+    }
 }
+

@@ -1,12 +1,9 @@
-//! Image resolution, Base64 embedding, and non-image link conversion module.
-
-use crate::error::DiagnosticError;
-use anyhow::Result;
+use crate::error::{DiagnosticError, Doc2FlowError, Result};
 use base64::prelude::*;
-use image::{imageops::FilterType, GenericImageView, ImageFormat};
+use image::{GenericImageView, ImageFormat, imageops::FilterType};
 use std::collections::HashMap;
-use std::fs;
 use std::fmt::Write as _;
+use std::fs;
 use std::io::{Cursor, IsTerminal, Write as _};
 use std::path::{Path, PathBuf};
 
@@ -102,13 +99,11 @@ pub fn embed_images_as_base64_with_source(
                                         auto_scale || prompt_user_for_resizing(src_val, size);
 
                                     let mut scaled = false;
-                                    if should_scale {
-                                        if let Ok(data_uri) =
-                                            process_and_encode_image_as_webp(&resolved_path)
-                                        {
-                                            cache.insert(resolved_path.clone(), data_uri);
-                                            scaled = true;
-                                        }
+                                    if let Some(Ok(data_uri)) =
+                                        should_scale.then(|| process_and_encode_image_as_webp(&resolved_path))
+                                    {
+                                        cache.insert(resolved_path.clone(), data_uri);
+                                        scaled = true;
                                     }
 
                                     if !scaled {
@@ -141,16 +136,14 @@ pub fn embed_images_as_base64_with_source(
                         }
                     }
 
-                    if let Some(data_uri) = cache.get(&resolved_path) {
-                        if data_uri != src_val {
-                            out.push_str(&tag_slice[..attr_start]);
-                            out.push_str("src=\"");
-                            out.push_str(data_uri);
-                            out.push('"');
-                            out.push_str(&tag_slice[attr_end..]);
-                            cursor = img_end;
-                            continue;
-                        }
+                    if let Some(data_uri) = cache.get(&resolved_path).filter(|&d| d != src_val) {
+                        out.push_str(&tag_slice[..attr_start]);
+                        out.push_str("src=\"");
+                        out.push_str(data_uri);
+                        out.push('"');
+                        out.push_str(&tag_slice[attr_end..]);
+                        cursor = img_end;
+                        continue;
                     }
                 }
             }
@@ -173,8 +166,13 @@ pub fn embed_images_as_base64_with_source(
 ///
 /// Returns an error if opening or encoding the image fails.
 pub fn process_and_encode_image_as_webp(image_path: &Path) -> Result<String> {
-    let img = image::open(image_path)
-        .map_err(|e| anyhow::anyhow!("Failed to open image '{}': {}", image_path.display(), e))?;
+    let img = image::open(image_path).map_err(|e| {
+        Doc2FlowError::ImageProcess(format!(
+            "Failed to open image '{}': {}",
+            image_path.display(),
+            e
+        ))
+    })?;
 
     let (orig_w, orig_h) = img.dimensions();
     let file_size = fs::metadata(image_path)
@@ -200,9 +198,9 @@ pub fn process_and_encode_image_as_webp(image_path: &Path) -> Result<String> {
 
         buffer.clear();
         let mut cursor = Cursor::new(&mut buffer);
-        resized_img
-            .write_to(&mut cursor, ImageFormat::WebP)
-            .map_err(|e| anyhow::anyhow!("Failed to encode image to WebP format: {}", e))?;
+        resized_img.write_to(&mut cursor, ImageFormat::WebP).map_err(|e| {
+            Doc2FlowError::ImageProcess(format!("Failed to encode image to WebP format: {}", e))
+        })?;
 
         if (buffer.len() as u64) <= MAX_IMAGE_SIZE_BYTES || (target_w <= 100 && target_h <= 100) {
             break dims;
@@ -278,19 +276,19 @@ const IMG_ITEM_CLOSE: &str = "</div>";
 /// Helper to unwrap `<div class="img-item">` container if present around a non-image tag.
 fn strip_img_item_wrapper(out: &mut String, html: &str, img_end: usize) -> Option<usize> {
     let trimmed_out = out.trim_end();
-    if let Some(pos) = trimmed_out.rfind(IMG_ITEM_OPEN) {
-        if trimmed_out[pos + IMG_ITEM_OPEN.len()..].trim().is_empty() {
-            let rest = &html[img_end..];
-            let rest_trimmed = rest.trim_start();
-            if rest_trimmed.starts_with(IMG_ITEM_CLOSE) {
-                let leading_ws = rest.len() - rest_trimmed.len();
-                let suffix_len = leading_ws + IMG_ITEM_CLOSE.len();
-                out.truncate(pos);
-                return Some(img_end + suffix_len);
-            }
-        }
+    let pos = trimmed_out.rfind(IMG_ITEM_OPEN)?;
+    if !trimmed_out[pos + IMG_ITEM_OPEN.len()..].trim().is_empty() {
+        return None;
     }
-    None
+    let rest = &html[img_end..];
+    let rest_trimmed = rest.trim_start();
+    if !rest_trimmed.starts_with(IMG_ITEM_CLOSE) {
+        return None;
+    }
+    let leading_ws = rest.len() - rest_trimmed.len();
+    let suffix_len = leading_ws + IMG_ITEM_CLOSE.len();
+    out.truncate(pos);
+    Some(img_end + suffix_len)
 }
 
 /// Helper to extract attribute bounds and value from an HTML tag slice without heap allocations.
@@ -300,7 +298,7 @@ fn extract_attribute<'a>(tag: &'a str, attr_name: &str) -> Option<(usize, usize,
     let attr_len = attr_bytes.len();
     let mut i = 0;
 
-    while i + attr_len + 1 <= bytes.len() {
+    while i + attr_len < bytes.len() {
         if bytes[i..i + attr_len].eq_ignore_ascii_case(attr_bytes) && bytes[i + attr_len] == b'=' {
             let abs_pos = i;
             let val_search_start = abs_pos + attr_len + 1;
@@ -343,10 +341,13 @@ fn is_image_source(src: &str, base_dir: Option<&Path>) -> bool {
 
     if !src.starts_with("http://") && !src.starts_with("https://") && !src.starts_with("data:") {
         let path = Path::new(src);
-        if let Some(resolved) = resolve_image_path(path, base_dir) {
-            if let Some(mime) = mime_guess::from_path(&resolved).first_raw() {
-                return mime.starts_with("image/");
-            }
+        let resolved = resolve_image_path(path, base_dir);
+        let is_img = resolved
+            .as_deref()
+            .and_then(|p| mime_guess::from_path(p).first_raw())
+            .is_some_and(|mime| mime.starts_with("image/"));
+        if is_img {
+            return true;
         }
     }
 
@@ -484,4 +485,30 @@ mod tests {
 
         assert!(result.contains("src=\"data:image/webp;base64,"));
     }
+
+    #[test]
+    fn test_remote_http_and_https_urls_preserved() {
+        let html = "<img src=\"https://example.com/logo.png\" alt=\"Remote Logo\"><img src=\"http://example.com/banner.jpg\">";
+        let result = embed_images_as_base64(html, None).unwrap();
+        assert!(result.contains("src=\"https://example.com/logo.png\""));
+        assert!(result.contains("src=\"http://example.com/banner.jpg\""));
+    }
+
+    #[test]
+    fn test_extract_attribute_single_quotes() {
+        let tag = "<img src='images/pic.png' alt='System Diagram'>";
+        let (start, end, val) = extract_attribute(tag, "src").unwrap();
+        assert_eq!(&tag[start..end], "src='images/pic.png'");
+        assert_eq!(val, "images/pic.png");
+    }
+
+    #[test]
+    fn test_find_markdown_location() {
+        let md = "Line 1\nLine 2\n![Alt](images/photo.png)\nLine 4";
+        let (line_no, col_no, snippet) = find_markdown_location(Some(md), "images/photo.png");
+        assert_eq!(line_no, 3);
+        assert_eq!(col_no, 8);
+        assert_eq!(snippet, "![Alt](images/photo.png)");
+    }
 }
+
