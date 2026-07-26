@@ -43,6 +43,7 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 .sb.collapsed { display: none; }
 .subh { font-size: 12.5px; font-weight: bold; color: var(--bm); margin: 14px 0 7px;
   padding-bottom: 4px; border-bottom: 1px solid var(--bl); }
+hr { border: none; border-top: 1px solid var(--bl); margin: 14px 20px; }
 .check-item { display: flex; align-items: flex-start; gap: 9px; padding: 3px 9px;
   border-radius: 6px; margin-bottom: 2px; cursor: pointer; transition: background .15s; }
 .check-item:first-child, *:not(.check-item) + .check-item { margin-top: 3px; }
@@ -152,7 +153,7 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
   .sb.collapsed { display: block !important; }
   .section { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
   .sh { -webkit-print-color-adjust: exact; print-color-adjust: exact; cursor: default; }
-  .sbadge, .pb, .pb-wrap, .note, .bw-block, .check-item.checked, .finish, .code-block {
+  .sbadge, .pb, .pb-wrap, .note, .bw-block, .check-item.checked, .finish, .code-block, hr {
     -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .note::after { opacity: 1 !important; }
   .doc-body img { break-inside: avoid; cursor: default; max-height: 8cm; width: auto; margin: 10px auto; }

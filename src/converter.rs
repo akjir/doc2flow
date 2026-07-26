@@ -650,6 +650,13 @@ mod tests {
     }
 
     #[test]
+    fn test_horizontal_rule_conversion() {
+        let input = "## Section 1\n\nText before divider\n\n---\n\nText after divider\n";
+        let html = convert_markdown_to_html(input).expect("conversion failed");
+        assert!(html.contains("<hr />") || html.contains("<hr>"));
+    }
+
+    #[test]
     fn test_html_comments_ignored() {
         let input = "## Section 1\n\n<!-- Secret internal comment -->\n\nThis is visible content.\n<!-- Another hidden comment -->\n";
         let html = convert_markdown_to_html(input).expect("conversion failed");

@@ -36,6 +36,9 @@ DOC2FLOW (D2F) - TEMPLATE & USAGE GUIDE
 
 7. COMMENTS:
    - HTML comments (like this) are ignored during parsing and omitted from output HTML.
+
+8. DATE SHORTCUTS & INTERACTIVE INPUTS:
+   - Type "today" into any date input field to automatically replace it with today's date (formatted via date_placeholder or browser locale).
 ===============================================================================
 -->
 ---

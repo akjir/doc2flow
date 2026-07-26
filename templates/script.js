@@ -270,6 +270,74 @@ function syncLinkedFields(sourceInput) {
     syncFieldPair('f_info_date', 'f_sign_date', sourceInput);
 }
 
+function formatDateFromTemplate(now, template) {
+    if (!template || typeof template !== 'string') return null;
+
+    const day = String(now.getDate()).padStart(2, '0');
+    const dayShort = String(now.getDate());
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const monthShort = String(now.getMonth() + 1);
+    const yearFull = String(now.getFullYear());
+    const yearShort = String(now.getFullYear()).slice(-2);
+
+    const tokenMap = {
+        'YYYY': yearFull,
+        'JJJJ': yearFull,
+        'YY': yearShort,
+        'JJ': yearShort,
+        'MM': month,
+        'DD': day,
+        'TT': day,
+        'M': monthShort,
+        'D': dayShort,
+        'T': dayShort,
+        'Y': yearFull,
+        'J': yearFull
+    };
+
+    const regex = /YYYY|JJJJ|YY|JJ|MM|DD|TT|M|D|T|Y|J/gi;
+    let hasMatches = false;
+
+    const formatted = template.replace(regex, (match) => {
+        hasMatches = true;
+        const upperMatch = match.toUpperCase();
+        return tokenMap[upperMatch] || match;
+    });
+
+    if (!hasMatches || /[A-Za-z]/.test(formatted)) {
+        return null;
+    }
+
+    return formatted;
+}
+
+function getTodayFormatted() {
+    const i18n = window.D2F_I18N || {};
+    const now = new Date();
+    const placeholder = i18n.date_placeholder;
+
+    try {
+        const fromTemplate = formatDateFromTemplate(now, placeholder);
+        if (fromTemplate) {
+            return fromTemplate;
+        }
+    } catch (e) {
+        console.warn('Failed to format date from date_placeholder template', e);
+    }
+
+    return now.toLocaleDateString(navigator.language || undefined);
+}
+
+function checkDateShortcut(input) {
+    if (!input || typeof input.value !== 'string') return false;
+    const val = input.value.trim().toLowerCase();
+    if (val === 'today') {
+        input.value = getTodayFormatted();
+        return true;
+    }
+    return false;
+}
+
 // Setup Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
     // Bind checkbox and text item clicks
@@ -308,12 +376,37 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Bind linked fields sync (Agent and Date)
-    ['f_info_agent', 'f_sign_agent', 'f_info_date', 'f_sign_date'].forEach(id => {
+    // Bind linked fields sync and date shortcut handling (Agent and Date)
+    const linkedIds = ['f_info_agent', 'f_sign_agent', 'f_info_date', 'f_sign_date'];
+    linkedIds.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
-            el.addEventListener('input', (e) => syncLinkedFields(e.target));
+            const isDateField = id.toLowerCase().includes('date');
+            const handler = (e) => {
+                if (isDateField) {
+                    checkDateShortcut(e.target);
+                }
+                syncLinkedFields(e.target);
+                saveState();
+            };
+            el.addEventListener('input', handler);
+            if (isDateField) {
+                el.addEventListener('change', handler);
+                el.addEventListener('blur', handler);
+            }
         }
+    });
+
+    // Bind any other date fields present in the document
+    document.querySelectorAll('input[id*="date"], input[name*="date"], input.date-field').forEach(input => {
+        if (linkedIds.includes(input.id)) return;
+        const handler = (e) => {
+            checkDateShortcut(e.target);
+            saveState();
+        };
+        input.addEventListener('input', handler);
+        input.addEventListener('change', handler);
+        input.addEventListener('blur', handler);
     });
 
     // Bind persistent fields

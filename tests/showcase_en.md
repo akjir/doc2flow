@@ -66,4 +66,6 @@ echo "Initializing Doc2Flow showcase environment..."
 - General bullet point entry B
 - General bullet point entry C
 
+---
+
 ![System Information Overview](../images/example3.jpg)

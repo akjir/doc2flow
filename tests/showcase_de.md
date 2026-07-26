@@ -66,4 +66,6 @@ echo "Doc2Flow Showcase-Umgebung wird initialisiert..."
 - Allgemeiner Listenpunkt B
 - Allgemeiner Listenpunkt C
 
+---
+
 ![System-Informationsübersicht](../images/example3.jpg)

@@ -7,7 +7,7 @@
   "setup_completed": "Process Completed",
   "setup_in_progress": "Process in Progress",
   "name_placeholder": "Name",
-  "date_placeholder": "DD.MM.YYYY",
+  "date_placeholder": "MM/DD/YYYY",
   "signature_date": "Date",
   "export_pdf": "📄 Export as PDF",
   "reset_all": "↺ Reset all checkboxes",
