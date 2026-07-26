@@ -536,16 +536,24 @@ pub fn convert_markdown_to_html_with_locale(
                 let clean_content = strip_paragraph_tags(trimmed).trim();
 
                 if !clean_content.is_empty() {
-                    global_txt_count += 1;
-                    let sec_num = if section_count == 0 { 1 } else { section_count };
-                    out.push_str(&format!(
-                        "<div class=\"check-item text-item\" id=\"txt_s{sec_num}_{global_txt_count}\">\n"
-                    ));
-                    out.push_str(&format!(
-                        "  <span class=\"text-content\">{}</span>\n",
-                        trimmed
-                    ));
-                    out.push_str("</div>\n");
+                    let is_image_block = clean_content.starts_with("<img");
+                    if is_image_block {
+                        out.push_str(&format!(
+                            "<div class=\"img-item\">\n  {}\n</div>\n",
+                            clean_content
+                        ));
+                    } else {
+                        global_txt_count += 1;
+                        let sec_num = if section_count == 0 { 1 } else { section_count };
+                        out.push_str(&format!(
+                            "<div class=\"check-item text-item\" id=\"txt_s{sec_num}_{global_txt_count}\">\n"
+                        ));
+                        out.push_str(&format!(
+                            "  <span class=\"text-content\">{}</span>\n",
+                            trimmed
+                        ));
+                        out.push_str("</div>\n");
+                    }
                 }
             }
 

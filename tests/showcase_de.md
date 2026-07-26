@@ -13,6 +13,8 @@ language: "de"
 
 Dies ist ein beliebiger Textabsatz im Abschnitts-Hauptteil. Er liefert allgemeine Anweisungen und Informationen für den Bearbeiter, die vor Beginn des Verfahrens durchgelesen werden sollten.
 
+![Beispiel Systemdiagramm](../images/example1.jpg)
+
 <!-- Test-Kommentar: Dieser Hinweis darf nicht im HTML erscheinen -->
 
 > Dies ist eine neutrale Hinweis-Box mit Standard-Kontext.
@@ -41,6 +43,8 @@ Dieser beliebige Textabsatz beschreibt die vorbereitenden Schritte, die erfüllt
 - [ ] Firewall-Regeln gemäß Unternehmensrichtlinie konfigurieren
 - [x] Fernzugriffs-Dienst überprüfen
 
+![Software-Konfiguration Screenshots](../images/example2.jpg)
+
 ## Abschnitt 3: Referenz & Code-Blöcke
 
 ### System-Registrierungseinstellungen
@@ -61,3 +65,5 @@ echo "Doc2Flow Showcase-Umgebung wird initialisiert..."
 - Allgemeiner Listenpunkt A
 - Allgemeiner Listenpunkt B
 - Allgemeiner Listenpunkt C
+
+![System-Informationsübersicht](../images/example3.jpg)

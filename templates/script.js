@@ -232,8 +232,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Bind checkbox and text item clicks
     document.querySelectorAll('.check-item').forEach(item => {
         item.addEventListener('click', function(e) {
-            // Ignore if clicked on a link
-            if (e.target.tagName === 'A') return;
+            // Ignore if clicked on a link or an image
+            if (e.target.tagName === 'A' || e.target.tagName === 'IMG') return;
             
             const cb = this.querySelector('input[type="checkbox"]');
             if (cb) {
@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Bind image lightbox clicks
-    document.querySelectorAll('.screenshot-wrap img, .ss-wrap img, img.lightbox-trigger').forEach(img => {
+    document.querySelectorAll('.doc-body img').forEach(img => {
         img.style.cursor = 'zoom-in';
         img.addEventListener('click', function(e) {
             e.stopPropagation();

@@ -197,11 +197,14 @@ fn test_showcase_en_fixture_conversion() {
     let html_body = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale)
         .expect("conversion failed");
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).expect("id gen failed");
-    let html =
+    let rendered =
         doc2flow::template::render(&fm, &locale, &html_body, &d2f_id).expect("rendering failed");
+    let html =
+        doc2flow::image::embed_images_as_base64(&rendered, Some(std::path::Path::new("tests")));
 
     assert!(html.contains("Doc2Flow English Showcase"));
     assert!(html.contains("<div class=\"check-item text-item\" id=\"txt_s1_1\">"));
+    assert!(html.contains("data:image/jpeg;base64,"));
     assert!(html.contains("<div class=\"note\" data-label=\"Note\">"));
     assert!(html.contains("<div class=\"note note-tip\" data-label=\"Tip\">"));
     assert!(html.contains("<input type=\"checkbox\" id=\"cb_s2_1\">"));
@@ -218,11 +221,14 @@ fn test_showcase_de_fixture_conversion() {
     let html_body = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale)
         .expect("conversion failed");
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).expect("id gen failed");
-    let html =
+    let rendered =
         doc2flow::template::render(&fm, &locale, &html_body, &d2f_id).expect("rendering failed");
+    let html =
+        doc2flow::image::embed_images_as_base64(&rendered, Some(std::path::Path::new("tests")));
 
     assert!(html.contains("Doc2Flow Deutscher Showcase"));
     assert!(html.contains("<div class=\"check-item text-item\" id=\"txt_s1_1\">"));
+    assert!(html.contains("data:image/jpeg;base64,"));
     assert!(html.contains("<div class=\"note\" data-label=\"Hinweis\">"));
     assert!(html.contains("<div class=\"note note-tip\" data-label=\"Tipp\">"));
     assert!(html.contains("<input type=\"checkbox\" id=\"cb_s2_1\">"));

@@ -89,15 +89,23 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
   font-size: 11.5px; padding: 12px 16px; border-radius: 10px; margin: 8px 0 12px;
   white-space: pre; overflow-x: auto; line-height: 1.6; }
 .code-block .c { color: #6A9955; } .code-block .s { color: #CE9178; }
-.screenshot-wrap, .ss-wrap { margin: 8px 0 3px 24px; border: 1px solid #ddd; border-radius: 6px;
-  overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.1); display: inline-block;
-  max-width: 100%; cursor: zoom-in; }
-.screenshot-wrap img, .ss-wrap img { display: block; max-width: 100%; height: auto; }
-.screenshot-caption, .ss-cap { font-size: 11px; color: #888; font-style: italic; margin: 2px 0 9px 24px; }
+.img-item {
+  margin: 12px 0;
+  padding: 0 10px;
+  background: transparent;
+  border: none;
+}
+.doc-body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 10px;
+}
 .lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.88);
   z-index: 999; align-items: center; justify-content: center; cursor: zoom-out; }
 .lightbox.active { display: flex; }
-.lightbox img { max-width: 94vw; max-height: 94vh; border-radius: 4px; box-shadow: 0 4px 32px rgba(0,0,0,.5); }
+.lightbox img { max-width: 94vw; max-height: 94vh; border-radius: 8px; border: none; margin: 0; box-shadow: 0 4px 32px rgba(0,0,0,.5); }
 .lb-x { position: fixed; top: 14px; right: 18px; color: white; font-size: 32px;
   cursor: pointer; line-height: 1; font-weight: bold; }
 .finish { background: var(--gbg); border: 2px solid #70AD47; border-radius: 10px;
@@ -147,8 +155,7 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
   .sbadge, .pb, .pb-wrap, .note, .bw-block, .check-item.checked, .finish, .code-block {
     -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .note::after { opacity: 1 !important; }
-  .screenshot-wrap, .ss-wrap { break-inside: avoid; cursor: default; }
-  .screenshot-wrap img, .ss-wrap img { max-height: 8cm; width: auto; }
+  .doc-body img { break-inside: avoid; cursor: default; max-height: 8cm; width: auto; margin: 10px auto; }
   .check-item { break-inside: avoid; }
   .subh { break-after: avoid; }
   a { color: #2E75B6 !important; text-decoration: none; }

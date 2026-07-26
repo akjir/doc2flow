@@ -13,6 +13,8 @@ language: "en"
 
 This is an arbitrary text paragraph in the section body. It provides general instructions and information for the operator to review before starting the procedure.
 
+![Example System Architecture](../images/example1.jpg)
+
 <!-- Test comment: This comment must not appear in the generated HTML -->
 
 > This is a neutral Note callout box providing standard context.
@@ -41,6 +43,8 @@ This arbitrary text paragraph describes the preliminary setup steps that must be
 - [ ] Configure firewall rules according to company policy
 - [x] Verify remote access service
 
+![Software Configuration Overview](../images/example2.jpg)
+
 ## Section 3: Reference & Code Blocks
 
 ### System Registry Settings
@@ -61,3 +65,5 @@ echo "Initializing Doc2Flow showcase environment..."
 - General bullet point entry A
 - General bullet point entry B
 - General bullet point entry C
+
+![System Information Overview](../images/example3.jpg)

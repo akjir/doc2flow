@@ -61,7 +61,10 @@ fn main() -> Result<()> {
     let html_content = converter::convert_markdown_to_html_with_locale(markdown_body, &locale)?;
 
     let d2f_id = doc2flow::id::generate_d2f_id(&frontmatter)?;
-    let final_html = template::render(&frontmatter, &locale, &html_content, &d2f_id)?;
+    let rendered_html = template::render(&frontmatter, &locale, &html_content, &d2f_id)?;
+
+    let base_dir = input_path.parent();
+    let final_html = doc2flow::image::embed_images_as_base64(&rendered_html, base_dir);
 
     fs::write(&output_path, final_html)
         .with_context(|| format!("Failed to write output file: {}", output_path.display()))?;
