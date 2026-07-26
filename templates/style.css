@@ -48,7 +48,7 @@ hr { border: none; border-top: 1px solid var(--bl); margin: 14px 20px; }
   border-radius: 6px; margin-bottom: 2px; cursor: pointer; transition: background .15s;
   margin-left: calc(var(--indent, 0) * 18px); position: relative; }
 .check-item[style*="--indent"]::before {
-  content: ""; position: absolute; left: -9px; top: 4px; bottom: 4px;
+  content: ""; position: absolute; left: -3px; top: 4px; bottom: 4px;
   width: 2px; background-color: var(--bl); border-radius: 1px; opacity: 0.7; }
 .check-item:first-child, *:not(.check-item) + .check-item { margin-top: 3px; }
 .check-item:last-child, .check-item:not(:has(+ .check-item)) { margin-bottom: 6px; }
