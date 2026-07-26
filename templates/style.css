@@ -48,17 +48,18 @@ hr { border: none; border-top: 1px solid var(--bl); margin: 14px 20px; }
   border-radius: 6px; margin-bottom: 2px; cursor: pointer; transition: background .15s; }
 .check-item:first-child, *:not(.check-item) + .check-item { margin-top: 3px; }
 .check-item:last-child, .check-item:not(:has(+ .check-item)) { margin-bottom: 6px; }
-.check-item.simple-item { cursor: default; }
+.check-item.simple-item { cursor: pointer; }
 .check-item:hover { background: #f5f9ff; }
 .check-item.checked { background: var(--done); }
 .check-item.checked .check-label { text-decoration: line-through; color: #bbb; }
 .check-item.text-item.checked .text-content,
-.check-item.text-item.checked .check-label { text-decoration: none; color: var(--gray); }
+.check-item.text-item.checked .check-label,
+.check-item.simple-item.checked .check-label { text-decoration: none; color: var(--gray); }
 .check-item input[type=checkbox] { width: 15px; height: 15px; min-width: 15px;
   margin-top: 2px; cursor: pointer; accent-color: var(--bm); }
 .list-bullet { display: inline-flex; align-items: center; justify-content: center;
-  width: 15px; min-width: 15px; height: 15px; margin-top: 2px; color: var(--bm);
-  font-size: 14px; line-height: 1; user-select: none; }
+  min-width: 15px; width: auto; height: 15px; margin-top: 2px; color: var(--bm);
+  font-size: 13px; font-weight: bold; line-height: 1; user-select: none; }
 .check-label, .text-content { font-size: 13px; line-height: 1.5; }
 .check-label a, .text-content a { color: var(--bm); }
 .bw-block { background: var(--bbg); border-left: 3px solid var(--bm);
@@ -153,8 +154,9 @@ hr { border: none; border-top: 1px solid var(--bl); margin: 14px 20px; }
   .sb.collapsed { display: block !important; }
   .section { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
   .sh { -webkit-print-color-adjust: exact; print-color-adjust: exact; cursor: default; }
-  .sbadge, .pb, .pb-wrap, .note, .bw-block, .check-item.checked, .finish, .code-block, hr {
+  .sbadge, .pb, .pb-wrap, .note, .bw-block, .finish, .code-block, hr {
     -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .check-item.checked { background: transparent !important; }
   .note::after { opacity: 1 !important; }
   .doc-body img { break-inside: avoid; cursor: default; max-height: 8cm; width: auto; margin: 10px auto; }
   .check-item { break-inside: avoid; }

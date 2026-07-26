@@ -51,7 +51,7 @@ function saveState() {
     });
     
     const textStates = {};
-    document.querySelectorAll('.check-item.text-item').forEach((item, index) => {
+    document.querySelectorAll('.check-item.text-item, .check-item.simple-item').forEach((item, index) => {
         const key = item.id || ('txt_' + index);
         textStates[key] = item.classList.contains('checked');
     });
@@ -86,7 +86,7 @@ function loadState() {
             });
         }
         if (data.texts) {
-            document.querySelectorAll('.check-item.text-item').forEach((item, index) => {
+            document.querySelectorAll('.check-item.text-item, .check-item.simple-item').forEach((item, index) => {
                 const key = item.id || ('txt_' + index);
                 if (data.texts[key] !== undefined) {
                     item.classList.toggle('checked', data.texts[key]);
@@ -176,7 +176,7 @@ function resetAll() {
         c.checked = false; 
         styleItem(c); 
     });
-    document.querySelectorAll('.check-item.text-item').forEach(item => {
+    document.querySelectorAll('.check-item.text-item, .check-item.simple-item').forEach(item => {
         item.classList.remove('checked');
     });
     updateProgress(); 
@@ -353,7 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 styleItem(cb);
                 updateProgress();
                 saveState();
-            } else if (this.classList.contains('text-item')) {
+            } else if (this.classList.contains('text-item') || this.classList.contains('simple-item')) {
                 this.classList.toggle('checked');
                 saveState();
             }

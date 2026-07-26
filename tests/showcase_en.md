@@ -66,6 +66,10 @@ echo "Initializing Doc2Flow showcase environment..."
 - General bullet point entry B
 - General bullet point entry C
 
+1. Sequential procedure step 1
+2. Sequential procedure step 2
+3. Sequential procedure step 3
+
 ---
 
 ![System Information Overview](../images/example3.jpg)

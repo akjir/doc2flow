@@ -66,6 +66,10 @@ echo "Doc2Flow Showcase-Umgebung wird initialisiert..."
 - Allgemeiner Listenpunkt B
 - Allgemeiner Listenpunkt C
 
+1. Nummerierter Verfahrensschritt 1
+2. Nummerierter Verfahrensschritt 2
+3. Nummerierter Verfahrensschritt 3
+
 ---
 
 ![System-Informationsübersicht](../images/example3.jpg)

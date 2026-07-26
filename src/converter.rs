@@ -21,6 +21,12 @@ fn html_escape(input: &str) -> String {
 }
 
 /// Frontmatter metadata extracted from Markdown header.
+#[derive(Debug, Clone, Copy)]
+enum ListKind {
+    Unordered,
+    Ordered { current: u64 },
+}
+
 #[derive(Debug, Default)]
 pub struct Frontmatter {
     pub title: String,
@@ -263,7 +269,9 @@ pub fn convert_markdown_to_html_with_locale(
     let mut section_count = 0usize;
     let mut global_cb_count = 0usize;
     let mut global_txt_count = 0usize;
+    let mut global_item_count = 0usize;
     let mut in_section = false;
+    let mut list_stack: Vec<ListKind> = Vec::new();
 
     let mut idx = 0;
     while idx < events.len() {
@@ -496,8 +504,23 @@ pub fn convert_markdown_to_html_with_locale(
                     let trimmed = label_html.trim();
                     let clean_label = strip_paragraph_tags(trimmed);
 
-                    out.push_str("<div class=\"check-item simple-item\">\n");
-                    out.push_str("  <span class=\"list-bullet\">&bull;</span>\n");
+                    let bullet = match list_stack.last_mut() {
+                        Some(ListKind::Ordered { current }) => {
+                            let num_str = format!("{current}.");
+                            *current += 1;
+                            num_str
+                        }
+                        _ => "&bull;".to_string(),
+                    };
+
+                    global_item_count += 1;
+                    let sec_num = if section_count == 0 { 1 } else { section_count };
+                    out.push_str(&format!(
+                        "<div class=\"check-item simple-item\" id=\"item_s{sec_num}_{global_item_count}\">\n"
+                    ));
+                    out.push_str(&format!(
+                        "  <span class=\"list-bullet\">{bullet}</span>\n"
+                    ));
                     out.push_str(&format!(
                         "  <span class=\"check-label\">{}</span>\n",
                         clean_label.trim()
@@ -557,12 +580,15 @@ pub fn convert_markdown_to_html_with_locale(
                 }
             }
 
-            // Suppress <ul> and </ul> wrappers around tasklists if they only contain task items
-            Event::Start(Tag::List(_)) => {
-                // Do not output <ul> for task lists
+            // Track lists (ordered vs unordered)
+            Event::Start(Tag::List(first_item_number)) => {
+                match first_item_number {
+                    Some(start) => list_stack.push(ListKind::Ordered { current: *start }),
+                    None => list_stack.push(ListKind::Unordered),
+                }
             }
             Event::End(TagEnd::List(_)) => {
-                // Do not output </ul> for task lists
+                list_stack.pop();
             }
 
             // Fallback for standard events
@@ -647,6 +673,20 @@ mod tests {
         assert!(
             html.contains("<span class=\"text-content\">This is a standard text paragraph.</span>")
         );
+    }
+
+    #[test]
+    fn test_ordered_list_conversion() {
+        let input = "## Section 1\n\n1. First step\n2. Second step\n3. Third step\n";
+        let html = convert_markdown_to_html(input).expect("conversion failed");
+
+        assert!(html.contains("<div class=\"check-item simple-item\" id=\"item_s1_1\">"));
+        assert!(html.contains("<span class=\"list-bullet\">1.</span>"));
+        assert!(html.contains("<span class=\"check-label\">First step</span>"));
+        assert!(html.contains("<span class=\"list-bullet\">2.</span>"));
+        assert!(html.contains("<span class=\"check-label\">Second step</span>"));
+        assert!(html.contains("<span class=\"list-bullet\">3.</span>"));
+        assert!(html.contains("<span class=\"check-label\">Third step</span>"));
     }
 
     #[test]
