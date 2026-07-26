@@ -35,7 +35,11 @@ Dies ist ein beliebiger Textabsatz im Abschnitts-Hauptteil. Er liefert allgemein
 Dieser beliebige Textabsatz beschreibt die vorbereitenden Schritte, die erfüllt sein müssen, bevor einzelne Aufgaben als erledigt markiert werden.
 
 - [ ] Hardware auspacken und Komponenten überprüfen
+  - [ ] Vollständigkeit des Zubehörs kontrollieren
+  - [x] Gehäuse auf Transportschäden prüfen
 - [ ] Netzwerk und Stromversorgung anschließen
+  1. Primäres Netzwerkkabel in Port 1 einstecken
+  2. Redundantes Netzwerkkabel in Port 2 einstecken
 - [x] Initialer Einschalttest abgeschlossen
 
 ### Software-Konfiguration
@@ -62,13 +66,22 @@ echo "Doc2Flow Showcase-Umgebung wird initialisiert..."
 
 ## Abschnitt 4: Informationslisten
 
-- Allgemeiner Listenpunkt A
-- Allgemeiner Listenpunkt B
-- Allgemeiner Listenpunkt C
+- Hauptaufgabe & Systemüberwachung
+  1. Unterpunkt A 1: Dienststatus abfragen
+  2. Unterpunkt A 2: Fehlerprotokoll analysieren
+- Vorgehensweise bei Wartungsarbeiten
+  - [ ] Testlauf vorbereiten
+     - Detailprüfung Parameter X
+     - Detailprüfung Parameter Y
+  - [x] Abnahme durch Administrator
 
-1. Nummerierter Verfahrensschritt 1
-2. Nummerierter Verfahrensschritt 2
-3. Nummerierter Verfahrensschritt 3
+1. Sequenzieller Hauptschritt 1
+   - Untergeordneter Prüfschritt 1.1
+   - Untergeordneter Prüfschritt 1.2
+2. Sequenzieller Hauptschritt 2
+   1. Detaillierter Teilverlauf 2.a
+   2. Detaillierter Teilverlauf 2.b
+3. Sequenzieller Hauptschritt 3
 
 ---
 

@@ -170,7 +170,7 @@ function updateProgress() {
 
 function resetAll() {
     const i18n = window.D2F_I18N || {};
-    const msg = i18n.confirm_reset || 'Are you sure you want to reset all checkboxes?';
+    const msg = i18n.confirm_reset || 'Are you sure you want to reset all markings?';
     if (!confirm(msg)) return;
     document.querySelectorAll('.check-item input[type="checkbox"]').forEach(c => { 
         c.checked = false; 

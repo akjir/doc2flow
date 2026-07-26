@@ -27,6 +27,69 @@ enum ListKind {
     Ordered { current: u64 },
 }
 
+/// Converts a 1-based number to alphabetic representation (1 -> a, 2 -> b, ..., 26 -> z).
+fn to_alpha(mut n: u64) -> String {
+    if n == 0 {
+        return "a".to_string();
+    }
+    let mut result = String::new();
+    while n > 0 {
+        n -= 1;
+        let rem = (n % 26) as u8;
+        result.insert(0, (b'a' + rem) as char);
+        n /= 26;
+    }
+    result
+}
+
+/// Converts a 1-based number to lowercase Roman numerals (1 -> i, 2 -> ii, 3 -> iii...).
+fn to_roman(n: u64) -> String {
+    let mapping = [
+        (1000, "m"),
+        (900, "cm"),
+        (500, "d"),
+        (400, "cd"),
+        (100, "c"),
+        (90, "xc"),
+        (50, "l"),
+        (40, "xl"),
+        (10, "x"),
+        (9, "ix"),
+        (5, "v"),
+        (4, "iv"),
+        (1, "i"),
+    ];
+    let mut num = n;
+    let mut result = String::new();
+    for (val, sym) in mapping {
+        while num >= val {
+            result.push_str(sym);
+            num -= val;
+        }
+    }
+    if result.is_empty() {
+        "i".to_string()
+    } else {
+        result
+    }
+}
+
+/// Formats bullet symbol or ordered number based on list kind and nesting depth.
+fn format_bullet(kind: &mut ListKind, depth: usize) -> String {
+    match kind {
+        ListKind::Ordered { current } => {
+            let num = *current;
+            *current += 1;
+            match depth % 3 {
+                0 => format!("{num}."),
+                1 => format!("{}.", to_alpha(num)),
+                _ => format!("{}.", to_roman(num)),
+            }
+        }
+        ListKind::Unordered => "&bull;".to_string(),
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct Frontmatter {
     pub title: String,
@@ -429,94 +492,83 @@ pub fn convert_markdown_to_html_with_locale(
             // Task List Items (- [ ] or - [x]) or Simple List Items (-)
             Event::Start(Tag::Item) => {
                 let is_task = matches!(events.get(idx + 1), Some(Event::TaskListMarker(_)));
-                if is_task {
+                let is_checked = if is_task {
                     if let Some(Event::TaskListMarker(checked)) = events.get(idx + 1) {
-                        let is_checked = *checked;
-                        global_cb_count += 1;
-
-                        idx += 2;
-
-                        let mut item_events = Vec::new();
-                        let mut depth = 1;
-                        while idx < events.len() {
-                            match &events[idx] {
-                                Event::Start(Tag::Item) => depth += 1,
-                                Event::End(TagEnd::Item) => {
-                                    depth -= 1;
-                                    if depth == 0 {
-                                        break;
-                                    }
-                                }
-                                _ => {}
-                            }
-                            item_events.push(events[idx].clone());
-                            idx += 1;
-                        }
-
-                        let mut label_html = String::new();
-                        html::push_html(&mut label_html, item_events.into_iter());
-                        let trimmed = label_html.trim();
-                        let clean_label = strip_paragraph_tags(trimmed);
-
-                        let sec_num = if section_count == 0 { 1 } else { section_count };
-                        let checked_attr = if is_checked { " checked" } else { "" };
-                        let checked_cls = if is_checked { " checked" } else { "" };
-
-                        out.push_str(&format!(
-                            "<div class=\"check-item{}\" id=\"wrap-cb_s{sec_num}_{global_cb_count}\">\n",
-                            checked_cls
-                        ));
-                        out.push_str(&format!(
-                            "  <input type=\"checkbox\" id=\"cb_s{sec_num}_{global_cb_count}\"{checked_attr}>\n"
-                        ));
-                        out.push_str(&format!(
-                            "  <label class=\"check-label\" for=\"cb_s{sec_num}_{global_cb_count}\">{}</label>\n",
-                            clean_label.trim()
-                        ));
-                        out.push_str("</div>\n");
-
-                        idx += 1;
-                        continue;
+                        *checked
+                    } else {
+                        false
                     }
                 } else {
-                    // Simple list item without checkbox (- Item)
+                    false
+                };
+
+                if is_task {
+                    idx += 2;
+                } else {
                     idx += 1;
+                }
 
-                    let mut item_events = Vec::new();
-                    let mut depth = 1;
-                    while idx < events.len() {
-                        match &events[idx] {
-                            Event::Start(Tag::Item) => depth += 1,
-                            Event::End(TagEnd::Item) => {
-                                depth -= 1;
-                                if depth == 0 {
-                                    break;
-                                }
+                let mut item_events = Vec::new();
+                let mut depth = 1;
+                while idx < events.len() {
+                    match &events[idx] {
+                        Event::Start(Tag::Item) => depth += 1,
+                        Event::End(TagEnd::Item) => {
+                            depth -= 1;
+                            if depth == 0 {
+                                break;
                             }
-                            _ => {}
                         }
-                        item_events.push(events[idx].clone());
-                        idx += 1;
+                        Event::Start(Tag::List(_)) => {
+                            // Sub-list encountered within list item, stop collecting item heading content
+                            break;
+                        }
+                        _ => {}
                     }
+                    item_events.push(events[idx].clone());
+                    idx += 1;
+                }
 
-                    let mut label_html = String::new();
-                    html::push_html(&mut label_html, item_events.into_iter());
-                    let trimmed = label_html.trim();
-                    let clean_label = strip_paragraph_tags(trimmed);
+                let mut label_html = String::new();
+                html::push_html(&mut label_html, item_events.into_iter());
+                let trimmed = label_html.trim();
+                let clean_label = strip_paragraph_tags(trimmed);
 
+                let list_depth = if list_stack.is_empty() { 0 } else { list_stack.len() - 1 };
+                let indent_style = if list_depth > 0 {
+                    format!(" style=\"--indent: {list_depth};\"")
+                } else {
+                    String::new()
+                };
+
+                let sec_num = if section_count == 0 { 1 } else { section_count };
+
+                if is_task {
+                    global_cb_count += 1;
+                    let checked_attr = if is_checked { " checked" } else { "" };
+                    let checked_cls = if is_checked { " checked" } else { "" };
+
+                    out.push_str(&format!(
+                        "<div class=\"check-item{}\" id=\"wrap-cb_s{sec_num}_{global_cb_count}\"{indent_style}>\n",
+                        checked_cls
+                    ));
+                    out.push_str(&format!(
+                        "  <input type=\"checkbox\" id=\"cb_s{sec_num}_{global_cb_count}\"{checked_attr}>\n"
+                    ));
+                    out.push_str(&format!(
+                        "  <label class=\"check-label\" for=\"cb_s{sec_num}_{global_cb_count}\">{}</label>\n",
+                        clean_label.trim()
+                    ));
+                    out.push_str("</div>\n");
+                } else {
                     let bullet = match list_stack.last_mut() {
-                        Some(ListKind::Ordered { current }) => {
-                            let num_str = format!("{current}.");
-                            *current += 1;
-                            num_str
-                        }
-                        _ => "&bull;".to_string(),
+                        Some(kind) => format_bullet(kind, list_depth),
+                        None => "&bull;".to_string(),
                     };
 
                     global_item_count += 1;
-                    let sec_num = if section_count == 0 { 1 } else { section_count };
                     out.push_str(&format!(
-                        "<div class=\"check-item simple-item\" id=\"item_s{sec_num}_{global_item_count}\">\n"
+                        "<div class=\"check-item simple-item\" id=\"item_s{sec_num}_{global_item_count}\"{indent_style}>\n"
                     ));
                     out.push_str(&format!(
                         "  <span class=\"list-bullet\">{bullet}</span>\n"
@@ -526,10 +578,16 @@ pub fn convert_markdown_to_html_with_locale(
                         clean_label.trim()
                     ));
                     out.push_str("</div>\n");
-
-                    idx += 1;
-                    continue;
                 }
+
+                if idx < events.len() && matches!(events[idx], Event::End(TagEnd::Item)) {
+                    idx += 1;
+                }
+                continue;
+            }
+
+            Event::End(TagEnd::Item) => {
+                // Suppress standard </li> tags
             }
 
             // Standalone Text Paragraphs
@@ -568,8 +626,14 @@ pub fn convert_markdown_to_html_with_locale(
                     } else {
                         global_txt_count += 1;
                         let sec_num = if section_count == 0 { 1 } else { section_count };
+                        let list_depth = if list_stack.is_empty() { 0 } else { list_stack.len() - 1 };
+                        let indent_style = if list_depth > 0 {
+                            format!(" style=\"--indent: {list_depth};\"")
+                        } else {
+                            String::new()
+                        };
                         out.push_str(&format!(
-                            "<div class=\"check-item text-item\" id=\"txt_s{sec_num}_{global_txt_count}\">\n"
+                            "<div class=\"check-item text-item\" id=\"txt_s{sec_num}_{global_txt_count}\"{indent_style}>\n"
                         ));
                         out.push_str(&format!(
                             "  <span class=\"text-content\">{}</span>\n",
@@ -714,6 +778,45 @@ mod tests {
         assert_eq!(strip_paragraph_tags("Plain text</p>"), "Plain text</p>");
         assert_eq!(strip_paragraph_tags("No tags"), "No tags");
         assert_eq!(strip_paragraph_tags("<p></p>"), "");
+    }
+
+    #[test]
+    fn test_nested_lists_conversion() {
+        let input = r#"## Section 1
+
+- Top Task
+  1. Sub step A
+  2. Sub step B
+- Next Task
+  - [ ] Sub-task 1
+     - Deep detail X
+     - Deep detail Y
+"#;
+        let html = convert_markdown_to_html(input).expect("conversion failed");
+
+        // Top level unordered item: depth 0 (no --indent style)
+        assert!(html.contains(r#"<div class="check-item simple-item" id="item_s1_1">"#));
+        assert!(html.contains(r#"<span class="list-bullet">&bull;</span>"#));
+        assert!(html.contains(r#"<span class="check-label">Top Task</span>"#));
+
+        // Sub-steps A & B: ordered at depth 1 (--indent: 1)
+        assert!(html.contains(r#"<div class="check-item simple-item" id="item_s1_2" style="--indent: 1;">"#));
+        assert!(html.contains(r#"<span class="list-bullet">a.</span>"#));
+        assert!(html.contains(r#"<span class="check-label">Sub step A</span>"#));
+
+        assert!(html.contains(r#"<div class="check-item simple-item" id="item_s1_3" style="--indent: 1;">"#));
+        assert!(html.contains(r#"<span class="list-bullet">b.</span>"#));
+        assert!(html.contains(r#"<span class="check-label">Sub step B</span>"#));
+
+        // Sub-task 1: task checkbox at depth 1 (--indent: 1)
+        assert!(html.contains(r#"<div class="check-item" id="wrap-cb_s1_1" style="--indent: 1;">"#));
+        assert!(html.contains(r#"<input type="checkbox" id="cb_s1_1">"#));
+        assert!(html.contains(r#"<label class="check-label" for="cb_s1_1">Sub-task 1</label>"#));
+
+        // Deep details X & Y: unordered at depth 2 (--indent: 2) with bullet (&bull;)
+        assert!(html.contains(r#"<div class="check-item simple-item" id="item_s1_5" style="--indent: 2;">"#));
+        assert!(html.contains(r#"<span class="list-bullet">&bull;</span>"#));
+        assert!(html.contains(r#"<span class="check-label">Deep detail X</span>"#));
     }
 
     #[test]

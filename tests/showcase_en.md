@@ -35,7 +35,11 @@ This is an arbitrary text paragraph in the section body. It provides general ins
 This arbitrary text paragraph describes the preliminary setup steps that must be fulfilled before marking individual items as completed.
 
 - [ ] Unpack hardware and verify components
+  - [ ] Inspect accessory completeness
+  - [x] Check casing for transport damage
 - [ ] Connect network and power supply
+  1. Plug primary network cable into Port 1
+  2. Plug redundant network cable into Port 2
 - [x] Initial power-on check completed
 
 ### Software Configuration
@@ -62,13 +66,22 @@ echo "Initializing Doc2Flow showcase environment..."
 
 ## Section 4: Informational Lists
 
-- General bullet point entry A
-- General bullet point entry B
-- General bullet point entry C
+- Main task & system monitoring
+  1. Sub-item A 1: Query service status
+  2. Sub-item A 2: Analyze error log
+- Procedure for maintenance tasks
+  - [ ] Prepare test run
+     - Detailed parameter check X
+     - Detailed parameter check Y
+  - [x] Approval by system administrator
 
-1. Sequential procedure step 1
-2. Sequential procedure step 2
-3. Sequential procedure step 3
+1. Sequential main step 1
+   - Subordinate verification step 1.1
+   - Subordinate verification step 1.2
+2. Sequential main step 2
+   1. Detailed sub-procedure 2.a
+   2. Detailed sub-procedure 2.b
+3. Sequential main step 3
 
 ---
 
