@@ -32,8 +32,11 @@ DOC2FLOW (D2F) - TEMPLATE & USAGE GUIDE
 5. CODE BLOCKS:
    - Fenced code blocks (```lang ... ```) render with language tags and copy button.
 
-6. LOCAL IMAGES:
-   - Relative images (![Alt text](./path/to/image.png)) are automatically embedded as Base64.
+6. IMAGES & LINKS:
+   - Local images (![Alt text](./path/to/image.png)) are automatically embedded as Base64.
+   - Remote images (![Alt text](https://example.com/image.png)) are preserved as remote <img> tags.
+   - Non-image files (![Doc](./manual.pdf)) are automatically converted to external <a> links.
+   - Hyperlinks ([Link text](https://example.com)) render as clickable links.
 
 7. COMMENTS:
    - HTML comments (like this) are ignored during parsing and omitted from output HTML.
@@ -62,6 +65,11 @@ language: "en"
 - [ ] Check operating system compatibility and network connectivity
 - [x] Verify administrator credentials and execution permissions
 - [ ] Confirm target directory layout and storage capacity
+
+### Reference Links & Documentation
+
+- [External System Documentation](https://example.com/docs)
+- ![Download System Specification PDF](https://example.com/files/specification.pdf)
 
 ### Essential Information
 

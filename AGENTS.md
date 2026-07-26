@@ -82,6 +82,7 @@ Adhere strictly to these guidelines:
   * Level 2 headings (`##`) $\rightarrow$ collapsible `.section` with `.sh`/`.sb` classes.
   * Checkbox unordered lists $\rightarrow$ wrapped in `.check-item`.
   * Blockquote callouts $\rightarrow$ map prefixes (`>`, `>?`, `>!`, `>!!`, `>!!!`) to alert panels (`.note`, `.note-tip`, `.note-important`, `.note-warning`, `.note-caution`).
+  * Image & Link Handling: Local image files are converted to Base64 `data:` URIs. Remote image URLs (`http://`, `https://`) are preserved as `<img>` tags. Non-image resources (e.g., `.pdf`, `.zip`) specified in image tags are converted to external link elements (`<a>`).
 * Placeholders: Replace generic placeholders (e.g., `{{TITLE}}`, `{{CUSTOMER}}`) in `base.html` using frontmatter/metadata.
 
 ## 10. Client-Side JavaScript Guidelines

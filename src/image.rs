@@ -1,17 +1,18 @@
-//! Image resolution and Base64 embedding module.
+//! Image resolution, Base64 embedding, and non-image link conversion module.
 
 use base64::prelude::*;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-/// Embeds local image references in HTML as Base64 `data:` URIs.
+/// Embeds local image references in HTML as Base64 `data:` URIs and converts non-image tags to links.
 ///
 /// Scans `<img ... src="..." ...>` tags in the input HTML. If a `src` attribute points to a local
 /// file, the file is read, Base64 encoded, and replaced with a `data:<mime>;base64,<encoded>` URI.
+/// Remote images (`http://`, `https://`) are preserved as-is. Non-image resources (e.g. `.pdf`, `.zip`)
+/// are converted to external link elements (`<a>`).
 ///
-/// Images are cached by resolved path so each unique image file is read and encoded only once
-/// to avoid redundant file operations and duplicate conversions.
+/// Images are cached by resolved path so each unique image file is read and encoded only once.
 pub fn embed_images_as_base64(html: &str, base_dir: Option<&Path>) -> String {
     let mut out = String::with_capacity(html.len());
     let mut cache: HashMap<PathBuf, String> = HashMap::new();
@@ -21,7 +22,6 @@ pub fn embed_images_as_base64(html: &str, base_dir: Option<&Path>) -> String {
         let img_start = cursor + img_start_rel;
         out.push_str(&html[cursor..img_start]);
 
-        // Find closing tag '>'
         let img_end = match html[img_start..].find('>') {
             Some(rel_end) => img_start + rel_end + 1,
             None => {
@@ -32,9 +32,21 @@ pub fn embed_images_as_base64(html: &str, base_dir: Option<&Path>) -> String {
         };
 
         let tag_slice = &html[img_start..img_end];
-        let mut replaced_tag = tag_slice.to_string();
 
-        if let Some((attr_start, attr_end, src_val)) = extract_src_attribute(tag_slice) {
+        if let Some((attr_start, attr_end, src_val)) = extract_attribute(tag_slice, "src") {
+            if !is_image_source(src_val, base_dir) {
+                let alt_text = extract_attribute(tag_slice, "alt")
+                    .map(|(_, _, val)| val)
+                    .unwrap_or(src_val);
+                use std::fmt::Write;
+                let _ = write!(
+                    out,
+                    "<a href=\"{src_val}\" target=\"_blank\" rel=\"noopener noreferrer\">{alt_text}</a>"
+                );
+                cursor = img_end;
+                continue;
+            }
+
             let is_remote_or_data = src_val.starts_with("data:")
                 || src_val.starts_with("http://")
                 || src_val.starts_with("https://");
@@ -56,14 +68,22 @@ pub fn embed_images_as_base64(html: &str, base_dir: Option<&Path>) -> String {
                     });
 
                     if data_uri != src_val {
-                        let new_attr = format!("src=\"{}\"", data_uri);
-                        replaced_tag.replace_range(attr_start..attr_end, &new_attr);
+                        out.push_str(&tag_slice[..attr_start]);
+                        out.push_str("src=\"");
+                        out.push_str(data_uri);
+                        out.push('"');
+                        out.push_str(&tag_slice[attr_end..]);
+                        cursor = img_end;
+                        continue;
                     }
                 }
             }
+
+            out.push_str(tag_slice);
+        } else {
+            out.push_str(tag_slice);
         }
 
-        out.push_str(&replaced_tag);
         cursor = img_end;
     }
 
@@ -71,29 +91,64 @@ pub fn embed_images_as_base64(html: &str, base_dir: Option<&Path>) -> String {
     out
 }
 
-/// Helper to extract src attribute bounds and value from an `<img>` tag slice.
-fn extract_src_attribute(tag: &str) -> Option<(usize, usize, &str)> {
-    let lower_tag = tag.to_lowercase();
-    let mut search_idx = 0;
+/// Helper to extract attribute bounds and value from an HTML tag slice without heap allocations.
+fn extract_attribute<'a>(tag: &'a str, attr_name: &str) -> Option<(usize, usize, &'a str)> {
+    let bytes = tag.as_bytes();
+    let attr_bytes = attr_name.as_bytes();
+    let attr_len = attr_bytes.len();
+    let mut i = 0;
 
-    while let Some(pos) = lower_tag[search_idx..].find("src=") {
-        let abs_pos = search_idx + pos;
-        let rest = tag[abs_pos + 4..].trim_start();
-        let quote = rest.chars().next()?;
+    while i + attr_len + 1 <= bytes.len() {
+        if bytes[i..i + attr_len].eq_ignore_ascii_case(attr_bytes) && bytes[i + attr_len] == b'=' {
+            let abs_pos = i;
+            let val_search_start = abs_pos + attr_len + 1;
+            let rest = tag[val_search_start..].trim_start();
+            let quote = rest.chars().next()?;
 
-        if quote == '"' || quote == '\'' {
-            let val_start = abs_pos + 4 + (tag[abs_pos + 4..].len() - rest.len()) + 1;
-            let val_rest = &tag[val_start..];
-            if let Some(val_end_rel) = val_rest.find(quote) {
-                let val_end = val_start + val_end_rel;
-                let attr_end = val_end + 1;
-                let src_val = &tag[val_start..val_end];
-                return Some((abs_pos, attr_end, src_val));
+            if quote == '"' || quote == '\'' {
+                let quote_offset = tag[val_search_start..].len() - rest.len();
+                let val_start = val_search_start + quote_offset + 1;
+                if let Some(val_end_rel) = tag[val_start..].find(quote) {
+                    let val_end = val_start + val_end_rel;
+                    let attr_end = val_end + 1;
+                    return Some((abs_pos, attr_end, &tag[val_start..val_end]));
+                }
             }
         }
-        search_idx = abs_pos + 4;
+        i += 1;
     }
     None
+}
+
+/// Checks if a file path or URL points to an image resource based on file extension or MIME type.
+fn is_image_source(src: &str, base_dir: Option<&Path>) -> bool {
+    if let Some(ext) = Path::new(src).extension().and_then(|e| e.to_str()) {
+        const NON_IMAGE_EXTS: &[&str] = &[
+            "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "zip", "tar", "gz", "7z",
+            "txt", "csv", "json", "xml", "html", "htm", "mp4", "mp3", "avi", "mov", "wav",
+        ];
+        if NON_IMAGE_EXTS.iter().any(|&e| e.eq_ignore_ascii_case(ext)) {
+            return false;
+        }
+
+        const IMAGE_EXTS: &[&str] = &[
+            "png", "jpg", "jpeg", "gif", "svg", "webp", "bmp", "ico", "avif", "tiff",
+        ];
+        if IMAGE_EXTS.iter().any(|&e| e.eq_ignore_ascii_case(ext)) {
+            return true;
+        }
+    }
+
+    if !src.starts_with("http://") && !src.starts_with("https://") && !src.starts_with("data:") {
+        let path = Path::new(src);
+        if let Some(resolved) = resolve_image_path(path, base_dir) {
+            if let Some(mime) = mime_guess::from_path(&resolved).first_raw() {
+                return mime.starts_with("image/");
+            }
+        }
+    }
+
+    true
 }
 
 /// Resolves an image path relative to base_dir or current working directory.
@@ -126,11 +181,31 @@ mod tests {
     use std::io::Write;
 
     #[test]
-    fn test_extract_src_attribute() {
-        let tag = "<img src=\"images/pic.png\" alt=\"test\">";
-        let (start, end, val) = extract_src_attribute(tag).unwrap();
+    fn test_extract_attribute_src_and_alt() {
+        let tag = "<img src=\"images/pic.png\" alt=\"System Diagram\">";
+        let (start, end, val) = extract_attribute(tag, "src").unwrap();
         assert_eq!(&tag[start..end], "src=\"images/pic.png\"");
         assert_eq!(val, "images/pic.png");
+
+        let (_, _, alt_val) = extract_attribute(tag, "alt").unwrap();
+        assert_eq!(alt_val, "System Diagram");
+    }
+
+    #[test]
+    fn test_is_image_source_extensions() {
+        assert!(is_image_source("image.png", None));
+        assert!(is_image_source("photo.JPG", None));
+        assert!(is_image_source("https://example.com/pic.webp", None));
+        assert!(!is_image_source("manual.pdf", None));
+        assert!(!is_image_source("archive.ZIP", None));
+    }
+
+    #[test]
+    fn test_non_image_source_converted_to_link() {
+        let html = "<p><img src=\"https://example.com/manual.pdf\" alt=\"Download Manual\"></p>";
+        let processed = embed_images_as_base64(html, None);
+        assert!(processed.contains("<a href=\"https://example.com/manual.pdf\" target=\"_blank\" rel=\"noopener noreferrer\">Download Manual</a>"));
+        assert!(!processed.contains("<img"));
     }
 
     #[test]

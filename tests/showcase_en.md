@@ -20,6 +20,11 @@ This top-level section describes the basic system configuration. Tasks within H1
 This is an arbitrary text paragraph in the section body. It provides general instructions and information for the operator to review before starting the procedure.
 
 ![Example System Architecture](../images/example1.jpg)
+![External Remote Image](https://picsum.photos/600/300)
+
+[External System Documentation](https://example.com/docs)
+
+![Download System Specification PDF](https://example.com/files/specification.pdf)
 
 <!-- Test comment: This comment must not appear in the generated HTML -->
 

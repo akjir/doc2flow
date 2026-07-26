@@ -21,6 +21,10 @@ Dies ist ein beliebiger Textabsatz im Abschnitts-Hauptteil. Er liefert allgemein
 
 ![Beispiel Systemdiagramm](../images/example1.jpg)
 
+![Externes Remote-Bild](https://picsum.photos/600/300)
+
+
+
 <!-- Test-Kommentar: Dieser Hinweis darf nicht im HTML erscheinen -->
 
 > Dies ist eine neutrale Hinweis-Box mit Standard-Kontext.
@@ -47,6 +51,10 @@ Dieser beliebige Textabsatz beschreibt die vorbereitenden Schritte, die erfüllt
   1. Primäres Netzwerkkabel in Port 1 einstecken
   2. Redundantes Netzwerkkabel in Port 2 einstecken
 - [x] Initialer Einschalttest abgeschlossen
+
+[Externe Systemdokumentation](https://example.com/docs)
+
+![Systemspezifikation PDF herunterladen](https://example.com/dateien/spezifikation.pdf)
 
 #### Software-Konfiguration
 - [ ] Neueste Systemupdates installieren

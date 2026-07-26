@@ -23,6 +23,10 @@ d2f.exe input.md
 # Explicit output path
 d2f.exe input.md -o custom_output.html
 
+# Generate a starter Markdown template (defaults to template.md)
+d2f.exe --init
+d2f.exe -i custom_template.md
+
 # Help text & Version
 d2f.exe --help
 d2f.exe --version
@@ -32,8 +36,9 @@ d2f.exe --version
 
 | Argument / Flag | Short | Description | Required? | Default |
 | --- | --- | --- | --- | --- |
-| `INPUT` | — | Path to the source Markdown file | **Yes** | — |
+| `INPUT` | — | Path to the source Markdown file | Conditional (unless `--init` is used) | — |
 | `OUTPUT` | `-o`, `--output` | Target path for the generated HTML file | No | `<INPUT_NAME>.html` |
+| `INIT` | `-i`, `--init` | Generates a starter template Markdown file | No | `template.md` |
 
 ---
 
@@ -49,39 +54,46 @@ d2f.exe --version
   contact: "John Doe"
   agent: "Jane Smith"
   date: "2026-07-25"
+  version: "1.0.0"
   language: "de"
   ---
   ```
   * `title`: Document main header title.
   * `subtitle`: Document subtitle or description.
-  * `company`: Company organization name (required).
-  * `contact`, `agent`: Populates contact and agent metadata table fields in header.
-  * `date`: Document date (used for `d2f_id` document identity generation).
+  * `company`: Company organization name (**required**; throws diagnostic error if missing).
+  * `contact`: Contact person name.
+  * `agent`: Operator/Agent responsible.
+  * `date`: Document creation date (used alongside metadata for `d2f_id` document identity generation).
+  * `version`: Document version string (included in document identity hash).
   * `language` / `lang`: Specifies locale code (`en`, `de`) for static UI translations.
-  * **Upper Metadata Table:** Header table renders Company (`{{COMPANY}}`), Contact (`{{CONTACT}}`), Agent (`{{AGENT}}`), and an interactive persistent Date input field (the frontmatter `date` is not populated into this table cell).
+  * **Upper Metadata Table:** Header table renders Company (`{{COMPANY}}`), Contact (`{{CONTACT}}`), Agent (`{{AGENT}}`), and an interactive persistent Date input field.
 * **Callout / Note Box Annotations:** Blockquotes are transformed into styled visual alert panels using prefix conventions:
   * `>` or `> Note`: Standard Note box (`.note`, neutral styling).
   * `>?` or `>? Tip`: Tip box (`.note-tip`, green accent).
-  * `>!` or `>! Important`: Important box (`.note-important`, blue accent).
-  * `>!!` or `>!! Warning`: Warning box (`.note-warning`, orange accent).
+  * `>!` or `>! Important`: Important box (`.note-important`, purple accent).
+  * `>!!` or `>!! Warning`: Warning box (`.note-warning`, yellow accent).
   * `>!!!` or `>!!! Caution`: Caution / Danger box (`.note-caution`, red accent).
 * **Document Structure & Structural Mapping:**
-  * **Level 1 Headings (`#`):** Define non-collapsible section blocks (`.section`, `.sh.sh-h1`, `.sb`) with custom header styling (`--bh1`), omitting section completion badges while including their task items in overall document progress calculations.
-  * **Level 2 Headings (`##`):** Define the start of a collapsible section block (`.section`, `.sh`, `.sb`) with section completion badges and toggle indicators.
-  * **Level 3 Headings (`###`):** Define subheadings inside section blocks (`.subh`).
+  * **Level 1 Headings (`#`):** Define non-collapsible section blocks (`.section`, `.sh.sh-h1`, `.sb`) with primary header styling (`--bd`), omitting section completion badges while including their task items in overall document progress calculations.
+  * **Level 2 Headings (`##`):** Define collapsible section blocks (`.section`, `.sh`, `.sb`) with section completion badges (`.sbadge`) and toggle indicators (`.stog`).
+  * **Level 3–6 Headings (`###` to `######`):** Define styled subheadings inside section bodies (`.subh`).
 * **Checklists & List Items:**
   * **Task Items (`- [ ]`, `- [x]`):** Rendered as interactive checkboxes (`.check-item`) with dynamic completion tracking.
-  * **Bullet Items (`-`):** Rendered as clean, bulleted list entries (`.simple-item`).
+  * **Bullet & Ordered Items (`-`, `1.`):** Rendered as clean, formatted list entries (`.simple-item`) with nested list support.
 * **Code Blocks:**
   * Fenced code blocks (` ```lang `) display language tags and include an interactive 1-click **Copy Code** button.
-* **Local Images:**
-  * Relatively linked images (e.g., `![Alt-Text](./images/graphic.png)`) are resolved locally by `d2f`, converted to Base64, and embedded directly as `data:image/...;base64,...` URIs.
+* **Image & Link Handling:**
+  * Relatively linked local images (e.g., `![Alt-Text](./images/graphic.png)`) are resolved locally by `d2f`, converted to Base64, and embedded directly as `data:image/...;base64,...` URIs.
+  * Remote image URLs (`http://`, `https://`) are preserved as `<img>` tags.
+  * Non-image resources (e.g., `.pdf`, `.zip`) specified in image tags are converted to external link elements (`<a>`).
+  * Standard Markdown hyperlinks (`[Link Text](url)`) are rendered as `<a>` tags.
 
 ---
 
 ## 4. Output Specification (HTML & UX)
 
 * **Self-Contained Document:** Generates a single valid HTML5 document with fully embedded styling (`<style>`) and script logic (`<script>`).
+* **Document Identity (`d2f_id`):** Generates a deterministic SHA-256 identity key derived from metadata (`company`, `title`, `subtitle`, `date`, `version`) to uniquely scope client-side state storage.
 * **Internationalization & Localization (i18n):**
   * Supports localized static UI elements based on the `language` frontmatter tag (matching the lowercased code to embedded locale JSON files, defaulting to `en`).
   * **Dynamic Resource Loading:** Locale resources are loaded dynamically into a `HashMap<String, String>` from flat JSON key-value files.
@@ -90,7 +102,7 @@ d2f.exe --version
   * Automatically translates controls, buttons, metadata labels, progress indicators, callout header tags, and print titles.
 * **Interactivity & State Persistence:**
   * Checkboxes can be toggled by end users.
-  * Checkbox states are persisted per section/document in browser `localStorage`.
+  * Checkbox states and metadata input values are persisted per document in browser `localStorage` using `d2f_id`.
   * Section badges dynamically calculate checked vs. total items (e.g., `2/5 completed`).
   * Reset button clears state after user confirmation in a modal overlay.
 * **Protocol & Sign-off Footer:**
@@ -119,7 +131,7 @@ To enable future expansions without requiring significant refactoring, the inter
 * **Core Libraries:** `clap` (derive feature), `pulldown-cmark`, `base64`, `mime_guess`, `serde`, `serde_json`, `anyhow`.
 * **Error Handling:**
   * No panics or crashes when encountering invalid paths or missing permissions.
-  * Human-readable, color-coded error messages output to `stderr`.
+  * Human-readable, color-coded diagnostic compiler-style error messages output to `stderr`.
 * **Testing:**
-  * Unit tests for Markdown parsing, frontmatter parsing, callout parsing, i18n locale resolution, and Base64 image embedding.
-  * Integration tests for CLI parameters and end-to-end HTML generation.
+  * Unit tests for Markdown parsing, frontmatter validation, callout parsing, i18n locale resolution, document hashing, and Base64 image embedding.
+  * Integration tests for CLI parameters and end-to-end HTML generation with fixture validation.
