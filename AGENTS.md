@@ -94,3 +94,15 @@ Adhere strictly to these guidelines:
 * **Non-Blocking Execution (JS-PERF-ASYNC):** Keep main-thread execution short. Eliminate DOM read/write interleaving (layout thrashing).
 * **State Persistence Sync (JS-STATE-DOM-SYNC):** Synchronize in-memory JS state with physical DOM attributes (`checked`, `value`, `textContent`, `selected`) prior to document export/download for 100% offline fidelity.
 * **Safe Clipboard API (JS-CLIPBOARD-SAFE):** Use `navigator.clipboard.writeText()` with async `.catch()`. Fall back gracefully in non-secure contexts (`http:` / restricted IFrames).
+
+## 11. CSS & Styling Guidelines
+* **CSS Variables (CSS-VARS):** Define all primary/brand colors, status backgrounds, alert variant colors, radii, borders, and font families centrally under `:root`.
+* **Zero External Dependencies (CSS-ZERO-DEPS):** Never use external webfont imports (`@import url(...)`). Use lean, cross-platform system font stacks (e.g. `Arial, sans-serif`, `'Courier New', monospace`).
+* **Class Naming Conventions (CSS-BEM-NAMING):** Maintain flat, consistent BEM-style class names (`.doc-*`, `.sb`, `.sh`, `.check-item`, `.note`, `.btn-*`, `.btn-reset`).
+* **Print CSS Specification (CSS-PRINT-MEDIA):**
+  * Hide interactive controls and progress indicators: `.btnrow, .copy-btn, .stog, .item-comment-icon, .item-comment-del, .sbadge, .pb-wrap, .pb, .pt { display: none !important; }`.
+  * Expand all sections: `.sb.collapsed { display: block !important; }`.
+  * Continuous page flow: Eliminate forced page breaks (`break-inside: avoid;` is omitted so `.section`, `##`, and child elements break naturally across pages without creating large whitespace gaps).
+  * Force exact background/color rendering: Use `-webkit-print-color-adjust: exact; print-color-adjust: exact;` on section headers (`.sh`), code blocks, callouts (`.note`), and finish signatures box (`.finish`).
+  * Remove strikethrough on checked items: `.check-item.checked { background: transparent !important; }` and `.check-item.checked .check-label { text-decoration: none !important; color: var(--gray) !important; }`.
+* **File Code Structure (CSS-STRUCTURE):** Subdivide `templates/style.css` using explicit comment header blocks: `1. Base`, `2. Layout`, `3. Components`, `4. Print`, and `5. Responsive`.
