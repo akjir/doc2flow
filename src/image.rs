@@ -141,7 +141,7 @@ mod tests {
         let mut file = File::create(&img_path).unwrap();
         file.write_all(b"fake png content").unwrap();
 
-        let html = format!("<p><img src=\"test.png\" alt=\"demo\"></p>");
+        let html = "<p><img src=\"test.png\" alt=\"demo\"></p>".to_string();
         let embedded = embed_images_as_base64(&html, Some(&dir));
 
         let _ = fs::remove_dir_all(&dir);

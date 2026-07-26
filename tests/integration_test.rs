@@ -101,7 +101,7 @@ language: "de"
     assert_eq!(locale.get("company"), "Firma");
     assert_eq!(
         locale.get("reset_all"),
-        "↺ Alle Kontrollkästchen zurücksetzen"
+        "Alle Kontrollkästchen zurücksetzen"
     );
 }
 

@@ -367,7 +367,7 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 
 <script>
 window.D2F_DOC_ID = 'd2f_id_c9c539743b5bb460';
-window.D2F_I18N = {"agent":"Agent","name_placeholder":"Name","callout_caution":"Caution","copied":"Copied!","save_state":"💾 Save State","lang_code":"en","confirm_reset":"Are you sure you want to reset all checkboxes?","reset_all":"↺ Reset all checkboxes","callout_note":"Note","callout_tip":"Tip","copy_code":"Copy code","signature_date":"Date","setup_in_progress":"Process in Progress","contact":"Contact","callout_warning":"Warning","company":"Company","export_pdf":"📄 Export as PDF","callout_important":"Important","date":"Date","setup_completed":"Process Completed","progress_template":"{done} of {total} tasks completed ({pct}%)","loading":"Loading...","date_placeholder":"DD.MM.YYYY"};
+window.D2F_I18N = {"company":"Company","setup_in_progress":"Process in Progress","export_pdf":"📄 Export as PDF","date_placeholder":"DD.MM.YYYY","callout_important":"Important","agent":"Agent","lang_code":"en","contact":"Contact","name_placeholder":"Name","progress_template":"{done} of {total} tasks completed ({pct}%)","save_state":"💾 Save State","copied":"Copied!","callout_caution":"Caution","copy_code":"Copy code","signature_date":"Date","callout_warning":"Warning","loading":"Loading...","setup_completed":"Process Completed","callout_note":"Note","date":"Date","reset_all":"↺ Reset all checkboxes","confirm_reset":"Are you sure you want to reset all checkboxes?","callout_tip":"Tip"};
 // Doc2Flow Generic Checklist Logic
 
 const DOC_ID = window.D2F_DOC_ID || '';
@@ -375,30 +375,33 @@ const rawFilename = window.location.pathname.split('/').pop() || 'index.html';
 const FILENAME = decodeURIComponent(rawFilename);
 const STATE_KEY = 'd2f_state_' + (DOC_ID ? (DOC_ID + '_') : '') + FILENAME;
 
+function handleLightboxKeydown(e) {
+    if (e.key === 'Escape') {
+        closeLightbox();
+    }
+}
+
 function openLightbox(imgSrc) {
     const lbImg = document.getElementById('lb-img');
     const lightbox = document.getElementById('lightbox');
     if (lbImg && lightbox) {
         lbImg.src = imgSrc;
         lightbox.classList.add('active');
+        document.addEventListener('keydown', handleLightboxKeydown);
     }
 }
 
 function closeLightbox() {
     const lightbox = document.getElementById('lightbox');
-    if (lightbox) lightbox.classList.remove('active');
+    if (lightbox) {
+        lightbox.classList.remove('active');
+    }
+    document.removeEventListener('keydown', handleLightboxKeydown);
 }
 
-document.addEventListener('keydown', e => { 
-    if(e.key === 'Escape') closeLightbox(); 
-});
-
 function toggleSection(headerElement) {
-    // Expect the next sibling to be the section body (.sb)
-    let body = headerElement.nextElementSibling;
-    while (body && !body.classList.contains('sb')) {
-        body = body.nextElementSibling;
-    }
+    const section = headerElement.closest('.section');
+    const body = section ? section.querySelector('.sb') : null;
     
     if (body) {
         const isCollapsed = body.classList.toggle('collapsed');
@@ -468,6 +471,7 @@ function loadState() {
                 }
             });
         }
+        syncLinkedFields();
     } catch(e) {
         console.warn('Failed to load state from localStorage', e);
     }
@@ -481,6 +485,7 @@ function styleItem(cb) {
 }
 
 function updateProgress() {
+    const i18n = window.D2F_I18N || {};
     const sections = document.querySelectorAll('.section');
     let total = 0, done = 0;
     
@@ -505,7 +510,6 @@ function updateProgress() {
     
     const pt = document.getElementById('pt');
     if (pt) {
-        const i18n = window.D2F_I18N || {};
         const tmpl = i18n.progress_template || '{done} of {total} tasks completed ({pct}%)';
         pt.textContent = tmpl.replace('{done}', done).replace('{total}', total).replace('{pct}', pct);
     }
@@ -514,7 +518,6 @@ function updateProgress() {
     const finishIcon = document.getElementById('finish-icon');
     const finishTitle = document.getElementById('finish-title');
     const btnPdf = document.getElementById('btn-pdf');
-    const i18n = window.D2F_I18N || {};
 
     if (finishBox) {
         finishBox.classList.remove('completed', 'pending', 'no-tasks');
@@ -563,8 +566,23 @@ function saveDocumentState() {
         styleItem(cb);
     });
 
-    document.querySelectorAll('input.persistent-field, .info-table input').forEach(input => {
+    document.querySelectorAll('input:not([type="checkbox"]):not([type="radio"])').forEach(input => {
         input.setAttribute('value', input.value);
+    });
+
+    document.querySelectorAll('textarea').forEach(ta => {
+        ta.textContent = ta.value;
+        ta.setAttribute('value', ta.value);
+    });
+
+    document.querySelectorAll('select').forEach(select => {
+        Array.from(select.options).forEach(opt => {
+            if (opt.selected) {
+                opt.setAttribute('selected', 'selected');
+            } else {
+                opt.removeAttribute('selected');
+            }
+        });
     });
 
     const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
@@ -595,6 +613,31 @@ function exportPDF() {
     
     window.addEventListener('afterprint', restore);
     setTimeout(() => window.print(), 100);
+}
+
+function syncFieldPair(id1, id2, sourceInput) {
+    const el1 = document.getElementById(id1);
+    const el2 = document.getElementById(id2);
+    if (!el1 || !el2) return;
+
+    if (sourceInput === el1) {
+        el2.value = el1.value;
+    } else if (sourceInput === el2) {
+        el1.value = el2.value;
+    } else {
+        if (el1.value && !el2.value) {
+            el2.value = el1.value;
+        } else if (el2.value && !el1.value) {
+            el1.value = el2.value;
+        } else if (el1.value) {
+            el2.value = el1.value;
+        }
+    }
+}
+
+function syncLinkedFields(sourceInput) {
+    syncFieldPair('f_info_agent', 'f_sign_agent', sourceInput);
+    syncFieldPair('f_info_date', 'f_sign_date', sourceInput);
 }
 
 // Setup Event Listeners
@@ -635,6 +678,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Bind linked fields sync (Agent and Date)
+    ['f_info_agent', 'f_sign_agent', 'f_info_date', 'f_sign_date'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', (e) => syncLinkedFields(e.target));
+        }
+    });
+
     // Bind persistent fields
     document.querySelectorAll('input.persistent-field').forEach(input => {
         input.addEventListener('input', saveState);
@@ -642,6 +693,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize state
     loadState();
+    syncLinkedFields();
     updateProgress();
 });
 
@@ -652,7 +704,7 @@ function copyCode(btn) {
     if (!codeEl) return;
 
     const text = codeEl.innerText || codeEl.textContent;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
         navigator.clipboard.writeText(text).then(() => {
             showCopiedFeedback(btn);
         }).catch(() => fallbackCopyText(text, btn));
@@ -662,19 +714,25 @@ function copyCode(btn) {
 }
 
 function fallbackCopyText(text, btn) {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.select();
     try {
-        document.execCommand('copy');
-        showCopiedFeedback(btn);
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        ta.style.top = '-9999px';
+        ta.style.opacity = '0';
+        ta.setAttribute('readonly', '');
+        document.body.appendChild(ta);
+        ta.select();
+        
+        const successful = typeof document.execCommand === 'function' ? document.execCommand('copy') : false;
+        document.body.removeChild(ta);
+        if (successful) {
+            showCopiedFeedback(btn);
+        }
     } catch (e) {
-        console.error('Fallback copy failed', e);
+        console.warn('Fallback copy failed:', e);
     }
-    document.body.removeChild(ta);
 }
 
 function showCopiedFeedback(btn) {
