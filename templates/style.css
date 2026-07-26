@@ -161,7 +161,7 @@ hr { border: none; border-top: 1px solid var(--bl); margin: 14px 20px; }
   .doc-body { max-width: 100%; margin: 0; padding: 0; }
   .btnrow, .stog, .copy-btn { display: none !important; }
   .sb.collapsed { display: block !important; }
-  .section { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+  .section { box-shadow: none; border: 1px solid #ccc; }
   .sh { -webkit-print-color-adjust: exact; print-color-adjust: exact; cursor: default; }
   .sbadge, .pb, .pb-wrap, .note, .bw-block, .finish, .code-block, hr {
     -webkit-print-color-adjust: exact; print-color-adjust: exact; }

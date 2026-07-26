@@ -23,8 +23,6 @@ Dies ist ein beliebiger Textabsatz im Abschnitts-Hauptteil. Er liefert allgemein
 
 ![Externes Remote-Bild](https://picsum.photos/600/300)
 
-
-
 <!-- Test-Kommentar: Dieser Hinweis darf nicht im HTML erscheinen -->
 
 > Dies ist eine neutrale Hinweis-Box mit Standard-Kontext.
