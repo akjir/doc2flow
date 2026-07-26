@@ -479,4 +479,75 @@ date: "2026-07-26"
     assert!(!html.contains("src=\"files/spec.pdf\""));
 }
 
+#[test]
+fn test_cli_parse_args_error_handling() {
+    use doc2flow::utils::parse_args;
+
+    // Unknown option
+    let err = parse_args(&["d2f", "--unknown-flag"]).unwrap_err();
+    assert!(err.contains("Unrecognized option '--unknown-flag'"));
+
+    // Missing value for -o
+    let err_o = parse_args(&["d2f", "-o"]).unwrap_err();
+    assert!(err_o.contains("Option '--output' requires a path value"));
+
+    // Empty value for --output=
+    let err_empty = parse_args(&["d2f", "--output="]).unwrap_err();
+    assert!(err_empty.contains("Option '--output' requires a non-empty path value"));
+
+    // Multiple positional arguments
+    let err_pos = parse_args(&["d2f", "doc1.md", "doc2.md"]).unwrap_err();
+    assert!(err_pos.contains("Unexpected positional argument 'doc2.md'"));
+}
+
+#[test]
+fn test_cli_version_output_formatting() {
+    use doc2flow::utils::parse_args;
+
+    let args = parse_args(&["d2f", "--version"]).unwrap();
+    assert!(args.show_version);
+    let version_str = env!("CARGO_PKG_VERSION");
+    assert_eq!(version_str, "0.9.0");
+}
+
+#[test]
+fn test_unknown_locale_fallback_to_english() {
+    let input = r#"---
+title: "Fallback Spec"
+company: "Global Inc"
+date: "2026-07-26"
+language: "fr"
+---
+## Section 1
+- [ ] Task 1
+"#;
+
+    let (fm, body) = doc2flow::converter::parse_and_validate_frontmatter(input, Some("fallback.md")).unwrap();
+    let locale = doc2flow::i18n::Locale::from_lang_code(&fm.language);
+    assert_eq!(locale.lang_code, "en"); // Fallback to English
+    let html_body = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
+    let d2f_id = doc2flow::id::generate_d2f_id(&fm).unwrap();
+    let html = doc2flow::template::render(&fm, &locale, &html_body, &d2f_id).unwrap();
+
+    assert!(html.contains("<html lang=\"en\">"));
+    assert!(html.contains("Save State"));
+}
+
+#[test]
+fn test_non_existent_input_file_handling() {
+    let non_existent_path = std::path::PathBuf::from("tests/non_existent_file_xyz123.md");
+    let err = std::fs::read_to_string(&non_existent_path).map_err(|e| doc2flow::error::Doc2FlowError::Io {
+        path: Some(non_existent_path.clone()),
+        source: e,
+    }).unwrap_err();
+
+    match err {
+        doc2flow::error::Doc2FlowError::Io { path, .. } => {
+            assert_eq!(path, Some(non_existent_path));
+        }
+        _ => panic!("Expected Doc2FlowError::Io variant"),
+    }
+}
+
+
 

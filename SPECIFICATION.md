@@ -23,6 +23,9 @@ d2f.exe input.md
 # Explicit output path
 d2f.exe input.md -o custom_output.html
 
+# Enable automatic image compression and WebP conversion for local images > 250 KB
+d2f.exe input.md -s
+
 # Generate a starter Markdown template (defaults to template.md)
 d2f.exe --init
 d2f.exe -i custom_template.md
@@ -39,6 +42,7 @@ d2f.exe --version
 | `INPUT` | — | Path to the source Markdown file | Conditional (unless `--init` is used) | — |
 | `OUTPUT` | `-o`, `--output` | Target path for the generated HTML file | No | `<INPUT_NAME>.html` |
 | `INIT` | `-i`, `--init` | Generates a starter template Markdown file | No | `template.md` |
+| `AUTO_SCALE` | `-s`, `--auto-scale` | Automatically resizes local images exceeding 250 KB to WebP | No | `false` |
 
 ---
 

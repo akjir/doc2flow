@@ -40,6 +40,9 @@ d2f input.md
 # Specify custom output path
 d2f input.md -o /path/to/output.html
 
+# Enable automatic image scaling to WebP for local images > 250 KB
+d2f input.md -s
+
 # View CLI help
 d2f --help
 
@@ -175,12 +178,16 @@ cargo test
 ```
 doc2flow/
 ├── src/
-│   ├── main.rs            # CLI entrypoint (clap parser & workflow)
+│   ├── main.rs            # CLI entrypoint & workflow execution
 │   ├── lib.rs             # Module declarations & exports
 │   ├── converter.rs       # Markdown parsing & HTML generation engine
-│   ├── image_embedder.rs  # Local image path resolution & Base64 encoder
+│   ├── image.rs           # Local image embedding & auto-scaling
 │   ├── i18n.rs            # Multi-language locale loader & dictionary
-│   └── utils.rs           # Core helper utilities
+│   ├── template.rs        # HTML layout template rendering
+│   ├── id.rs              # Document ID (d2f_id) generator
+│   ├── hasher.rs          # Metadata hashing algorithms
+│   ├── error.rs           # Custom domain error types & compiler diagnostics
+│   └── utils.rs           # Zero-dependency Base64, MIME & CLI parser
 ├── templates/
 │   ├── base.html          # Embedded HTML output skeleton
 │   ├── style.css          # Embedded stylesheet & print rules
@@ -190,6 +197,8 @@ doc2flow/
 │   └── de.json            # German translations
 ├── tests/
 │   └── integration_test.rs # Integration test suite
+├── build.rs               # Build script for embedding locales at compile time
+├── CHANGELOG.md           # Keep a Changelog documentation
 ├── SPECIFICATION.md       # Technical specification document
 ├── AGENTS.md              # AI agent guidelines
 └── README.md              # Project documentation

@@ -208,53 +208,61 @@ where
 
     while let Some(arg) = iter.next() {
         let arg_str = arg.as_ref();
-        if arg_str == "-h" || arg_str == "--help" {
-            parsed.show_help = true;
-        } else if arg_str == "-V" || arg_str == "--version" {
-            parsed.show_version = true;
-        } else if arg_str == "-s" || arg_str == "--auto-scale" {
-            parsed.auto_scale = true;
-        } else if arg_str == "-o" || arg_str == "--output" {
-            let val = iter
-                .next()
-                .ok_or_else(|| "Option '--output' requires a path value".to_string())?;
-            parsed.output = Some(PathBuf::from(val.as_ref()));
-        } else if let Some(val) = arg_str.strip_prefix("--output=") {
-            if val.is_empty() {
-                return Err("Option '--output' requires a non-empty path value".to_string());
+        match arg_str {
+            "-h" | "--help" => parsed.show_help = true,
+            "-V" | "--version" => parsed.show_version = true,
+            "-s" | "--auto-scale" => parsed.auto_scale = true,
+            "-o" | "--output" => {
+                let val = iter
+                    .next()
+                    .ok_or_else(|| "Option '--output' requires a path value".to_string())?;
+                parsed.output = Some(PathBuf::from(val.as_ref()));
             }
-            parsed.output = Some(PathBuf::from(val));
-        } else if arg_str == "-i" || arg_str == "--init" {
-            if let Some(next_arg) = iter.peek() {
-                let next_str = next_arg.as_ref();
-                if !next_str.starts_with('-') {
-                    let val = iter.next().unwrap();
-                    parsed.init = Some(PathBuf::from(val.as_ref()));
+            "-i" | "--init" => {
+                if let Some(next_arg) = iter.peek() {
+                    let next_str = next_arg.as_ref();
+                    if !next_str.starts_with('-') {
+                        let val = iter.next().unwrap();
+                        parsed.init = Some(PathBuf::from(val.as_ref()));
+                    } else {
+                        parsed.init = Some(PathBuf::from("template.md"));
+                    }
                 } else {
                     parsed.init = Some(PathBuf::from("template.md"));
                 }
-            } else {
-                parsed.init = Some(PathBuf::from("template.md"));
             }
-        } else if let Some(val) = arg_str.strip_prefix("--init=") {
-            if val.is_empty() {
-                parsed.init = Some(PathBuf::from("template.md"));
-            } else {
-                parsed.init = Some(PathBuf::from(val));
+            opt if opt.starts_with("--output=") => {
+                let val = &opt["--output=".len()..];
+                if val.is_empty() {
+                    return Err("Option '--output' requires a non-empty path value".to_string());
+                }
+                parsed.output = Some(PathBuf::from(val));
             }
-        } else if let Some(val) = arg_str.strip_prefix("-i=") {
-            if val.is_empty() {
-                parsed.init = Some(PathBuf::from("template.md"));
-            } else {
-                parsed.init = Some(PathBuf::from(val));
+            opt if opt.starts_with("--init=") => {
+                let val = &opt["--init=".len()..];
+                if val.is_empty() {
+                    parsed.init = Some(PathBuf::from("template.md"));
+                } else {
+                    parsed.init = Some(PathBuf::from(val));
+                }
             }
-        } else if arg_str.starts_with('-') {
-            return Err(format!("Unrecognized option '{arg_str}'"));
-        } else {
-            if parsed.input.is_some() {
-                return Err(format!("Unexpected positional argument '{arg_str}'"));
+            opt if opt.starts_with("-i=") => {
+                let val = &opt["-i=".len()..];
+                if val.is_empty() {
+                    parsed.init = Some(PathBuf::from("template.md"));
+                } else {
+                    parsed.init = Some(PathBuf::from(val));
+                }
             }
-            parsed.input = Some(PathBuf::from(arg_str));
+            opt if opt.starts_with('-') => {
+                return Err(format!("Unrecognized option '{arg_str}'"));
+            }
+            _ => {
+                if parsed.input.is_some() {
+                    return Err(format!("Unexpected positional argument '{arg_str}'"));
+                }
+                parsed.input = Some(PathBuf::from(arg_str));
+            }
         }
     }
 

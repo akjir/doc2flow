@@ -5,10 +5,13 @@ Adhere strictly to these guidelines:
 ## 1. Project Specification Reference
 * Specifications reside in `SPECIFICATION.md`.
 
-## 2. Tech Stack Recommendations
-* CLI parsing: zero-dependency parser in `src/utils.rs` (`std::env::args()`).
-* Markdown to HTML: `pulldown-cmark`.
-* Asset processing & encoding: custom `src/utils.rs` (`base64_encode`, `guess_mime_type`).
+## 2. Tech Stack Recommendations & Architecture
+* CLI parsing: zero-dependency parser in `src/utils.rs` (`std::env::args()`) using idiomatic pattern matching.
+* Markdown to HTML: `pulldown-cmark` with GFM extensions.
+* Asset processing & encoding: custom zero-allocation RFC 4648 Base64 encoder and MIME-type detection in `src/utils.rs` (`base64_encode`, `guess_mime_type`, `file_to_data_uri`).
+* Localization (i18n): dynamic `HashMap<String, String>` dictionary populated via compile-time embedded locale JSON files (`locales/*.json`) generated in `build.rs`.
+* Image Optimization: automatic image compression and WebP conversion for oversized local images (`src/image.rs`).
+* Inline Asset Embeds: static HTML base skeleton (`templates/base.html`), CSS stylesheet (`templates/style.css`), JS client-side logic (`templates/script.js`), and locales embedded directly into binary at compile time via `include_str!` or code generation.
 
 
 ## 3. Incremental Development
@@ -48,7 +51,22 @@ Adhere strictly to these guidelines:
 * **Smart Cow Usage (P-COW-STR):** Use `std::borrow::Cow<'a, str>` for struct fields/returns that conditionally require owned modifications.
 
 ### Pattern Matching & Flow Control
-* **Match over Chained If-Else (I-MATCH-TABLES):** Use `match` expressions, lookup slices, or iterator chains instead of multi-branch `if-else` cascades.
+* **Match over Chained If-Else (I-MATCH-TABLES):** Strict prohibition of deep, unreadable `if ... else if` decision trees and cascades. Replace complex branches with idiomatic Rust pattern matching (`match`), lookup tables/maps, guard clauses, combinators (`Option::and_then`, `strip_prefix`, `map`), or iterators.
+  ```rust
+  // ❌ ANTI-PATTERN:
+  if let Some(s) = text.strip_prefix("note ") {
+      ("note", s)
+  } else if let Some(s) = text.strip_prefix("tip ") {
+      ("note-tip", s)
+  } else if ...
+
+  // ✅ BEST PRACTICE (Idiomatisches Pattern Matching / Match Table):
+  match text.split_once(' ') {
+      Some(("note", rest)) => ("note", rest),
+      Some(("tip", rest)) => ("note-tip", rest),
+      _ => ("note", text),
+  }
+  ```
 * **Functional Iteration (I-ITER-CHAIN):** Prefer declarative iterators (`.filter()`, `.map()`, `.count()`, `.find()`) over mutable loop state tracking.
 * **No Unnecessary Formatting Overhead (I-NO-FMT-OVERHEAD):** Avoid temporary `format!()` strings in loops/stream renders. Write directly to streams via `write!` or `writeln!`.
 
