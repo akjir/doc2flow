@@ -9,11 +9,7 @@ name = "d2f"
 path = "src/main.rs"
 
 [dependencies]
-anyhow = "1.0"
-clap = { version = "4.4.11", features = ["derive"] }
 pulldown-cmark = "0.13.4"
-base64 = "0.23"
-mime_guess = "2.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 image = "0.25.10"

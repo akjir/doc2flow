@@ -6,9 +6,10 @@ Adhere strictly to these guidelines:
 * Specifications reside in `SPECIFICATION.md`.
 
 ## 2. Tech Stack Recommendations
-* CLI parsing: `clap` (with `derive`).
+* CLI parsing: zero-dependency parser in `src/utils.rs` (`std::env::args()`).
 * Markdown to HTML: `pulldown-cmark`.
-* Asset processing: `base64`, `mime_guess`.
+* Asset processing & encoding: custom `src/utils.rs` (`base64_encode`, `guess_mime_type`).
+
 
 ## 3. Incremental Development
 * Implement iteratively: CLI scaffolding → simple Markdown conversion → local image embedding → interactive checklists.
@@ -22,7 +23,7 @@ Adhere strictly to these guidelines:
 * **Single-Item Path (M-SINGLE-ITEM-PATH):** Ensure public items have exactly one reachability path. Avoid redundant re-exports.
 
 ### Error Handling & Correctness
-* **Application-Level Errors (M-APP-ERROR):** Use `anyhow` or `eyre` for error propagation. Avoid exhaustive custom error enums unless strictly required.
+* **Application-Level Errors (M-APP-ERROR):** Use standard library error propagation (`std::error::Error`) and dedicated domain error types (`Doc2FlowError`). Avoid third-party error handling dependencies (`anyhow`, `eyre`).
 * **Panics mean "Stop" (M-PANIC-IS-STOP):** Panics indicate immediate termination. Never catch panics (`catch_unwind`).
 * **Bugs vs. Errors (M-PANIC-ON-BUG):**
   * Use `Result` for expected, recoverable errors (I/O, invalid input, missing files).

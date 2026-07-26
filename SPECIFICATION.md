@@ -128,7 +128,7 @@ To enable future expansions without requiring significant refactoring, the inter
 * **Programming Language:** Rust (Edition 2024).
 * **Target Platform:** Windows 64-Bit (`x86_64-pc-windows-msvc`).
 * **File Size:** Target size of `d2f.exe` `< 10 MB` (utilizing binary stripping, LTO, and release optimizations).
-* **Core Libraries:** `clap` (derive feature), `pulldown-cmark`, `base64`, `mime_guess`, `serde`, `serde_json`, `anyhow`.
+* **Core Libraries:** `pulldown-cmark`, `serde`, `serde_json`, `image` (custom zero-dependency modules in `src/utils.rs` for Base64 encoding, MIME type guessing, and CLI argument parsing).
 * **Error Handling:**
   * No panics or crashes when encountering invalid paths or missing permissions.
   * Human-readable, color-coded diagnostic compiler-style error messages output to `stderr`.

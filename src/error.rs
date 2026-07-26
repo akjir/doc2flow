@@ -133,11 +133,6 @@ impl<'a> DiagnosticError<'a> {
         Doc2FlowError::Diagnostic(self.render())
     }
 
-    /// Converts the diagnostic error into an `anyhow::Error`.
-    pub fn to_anyhow(&self) -> anyhow::Error {
-        anyhow::anyhow!("{}", self.render())
-    }
-
     /// Builder for missing frontmatter field errors.
     pub fn missing_frontmatter_field(file_path: &'a str, line_no: usize) -> Doc2FlowError {
         DiagnosticError {

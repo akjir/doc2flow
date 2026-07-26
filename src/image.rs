@@ -1,5 +1,5 @@
 use crate::error::{DiagnosticError, Doc2FlowError, Result};
-use base64::prelude::*;
+use crate::utils::{base64_encode, guess_mime_type};
 use image::{GenericImageView, ImageFormat, imageops::FilterType};
 use std::collections::HashMap;
 use std::fmt::Write as _;
@@ -120,10 +120,8 @@ pub fn embed_images_as_base64_with_source(
                                         ));
                                     }
                                 } else {
-                                    let mime = mime_guess::from_path(&resolved_path)
-                                        .first_raw()
-                                        .unwrap_or("image/jpeg");
-                                    let b64 = BASE64_STANDARD.encode(&bytes);
+                                    let mime = guess_mime_type(&resolved_path);
+                                    let b64 = base64_encode(&bytes);
                                     cache.insert(
                                         resolved_path.clone(),
                                         format!("data:{mime};base64,{b64}"),
@@ -224,7 +222,7 @@ pub fn process_and_encode_image_as_webp(image_path: &Path) -> Result<String> {
         final_h
     );
 
-    let b64 = BASE64_STANDARD.encode(&buffer);
+    let b64 = base64_encode(&buffer);
     Ok(format!("data:image/webp;base64,{b64}"))
 }
 
@@ -344,7 +342,7 @@ fn is_image_source(src: &str, base_dir: Option<&Path>) -> bool {
         let resolved = resolve_image_path(path, base_dir);
         let is_img = resolved
             .as_deref()
-            .and_then(|p| mime_guess::from_path(p).first_raw())
+            .map(guess_mime_type)
             .is_some_and(|mime| mime.starts_with("image/"));
         if is_img {
             return true;

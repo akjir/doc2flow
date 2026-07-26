@@ -7,3 +7,5 @@ pub mod i18n;
 pub mod id;
 pub mod image;
 pub mod template;
+pub mod utils;
+

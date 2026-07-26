@@ -1,38 +1,23 @@
-use clap::Parser;
 use doc2flow::converter;
 use doc2flow::error::{Doc2FlowError, Result};
 use doc2flow::i18n::Locale;
 use doc2flow::template;
+use doc2flow::utils::{help_message, parse_args};
+use std::env;
 use std::fs;
-use std::path::PathBuf;
-
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-struct Args {
-    #[arg(help = "Path to the input Markdown file")]
-    input: Option<PathBuf>,
-
-    #[arg(short, long, help = "Path to the output HTML file (optional)")]
-    output: Option<PathBuf>,
-
-    #[arg(
-        short = 'i',
-        long = "init",
-        num_args = 0..=1,
-        default_missing_value = "template.md",
-        help = "Generate a starter template Markdown file (optional target path, default: template.md)"
-    )]
-    init: Option<PathBuf>,
-    #[arg(
-        short = 's',
-        long = "auto-scale",
-        help = "Automatically resize local images exceeding 250 KB to WebP"
-    )]
-    auto_scale: bool,
-}
 
 fn main() -> Result<()> {
-    let args = Args::parse();
+    let args = parse_args(env::args()).map_err(Doc2FlowError::Message)?;
+
+    if args.show_help {
+        println!("{}", help_message());
+        return Ok(());
+    }
+
+    if args.show_version {
+        println!("d2f {}", env!("CARGO_PKG_VERSION"));
+        return Ok(());
+    }
 
     if let Some(init_path) = args.init {
         let template_content = template::generate_template_markdown();
