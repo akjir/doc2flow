@@ -71,6 +71,7 @@ language: "de"
 
 ### 2. Collapsible Sections & Headings
 
+- **`# Section Title` (Level 1 Heading):** Creates a non-collapsible section header with distinct styling (`--bh1`). Tasks under H1 are included in overall progress tracking without displaying a section completion badge.
 - **`## Section Title` (Level 2 Heading):** Creates a collapsible section container with a completion badge (`0/3 completed`) and toggle indicator.
 - **`### Subheading` (Level 3 Heading):** Creates a sub-section label within a section.
 

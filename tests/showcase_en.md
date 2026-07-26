@@ -9,6 +9,12 @@ version: "1.0.0"
 language: "en"
 ---
 
+# Part 1: System Setup & Preparation
+
+This top-level section describes the basic system configuration. Tasks within H1 sections do not display an individual badge indicator, but contribute fully to the overall progress tracking.
+
+- [x] General safety briefing for technicians completed
+
 ## Section 1: Overview & Guidelines
 
 This is an arbitrary text paragraph in the section body. It provides general instructions and information for the operator to review before starting the procedure.
@@ -42,12 +48,14 @@ This arbitrary text paragraph describes the preliminary setup steps that must be
   2. Plug redundant network cable into Port 2
 - [x] Initial power-on check completed
 
-### Software Configuration
+#### Software Configuration
 - [ ] Install latest system updates
 - [ ] Configure firewall rules according to company policy
 - [x] Verify remote access service
 
 ![Software Configuration Overview](../images/example2.jpg)
+
+# Part 2: Maintenance & System Reference
 
 ## Section 3: Reference & Code Blocks
 

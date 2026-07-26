@@ -339,70 +339,81 @@ pub fn convert_markdown_to_html_with_locale(
     let mut idx = 0;
     while idx < events.len() {
         match &events[idx] {
-            // Level 2 Headings (## Section)
+            // Level 1 (# Section) and Level 2 (## Section) Headings
             Event::Start(Tag::Heading {
-                level: HeadingLevel::H2,
+                level: level @ (HeadingLevel::H1 | HeadingLevel::H2),
                 ..
             }) => {
+                let target_level = *level;
                 if in_section {
                     out.push_str("</div></div>\n\n");
                 }
                 section_count += 1;
                 in_section = true;
 
-                // Collect heading content until End(Heading)
-                let mut heading_events = Vec::new();
+                let start_idx = idx + 1;
                 idx += 1;
                 while idx < events.len() {
-                    if matches!(events[idx], Event::End(TagEnd::Heading(HeadingLevel::H2))) {
+                    if matches!(events[idx], Event::End(TagEnd::Heading(l)) if l == target_level) {
                         break;
                     }
-                    heading_events.push(events[idx].clone());
                     idx += 1;
                 }
 
                 let mut heading_html = String::new();
-                html::push_html(&mut heading_html, heading_events.into_iter());
+                html::push_html(&mut heading_html, events[start_idx..idx].iter().cloned());
                 let heading_text = heading_html.trim();
 
-                out.push_str(&format!("<!-- S{section_count} -->\n"));
-                out.push_str(&format!(
-                    "<div class=\"section\" id=\"s{section_count}\">\n"
-                ));
-                out.push_str(&format!(
-                    "<div class=\"sh\" onclick=\"toggleSection('s{section_count}')\"><span>{heading_text}</span>\n"
-                ));
-                out.push_str(&format!(
-                    "<div style=\"display:flex;align-items:center;gap:8px\"><span class=\"sbadge\" id=\"badge-s{section_count}\"></span><span class=\"stog\" id=\"tog-s{section_count}\">&#9660;</span></div></div>\n"
-                ));
-                out.push_str(&format!(
-                    "<div class=\"sb\" id=\"body-s{section_count}\">\n"
-                ));
+                use std::fmt::Write;
+                let _ = writeln!(out, "<!-- S{section_count} -->");
+                let _ = writeln!(out, "<div class=\"section\" id=\"s{section_count}\">");
+
+                if target_level == HeadingLevel::H1 {
+                    let _ = writeln!(
+                        out,
+                        "<div class=\"sh sh-h1\"><span>{heading_text}</span></div>"
+                    );
+                } else {
+                    let _ = writeln!(
+                        out,
+                        "<div class=\"sh\" onclick=\"toggleSection('s{section_count}')\"><span>{heading_text}</span>"
+                    );
+                    let _ = writeln!(
+                        out,
+                        "<div style=\"display:flex;align-items:center;gap:8px\"><span class=\"sbadge\" id=\"badge-s{section_count}\"></span><span class=\"stog\" id=\"tog-s{section_count}\">&#9660;</span></div></div>"
+                    );
+                }
+
+                let _ = writeln!(out, "<div class=\"sb\" id=\"body-s{section_count}\">");
             }
 
-            // Level 3 Headings (### Subheading)
+            // Level 3-6 Headings (###, ####, #####, ###### Subheadings)
             Event::Start(Tag::Heading {
-                level: HeadingLevel::H3,
+                level: level @ (HeadingLevel::H3
+                | HeadingLevel::H4
+                | HeadingLevel::H5
+                | HeadingLevel::H6),
                 ..
             }) => {
-                let mut sub_events = Vec::new();
+                let target_level = *level;
+                let start_idx = idx + 1;
                 idx += 1;
                 while idx < events.len() {
-                    if matches!(events[idx], Event::End(TagEnd::Heading(HeadingLevel::H3))) {
+                    if matches!(events[idx], Event::End(TagEnd::Heading(l)) if l == target_level) {
                         break;
                     }
-                    sub_events.push(events[idx].clone());
                     idx += 1;
                 }
 
                 let mut sub_html = String::new();
-                html::push_html(&mut sub_html, sub_events.into_iter());
-                out.push_str(&format!("<div class=\"subh\">{}</div>\n", sub_html.trim()));
+                html::push_html(&mut sub_html, events[start_idx..idx].iter().cloned());
+                use std::fmt::Write;
+                let _ = writeln!(out, "<div class=\"subh\">{}</div>", sub_html.trim());
             }
 
             // Blockquotes (> Note, >? Tip, >! Important, >!! Warning, >!!! Caution)
             Event::Start(Tag::BlockQuote(_)) => {
-                let mut bq_events = Vec::new();
+                let start_idx = idx + 1;
                 idx += 1;
                 let mut depth = 1;
                 while idx < events.len() {
@@ -416,24 +427,25 @@ pub fn convert_markdown_to_html_with_locale(
                         }
                         _ => {}
                     }
-                    bq_events.push(events[idx].clone());
                     idx += 1;
                 }
 
                 let mut bq_html = String::new();
-                html::push_html(&mut bq_html, bq_events.into_iter());
+                html::push_html(&mut bq_html, events[start_idx..idx].iter().cloned());
                 let trimmed = bq_html.trim();
 
                 let inner = strip_paragraph_tags(trimmed);
                 let (note_cls, note_content, callout_label) = parse_callout(inner, locale);
 
                 let escaped_label = html_escape(callout_label);
-                out.push_str(&format!(
-                    "<div class=\"{}\" data-label=\"{}\">{}</div>\n",
+                use std::fmt::Write;
+                let _ = writeln!(
+                    out,
+                    "<div class=\"{}\" data-label=\"{}\">{}</div>",
                     note_cls,
                     escaped_label,
                     note_content.trim()
-                ));
+                );
             }
 
             // Code Blocks (e.g. ```ini ... ```)
@@ -443,7 +455,7 @@ pub fn convert_markdown_to_html_with_locale(
                     _ => None,
                 };
 
-                let mut code_events = Vec::new();
+                let start_idx = idx + 1;
                 idx += 1;
                 let mut depth = 1;
                 while idx < events.len() {
@@ -457,14 +469,13 @@ pub fn convert_markdown_to_html_with_locale(
                         }
                         _ => {}
                     }
-                    code_events.push(events[idx].clone());
                     idx += 1;
                 }
 
                 let mut code_text = String::new();
-                for ev in code_events {
+                for ev in &events[start_idx..idx] {
                     if let Event::Text(text) = ev {
-                        code_text.push_str(&text);
+                        code_text.push_str(text);
                     }
                 }
 
@@ -483,10 +494,12 @@ pub fn convert_markdown_to_html_with_locale(
                 let copy_icon = r#"<svg aria-hidden="true" class="svg-icon iconCopy" width="14" height="15" viewBox="0 0 17 18"><path fill="currentColor" d="M5 6c0-1.09.91-2 2-2h4.5L15 7.5V15c0 1.09-.91 2-2 2H7c-1.09 0-2-.91-2-2zm6-1.25V8h3.25z"/><path fill="currentColor" d="M10 1a2 2 0 0 1 2 2H6a2 2 0 0 0-2 2v9a2 2 0 0 1-2-2V4a3 3 0 0 1 3-3z" opacity=".4"/></svg>"#;
 
                 let copy_label = html_escape(locale.get("copy_code"));
-                out.push_str(&format!(
-                    "<div class=\"code-block-wrap\"><div class=\"code-header\">{}<button class=\"copy-btn\" onclick=\"copyCode(this)\" title=\"{}\" aria-label=\"{}\">{}</button></div><pre class=\"code-block{}\"><code>{}</code></pre></div>\n",
+                use std::fmt::Write;
+                let _ = writeln!(
+                    out,
+                    "<div class=\"code-block-wrap\"><div class=\"code-header\">{}<button class=\"copy-btn\" onclick=\"copyCode(this)\" title=\"{}\" aria-label=\"{}\">{}</button></div><pre class=\"code-block{}\"><code>{}</code></pre></div>",
                     lang_span, copy_label, copy_label, copy_icon, lang_cls, escaped_code
-                ));
+                );
             }
 
             // Task List Items (- [ ] or - [x]) or Simple List Items (-)
@@ -508,7 +521,7 @@ pub fn convert_markdown_to_html_with_locale(
                     idx += 1;
                 }
 
-                let mut item_events = Vec::new();
+                let start_idx = idx;
                 let mut depth = 1;
                 while idx < events.len() {
                     match &events[idx] {
@@ -525,12 +538,11 @@ pub fn convert_markdown_to_html_with_locale(
                         }
                         _ => {}
                     }
-                    item_events.push(events[idx].clone());
                     idx += 1;
                 }
 
                 let mut label_html = String::new();
-                html::push_html(&mut label_html, item_events.into_iter());
+                html::push_html(&mut label_html, events[start_idx..idx].iter().cloned());
                 let trimmed = label_html.trim();
                 let clean_label = strip_paragraph_tags(trimmed);
 
@@ -543,22 +555,26 @@ pub fn convert_markdown_to_html_with_locale(
 
                 let sec_num = if section_count == 0 { 1 } else { section_count };
 
+                use std::fmt::Write;
                 if is_task {
                     global_cb_count += 1;
                     let checked_attr = if is_checked { " checked" } else { "" };
                     let checked_cls = if is_checked { " checked" } else { "" };
 
-                    out.push_str(&format!(
-                        "<div class=\"check-item{}\" id=\"wrap-cb_s{sec_num}_{global_cb_count}\"{indent_style}>\n",
+                    let _ = writeln!(
+                        out,
+                        "<div class=\"check-item{}\" id=\"wrap-cb_s{sec_num}_{global_cb_count}\"{indent_style}>",
                         checked_cls
-                    ));
-                    out.push_str(&format!(
-                        "  <input type=\"checkbox\" id=\"cb_s{sec_num}_{global_cb_count}\"{checked_attr}>\n"
-                    ));
-                    out.push_str(&format!(
-                        "  <label class=\"check-label\" for=\"cb_s{sec_num}_{global_cb_count}\">{}</label>\n",
+                    );
+                    let _ = writeln!(
+                        out,
+                        "  <input type=\"checkbox\" id=\"cb_s{sec_num}_{global_cb_count}\"{checked_attr}>"
+                    );
+                    let _ = writeln!(
+                        out,
+                        "  <label class=\"check-label\" for=\"cb_s{sec_num}_{global_cb_count}\">{}</label>",
                         clean_label.trim()
-                    ));
+                    );
                     out.push_str("</div>\n");
                 } else {
                     let bullet = match list_stack.last_mut() {
@@ -567,16 +583,19 @@ pub fn convert_markdown_to_html_with_locale(
                     };
 
                     global_item_count += 1;
-                    out.push_str(&format!(
-                        "<div class=\"check-item simple-item\" id=\"item_s{sec_num}_{global_item_count}\"{indent_style}>\n"
-                    ));
-                    out.push_str(&format!(
-                        "  <span class=\"list-bullet\">{bullet}</span>\n"
-                    ));
-                    out.push_str(&format!(
-                        "  <span class=\"check-label\">{}</span>\n",
+                    let _ = writeln!(
+                        out,
+                        "<div class=\"check-item simple-item\" id=\"item_s{sec_num}_{global_item_count}\"{indent_style}>"
+                    );
+                    let _ = writeln!(
+                        out,
+                        "  <span class=\"list-bullet\">{bullet}</span>"
+                    );
+                    let _ = writeln!(
+                        out,
+                        "  <span class=\"check-label\">{}</span>",
                         clean_label.trim()
-                    ));
+                    );
                     out.push_str("</div>\n");
                 }
 
@@ -592,7 +611,7 @@ pub fn convert_markdown_to_html_with_locale(
 
             // Standalone Text Paragraphs
             Event::Start(Tag::Paragraph) => {
-                let mut para_events = Vec::new();
+                let start_idx = idx + 1;
                 idx += 1;
                 let mut depth = 1;
                 while idx < events.len() {
@@ -606,23 +625,24 @@ pub fn convert_markdown_to_html_with_locale(
                         }
                         _ => {}
                     }
-                    para_events.push(events[idx].clone());
                     idx += 1;
                 }
 
                 let mut para_html = String::new();
-                html::push_html(&mut para_html, para_events.into_iter());
+                html::push_html(&mut para_html, events[start_idx..idx].iter().cloned());
                 let trimmed = para_html.trim();
 
                 let clean_content = strip_paragraph_tags(trimmed).trim();
 
                 if !clean_content.is_empty() {
                     let is_image_block = clean_content.starts_with("<img");
+                    use std::fmt::Write;
                     if is_image_block {
-                        out.push_str(&format!(
-                            "<div class=\"img-item\">\n  {}\n</div>\n",
+                        let _ = writeln!(
+                            out,
+                            "<div class=\"img-item\">\n  {}\n</div>",
                             clean_content
-                        ));
+                        );
                     } else {
                         global_txt_count += 1;
                         let sec_num = if section_count == 0 { 1 } else { section_count };
@@ -632,13 +652,15 @@ pub fn convert_markdown_to_html_with_locale(
                         } else {
                             String::new()
                         };
-                        out.push_str(&format!(
-                            "<div class=\"check-item text-item\" id=\"txt_s{sec_num}_{global_txt_count}\"{indent_style}>\n"
-                        ));
-                        out.push_str(&format!(
-                            "  <span class=\"text-content\">{}</span>\n",
+                        let _ = writeln!(
+                            out,
+                            "<div class=\"check-item text-item\" id=\"txt_s{sec_num}_{global_txt_count}\"{indent_style}>"
+                        );
+                        let _ = writeln!(
+                            out,
+                            "  <span class=\"text-content\">{}</span>",
                             trimmed
-                        ));
+                        );
                         out.push_str("</div>\n");
                     }
                 }
@@ -882,5 +904,35 @@ mod tests {
         assert!(err_str.contains("1 | # No Frontmatter Document"));
         assert!(err_str.contains("^ missing frontmatter section '---'"));
         assert!(err_str.contains("= help: add YAML frontmatter"));
+    }
+
+    #[test]
+    fn test_level_1_heading_conversion() {
+        let input = "# Top Level Header\n\n- [ ] Task in H1\n\n## Sub Section\n\n- [x] Task in H2";
+        let html = convert_markdown_to_html(input).expect("conversion failed");
+
+        assert!(html.contains(r#"<!-- S1 -->"#));
+        assert!(html.contains(r#"<div class="section" id="s1">"#));
+        assert!(html.contains(r#"<div class="sh sh-h1"><span>Top Level Header</span></div>"#));
+        assert!(!html.contains(r#"badge-s1"#));
+        assert!(!html.contains(r#"tog-s1"#));
+        assert!(html.contains(r#"id="wrap-cb_s1_1""#));
+
+        assert!(html.contains(r#"<!-- S2 -->"#));
+        assert!(html.contains(r#"<div class="section" id="s2">"#));
+        assert!(html.contains(r#"<div class="sh" onclick="toggleSection('s2')"><span>Sub Section</span>"#));
+        assert!(html.contains(r#"badge-s2"#));
+        assert!(html.contains(r#"tog-s2"#));
+    }
+
+    #[test]
+    fn test_h4_to_h6_treated_as_subheading() {
+        let input = "## Section 1\n\n### Sub 3\n\n#### Sub 4\n\n##### Sub 5\n\n###### Sub 6";
+        let html = convert_markdown_to_html(input).expect("conversion failed");
+
+        assert!(html.contains(r#"<div class="subh">Sub 3</div>"#));
+        assert!(html.contains(r#"<div class="subh">Sub 4</div>"#));
+        assert!(html.contains(r#"<div class="subh">Sub 5</div>"#));
+        assert!(html.contains(r#"<div class="subh">Sub 6</div>"#));
     }
 }

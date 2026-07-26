@@ -212,11 +212,13 @@ fn test_showcase_en_fixture_conversion() {
         doc2flow::image::embed_images_as_base64(&rendered, Some(std::path::Path::new("tests")));
 
     assert!(html.contains("Doc2Flow English Showcase"));
+    assert!(html.contains("<div class=\"sh sh-h1\"><span>Part 1: System Setup &amp; Preparation</span></div>"));
     assert!(html.contains("<div class=\"check-item text-item\" id=\"txt_s1_1\">"));
+    assert!(html.contains("<input type=\"checkbox\" id=\"cb_s1_1\" checked>"));
     assert!(html.contains("data:image/jpeg;base64,"));
     assert!(html.contains("<div class=\"note\" data-label=\"Note\">"));
     assert!(html.contains("<div class=\"note note-tip\" data-label=\"Tip\">"));
-    assert!(html.contains("<input type=\"checkbox\" id=\"cb_s2_1\">"));
+    assert!(html.contains("<input type=\"checkbox\" id=\"cb_s3_2\">"));
     assert!(!html.contains("Test comment: This comment must not appear"));
     assert!(html.contains("<div class=\"logo-wrap\">"));
 }
@@ -236,11 +238,13 @@ fn test_showcase_de_fixture_conversion() {
         doc2flow::image::embed_images_as_base64(&rendered, Some(std::path::Path::new("tests")));
 
     assert!(html.contains("Doc2Flow Deutscher Showcase"));
+    assert!(html.contains("<div class=\"sh sh-h1\"><span>Teil 1: Systemeinrichtung &amp; Vorbereitung</span></div>"));
     assert!(html.contains("<div class=\"check-item text-item\" id=\"txt_s1_1\">"));
+    assert!(html.contains("<input type=\"checkbox\" id=\"cb_s1_1\" checked>"));
     assert!(html.contains("data:image/jpeg;base64,"));
     assert!(html.contains("<div class=\"note\" data-label=\"Hinweis\">"));
     assert!(html.contains("<div class=\"note note-tip\" data-label=\"Tipp\">"));
-    assert!(html.contains("<input type=\"checkbox\" id=\"cb_s2_1\">"));
+    assert!(html.contains("<input type=\"checkbox\" id=\"cb_s3_2\">"));
     assert!(!html.contains("Test-Kommentar: Dieser Hinweis darf nicht"));
     assert!(html.contains("<div class=\"logo-wrap\">"));
 }
@@ -320,4 +324,31 @@ date: "2026-07-25"
     assert!(err_msg.contains("3 | company: \"\""));
     assert!(err_msg.contains("^^^^^^^^^^^ 'company' field value cannot be empty"));
     assert!(err_msg.contains("= help: provide a valid company name"));
+}
+
+#[test]
+fn test_level_1_heading_integration() {
+    let input = r#"---
+title: "H1 Test"
+company: "Test Corp"
+date: "2026-07-26"
+---
+# Main Section
+- [ ] Task 1
+- [x] Task 2
+
+## Sub Section
+- [ ] Task 3
+"#;
+
+    let (fm, body) = doc2flow::converter::parse_and_validate_frontmatter(input, Some("test_h1.md")).unwrap();
+    let locale = doc2flow::i18n::Locale::from_lang_code(&fm.language);
+    let html_body = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
+    let d2f_id = doc2flow::id::generate_d2f_id(&fm).unwrap();
+    let rendered = doc2flow::template::render(&fm, &locale, &html_body, &d2f_id).unwrap();
+
+    assert!(rendered.contains(r#"<div class="sh sh-h1"><span>Main Section</span></div>"#));
+    assert!(!rendered.contains(r#"badge-s1"#));
+    assert!(rendered.contains(r#"<div class="sh" onclick="toggleSection('s2')"><span>Sub Section</span>"#));
+    assert!(rendered.contains(r#"badge-s2"#));
 }

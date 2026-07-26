@@ -14,6 +14,7 @@ DOC2FLOW (D2F) - TEMPLATE & USAGE GUIDE
    - language / lang: Language code for static UI translation ('en', 'de').
 
 2. DOCUMENT STRUCTURE:
+   - Level 1 Headings (# Heading): Define non-collapsible section headers.
    - Level 2 Headings (## Heading): Define collapsible sections with progress badges.
    - Level 3 Headings (### Subheading): Define subheadings within sections.
 

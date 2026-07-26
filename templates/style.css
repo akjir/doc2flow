@@ -1,5 +1,6 @@
 :root {
   --bd: #1F4E79; --bm: #2E75B6; --bl: #D6E4F0; --bbg: #EBF3FB;
+  --bh2: #2B6AA0;
   --obg: #FFF2CC; --oc: #7F6000; --gc: #375623; --gbg: #E2EFDA;
   --gray: #444; --done: #f0f9f0;
 }
@@ -31,15 +32,19 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 .info-table td input { width: 100%; border: none; outline: none; font-size: 12px; font-family: Arial; background: transparent; }
 .section { background: white; border-radius: 10px; margin-bottom: 14px;
   box-shadow: 0 1px 4px rgba(0,0,0,.08); overflow: hidden; }
-.sh { background: var(--bd); color: white; padding: 11px 18px;
+.sh { background: var(--bh2); color: white; padding: 11px 18px;
   font-size: 15px; font-weight: bold; display: flex; align-items: center;
   justify-content: space-between; cursor: pointer; user-select: none; }
-.sh:hover { background: #174070; }
+.sh:hover { background: #215480; }
+.sh.sh-h1 { background: var(--bd); font-size: 16px; cursor: default; }
+.sh.sh-h1:hover { background: var(--bd); }
 .sbadge { font-size: 11px; font-weight: normal; background: rgba(255,255,255,.2);
   padding: 2px 7px; border-radius: 12px; white-space: nowrap; }
+.sbadge:empty { display: none; }
 .sbadge.done { background: #70AD47; }
 .stog { font-size: 16px; margin-left: 10px; transition: transform .2s; }
 .sb { padding: 14px 18px; }
+.sb:empty, .sb:not(:has(*)) { display: none; }
 .sb.collapsed { display: none; }
 .subh { font-size: 12.5px; font-weight: bold; color: var(--bm); margin: 14px 0 7px;
   padding-bottom: 4px; border-bottom: 1px solid var(--bl); }

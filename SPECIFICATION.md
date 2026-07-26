@@ -66,6 +66,7 @@ d2f.exe --version
   * `>!!` or `>!! Warning`: Warning box (`.note-warning`, orange accent).
   * `>!!!` or `>!!! Caution`: Caution / Danger box (`.note-caution`, red accent).
 * **Document Structure & Structural Mapping:**
+  * **Level 1 Headings (`#`):** Define non-collapsible section blocks (`.section`, `.sh.sh-h1`, `.sb`) with custom header styling (`--bh1`), omitting section completion badges while including their task items in overall document progress calculations.
   * **Level 2 Headings (`##`):** Define the start of a collapsible section block (`.section`, `.sh`, `.sb`) with section completion badges and toggle indicators.
   * **Level 3 Headings (`###`):** Define subheadings inside section blocks (`.subh`).
 * **Checklists & List Items:**

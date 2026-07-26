@@ -30,6 +30,7 @@ function closeLightbox() {
 }
 
 function toggleSection(headerElement) {
+    if (!headerElement || (headerElement.classList && headerElement.classList.contains('sh-h1'))) return;
     const section = headerElement.closest('.section');
     const body = section ? section.querySelector('.sb') : null;
     
@@ -45,7 +46,6 @@ function toggleSection(headerElement) {
 function saveState() {
     const state = {};
     document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb, index) => {
-        // Use an index or an ID if available. d2f generator will try to assign unique IDs to checkboxes
         const key = cb.id || ('cb_' + index);
         state[key] = cb.checked;
     });
@@ -56,7 +56,6 @@ function saveState() {
         textStates[key] = item.classList.contains('checked');
     });
 
-    // Save any persistent inputs (e.g. signature fields)
     const fields = {};
     document.querySelectorAll('input.persistent-field').forEach((input, index) => {
         const key = input.id || ('f_' + index);
@@ -65,7 +64,7 @@ function saveState() {
 
     try { 
         localStorage.setItem(STATE_KEY, JSON.stringify({ checks: state, texts: textStates, fields: fields })); 
-    } catch(e) {
+    } catch (e) {
         console.warn('Failed to save state to localStorage', e);
     }
 }
@@ -102,7 +101,7 @@ function loadState() {
             });
         }
         syncLinkedFields();
-    } catch(e) {
+    } catch (e) {
         console.warn('Failed to load state from localStorage', e);
     }
 }
@@ -118,26 +117,35 @@ function updateProgress() {
     const i18n = window.D2F_I18N || {};
     const sections = document.querySelectorAll('.section');
     let total = 0, done = 0;
-    
-    sections.forEach(sec => {
-        const cbs = sec.querySelectorAll('input[type="checkbox"]');
-        if (cbs.length === 0) return;
-        
-        const checkedCount = [...cbs].filter(c => c.checked).length;
-        total += cbs.length;
-        done += checkedCount;
-        
+
+    // Batch read phase (eliminate layout thrashing - JS-PERF-ASYNC)
+    const updates = Array.from(sections).map(sec => {
+        const cbs = Array.from(sec.querySelectorAll('input[type="checkbox"]'));
         const badge = sec.querySelector('.sbadge');
-        if (badge) { 
-            badge.textContent = checkedCount + ' / ' + cbs.length; 
-            badge.className = 'sbadge' + (checkedCount === cbs.length ? ' done' : ''); 
+        const count = cbs.length;
+        const checkedCount = cbs.filter(c => c.checked).length;
+        total += count;
+        done += checkedCount;
+        return { badge, count, checkedCount };
+    });
+
+    // Batch write phase
+    updates.forEach(({ badge, count, checkedCount }) => {
+        if (!badge) return;
+        if (count === 0) {
+            badge.textContent = '';
+            badge.style.display = 'none';
+        } else {
+            badge.style.display = '';
+            badge.textContent = checkedCount + ' / ' + count;
+            badge.className = 'sbadge' + (checkedCount === count ? ' done' : '');
         }
     });
-    
-    const pct = total ? Math.round(done / total * 100) : 0;
+
+    const pct = total ? Math.round((done / total) * 100) : 0;
     const pb = document.getElementById('pb');
     if (pb) pb.style.width = pct + '%';
-    
+
     const pt = document.getElementById('pt');
     if (pt) {
         const tmpl = i18n.progress_template || '{done} of {total} tasks completed ({pct}%)';
@@ -183,7 +191,7 @@ function resetAll() {
     saveState();
 }
 
-// Saves current state into DOM attributes and downloads the updated HTML file.
+// Saves current state into DOM attributes and downloads the updated HTML file (JS-STATE-DOM-SYNC)
 function saveDocumentState() {
     saveState();
 
@@ -227,13 +235,12 @@ function saveDocumentState() {
     URL.revokeObjectURL(url);
 }
 
-// Export the current state as PDF via the browser's "Save as PDF" print option.
-// Collapsed sections are temporarily expanded so nothing is hidden in the PDF.
+// Export the current state as PDF via browser print.
 function exportPDF() {
     const btnPdf = document.getElementById('btn-pdf');
     if (btnPdf && btnPdf.disabled) return;
 
-    const collapsed = [...document.querySelectorAll('.sb.collapsed')];
+    const collapsed = Array.from(document.querySelectorAll('.sb.collapsed'));
     collapsed.forEach(el => el.classList.remove('collapsed'));
     
     const restore = () => {
@@ -338,88 +345,6 @@ function checkDateShortcut(input) {
     return false;
 }
 
-// Setup Event Listeners
-document.addEventListener('DOMContentLoaded', () => {
-    // Bind checkbox and text item clicks
-    document.querySelectorAll('.check-item').forEach(item => {
-        item.addEventListener('click', function(e) {
-            // Ignore if clicked on a link or an image
-            if (e.target.tagName === 'A' || e.target.tagName === 'IMG') return;
-            
-            const cb = this.querySelector('input[type="checkbox"]');
-            if (cb) {
-                // If clicked on the wrapper but not the checkbox directly, toggle it manually
-                if (e.target !== cb) cb.checked = !cb.checked;
-                styleItem(cb);
-                updateProgress();
-                saveState();
-            } else if (this.classList.contains('text-item') || this.classList.contains('simple-item')) {
-                this.classList.toggle('checked');
-                saveState();
-            }
-        });
-    });
-
-    // Bind section header clicks
-    document.querySelectorAll('.sh').forEach(sh => {
-        sh.addEventListener('click', function() {
-            toggleSection(this);
-        });
-    });
-
-    // Bind image lightbox clicks
-    document.querySelectorAll('.doc-body img').forEach(img => {
-        img.style.cursor = 'zoom-in';
-        img.addEventListener('click', function(e) {
-            e.stopPropagation();
-            openLightbox(this.src);
-        });
-    });
-
-    // Bind linked fields sync and date shortcut handling (Agent and Date)
-    const linkedIds = ['f_info_agent', 'f_sign_agent', 'f_info_date', 'f_sign_date'];
-    linkedIds.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            const isDateField = id.toLowerCase().includes('date');
-            const handler = (e) => {
-                if (isDateField) {
-                    checkDateShortcut(e.target);
-                }
-                syncLinkedFields(e.target);
-                saveState();
-            };
-            el.addEventListener('input', handler);
-            if (isDateField) {
-                el.addEventListener('change', handler);
-                el.addEventListener('blur', handler);
-            }
-        }
-    });
-
-    // Bind any other date fields present in the document
-    document.querySelectorAll('input[id*="date"], input[name*="date"], input.date-field').forEach(input => {
-        if (linkedIds.includes(input.id)) return;
-        const handler = (e) => {
-            checkDateShortcut(e.target);
-            saveState();
-        };
-        input.addEventListener('input', handler);
-        input.addEventListener('change', handler);
-        input.addEventListener('blur', handler);
-    });
-
-    // Bind persistent fields
-    document.querySelectorAll('input.persistent-field').forEach(input => {
-        input.addEventListener('input', saveState);
-    });
-
-    // Initialize state
-    loadState();
-    syncLinkedFields();
-    updateProgress();
-});
-
 function copyCode(btn) {
     const wrap = btn.closest('.code-block-wrap');
     if (!wrap) return;
@@ -462,3 +387,74 @@ function showCopiedFeedback(btn) {
     btn.classList.add('copied');
     setTimeout(() => btn.classList.remove('copied'), 2000);
 }
+
+// Global Event Delegation & Initialization (JS-EVENT-LIFECYCLE & JS-DOM-EFFICIENT)
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Delegated click listener for interactive items, headers, and images
+    document.addEventListener('click', (e) => {
+        const img = e.target.closest('.doc-body img');
+        if (img) {
+            e.stopPropagation();
+            openLightbox(img.src);
+            return;
+        }
+
+        const sh = e.target.closest('.sh');
+        if (sh && !sh.classList.contains('sh-h1')) {
+            toggleSection(sh);
+            return;
+        }
+
+        const checkItem = e.target.closest('.check-item');
+        if (checkItem) {
+            if (e.target.tagName === 'A' || e.target.tagName === 'IMG') return;
+
+            const cb = checkItem.querySelector('input[type="checkbox"]');
+            if (cb) {
+                if (e.target !== cb) cb.checked = !cb.checked;
+                styleItem(cb);
+                updateProgress();
+                saveState();
+            } else if (checkItem.classList.contains('text-item') || checkItem.classList.contains('simple-item')) {
+                checkItem.classList.toggle('checked');
+                saveState();
+            }
+        }
+    });
+
+    // 2. Delegated input/change listeners for persistent fields, linked fields, and date shortcuts
+    const linkedIds = ['f_info_agent', 'f_sign_agent', 'f_info_date', 'f_sign_date'];
+    const handleInputOrChange = (e) => {
+        const target = e.target;
+        if (!target) return;
+
+        if (target.classList.contains('persistent-field')) {
+            saveState();
+        }
+
+        if (target.id && linkedIds.includes(target.id)) {
+            if (target.id.toLowerCase().includes('date')) {
+                checkDateShortcut(target);
+            }
+            syncLinkedFields(target);
+            saveState();
+        } else if (target.matches('input[id*="date"], input[name*="date"], input.date-field')) {
+            checkDateShortcut(target);
+            saveState();
+        }
+    };
+
+    document.addEventListener('input', handleInputOrChange);
+    document.addEventListener('change', handleInputOrChange);
+    document.addEventListener('blur', (e) => {
+        if (e.target && (linkedIds.includes(e.target.id) || e.target.matches('input[id*="date"], input[name*="date"], input.date-field'))) {
+            checkDateShortcut(e.target);
+            saveState();
+        }
+    }, true);
+
+    // Initialize document state
+    loadState();
+    syncLinkedFields();
+    updateProgress();
+});

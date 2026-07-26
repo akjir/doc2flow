@@ -9,6 +9,12 @@ version: "1.0.0"
 language: "de"
 ---
 
+# Teil 1: Systemeinrichtung & Vorbereitung
+
+Dieser übergeordnete Abschnitt beschreibt die grundlegende Systemkonfiguration. Aufgaben in H1-Abschnitten besitzen keinen eigenen Badge-Indikator, fließen aber voll in die Gesamtfortschrittsanzeige ein.
+
+- [x] Allgemeine Sicherheitsunterweisung für Techniker durchgeführt
+
 ## Abschnitt 1: Übersicht & Richtlinien
 
 Dies ist ein beliebiger Textabsatz im Abschnitts-Hauptteil. Er liefert allgemeine Anweisungen und Informationen für den Bearbeiter, die vor Beginn des Verfahrens durchgelesen werden sollten.
@@ -42,12 +48,14 @@ Dieser beliebige Textabsatz beschreibt die vorbereitenden Schritte, die erfüllt
   2. Redundantes Netzwerkkabel in Port 2 einstecken
 - [x] Initialer Einschalttest abgeschlossen
 
-### Software-Konfiguration
+#### Software-Konfiguration
 - [ ] Neueste Systemupdates installieren
 - [ ] Firewall-Regeln gemäß Unternehmensrichtlinie konfigurieren
 - [x] Fernzugriffs-Dienst überprüfen
 
 ![Software-Konfiguration Screenshots](../images/example2.jpg)
+
+# Teil 2: Wartung & Systemreferenz
 
 ## Abschnitt 3: Referenz & Code-Blöcke
 
