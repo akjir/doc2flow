@@ -3,8 +3,11 @@
 use crate::error::DiagnosticError;
 use anyhow::Result;
 use base64::prelude::*;
+use image::{imageops::FilterType, GenericImageView, ImageFormat};
 use std::collections::HashMap;
 use std::fs;
+use std::fmt::Write as _;
+use std::io::{Cursor, IsTerminal, Write as _};
 use std::path::{Path, PathBuf};
 
 /// Maximum allowed size in bytes for a local image embedded into HTML (250 KB).
@@ -23,22 +26,23 @@ pub const MAX_IMAGE_SIZE_BYTES: u64 = 250 * 1024;
 ///
 /// Returns a compiler-style `DiagnosticError` if a local image exceeds the 250 KB size limit.
 pub fn embed_images_as_base64(html: &str, base_dir: Option<&Path>) -> Result<String> {
-    embed_images_as_base64_with_source(html, None, None, base_dir)
+    embed_images_as_base64_with_source(html, None, None, base_dir, false)
 }
 
 /// Embeds local image references in HTML as Base64 `data:` URIs with Markdown source context for error diagnostics.
 ///
 /// Scans `<img ... src="..." ...>` tags in the input HTML. Checks image sizes against `MAX_IMAGE_SIZE_BYTES` (250 KB).
-/// If an image exceeds this limit, returns a compiler-style `DiagnosticError` pointing to the exact location in `md_content`.
+/// If an image exceeds this limit, offers interactive scaling/conversion to WebP or returns a compiler-style `DiagnosticError`.
 ///
 /// # Errors
 ///
-/// Returns a compiler-style `DiagnosticError` if a local image exceeds the 250 KB size limit.
+/// Returns a compiler-style `DiagnosticError` if a local image exceeds the 250 KB size limit and is not scaled.
 pub fn embed_images_as_base64_with_source(
     html: &str,
     md_content: Option<&str>,
     file_name: Option<&str>,
     base_dir: Option<&Path>,
+    auto_scale: bool,
 ) -> Result<String> {
     let mut out = String::with_capacity(html.len());
     let mut cache: HashMap<PathBuf, String> = HashMap::new();
@@ -66,14 +70,12 @@ pub fn embed_images_as_base64_with_source(
                     .unwrap_or(src_val);
 
                 if let Some(next_cursor) = strip_img_item_wrapper(&mut out, html, img_end) {
-                    use std::fmt::Write;
                     let _ = writeln!(
                         out,
                         "<div class=\"check-item text-item\">\n  <span class=\"text-content\"><a href=\"{src_val}\" target=\"_blank\" rel=\"noopener noreferrer\">{alt_text}</a></span>\n</div>"
                     );
                     cursor = next_cursor;
                 } else {
-                    use std::fmt::Write;
                     let _ = write!(
                         out,
                         "<a href=\"{src_val}\" target=\"_blank\" rel=\"noopener noreferrer\">{alt_text}</a>"
@@ -95,27 +97,42 @@ pub fn embed_images_as_base64_with_source(
                             Ok(bytes) => {
                                 let size = bytes.len() as u64;
                                 if size > MAX_IMAGE_SIZE_BYTES {
-                                    let (line_no, col_no, line_snippet) =
-                                        find_markdown_location(md_content, src_val);
-                                    let f_name = file_name.unwrap_or("input.md");
-                                    return Err(DiagnosticError::image_too_large(
-                                        f_name,
-                                        line_no,
-                                        col_no,
-                                        line_snippet,
-                                        src_val,
-                                        size,
-                                    ));
-                                }
+                                    let should_scale =
+                                        auto_scale || prompt_user_for_resizing(src_val, size);
 
-                                let mime = mime_guess::from_path(&resolved_path)
-                                    .first_raw()
-                                    .unwrap_or("image/jpeg");
-                                let b64 = BASE64_STANDARD.encode(&bytes);
-                                cache.insert(
-                                    resolved_path.clone(),
-                                    format!("data:{mime};base64,{b64}"),
-                                );
+                                    let mut scaled = false;
+                                    if should_scale {
+                                        if let Ok(data_uri) =
+                                            process_and_encode_image_as_webp(&resolved_path)
+                                        {
+                                            cache.insert(resolved_path.clone(), data_uri);
+                                            scaled = true;
+                                        }
+                                    }
+
+                                    if !scaled {
+                                        let (line_no, col_no, line_snippet) =
+                                            find_markdown_location(md_content, src_val);
+                                        let f_name = file_name.unwrap_or("input.md");
+                                        return Err(DiagnosticError::image_too_large(
+                                            f_name,
+                                            line_no,
+                                            col_no,
+                                            line_snippet,
+                                            src_val,
+                                            size,
+                                        ));
+                                    }
+                                } else {
+                                    let mime = mime_guess::from_path(&resolved_path)
+                                        .first_raw()
+                                        .unwrap_or("image/jpeg");
+                                    let b64 = BASE64_STANDARD.encode(&bytes);
+                                    cache.insert(
+                                        resolved_path.clone(),
+                                        format!("data:{mime};base64,{b64}"),
+                                    );
+                                }
                             }
                             Err(_) => {
                                 cache.insert(resolved_path.clone(), src_val.to_string());
@@ -147,6 +164,89 @@ pub fn embed_images_as_base64_with_source(
 
     out.push_str(&html[cursor..]);
     Ok(out)
+}
+
+/// Resizes a local image file and converts it to WebP format until its size is within `MAX_IMAGE_SIZE_BYTES` (250 KB).
+///
+/// # Errors
+///
+/// Returns an error if opening or encoding the image fails.
+pub fn process_and_encode_image_as_webp(image_path: &Path) -> Result<String> {
+    let img = image::open(image_path)
+        .map_err(|e| anyhow::anyhow!("Failed to open image '{}': {}", image_path.display(), e))?;
+
+    let (orig_w, orig_h) = img.dimensions();
+    let file_size = fs::metadata(image_path)
+        .map(|m| m.len())
+        .unwrap_or(MAX_IMAGE_SIZE_BYTES + 1);
+
+    let scale_ratio = (MAX_IMAGE_SIZE_BYTES as f64 / file_size as f64)
+        .sqrt()
+        .min(0.95);
+    let mut target_w = ((orig_w as f64 * scale_ratio) as u32).max(100);
+    let mut target_h = ((orig_h as f64 * scale_ratio) as u32).max(100);
+
+    let mut buffer = Vec::with_capacity(MAX_IMAGE_SIZE_BYTES as usize);
+
+    let (final_w, final_h) = loop {
+        let resized_img = if target_w < orig_w || target_h < orig_h {
+            img.resize(target_w, target_h, FilterType::Triangle)
+        } else {
+            img.clone()
+        };
+
+        let dims = resized_img.dimensions();
+
+        buffer.clear();
+        let mut cursor = Cursor::new(&mut buffer);
+        resized_img
+            .write_to(&mut cursor, ImageFormat::WebP)
+            .map_err(|e| anyhow::anyhow!("Failed to encode image to WebP format: {}", e))?;
+
+        if (buffer.len() as u64) <= MAX_IMAGE_SIZE_BYTES || (target_w <= 100 && target_h <= 100) {
+            break dims;
+        }
+
+        target_w = ((target_w as f64 * 0.85) as u32).max(100);
+        target_h = ((target_h as f64 * 0.85) as u32).max(100);
+    };
+
+    let webp_path = image_path.with_extension("webp");
+    let _ = fs::write(&webp_path, &buffer);
+
+    let orig_kb = file_size as f64 / 1024.0;
+    let new_kb = buffer.len() as f64 / 1024.0;
+    println!(
+        "Resized image '{}': {}x{} ({orig_kb:.1} KB) -> {}x{} WebP ({new_kb:.1} KB)",
+        image_path.display(),
+        orig_w,
+        orig_h,
+        final_w,
+        final_h
+    );
+
+    let b64 = BASE64_STANDARD.encode(&buffer);
+    Ok(format!("data:image/webp;base64,{b64}"))
+}
+
+/// Asks user interactively via stderr/stdin whether to resize/convert an image that exceeds 250 KB.
+fn prompt_user_for_resizing(src_val: &str, size_bytes: u64) -> bool {
+    if !std::io::stdin().is_terminal() {
+        return false;
+    }
+
+    let size_kb = size_bytes as f64 / 1024.0;
+    eprint!(
+        "\nWarning: Image '{src_val}' ({size_kb:.1} KB) exceeds the 250 KB limit.\nDo you want to resize and convert it to WebP? [y/N]: "
+    );
+    let _ = std::io::stderr().flush();
+
+    let mut input = String::new();
+    if std::io::stdin().read_line(&mut input).is_ok() {
+        let trimmed = input.trim().to_lowercase();
+        return trimmed == "y" || trimmed == "yes";
+    }
+    false
 }
 
 /// Finds the line number (1-based), column number (1-based), and line snippet in Markdown for an image source string.
@@ -354,33 +454,33 @@ mod tests {
     }
 
     #[test]
-    fn test_embed_images_exceeds_max_size_error() {
-        let dir = std::env::temp_dir().join("d2f_test_img_large");
+    fn test_auto_scale_large_image_to_webp() {
+        let dir = std::env::temp_dir().join("d2f_test_auto_scale");
         let _ = fs::create_dir_all(&dir);
-        let img_path = dir.join("large.png");
-        let mut file = File::create(&img_path).unwrap();
-        // Write 251 KB (251 * 1024 bytes)
-        let large_buf = vec![0u8; 251 * 1024];
-        file.write_all(&large_buf).unwrap();
+        let img_path = dir.join("big_photo.png");
 
-        let md_content = "---\ntitle: \"Test\"\ncompany: \"Corp\"\n---\n## Section\n\n![Large Image](large.png)\n";
-        let html = "<div class=\"img-item\">\n  <img src=\"large.png\" alt=\"Large Image\">\n</div>";
+        let img_buf = image::RgbImage::new(1000, 1000);
+        img_buf.save_with_format(&img_path, ImageFormat::Png).unwrap();
 
-        let err = embed_images_as_base64_with_source(
+        let metadata = fs::metadata(&img_path).unwrap();
+        if metadata.len() <= MAX_IMAGE_SIZE_BYTES {
+            let mut file = fs::OpenOptions::new().append(true).open(&img_path).unwrap();
+            let pad = vec![0u8; (MAX_IMAGE_SIZE_BYTES + 50 * 1024) as usize];
+            file.write_all(&pad).unwrap();
+        }
+
+        let html = "<img src=\"big_photo.png\">";
+        let result = embed_images_as_base64_with_source(
             html,
-            Some(md_content),
-            Some("test_doc.md"),
+            Some("![Big](big_photo.png)"),
+            Some("doc.md"),
             Some(&dir),
+            true,
         )
-        .unwrap_err();
+        .expect("auto scale should succeed");
 
         let _ = fs::remove_dir_all(&dir);
 
-        let err_str = err.to_string();
-        assert!(err_str.contains("error: image 'large.png' exceeds maximum allowed size of 250 KB (251.0 KB)"));
-        assert!(err_str.contains("--> test_doc.md:7:16"));
-        assert!(err_str.contains("7 | ![Large Image](large.png)"));
-        assert!(err_str.contains("^^^^^^^^^ local image size (251.0 KB) exceeds 250 KB limit"));
-        assert!(err_str.contains("= help: reduce image resolution or compress 'large.png' below 250 KB before embedding."));
+        assert!(result.contains("src=\"data:image/webp;base64,"));
     }
 }

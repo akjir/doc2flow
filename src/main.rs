@@ -23,6 +23,12 @@ struct Args {
         help = "Generate a starter template Markdown file (optional target path, default: template.md)"
     )]
     init: Option<PathBuf>,
+    #[arg(
+        short = 's',
+        long = "auto-scale",
+        help = "Automatically resize local images exceeding 250 KB to WebP"
+    )]
+    auto_scale: bool,
 }
 
 fn main() -> Result<()> {
@@ -69,6 +75,7 @@ fn main() -> Result<()> {
         Some(&md_content),
         file_name,
         base_dir,
+        args.auto_scale,
     )?;
 
     fs::write(&output_path, final_html)

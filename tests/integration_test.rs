@@ -360,49 +360,56 @@ date: "2026-07-26"
 }
 
 #[test]
-fn test_image_size_limit_diagnostic_error() {
-    use std::fs::File;
+fn test_auto_scale_integration_test() {
     use std::io::Write;
 
-    let dir = std::env::temp_dir().join("d2f_integration_img_size");
+    let dir = std::env::temp_dir().join("d2f_integration_auto_scale");
     let _ = std::fs::create_dir_all(&dir);
-    let img_path = dir.join("oversized.jpg");
-    let mut file = File::create(&img_path).unwrap();
-    // Write 300 KB
-    let data = vec![0u8; 300 * 1024];
-    file.write_all(&data).unwrap();
+    let img_path = dir.join("heavy.png");
+    let img_buf = image::RgbImage::new(1200, 800);
+    img_buf
+        .save_with_format(&img_path, image::ImageFormat::Png)
+        .unwrap();
+
+    let metadata = std::fs::metadata(&img_path).unwrap();
+    if metadata.len() <= doc2flow::image::MAX_IMAGE_SIZE_BYTES {
+        let mut file = std::fs::OpenOptions::new()
+            .append(true)
+            .open(&img_path)
+            .unwrap();
+        let pad = vec![0u8; (doc2flow::image::MAX_IMAGE_SIZE_BYTES + 50 * 1024) as usize];
+        file.write_all(&pad).unwrap();
+    }
 
     let input = r#"---
-title: "Large Image Spec"
+title: "Auto Scale Spec"
 company: "Test Corp"
 date: "2026-07-26"
 ---
 ## System Overview
 
-![Architecture Diagram](oversized.jpg)
+![Heavy Diagram](heavy.png)
 "#;
 
-    let file_name = "spec.md";
-    let (fm, body) = doc2flow::converter::parse_and_validate_frontmatter(input, Some(file_name)).unwrap();
+    let file_name = "spec_scale.md";
+    let (fm, body) =
+        doc2flow::converter::parse_and_validate_frontmatter(input, Some(file_name)).unwrap();
     let locale = doc2flow::i18n::Locale::from_lang_code(&fm.language);
-    let html_body = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
+    let html_body =
+        doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).unwrap();
     let rendered = doc2flow::template::render(&fm, &locale, &html_body, &d2f_id).unwrap();
 
-    let err = doc2flow::image::embed_images_as_base64_with_source(
+    let html = doc2flow::image::embed_images_as_base64_with_source(
         &rendered,
         Some(input),
         Some(file_name),
         Some(&dir),
+        true, // auto_scale
     )
-    .unwrap_err();
+    .expect("scaling should succeed");
 
     let _ = std::fs::remove_dir_all(&dir);
 
-    let err_msg = err.to_string();
-    assert!(err_msg.contains("error: image 'oversized.jpg' exceeds maximum allowed size of 250 KB (300.0 KB)"));
-    assert!(err_msg.contains("--> spec.md:8:25"));
-    assert!(err_msg.contains("8 | ![Architecture Diagram](oversized.jpg)"));
-    assert!(err_msg.contains("local image size (300.0 KB) exceeds 250 KB limit"));
-    assert!(err_msg.contains("= help: reduce image resolution or compress 'oversized.jpg' below 250 KB before embedding."));
+    assert!(html.contains("data:image/webp;base64,"));
 }
