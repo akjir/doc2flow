@@ -43,6 +43,42 @@ function toggleSection(headerElement) {
     }
 }
 
+function getOrCreateCommentBox(checkItem, initialValue) {
+    if (!checkItem) return null;
+    let box = checkItem.querySelector('.item-comment-box');
+    let input;
+    if (!box) {
+        box = document.createElement('div');
+        box.className = 'item-comment-box';
+        
+        input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'item-comment-input';
+        const i18n = window.D2F_I18N || {};
+        input.placeholder = i18n.comment_placeholder || 'Add a comment...';
+        
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'item-comment-del';
+        delBtn.title = 'Delete comment';
+        delBtn.setAttribute('aria-label', 'Delete comment');
+        delBtn.innerHTML = '&#10006;';
+        
+        box.appendChild(input);
+        box.appendChild(delBtn);
+        checkItem.appendChild(box);
+    } else {
+        input = box.querySelector('.item-comment-input');
+    }
+    
+    if (typeof initialValue === 'string') {
+        input.value = initialValue;
+        input.setAttribute('value', initialValue);
+    }
+    
+    return { box, input };
+}
+
 function saveState() {
     const state = {};
     document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb, index) => {
@@ -62,8 +98,17 @@ function saveState() {
         fields[key] = input.value;
     });
 
+    const comments = {};
+    document.querySelectorAll('.check-item').forEach((item, index) => {
+        const input = item.querySelector('.item-comment-input');
+        if (input && input.value.trim() !== '') {
+            const key = item.id || ('item_' + index);
+            comments[key] = input.value;
+        }
+    });
+
     try { 
-        localStorage.setItem(STATE_KEY, JSON.stringify({ checks: state, texts: textStates, fields: fields })); 
+        localStorage.setItem(STATE_KEY, JSON.stringify({ checks: state, texts: textStates, fields: fields, comments: comments })); 
     } catch (e) {
         console.warn('Failed to save state to localStorage', e);
     }
@@ -97,6 +142,14 @@ function loadState() {
                 const key = input.id || ('f_' + index);
                 if (data.fields[key] !== undefined) {
                     input.value = data.fields[key];
+                }
+            });
+        }
+        if (data.comments) {
+            document.querySelectorAll('.check-item').forEach((item, index) => {
+                const key = item.id || ('item_' + index);
+                if (data.comments[key] !== undefined) {
+                    getOrCreateCommentBox(item, data.comments[key]);
                 }
             });
         }
@@ -405,13 +458,37 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const commentBtn = e.target.closest('.item-comment-icon');
+        if (commentBtn) {
+            const checkItem = commentBtn.closest('.check-item');
+            if (checkItem) {
+                const res = getOrCreateCommentBox(checkItem);
+                if (res && res.input) {
+                    res.input.focus();
+                }
+            }
+            return;
+        }
+
+        const commentDelBtn = e.target.closest('.item-comment-del');
+        if (commentDelBtn) {
+            const box = commentDelBtn.closest('.item-comment-box');
+            if (box) {
+                box.remove();
+                saveState();
+            }
+            return;
+        }
+
         const checkItem = e.target.closest('.check-item');
         if (checkItem) {
-            if (e.target.tagName === 'A' || e.target.tagName === 'IMG') return;
+            if (e.target.tagName === 'A' || e.target.tagName === 'IMG' || e.target.closest('.item-comment-box')) return;
 
             const cb = checkItem.querySelector('input[type="checkbox"]');
             if (cb) {
-                if (e.target !== cb) cb.checked = !cb.checked;
+                if (e.target !== cb && !e.target.closest('label')) {
+                    cb.checked = !cb.checked;
+                }
                 styleItem(cb);
                 updateProgress();
                 saveState();
@@ -422,6 +499,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    document.addEventListener('change', (e) => {
+        if (e.target && e.target.matches('.check-item input[type="checkbox"]')) {
+            styleItem(e.target);
+            updateProgress();
+            saveState();
+        }
+    });
+
     // 2. Delegated input/change listeners for persistent fields, linked fields, and date shortcuts
     const linkedIds = ['f_info_agent', 'f_sign_agent', 'f_info_date', 'f_sign_date'];
     const handleInputOrChange = (e) => {
@@ -429,6 +514,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!target) return;
 
         if (target.classList.contains('persistent-field')) {
+            saveState();
+        }
+
+        if (target.classList.contains('item-comment-input')) {
+            target.setAttribute('value', target.value);
             saveState();
         }
 

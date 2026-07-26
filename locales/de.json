@@ -21,5 +21,6 @@
   "callout_tip": "Tipp",
   "callout_important": "Wichtig",
   "callout_warning": "Warnung",
-  "callout_caution": "Achtung"
+  "callout_caution": "Achtung",
+  "comment_placeholder": "Kommentar hinzufügen..."
 }

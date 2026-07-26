@@ -70,9 +70,10 @@ pub fn embed_images_as_base64_with_source(
                     .unwrap_or(src_val);
 
                 if let Some(next_cursor) = strip_img_item_wrapper(&mut out, html, img_end) {
+                    let comment_icon = crate::converter::COMMENT_ICON_SVG;
                     let _ = writeln!(
                         out,
-                        "<div class=\"check-item text-item\">\n  <span class=\"text-content\"><a href=\"{src_val}\" target=\"_blank\" rel=\"noopener noreferrer\">{alt_text}</a></span>\n</div>"
+                        "<div class=\"check-item text-item\">\n  <span class=\"text-content\"><a href=\"{src_val}\" target=\"_blank\" rel=\"noopener noreferrer\">{alt_text}</a></span>\n  {comment_icon}\n</div>"
                     );
                     cursor = next_cursor;
                 } else {
