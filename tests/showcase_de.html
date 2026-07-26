@@ -23,10 +23,14 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 .pt { font-size: 11px; color: #BDD7EE; margin-top: 3px; text-align: right; }
 .doc-body { max-width: 840px; margin: 20px auto; padding: 0 14px 60px; }
 .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; background: white;
-  border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
-.info-table th { background: var(--bl); color: var(--bd); font-weight: bold; padding: 8px 14px;
+  border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.1); table-layout: fixed; }
+.info-table th { background: var(--bl); color: var(--bd); font-weight: bold; padding: 8px 10px;
   border: 1px solid #BDD7EE; font-size: 12px; }
-.info-table td { padding: 8px 14px; border: 1px solid #ddd; font-size: 12px; }
+.info-table th:nth-child(1), .info-table td:nth-child(1) { width: 35%; }
+.info-table th:nth-child(2), .info-table td:nth-child(2) { width: 25%; }
+.info-table th:nth-child(3), .info-table td:nth-child(3) { width: 25%; }
+.info-table th:nth-child(4), .info-table td:nth-child(4) { width: 15%; }
+.info-table td { padding: 8px 10px; border: 1px solid #ddd; font-size: 12px; }
 .info-table td input { width: 100%; border: none; outline: none; font-size: 12px; font-family: Arial; background: transparent; }
 .section { background: white; border-radius: 10px; margin-bottom: 14px;
   box-shadow: 0 1px 4px rgba(0,0,0,.08); overflow: hidden; }
@@ -169,9 +173,9 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
   <tr><th>Firma</th><th>Ansprechpartner</th><th>Bearbeiter</th><th>Datum</th></tr>
   <tr>
     <td>ACME Deutschland GmbH</td>
-    <td>Max Mustermann</td>
-    <td>Erika Musterfrau</td>
-    <td><input type="text" class="sf persistent-field" id="f_info_date" placeholder="TT.MM.JJJJ"></td>
+    <td><input type="text" class="sf persistent-field" id="f_info_contact" value="Max Mustermann" placeholder="Name"></td>
+    <td><input type="text" class="sf persistent-field" id="f_info_agent" value="Erika Musterfrau" placeholder="Name"></td>
+    <td><input type="text" class="sf persistent-field" id="f_info_date" value="25.07.2026" placeholder="TT.MM.JJJJ"></td>
   </tr>
 </table>
 
@@ -289,7 +293,7 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 
 <script>
 window.D2F_DOC_ID = 'd2f_id_468e65bc2ccf89b4';
-window.D2F_I18N = {"copy_code":"Code kopieren","callout_warning":"Warnung","name_placeholder":"Name","date_placeholder":"TT.MM.JJJJ","lang_code":"de","date":"Datum","save_state":"💾 Stand sichern","export_pdf":"📄 Als PDF exportieren","copied":"Kopiert!","loading":"Lade...","company":"Firma","confirm_reset":"Sind Sie sicher, dass Sie alle Kontrollkästchen zurücksetzen möchten?","callout_note":"Hinweis","contact":"Ansprechpartner","callout_tip":"Tipp","reset_all":"↺ Alle Kontrollkästchen zurücksetzen","agent":"Bearbeiter","callout_important":"Wichtig","callout_caution":"Achtung","setup_in_progress":"Vorgang in Bearbeitung","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","setup_completed":"Vorgang abgeschlossen","signature_date":"Datum"};
+window.D2F_I18N = {"export_pdf":"📄 Als PDF exportieren","copied":"Kopiert!","lang_code":"de","contact":"Ansprechpartner","date":"Datum","setup_in_progress":"Vorgang in Bearbeitung","loading":"Lade...","name_placeholder":"Name","setup_completed":"Vorgang abgeschlossen","confirm_reset":"Sind Sie sicher, dass Sie alle Kontrollkästchen zurücksetzen möchten?","date_placeholder":"TT.MM.JJJJ","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","callout_caution":"Achtung","callout_tip":"Tipp","callout_warning":"Warnung","save_state":"💾 Stand sichern","reset_all":"↺ Alle Kontrollkästchen zurücksetzen","agent":"Bearbeiter","callout_note":"Hinweis","callout_important":"Wichtig","copy_code":"Code kopieren","signature_date":"Datum","company":"Firma"};
 // Doc2Flow Generic Checklist Logic
 
 const DOC_ID = window.D2F_DOC_ID || '';

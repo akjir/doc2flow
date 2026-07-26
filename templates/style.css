@@ -16,10 +16,14 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
 .pt { font-size: 11px; color: #BDD7EE; margin-top: 3px; text-align: right; }
 .doc-body { max-width: 840px; margin: 20px auto; padding: 0 14px 60px; }
 .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; background: white;
-  border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
-.info-table th { background: var(--bl); color: var(--bd); font-weight: bold; padding: 8px 14px;
+  border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.1); table-layout: fixed; }
+.info-table th { background: var(--bl); color: var(--bd); font-weight: bold; padding: 8px 10px;
   border: 1px solid #BDD7EE; font-size: 12px; }
-.info-table td { padding: 8px 14px; border: 1px solid #ddd; font-size: 12px; }
+.info-table th:nth-child(1), .info-table td:nth-child(1) { width: 35%; }
+.info-table th:nth-child(2), .info-table td:nth-child(2) { width: 25%; }
+.info-table th:nth-child(3), .info-table td:nth-child(3) { width: 25%; }
+.info-table th:nth-child(4), .info-table td:nth-child(4) { width: 15%; }
+.info-table td { padding: 8px 10px; border: 1px solid #ddd; font-size: 12px; }
 .info-table td input { width: 100%; border: none; outline: none; font-size: 12px; font-family: Arial; background: transparent; }
 .section { background: white; border-radius: 10px; margin-bottom: 14px;
   box-shadow: 0 1px 4px rgba(0,0,0,.08); overflow: hidden; }

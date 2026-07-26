@@ -171,6 +171,14 @@ language: "de"
     assert!(final_html.contains("Test Corp"));
     assert!(final_html.contains("doc_test_123"));
     assert!(final_html.contains("<input type=\"checkbox\" id=\"cb_s1_1\">"));
+    assert!(final_html.contains("id=\"f_info_contact\""));
+    assert!(final_html.contains("id=\"f_info_agent\""));
+    assert!(final_html.contains("id=\"f_info_date\""));
+    assert!(final_html.contains("table-layout: fixed"));
+    assert!(
+        final_html
+            .contains(".info-table th:nth-child(4), .info-table td:nth-child(4) { width: 15%; }")
+    );
     assert!(final_html.contains("id=\"finish-box\""));
     assert!(final_html.contains("id=\"finish-icon\""));
     assert!(final_html.contains("id=\"finish-title\""));
