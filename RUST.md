@@ -31,4 +31,24 @@ This document outlines the core Rust guidelines for the Doc2Flow project. Given 
     *   Use canonical markdown headers (`# Examples`, `# Errors`, `# Panics`) when applicable.
     *   Do not list parameter tables; explain parameters naturally in the plain text.
 
+## 4. Performance & Memory Efficiency
+
+*   **Allocation Minimization (P-MIN-ALLOC):** Avoid redundant heap allocations (`Vec`, `String`, `Box`). Prefer borrowing (`&str`, `&[T]`) over cloning or `.to_string()` when reading or inspecting data.
+*   **Pre-allocation via Capacity (P-WITH-CAPACITY):** When building collections or strings with known or estimable bounds, initialize them using `with_capacity()` to eliminate dynamic reallocations during append operations.
+*   **Single-Pass Scanning (P-SINGLE-PASS):** Design string transformation and parsing algorithms (e.g., Markdown AST conversion, template placeholders) to process inputs in a single streaming pass ($O(N)$) without recursive or chained string mutations.
+*   **Zero-Copy Slicing (P-ZERO-COPY):** Prefer standard library slicing, `.strip_prefix()`, `.strip_suffix()`, and `.split_once()` over creating new `String` allocations or temporary `Vec<&str>` collections via `.split().collect()`.
+*   **Smart Cow Usage (P-COW-STR):** Use `std::borrow::Cow<'a, str>` for struct fields or return values that usually reference static/borrowed strings but occasionally require owned modifications.
+
+## 5. Idiomatic Pattern Matching & Flow Control
+
+*   **Match over Chained If-Else (I-MATCH-TABLES):** Avoid multi-branch if-else cascades for string matching or prefixes. Use concise match expressions, lookup slices, or iterator chains instead.
+*   **Functional Iteration (I-ITER-CHAIN):** Prefer declarative iterator chains (`.filter()`, `.map()`, `.count()`, `.find()`) over mutable loop state tracking (`mut count += 1`).
+*   **No Unnecessary Formatting Overhead (I-NO-FMT-OVERHEAD):** Avoid creating temporary intermediate `String` instances using `format!()` inside tight loops or stream renders. Write directly into pre-allocated buffer streams (`write!`, `writeln!`) or format-specifiers.
+
+## 6. Binary Size & Compile-Time Optimization
+
+*   **Compile-Time Asset Embedding (B-EMBED-ASSETS):** Embed static UI templates, CSS, JS, and default locales at compile time using `include_str!` or `build.rs` code generation. Do not rely on runtime filesystem paths for embedded assets.
+*   **Zero-Dependency Ecosystem (B-ZERO-DEPS):** Favor idiomatic standard library features (`std::collections::HashMap`, `std::path::PathBuf`, slice parsing) over third-party crates unless strictly necessary (e.g., `pulldown-cmark`, `clap`, `serde_json`).
+*   **Release Artifact Shrinking (B-STRIP-BINARY):** Release builds must target minimal executable size (enabling `lto = true`, `opt-level = "z"` / `"s"`, `codegen-units = 1`, and binary symbol stripping).
+
 *(For project-specific architecture, tech stack, and test-driven policies, always refer to `AGENTS.md` and `SPECIFICATION.md`.)*
