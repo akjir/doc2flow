@@ -64,7 +64,12 @@ fn main() -> Result<()> {
     let rendered_html = template::render(&frontmatter, &locale, &html_content, &d2f_id)?;
 
     let base_dir = input_path.parent();
-    let final_html = doc2flow::image::embed_images_as_base64(&rendered_html, base_dir);
+    let final_html = doc2flow::image::embed_images_as_base64_with_source(
+        &rendered_html,
+        Some(&md_content),
+        file_name,
+        base_dir,
+    )?;
 
     fs::write(&output_path, final_html)
         .with_context(|| format!("Failed to write output file: {}", output_path.display()))?;

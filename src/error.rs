@@ -135,6 +135,56 @@ impl<'a> DiagnosticError<'a> {
         }
         .to_anyhow()
     }
+
+    /// Builder for local image size exceeding maximum limit errors.
+    pub fn image_too_large(
+        file_path: &'a str,
+        line_no: usize,
+        col_no: usize,
+        line_snippet: &'a str,
+        src_val: &'a str,
+        size_bytes: u64,
+    ) -> Error {
+        let size_kb = size_bytes as f64 / 1024.0;
+        let line_len = line_snippet.len().max(1);
+
+        let carets = if col_no > 0 && !line_snippet.is_empty() {
+            let padding_len = col_no.saturating_sub(1);
+            let span_len = src_val
+                .len()
+                .max(1)
+                .min(line_len.saturating_sub(padding_len).max(1));
+            let mut s = String::with_capacity(padding_len + span_len);
+            for _ in 0..padding_len {
+                s.push(' ');
+            }
+            for _ in 0..span_len {
+                s.push('^');
+            }
+            Cow::Owned(s)
+        } else {
+            let carets_len = src_val.len().max(1).min(line_len);
+            Cow::Borrowed(&STATIC_CARETS[..carets_len.min(STATIC_CARETS.len())])
+        };
+
+        DiagnosticError {
+            message: Cow::Owned(format!(
+                "image '{src_val}' exceeds maximum allowed size of 250 KB ({size_kb:.1} KB)"
+            )),
+            file_path: Cow::Borrowed(file_path),
+            line_number: line_no,
+            col_number: col_no,
+            line_snippet: Cow::Borrowed(line_snippet),
+            annotation_carets: carets,
+            annotation_text: Cow::Owned(format!(
+                "local image size ({size_kb:.1} KB) exceeds 250 KB limit"
+            )),
+            help_text: Cow::Owned(format!(
+                "reduce image resolution or compress '{src_val}' below 250 KB before embedding."
+            )),
+        }
+        .to_anyhow()
+    }
 }
 
 /// Prints a standardized warning message to stderr.
@@ -194,5 +244,23 @@ mod tests {
         );
         assert!(err_str.contains("--> doc.md:1:1"));
         assert!(err_str.contains("1 | # Title"));
+    }
+
+    #[test]
+    fn test_image_too_large_builder() {
+        let err = DiagnosticError::image_too_large(
+            "doc.md",
+            12,
+            16,
+            "![Diagram](images/large_photo.png)",
+            "images/large_photo.png",
+            300 * 1024,
+        );
+        let err_str = err.to_string();
+        assert!(err_str.contains("error: image 'images/large_photo.png' exceeds maximum allowed size of 250 KB (300.0 KB)"));
+        assert!(err_str.contains("--> doc.md:12:16"));
+        assert!(err_str.contains("12 | ![Diagram](images/large_photo.png)"));
+        assert!(err_str.contains("^^^^^^^^^^^^^^^^^^^ local image size (300.0 KB) exceeds 250 KB limit"));
+        assert!(err_str.contains("= help: reduce image resolution or compress 'images/large_photo.png' below 250 KB before embedding."));
     }
 }

@@ -1,9 +1,14 @@
 //! Image resolution, Base64 embedding, and non-image link conversion module.
 
+use crate::error::DiagnosticError;
+use anyhow::Result;
 use base64::prelude::*;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+
+/// Maximum allowed size in bytes for a local image embedded into HTML (250 KB).
+pub const MAX_IMAGE_SIZE_BYTES: u64 = 250 * 1024;
 
 /// Embeds local image references in HTML as Base64 `data:` URIs and converts non-image tags to links.
 ///
@@ -12,8 +17,29 @@ use std::path::{Path, PathBuf};
 /// Remote images (`http://`, `https://`) are preserved as-is. Non-image resources (e.g. `.pdf`, `.zip`)
 /// are converted to external link elements (`<a>`).
 ///
-/// Images are cached by resolved path so each unique image file is read and encoded only once.
-pub fn embed_images_as_base64(html: &str, base_dir: Option<&Path>) -> String {
+/// Local images must not exceed `MAX_IMAGE_SIZE_BYTES` (250 KB).
+///
+/// # Errors
+///
+/// Returns a compiler-style `DiagnosticError` if a local image exceeds the 250 KB size limit.
+pub fn embed_images_as_base64(html: &str, base_dir: Option<&Path>) -> Result<String> {
+    embed_images_as_base64_with_source(html, None, None, base_dir)
+}
+
+/// Embeds local image references in HTML as Base64 `data:` URIs with Markdown source context for error diagnostics.
+///
+/// Scans `<img ... src="..." ...>` tags in the input HTML. Checks image sizes against `MAX_IMAGE_SIZE_BYTES` (250 KB).
+/// If an image exceeds this limit, returns a compiler-style `DiagnosticError` pointing to the exact location in `md_content`.
+///
+/// # Errors
+///
+/// Returns a compiler-style `DiagnosticError` if a local image exceeds the 250 KB size limit.
+pub fn embed_images_as_base64_with_source(
+    html: &str,
+    md_content: Option<&str>,
+    file_name: Option<&str>,
+    base_dir: Option<&Path>,
+) -> Result<String> {
     let mut out = String::with_capacity(html.len());
     let mut cache: HashMap<PathBuf, String> = HashMap::new();
     let mut cursor = 0;
@@ -64,27 +90,49 @@ pub fn embed_images_as_base64(html: &str, base_dir: Option<&Path>) -> String {
             if !is_remote_or_data {
                 let path = Path::new(src_val);
                 if let Some(resolved_path) = resolve_image_path(path, base_dir) {
-                    let data_uri = cache.entry(resolved_path.clone()).or_insert_with(|| {
+                    if !cache.contains_key(&resolved_path) {
                         match fs::read(&resolved_path) {
                             Ok(bytes) => {
+                                let size = bytes.len() as u64;
+                                if size > MAX_IMAGE_SIZE_BYTES {
+                                    let (line_no, col_no, line_snippet) =
+                                        find_markdown_location(md_content, src_val);
+                                    let f_name = file_name.unwrap_or("input.md");
+                                    return Err(DiagnosticError::image_too_large(
+                                        f_name,
+                                        line_no,
+                                        col_no,
+                                        line_snippet,
+                                        src_val,
+                                        size,
+                                    ));
+                                }
+
                                 let mime = mime_guess::from_path(&resolved_path)
                                     .first_raw()
                                     .unwrap_or("image/jpeg");
                                 let b64 = BASE64_STANDARD.encode(&bytes);
-                                format!("data:{mime};base64,{b64}")
+                                cache.insert(
+                                    resolved_path.clone(),
+                                    format!("data:{mime};base64,{b64}"),
+                                );
                             }
-                            Err(_) => src_val.to_string(),
+                            Err(_) => {
+                                cache.insert(resolved_path.clone(), src_val.to_string());
+                            }
                         }
-                    });
+                    }
 
-                    if data_uri != src_val {
-                        out.push_str(&tag_slice[..attr_start]);
-                        out.push_str("src=\"");
-                        out.push_str(data_uri);
-                        out.push('"');
-                        out.push_str(&tag_slice[attr_end..]);
-                        cursor = img_end;
-                        continue;
+                    if let Some(data_uri) = cache.get(&resolved_path) {
+                        if data_uri != src_val {
+                            out.push_str(&tag_slice[..attr_start]);
+                            out.push_str("src=\"");
+                            out.push_str(data_uri);
+                            out.push('"');
+                            out.push_str(&tag_slice[attr_end..]);
+                            cursor = img_end;
+                            continue;
+                        }
                     }
                 }
             }
@@ -98,7 +146,29 @@ pub fn embed_images_as_base64(html: &str, base_dir: Option<&Path>) -> String {
     }
 
     out.push_str(&html[cursor..]);
-    out
+    Ok(out)
+}
+
+/// Finds the line number (1-based), column number (1-based), and line snippet in Markdown for an image source string.
+fn find_markdown_location<'a>(
+    md_content: Option<&'a str>,
+    src_val: &'a str,
+) -> (usize, usize, &'a str) {
+    if let Some(md) = md_content {
+        for (idx, line) in md.lines().enumerate() {
+            if let Some(col_idx) = line.find(src_val) {
+                return (idx + 1, col_idx + 1, line);
+            }
+        }
+        if let Some(file_name) = Path::new(src_val).file_name().and_then(|f| f.to_str()) {
+            for (idx, line) in md.lines().enumerate() {
+                if let Some(col_idx) = line.find(file_name) {
+                    return (idx + 1, col_idx + 1, line);
+                }
+            }
+        }
+    }
+    (1, 1, "")
 }
 
 const IMG_ITEM_OPEN: &str = "<div class=\"img-item\">";
@@ -234,7 +304,7 @@ mod tests {
     #[test]
     fn test_non_image_source_converted_to_link() {
         let html = "<p><img src=\"https://example.com/manual.pdf\" alt=\"Download Manual\"></p>";
-        let processed = embed_images_as_base64(html, None);
+        let processed = embed_images_as_base64(html, None).unwrap();
         assert!(processed.contains("<a href=\"https://example.com/manual.pdf\" target=\"_blank\" rel=\"noopener noreferrer\">Download Manual</a>"));
         assert!(!processed.contains("<img"));
     }
@@ -242,7 +312,7 @@ mod tests {
     #[test]
     fn test_non_image_source_in_img_item_wrapper_converted_to_text_item() {
         let html = "<div class=\"img-item\">\n  <img src=\"https://example.com/dateien/spezifikation.pdf\" alt=\"Systemspezifikation PDF herunterladen\">\n</div>";
-        let processed = embed_images_as_base64(html, None);
+        let processed = embed_images_as_base64(html, None).unwrap();
         assert!(processed.contains("<div class=\"check-item text-item\">"));
         assert!(processed.contains("<span class=\"text-content\"><a href=\"https://example.com/dateien/spezifikation.pdf\" target=\"_blank\" rel=\"noopener noreferrer\">Systemspezifikation PDF herunterladen</a></span>"));
         assert!(!processed.contains("class=\"img-item\""));
@@ -258,7 +328,7 @@ mod tests {
         file.write_all(b"fake png content").unwrap();
 
         let html = "<p><img src=\"test.png\" alt=\"demo\"></p>".to_string();
-        let embedded = embed_images_as_base64(&html, Some(&dir));
+        let embedded = embed_images_as_base64(&html, Some(&dir)).unwrap();
 
         let _ = fs::remove_dir_all(&dir);
 
@@ -275,11 +345,42 @@ mod tests {
         file.write_all(b"sample image data").unwrap();
 
         let html = "<img src=\"logo.jpg\"><p>text</p><img src=\"logo.jpg\">";
-        let embedded = embed_images_as_base64(html, Some(&dir));
+        let embedded = embed_images_as_base64(html, Some(&dir)).unwrap();
 
         let _ = fs::remove_dir_all(&dir);
 
         let matches: Vec<_> = embedded.matches("data:image/jpeg;base64,").collect();
         assert_eq!(matches.len(), 2);
+    }
+
+    #[test]
+    fn test_embed_images_exceeds_max_size_error() {
+        let dir = std::env::temp_dir().join("d2f_test_img_large");
+        let _ = fs::create_dir_all(&dir);
+        let img_path = dir.join("large.png");
+        let mut file = File::create(&img_path).unwrap();
+        // Write 251 KB (251 * 1024 bytes)
+        let large_buf = vec![0u8; 251 * 1024];
+        file.write_all(&large_buf).unwrap();
+
+        let md_content = "---\ntitle: \"Test\"\ncompany: \"Corp\"\n---\n## Section\n\n![Large Image](large.png)\n";
+        let html = "<div class=\"img-item\">\n  <img src=\"large.png\" alt=\"Large Image\">\n</div>";
+
+        let err = embed_images_as_base64_with_source(
+            html,
+            Some(md_content),
+            Some("test_doc.md"),
+            Some(&dir),
+        )
+        .unwrap_err();
+
+        let _ = fs::remove_dir_all(&dir);
+
+        let err_str = err.to_string();
+        assert!(err_str.contains("error: image 'large.png' exceeds maximum allowed size of 250 KB (251.0 KB)"));
+        assert!(err_str.contains("--> test_doc.md:7:16"));
+        assert!(err_str.contains("7 | ![Large Image](large.png)"));
+        assert!(err_str.contains("^^^^^^^^^ local image size (251.0 KB) exceeds 250 KB limit"));
+        assert!(err_str.contains("= help: reduce image resolution or compress 'large.png' below 250 KB before embedding."));
     }
 }

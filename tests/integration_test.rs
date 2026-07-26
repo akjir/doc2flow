@@ -208,8 +208,11 @@ fn test_showcase_en_fixture_conversion() {
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).expect("id gen failed");
     let rendered =
         doc2flow::template::render(&fm, &locale, &html_body, &d2f_id).expect("rendering failed");
-    let html =
-        doc2flow::image::embed_images_as_base64(&rendered, Some(std::path::Path::new("tests")));
+    let html = doc2flow::image::embed_images_as_base64(
+        &rendered,
+        Some(std::path::Path::new("tests")),
+    )
+    .expect("image embedding failed");
 
     assert!(html.contains("Doc2Flow English Showcase"));
     assert!(html.contains("<div class=\"sh sh-h1\"><span>Part 1: System Setup &amp; Preparation</span></div>"));
@@ -234,8 +237,11 @@ fn test_showcase_de_fixture_conversion() {
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).expect("id gen failed");
     let rendered =
         doc2flow::template::render(&fm, &locale, &html_body, &d2f_id).expect("rendering failed");
-    let html =
-        doc2flow::image::embed_images_as_base64(&rendered, Some(std::path::Path::new("tests")));
+    let html = doc2flow::image::embed_images_as_base64(
+        &rendered,
+        Some(std::path::Path::new("tests")),
+    )
+    .expect("image embedding failed");
 
     assert!(html.contains("Doc2Flow Deutscher Showcase"));
     assert!(html.contains("<div class=\"sh sh-h1\"><span>Teil 1: Systemeinrichtung &amp; Vorbereitung</span></div>"));
@@ -351,4 +357,52 @@ date: "2026-07-26"
     assert!(!rendered.contains(r#"badge-s1"#));
     assert!(rendered.contains(r#"<div class="sh" onclick="toggleSection('s2')"><span>Sub Section</span>"#));
     assert!(rendered.contains(r#"badge-s2"#));
+}
+
+#[test]
+fn test_image_size_limit_diagnostic_error() {
+    use std::fs::File;
+    use std::io::Write;
+
+    let dir = std::env::temp_dir().join("d2f_integration_img_size");
+    let _ = std::fs::create_dir_all(&dir);
+    let img_path = dir.join("oversized.jpg");
+    let mut file = File::create(&img_path).unwrap();
+    // Write 300 KB
+    let data = vec![0u8; 300 * 1024];
+    file.write_all(&data).unwrap();
+
+    let input = r#"---
+title: "Large Image Spec"
+company: "Test Corp"
+date: "2026-07-26"
+---
+## System Overview
+
+![Architecture Diagram](oversized.jpg)
+"#;
+
+    let file_name = "spec.md";
+    let (fm, body) = doc2flow::converter::parse_and_validate_frontmatter(input, Some(file_name)).unwrap();
+    let locale = doc2flow::i18n::Locale::from_lang_code(&fm.language);
+    let html_body = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
+    let d2f_id = doc2flow::id::generate_d2f_id(&fm).unwrap();
+    let rendered = doc2flow::template::render(&fm, &locale, &html_body, &d2f_id).unwrap();
+
+    let err = doc2flow::image::embed_images_as_base64_with_source(
+        &rendered,
+        Some(input),
+        Some(file_name),
+        Some(&dir),
+    )
+    .unwrap_err();
+
+    let _ = std::fs::remove_dir_all(&dir);
+
+    let err_msg = err.to_string();
+    assert!(err_msg.contains("error: image 'oversized.jpg' exceeds maximum allowed size of 250 KB (300.0 KB)"));
+    assert!(err_msg.contains("--> spec.md:8:25"));
+    assert!(err_msg.contains("8 | ![Architecture Diagram](oversized.jpg)"));
+    assert!(err_msg.contains("local image size (300.0 KB) exceeds 250 KB limit"));
+    assert!(err_msg.contains("= help: reduce image resolution or compress 'oversized.jpg' below 250 KB before embedding."));
 }
