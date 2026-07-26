@@ -4,12 +4,13 @@ use crate::converter::Frontmatter;
 use crate::error::print_warning;
 use crate::hasher::sha256;
 use anyhow::{Result, bail};
+use std::borrow::Cow;
 
 /// Generates a dynamic, deterministic, and collision-free `d2f_id` for a document.
 ///
-/// Combines the `title`, `version`, and `date` fields from the document's frontmatter.
+/// Combines the `title`, `version`, and `date` fields from the given frontmatter.
 /// Each field is trimmed and lowercased. If the `version` field exceeds 12 characters,
-/// it is truncated and a warning is printed to `stderr`.
+/// it is truncated to 12 characters and a warning is logged.
 ///
 /// # Errors
 ///
@@ -30,42 +31,61 @@ use anyhow::{Result, bail};
 ///
 /// let id = generate_d2f_id(&fm).unwrap();
 /// assert!(id.starts_with("d2f_id_"));
-/// assert_eq!(id.len(), 7 + 16); // "d2f_id_" + 16 hex chars
+/// assert_eq!(id.len(), 23);
 /// ```
 pub fn generate_d2f_id(frontmatter: &Frontmatter) -> Result<String> {
-    let norm_title = frontmatter.title.trim().to_lowercase();
-    let norm_date = frontmatter.date.trim().to_lowercase();
-    let raw_version = frontmatter.version.trim().to_lowercase();
+    let norm_title = normalize_field(&frontmatter.title);
+    let norm_date = normalize_field(&frontmatter.date);
+    let raw_version = normalize_field(&frontmatter.version);
 
-    let missing_count = [&norm_title, &norm_date, &raw_version]
-        .iter()
-        .filter(|f| f.is_empty())
+    let missing_count = [norm_title.is_empty(), norm_date.is_empty(), raw_version.is_empty()]
+        .into_iter()
+        .filter(|&empty| empty)
         .count();
 
-    if missing_count >= 2 {
-        bail!(
-            "Fatal: At least 2 of the required identity fields (title, version, date) are missing in frontmatter."
-        );
-    }
-
-    if missing_count == 1 {
-        print_warning(
+    match missing_count {
+        0 => (),
+        1 => print_warning(
             "One of the identity fields (title, version, date) is missing in frontmatter. Generating d2f_id with available metadata.",
-        );
+        ),
+        _ => bail!(
+            "Fatal: At least 2 of the required identity fields (title, version, date) are missing in frontmatter."
+        ),
     }
 
-    let norm_version = if raw_version.chars().count() > 12 {
+    let norm_version = if let Some((idx, _)) = raw_version.char_indices().nth(12) {
         print_warning("'version' field exceeds 12 characters. Truncating to 12 characters.");
-        raw_version.chars().take(12).collect::<String>()
+        &raw_version[..idx]
     } else {
-        raw_version
+        &raw_version
     };
 
-    let composite_key = format!("{}:{}:{}", norm_title, norm_version, norm_date);
-    let hash_hex = sha256(composite_key.as_bytes());
-    let id_suffix = &hash_hex[..16];
+    let key_len = norm_title.len() + norm_version.len() + norm_date.len() + 2;
+    let mut composite_key = String::with_capacity(key_len);
+    composite_key.push_str(&norm_title);
+    composite_key.push(':');
+    composite_key.push_str(norm_version);
+    composite_key.push(':');
+    composite_key.push_str(&norm_date);
 
-    Ok(format!("d2f_id_{}", id_suffix))
+    let hash_hex = sha256(composite_key.as_bytes());
+
+    let mut result = String::with_capacity(23);
+    result.push_str("d2f_id_");
+    result.push_str(&hash_hex[..16]);
+    Ok(result)
+}
+
+/// Normalizes a string field by trimming whitespace and lowercasing.
+///
+/// Returns `Cow::Borrowed` if the string requires no lowercasing, avoiding heap allocations.
+fn normalize_field(input: &str) -> Cow<'_, str> {
+    let trimmed = input.trim();
+    if trimmed.chars().any(char::is_uppercase) {
+        Cow::Owned(trimmed.to_lowercase())
+    } else {
+        Cow::Borrowed(trimmed)
+    }
 }
 
 #[cfg(test)]
@@ -126,6 +146,30 @@ mod tests {
         let id1 = generate_d2f_id(&fm).unwrap();
         let id2 = generate_d2f_id(&fm_truncated_manually).unwrap();
         assert_eq!(id1, id2);
+    }
+
+    #[test]
+    fn test_generate_d2f_id_version_truncation_unicode() {
+        let fm = Frontmatter {
+            title: "System Spec".into(),
+            version: "1.0.0-beta.äöü.99".into(), // > 12 unicode chars
+            date: "2026-07-25".into(),
+            ..Default::default()
+        };
+
+        let id = generate_d2f_id(&fm).unwrap();
+        assert!(id.starts_with("d2f_id_"));
+        assert_eq!(id.len(), 23);
+    }
+
+    #[test]
+    fn test_normalize_field_borrowed_vs_owned() {
+        let borrowed = normalize_field("  clean_string  ");
+        assert!(matches!(borrowed, Cow::Borrowed("clean_string")));
+
+        let owned = normalize_field("  UPPER_STRING  ");
+        assert!(matches!(owned, Cow::Owned(_)));
+        assert_eq!(owned, "upper_string");
     }
 
     #[test]

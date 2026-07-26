@@ -38,12 +38,22 @@ pub fn embed_images_as_base64(html: &str, base_dir: Option<&Path>) -> String {
                 let alt_text = extract_attribute(tag_slice, "alt")
                     .map(|(_, _, val)| val)
                     .unwrap_or(src_val);
-                use std::fmt::Write;
-                let _ = write!(
-                    out,
-                    "<a href=\"{src_val}\" target=\"_blank\" rel=\"noopener noreferrer\">{alt_text}</a>"
-                );
-                cursor = img_end;
+
+                if let Some(next_cursor) = strip_img_item_wrapper(&mut out, html, img_end) {
+                    use std::fmt::Write;
+                    let _ = writeln!(
+                        out,
+                        "<div class=\"check-item text-item\">\n  <span class=\"text-content\"><a href=\"{src_val}\" target=\"_blank\" rel=\"noopener noreferrer\">{alt_text}</a></span>\n</div>"
+                    );
+                    cursor = next_cursor;
+                } else {
+                    use std::fmt::Write;
+                    let _ = write!(
+                        out,
+                        "<a href=\"{src_val}\" target=\"_blank\" rel=\"noopener noreferrer\">{alt_text}</a>"
+                    );
+                    cursor = img_end;
+                }
                 continue;
             }
 
@@ -89,6 +99,27 @@ pub fn embed_images_as_base64(html: &str, base_dir: Option<&Path>) -> String {
 
     out.push_str(&html[cursor..]);
     out
+}
+
+const IMG_ITEM_OPEN: &str = "<div class=\"img-item\">";
+const IMG_ITEM_CLOSE: &str = "</div>";
+
+/// Helper to unwrap `<div class="img-item">` container if present around a non-image tag.
+fn strip_img_item_wrapper(out: &mut String, html: &str, img_end: usize) -> Option<usize> {
+    let trimmed_out = out.trim_end();
+    if let Some(pos) = trimmed_out.rfind(IMG_ITEM_OPEN) {
+        if trimmed_out[pos + IMG_ITEM_OPEN.len()..].trim().is_empty() {
+            let rest = &html[img_end..];
+            let rest_trimmed = rest.trim_start();
+            if rest_trimmed.starts_with(IMG_ITEM_CLOSE) {
+                let leading_ws = rest.len() - rest_trimmed.len();
+                let suffix_len = leading_ws + IMG_ITEM_CLOSE.len();
+                out.truncate(pos);
+                return Some(img_end + suffix_len);
+            }
+        }
+    }
+    None
 }
 
 /// Helper to extract attribute bounds and value from an HTML tag slice without heap allocations.
@@ -205,6 +236,16 @@ mod tests {
         let html = "<p><img src=\"https://example.com/manual.pdf\" alt=\"Download Manual\"></p>";
         let processed = embed_images_as_base64(html, None);
         assert!(processed.contains("<a href=\"https://example.com/manual.pdf\" target=\"_blank\" rel=\"noopener noreferrer\">Download Manual</a>"));
+        assert!(!processed.contains("<img"));
+    }
+
+    #[test]
+    fn test_non_image_source_in_img_item_wrapper_converted_to_text_item() {
+        let html = "<div class=\"img-item\">\n  <img src=\"https://example.com/dateien/spezifikation.pdf\" alt=\"Systemspezifikation PDF herunterladen\">\n</div>";
+        let processed = embed_images_as_base64(html, None);
+        assert!(processed.contains("<div class=\"check-item text-item\">"));
+        assert!(processed.contains("<span class=\"text-content\"><a href=\"https://example.com/dateien/spezifikation.pdf\" target=\"_blank\" rel=\"noopener noreferrer\">Systemspezifikation PDF herunterladen</a></span>"));
+        assert!(!processed.contains("class=\"img-item\""));
         assert!(!processed.contains("<img"));
     }
 

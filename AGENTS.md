@@ -11,7 +11,7 @@ Adhere strictly to these guidelines:
 * Asset processing: `base64`, `mime_guess`.
 
 ## 3. Incremental Development
-* Implement iteratively: CLI scaffolding $\rightarrow$ simple Markdown conversion $\rightarrow$ local image embedding $\rightarrow$ interactive checklists.
+* Implement iteratively: CLI scaffolding → simple Markdown conversion → local image embedding → interactive checklists.
 
 ## 4. Pragmatic Rust Guidelines
 
@@ -79,10 +79,10 @@ Adhere strictly to these guidelines:
 ## 9. HTML Template & UI Guidelines
 * Generic Templates: `templates/base.html`, `templates/style.css`, and `templates/script.js` must remain completely generic and devoid of customer-specific text.
 * Markdown Mapping:
-  * Level 2 headings (`##`) $\rightarrow$ collapsible `.section` with `.sh`/`.sb` classes.
-  * Checkbox unordered lists $\rightarrow$ wrapped in `.check-item`.
-  * Blockquote callouts $\rightarrow$ map prefixes (`>`, `>?`, `>!`, `>!!`, `>!!!`) to alert panels (`.note`, `.note-tip`, `.note-important`, `.note-warning`, `.note-caution`).
-  * Image & Link Handling: Local image files are converted to Base64 `data:` URIs. Remote image URLs (`http://`, `https://`) are preserved as `<img>` tags. Non-image resources (e.g., `.pdf`, `.zip`) specified in image tags are converted to external link elements (`<a>`).
+  * Level 2 headings (`##`) → collapsible `.section` with `.sh`/`.sb` classes.
+  * Checkbox unordered lists → wrapped in `.check-item`.
+  * Blockquote callouts → map prefixes (`>`, `>?`, `>!`, `>!!`, `>!!!`) to alert panels (`.note`, `.note-tip`, `.note-important`, `.note-warning`, `.note-caution`).
+  * Image & Link Handling: Local image files are converted to Base64 `data:` URIs. Remote image URLs (`http://`, `https://`) are preserved as `<img>` tags. Non-image resources (e.g., `.pdf`, `.zip`) specified in image tags are converted to external link elements (`<a>`) wrapped in standard `.check-item.text-item` containers for CSS parity.
 * Placeholders: Replace generic placeholders (e.g., `{{TITLE}}`, `{{CUSTOMER}}`) in `base.html` using frontmatter/metadata.
 
 ## 10. Client-Side JavaScript Guidelines
