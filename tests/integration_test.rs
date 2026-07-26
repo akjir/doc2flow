@@ -185,6 +185,7 @@ language: "de"
     assert!(final_html.contains("id=\"btn-pdf\""));
     assert!(final_html.contains("id=\"btn-save\""));
     assert!(final_html.contains("Stand sichern"));
+    assert!(final_html.contains("<div class=\"logo-wrap\">"));
 }
 
 #[test]
@@ -205,6 +206,7 @@ fn test_showcase_en_fixture_conversion() {
     assert!(html.contains("<div class=\"note note-tip\" data-label=\"Tip\">"));
     assert!(html.contains("<input type=\"checkbox\" id=\"cb_s2_1\">"));
     assert!(!html.contains("Test comment: This comment must not appear"));
+    assert!(html.contains("<div class=\"logo-wrap\">"));
 }
 
 #[test]
@@ -225,6 +227,7 @@ fn test_showcase_de_fixture_conversion() {
     assert!(html.contains("<div class=\"note note-tip\" data-label=\"Tipp\">"));
     assert!(html.contains("<input type=\"checkbox\" id=\"cb_s2_1\">"));
     assert!(!html.contains("Test-Kommentar: Dieser Hinweis darf nicht"));
+    assert!(html.contains("<div class=\"logo-wrap\">"));
 }
 
 #[test]
@@ -243,6 +246,7 @@ fn test_template_generator_conversion() {
     assert!(html.contains("Section 1: Initial System Verification"));
     assert!(html.contains("Prerequisites Checklist"));
     assert!(html.contains("Configuration &amp; Service Deployment"));
+    assert!(html.contains("<div class=\"logo-wrap\">"));
 }
 
 #[test]

@@ -9,8 +9,12 @@ body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); back
   background: var(--bd); color: white; padding: 16px 28px 12px;
   position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.3);
 }
+.header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.header-titles { flex: 1; min-width: 0; }
 .doc-header h1 { font-size: 20px; font-weight: bold; }
 .doc-header .sub { font-size: 12px; color: #BDD7EE; margin-top: 2px; }
+.logo-wrap { flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end; max-height: 48px; }
+.logo-wrap svg { max-height: 48px; max-width: 160px; width: auto; height: auto; display: block; }
 .pb-wrap { margin-top: 10px; background: rgba(255,255,255,.2); border-radius: 8px; height: 9px; overflow: hidden; }
 .pb { height: 100%; background: #70AD47; border-radius: 8px; transition: width .3s; width: 0%; }
 .pt { font-size: 11px; color: #BDD7EE; margin-top: 3px; text-align: right; }

@@ -5,6 +5,9 @@ use crate::i18n::{Locale, validate_locale_coverage};
 use anyhow::{Context, Result};
 use std::collections::HashMap;
 
+/// Default embedded SVG header logo.
+pub const DEFAULT_LOGO_SVG: &str = include_str!("../images/logo.svg");
+
 /// Returns the pre-populated default starter Markdown template string.
 ///
 /// Contains frontmatter metadata fields, HTML comments with usage instructions,
@@ -62,12 +65,11 @@ pub fn substitute_template(
 
             if let Some(val) = vars.get(key) {
                 result.push_str(val);
-            } else if let Some(key_name) = key.strip_prefix("L_") {
-                if let Some(val) = locale.and_then(|loc| loc.get_ignore_ascii_case(key_name)) {
-                    result.push_str(val);
-                } else {
-                    result.push_str(&template[abs_start..abs_end + 2]);
-                }
+            } else if let Some(val) = key
+                .strip_prefix("L_")
+                .and_then(|key_name| locale.and_then(|loc| loc.get_ignore_ascii_case(key_name)))
+            {
+                result.push_str(val);
             } else {
                 result.push_str(&template[abs_start..abs_end + 2]);
             }
@@ -104,7 +106,7 @@ pub fn render(
     let i18n_json = serde_json::to_string(&locale.entries)
         .context("Failed to serialize locale entries to JSON for template rendering")?;
 
-    let mut vars = HashMap::with_capacity(12);
+    let mut vars = HashMap::with_capacity(13);
     vars.insert("LANG_CODE", locale.lang_code.as_str());
     vars.insert("TITLE", frontmatter.title.as_str());
     vars.insert("SUBTITLE", frontmatter.subtitle.as_str());
@@ -117,6 +119,7 @@ pub fn render(
     vars.insert("JS", script_js);
     vars.insert("CONTENT", html_content);
     vars.insert("DOC_ID", doc_id);
+    vars.insert("LOGO", DEFAULT_LOGO_SVG);
 
     Ok(substitute_template(base_html, &vars, Some(locale)))
 }
@@ -196,6 +199,8 @@ mod tests {
         assert!(!html.contains("{{TITLE}}"));
         assert!(!html.contains("{{CONTENT}}"));
         assert!(!html.contains("{{L_COMPANY}}"));
+        assert!(!html.contains("{{LOGO}}"));
+        assert!(html.contains("<svg"));
         assert!(html.contains("Firma"));
     }
 
