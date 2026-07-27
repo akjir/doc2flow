@@ -136,5 +136,5 @@ Adhere strictly to these guidelines:
 * **File Code Structure (CSS-STRUCTURE):** Subdivide `templates/style.css` using explicit comment header blocks: `1. Base`, `2. Layout`, `3. Components`, `4. Print`, and `5. Responsive`.
 
 ## 12. Changelog Policy
-* Automatically update `CHANGELOG.md` under `[Unreleased]` whenever relevant features, fixes, or user-facing changes are made. Keep entries short, simple, and limited to concise single-line bullet points.
-* Do NOT include internal code refactorings, optimizations, or test infrastructure changes in `CHANGELOG.md`.
+* Automatically update `CHANGELOG.md` under `[Unreleased]` ONLY when user-facing features, bug fixes, or user-facing changes are made. Keep entries short, simple, and limited to concise single-line bullet points.
+* **STRICT PROHIBITION:** Do NOT include internal code refactorings, module restructuring, optimizations, or test infrastructure changes in `CHANGELOG.md`. Only user-visible changes belong in the changelog.
