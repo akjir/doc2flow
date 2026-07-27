@@ -359,6 +359,7 @@ date: "2026-07-26"
     assert!(rendered.contains(r#"badge-s1"#));
     assert!(rendered.contains(r#"<div class="sh"><span>Sub Section</span>"#));
     assert!(rendered.contains(r#"badge-s2"#));
+    assert!(!html_body.contains("onclick="));
 }
 
 #[test]

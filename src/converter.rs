@@ -976,6 +976,14 @@ mod tests {
     }
 
     #[test]
+    fn test_no_inline_onclick_on_section_headers() {
+        let input = "# H1 Heading\n\nSome content\n\n## H2 Heading\n\nMore content";
+        let html = convert_markdown_to_html(input).expect("conversion failed");
+
+        assert!(!html.contains("onclick="));
+    }
+
+    #[test]
     fn test_h4_to_h6_treated_as_subheading() {
         let input = "## Section 1\n\n### Sub 3\n\n#### Sub 4\n\n##### Sub 5\n\n###### Sub 6";
         let html = convert_markdown_to_html(input).expect("conversion failed");
