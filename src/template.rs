@@ -1,10 +1,107 @@
+use crate::components;
 use crate::converter::Frontmatter;
 use crate::error::{Doc2FlowError, Result};
 use crate::i18n::{Locale, validate_locale_coverage};
 use std::collections::HashMap;
+use std::fmt::Write;
 
 /// Default embedded SVG header logo.
-pub const DEFAULT_LOGO_SVG: &str = include_str!("../images/logo.svg");
+pub const DEFAULT_LOGO_SVG: &str = components::DEFAULT_LOGO_SVG;
+
+/// Embedded SVG comment icon for interactive elements.
+pub const COMMENT_ICON_SVG: &str = components::COMMENT_ICON_SVG;
+
+
+/// Renders a section header component directly into the output buffer.
+#[inline]
+pub fn render_section_header(
+    out: &mut impl Write,
+    section_count: usize,
+    heading_text: &str,
+    is_h1: bool,
+    is_empty: bool,
+) {
+    components::render_section_header(out, section_count, heading_text, is_h1, is_empty);
+}
+
+/// Renders section container closing tags directly into the output buffer.
+#[inline]
+pub fn render_section_close(out: &mut impl Write) {
+    components::render_section_close(out);
+}
+
+/// Renders a subheading component (H3-H6) directly into the output buffer.
+#[inline]
+pub fn render_subheading(out: &mut impl Write, sub_html: &str) {
+    components::render_subheading(out, sub_html);
+}
+
+/// Renders an alert or callout box component directly into the output buffer.
+#[inline]
+pub fn render_callout(
+    out: &mut impl Write,
+    note_cls: &str,
+    escaped_label: &str,
+    note_content: &str,
+) {
+    components::render_callout(out, note_cls, escaped_label, note_content);
+}
+
+/// Renders a code block component directly into the output buffer.
+#[inline]
+pub fn render_code_block(
+    out: &mut impl Write,
+    lang_opt: Option<&str>,
+    escaped_code: &str,
+    copy_label: &str,
+) {
+    components::render_code_block(out, lang_opt, escaped_code, copy_label);
+}
+
+/// Renders a task list checkbox item directly into the output buffer.
+#[inline]
+pub fn render_task_item(
+    out: &mut impl Write,
+    sec_num: usize,
+    cb_count: usize,
+    is_checked: bool,
+    clean_label: &str,
+    indent_depth: usize,
+) {
+    components::render_task_item(out, sec_num, cb_count, is_checked, clean_label, indent_depth);
+}
+
+/// Renders a simple list item component directly into the output buffer.
+#[inline]
+pub fn render_list_item(
+    out: &mut impl Write,
+    sec_num: usize,
+    item_count: usize,
+    bullet: &str,
+    clean_label: &str,
+    indent_depth: usize,
+) {
+    components::render_list_item(out, sec_num, item_count, bullet, clean_label, indent_depth);
+}
+
+/// Renders a standalone text paragraph item component directly into the output buffer.
+#[inline]
+pub fn render_text_item(
+    out: &mut impl Write,
+    sec_num: usize,
+    txt_count: usize,
+    content_html: &str,
+    indent_depth: usize,
+) {
+    components::render_text_item(out, sec_num, txt_count, content_html, indent_depth);
+}
+
+/// Renders an image container block directly into the output buffer.
+#[inline]
+pub fn render_image_item(out: &mut impl Write, clean_content: &str) {
+    components::render_image_item(out, clean_content);
+}
+
 
 /// Returns the pre-populated default starter Markdown template string.
 ///

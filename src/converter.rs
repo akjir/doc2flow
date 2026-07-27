@@ -1,12 +1,11 @@
 use crate::error::{DiagnosticError, Result};
 use crate::i18n::Locale;
+use crate::template;
 use pulldown_cmark::{
     CodeBlockKind, Event, HeadingLevel, Options, Parser as MarkdownParser, Tag, TagEnd, html,
 };
 use std::borrow::Cow;
 
-/// SVG icon rendered on hover for clickable elements.
-pub const COMMENT_ICON_SVG: &str = r#"<span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><g fill="currentColor" transform="translate(-204, -255)"><path d="M228,267 C226.896,267 226,267.896 226,269 C226,270.104 226.896,271 228,271 C229.104,271 230,270.104 230,269 C230,267.896 229.104,267 228,267 L228,267 Z M220,281 C218.832,281 217.704,280.864 216.62,280.633 L211.912,283.463 L211.975,278.824 C208.366,276.654 206,273.066 206,269 C206,262.373 212.268,257 220,257 C227.732,257 234,262.373 234,269 C234,275.628 227.732,281 220,281 L220,281 Z M220,255 C211.164,255 204,261.269 204,269 C204,273.419 206.345,277.354 210,279.919 L210,287 L217.009,282.747 C217.979,282.907 218.977,283 220,283 C228.836,283 236,276.732 236,269 C236,261.269 228.836,255 220,255 L220,255 Z M212,267 C210.896,267 210,267.896 210,269 C210,270.104 210.896,271 212,271 C213.104,271 214,270.104 214,269 C214,267.896 213.104,267 212,267 L212,267 Z M220,267 C218.896,267 218,267.896 218,269 C218,270.104 218.896,271 220,271 C221.104,271 222,270.104 222,269 C222,267.896 221.104,267 220,267 L220,267 Z"/></g></svg></span>"#;
 
 /// Escapes HTML special characters in code strings. Returns Cow::Borrowed if no escaping is needed.
 fn html_escape(input: &str) -> Cow<'_, str> {
@@ -364,7 +363,7 @@ pub fn convert_markdown_to_html_with_locale(
             }) => {
                 let target_level = *level;
                 if in_section {
-                    out.push_str("</div></div>\n\n");
+                    template::render_section_close(&mut out);
                 }
                 section_count += 1;
                 in_section = true;
@@ -383,22 +382,15 @@ pub fn convert_markdown_to_html_with_locale(
                 let heading_text = heading_html.trim();
 
                 let is_empty = is_section_empty(&events[idx + 1..]);
-                let h1_class = if target_level == HeadingLevel::H1 { " sh-h1" } else { "" };
-                let empty_class = if is_empty { " no-toggle" } else { "" };
+                let is_h1 = target_level == HeadingLevel::H1;
 
-                use std::fmt::Write;
-                let _ = writeln!(out, "<!-- S{section_count} -->");
-                let _ = writeln!(out, "<div class=\"section\" id=\"s{section_count}\">");
-                let _ = writeln!(
-                    out,
-                    "<div class=\"sh{h1_class}{empty_class}\"><span>{heading_text}</span>"
+                template::render_section_header(
+                    &mut out,
+                    section_count,
+                    heading_text,
+                    is_h1,
+                    is_empty,
                 );
-                let _ = writeln!(
-                    out,
-                    "<div style=\"display:flex;align-items:center;gap:8px\"><span class=\"sbadge\" id=\"badge-s{section_count}\"></span><span class=\"stog\" id=\"tog-s{section_count}\">&#9660;</span></div></div>"
-                );
-
-                let _ = writeln!(out, "<div class=\"sb\" id=\"body-s{section_count}\">");
             }
 
             // Level 3-6 Headings (###, ####, #####, ###### Subheadings)
@@ -421,8 +413,7 @@ pub fn convert_markdown_to_html_with_locale(
 
                 let mut sub_html = String::new();
                 html::push_html(&mut sub_html, events[start_idx..idx].iter().cloned());
-                use std::fmt::Write;
-                let _ = writeln!(out, "<div class=\"subh\">{}</div>", sub_html.trim());
+                template::render_subheading(&mut out, &sub_html);
             }
 
             // Blockquotes (> Note, >? Tip, >! Important, >!! Warning, >!!! Caution)
@@ -452,14 +443,7 @@ pub fn convert_markdown_to_html_with_locale(
                 let (note_cls, note_content, callout_label) = parse_callout(inner, locale);
 
                 let escaped_label = html_escape(callout_label);
-                use std::fmt::Write;
-                let _ = writeln!(
-                    out,
-                    "<div class=\"{}\" data-label=\"{}\">{}</div>",
-                    note_cls,
-                    escaped_label,
-                    note_content.trim()
-                );
+                template::render_callout(&mut out, note_cls, &escaped_label, note_content);
             }
 
             // Code Blocks (e.g. ```ini ... ```)
@@ -494,26 +478,12 @@ pub fn convert_markdown_to_html_with_locale(
                 }
 
                 let escaped_code = html_escape(&code_text);
-                let lang_span = if let Some(ref lang) = lang_opt {
-                    format!("<span class=\"code-lang\">{}</span>", html_escape(lang))
-                } else {
-                    String::new()
-                };
-                let lang_cls = if let Some(ref lang) = lang_opt {
-                    format!(" language-{}", html_escape(lang))
-                } else {
-                    String::new()
-                };
-
-                let copy_icon = r#"<svg aria-hidden="true" class="svg-icon iconCopy" width="14" height="15" viewBox="0 0 17 18"><path fill="currentColor" d="M5 6c0-1.09.91-2 2-2h4.5L15 7.5V15c0 1.09-.91 2-2 2H7c-1.09 0-2-.91-2-2zm6-1.25V8h3.25z"/><path fill="currentColor" d="M10 1a2 2 0 0 1 2 2H6a2 2 0 0 0-2 2v9a2 2 0 0 1-2-2V4a3 3 0 0 1 3-3z" opacity=".4"/></svg>"#;
-
                 let copy_label = html_escape(locale.get("copy_code"));
-                use std::fmt::Write;
-                let _ = writeln!(
-                    out,
-                    "<div class=\"code-block-wrap\"><div class=\"code-header\">{}<button class=\"copy-btn\" onclick=\"copyCode(this)\" title=\"{}\" aria-label=\"{}\">{}</button></div><pre class=\"code-block{}\"><code>{}</code></pre></div>",
-                    lang_span, copy_label, copy_label, copy_icon, lang_cls, escaped_code
-                );
+
+                let escaped_lang_opt = lang_opt.as_ref().map(|l| html_escape(l));
+                let lang_ref = escaped_lang_opt.as_deref();
+
+                template::render_code_block(&mut out, lang_ref, &escaped_code, &copy_label);
             }
 
             // Task List Items (- [ ] or - [x]) or Simple List Items (-)
@@ -561,36 +531,18 @@ pub fn convert_markdown_to_html_with_locale(
                 let clean_label = strip_paragraph_tags(trimmed);
 
                 let list_depth = if list_stack.is_empty() { 0 } else { list_stack.len() - 1 };
-                let indent_style = if list_depth > 0 {
-                    format!(" style=\"--indent: {list_depth};\"")
-                } else {
-                    String::new()
-                };
-
                 let sec_num = if section_count == 0 { 1 } else { section_count };
 
-                use std::fmt::Write;
                 if is_task {
                     global_cb_count += 1;
-                    let checked_attr = if is_checked { " checked" } else { "" };
-                    let checked_cls = if is_checked { " checked" } else { "" };
-
-                    let _ = writeln!(
-                        out,
-                        "<div class=\"check-item{}\" id=\"wrap-cb_s{sec_num}_{global_cb_count}\"{indent_style}>",
-                        checked_cls
+                    template::render_task_item(
+                        &mut out,
+                        sec_num,
+                        global_cb_count,
+                        is_checked,
+                        clean_label,
+                        list_depth,
                     );
-                    let _ = writeln!(
-                        out,
-                        "  <input type=\"checkbox\" id=\"cb_s{sec_num}_{global_cb_count}\"{checked_attr}>"
-                    );
-                    let _ = writeln!(
-                        out,
-                        "  <label class=\"check-label\" for=\"cb_s{sec_num}_{global_cb_count}\">{}</label>",
-                        clean_label.trim()
-                    );
-                    let _ = writeln!(out, "  {COMMENT_ICON_SVG}");
-                    out.push_str("</div>\n");
                 } else {
                     let bullet = match list_stack.last_mut() {
                         Some(kind) => format_bullet(kind, list_depth),
@@ -598,21 +550,14 @@ pub fn convert_markdown_to_html_with_locale(
                     };
 
                     global_item_count += 1;
-                    let _ = writeln!(
-                        out,
-                        "<div class=\"check-item simple-item\" id=\"item_s{sec_num}_{global_item_count}\"{indent_style}>"
+                    template::render_list_item(
+                        &mut out,
+                        sec_num,
+                        global_item_count,
+                        &bullet,
+                        clean_label,
+                        list_depth,
                     );
-                    let _ = writeln!(
-                        out,
-                        "  <span class=\"list-bullet\">{bullet}</span>"
-                    );
-                    let _ = writeln!(
-                        out,
-                        "  <span class=\"check-label\">{}</span>",
-                        clean_label.trim()
-                    );
-                    let _ = writeln!(out, "  {COMMENT_ICON_SVG}");
-                    out.push_str("</div>\n");
                 }
 
                 if idx < events.len() && matches!(events[idx], Event::End(TagEnd::Item)) {
@@ -652,33 +597,19 @@ pub fn convert_markdown_to_html_with_locale(
 
                 if !clean_content.is_empty() {
                     let is_image_block = clean_content.starts_with("<img");
-                    use std::fmt::Write;
                     if is_image_block {
-                        let _ = writeln!(
-                            out,
-                            "<div class=\"img-item\">\n  {}\n</div>",
-                            clean_content
-                        );
+                        template::render_image_item(&mut out, clean_content);
                     } else {
                         global_txt_count += 1;
                         let sec_num = if section_count == 0 { 1 } else { section_count };
                         let list_depth = if list_stack.is_empty() { 0 } else { list_stack.len() - 1 };
-                        let indent_style = if list_depth > 0 {
-                            format!(" style=\"--indent: {list_depth};\"")
-                        } else {
-                            String::new()
-                        };
-                        let _ = writeln!(
-                            out,
-                            "<div class=\"check-item text-item\" id=\"txt_s{sec_num}_{global_txt_count}\"{indent_style}>"
+                        template::render_text_item(
+                            &mut out,
+                            sec_num,
+                            global_txt_count,
+                            trimmed,
+                            list_depth,
                         );
-                        let _ = writeln!(
-                            out,
-                            "  <span class=\"text-content\">{}</span>",
-                            trimmed
-                        );
-                        let _ = writeln!(out, "  {COMMENT_ICON_SVG}");
-                        out.push_str("</div>\n");
                     }
                 }
             }
@@ -705,10 +636,11 @@ pub fn convert_markdown_to_html_with_locale(
     }
 
     if in_section {
-        out.push_str("</div></div>\n");
+        template::render_section_close(&mut out);
     }
 
     Ok(out)
+
 }
 
 fn is_section_empty(events: &[Event]) -> bool {

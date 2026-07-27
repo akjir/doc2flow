@@ -11,7 +11,9 @@ Adhere strictly to these guidelines:
 * Asset processing & encoding: custom zero-allocation RFC 4648 Base64 encoder and MIME-type detection in `src/utils.rs` (`base64_encode`, `guess_mime_type`, `file_to_data_uri`).
 * Localization (i18n): dynamic `HashMap<String, String>` dictionary populated via compile-time embedded locale JSON files (`locales/*.json`) generated in `build.rs`.
 * Image Optimization: automatic image compression and WebP conversion for oversized local images (`src/image.rs`).
+* HTML Templating & Components: zero-allocation buffer-pattern UI components in `src/components.rs`, orchestrated centrally by `src/template.rs`.
 * Inline Asset Embeds: static HTML base skeleton (`templates/base.html`), CSS stylesheet (`templates/style.css`), JS client-side logic (`templates/script.js`), and locales embedded directly into binary at compile time via `include_str!` or code generation.
+
 
 
 ## 3. Incremental Development
@@ -68,7 +70,11 @@ Adhere strictly to these guidelines:
   }
   ```
 * **Functional Iteration (I-ITER-CHAIN):** Prefer declarative iterators (`.filter()`, `.map()`, `.count()`, `.find()`) over mutable loop state tracking.
-* **No Unnecessary Formatting Overhead (I-NO-FMT-OVERHEAD):** Avoid temporary `format!()` strings in loops/stream renders. Write directly to streams via `write!` or `writeln!`.
+* **Formatting & Buffer Directives (I-NO-FMT-OVERHEAD):** Avoid temporary `format!()` strings in loops/stream renders.
+  * `out.write_str("...")`: Use exclusively for purely static HTML strings and constants without variable interpolation.
+  * `write!(out, "...", vars)`: Use for cohesive HTML fragments containing dynamic variables. Avoid fragmenting HTML structures into multiple cascading `write_str` calls solely to avoid `write!`. Priority is zero-allocation combined with maximum readability of the HTML skeleton.
+
+
 
 ### Binary Size & Compile-Time Optimization
 * **Compile-Time Asset Embedding (B-EMBED-ASSETS):** Embed static templates, CSS, JS, and locales via `include_str!` or `build.rs`. Never rely on runtime paths.
@@ -98,7 +104,9 @@ Adhere strictly to these guidelines:
 
 ## 9. HTML Template & UI Guidelines
 * Generic Templates: `templates/base.html`, `templates/style.css`, and `templates/script.js` must remain completely generic and devoid of customer-specific text.
+* Modular HTML Components: Reusable UI fragments (headers, callouts, code blocks, task/list items) are rendered via zero-allocation buffer functions in `src/components.rs` and orchestrated exclusively through `src/template.rs`.
 * Markdown Mapping:
+
   * Level 2 headings (`##`) → collapsible `.section` with `.sh`/`.sb` classes.
   * Checkbox unordered lists → wrapped in `.check-item`.
   * Blockquote callouts → map prefixes (`>`, `>?`, `>!`, `>!!`, `>!!!`) to alert panels (`.note`, `.note-tip`, `.note-important`, `.note-warning`, `.note-caution`).

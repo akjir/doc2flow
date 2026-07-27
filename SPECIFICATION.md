@@ -132,11 +132,15 @@ To ensure clean separation of concerns, long-term maintainability, and high perf
   * `src/io.rs` serves as the exclusive domain for all filesystem interactions, file reading/writing, path resolution (`std::path::Path`, `PathBuf`), and asset byte retrieval.
   * Direct `std::fs` and `std::io` calls are prohibited in processing modules. All disk and path operations must be performed via helper functions in `src/io.rs`.
 * **Pure In-Memory Processing Core:**
-  * Core processing modules (`src/converter.rs`, `src/template.rs`, `src/i18n.rs`, `src/hasher.rs`, `src/id.rs`) perform purely in-memory data processing on strings, vectors, and syntax trees.
+  * Core processing modules (`src/converter.rs`, `src/template.rs`, `src/components.rs`, `src/i18n.rs`, `src/hasher.rs`, `src/id.rs`) perform purely in-memory data processing on strings, vectors, and syntax trees.
   * These modules operate entirely decoupled from disk I/O, allowing effortless unit testing and future pipeline extensions (e.g. streaming or in-memory execution).
+* **HTML UI Components & Templating Architecture (`src/components.rs` & `src/template.rs`):**
+  * `src/components.rs` houses reusable, zero-allocation HTML UI building blocks and components (section headers, callout panels, code blocks, task/list items, subheadings, text/image containers) using the buffer-writing pattern (`out: &mut impl Write`).
+  * `src/template.rs` serves as the central orchestrator for HTML templating, page rendering, and component delegation. All other processing modules (such as `src/converter.rs`) communicate exclusively with `src/template.rs` for HTML component and document rendering.
 * **Centralized Diagnostic Error Handling (`src/error.rs`):**
   * All runtime, I/O, and syntax errors map strictly to domain error types defined in `src/error.rs` (`Doc2FlowError`).
   * Compiler-style human-readable diagnostics and non-blocking `stderr` warning reporting (`print_warning`) remain centrally anchored in `src/error.rs`.
+
 
 ---
 

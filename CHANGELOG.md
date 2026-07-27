@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Custom logo feature (`-l` / `--logo <PATH>` CLI option and `logo: "<PATH>"` frontmatter tag) supporting SVG and raster images (PNG, JPG, WebP) with automatic Base64 embedding and graceful default fallback.
 
 ### Changed
+- Refactored HTML component generation and templating into dedicated zero-allocation `src/components.rs` module with `src/template.rs` as central orchestrator.
 - Unified H1 and H2 section collapsing behavior and suppressed expand/collapse toggle icons for empty headings.
 - Replaced single-line comment inputs with auto-expanding multiline textareas for improved text wrapping, persistence, and print/PDF readability.
 - Added a subtle 1px border (`var(--border-color)`) to embedded document body images (`.doc-body img`) for improved visual distinction against light backgrounds.

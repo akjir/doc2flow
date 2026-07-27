@@ -153,17 +153,21 @@ pub fn embed_images_as_base64_with_source(
                     .unwrap_or(src_val);
 
                 if let Some(next_cursor) = strip_img_item_wrapper(&mut out, html, img_end) {
-                    let comment_icon = crate::converter::COMMENT_ICON_SVG;
-                    let _ = writeln!(
-                        out,
-                        "<div class=\"check-item text-item\">\n  <span class=\"text-content\"><a href=\"{src_val}\" target=\"_blank\" rel=\"noopener noreferrer\">{alt_text}</a></span>\n  {comment_icon}\n</div>"
-                    );
+                    let comment_icon = crate::template::COMMENT_ICON_SVG;
+                    let _ = out.write_str("<div class=\"check-item text-item\">\n  <span class=\"text-content\"><a href=\"");
+                    let _ = out.write_str(src_val);
+                    let _ = out.write_str("\" target=\"_blank\" rel=\"noopener noreferrer\">");
+                    let _ = out.write_str(alt_text);
+                    let _ = out.write_str("</a></span>\n  ");
+                    let _ = out.write_str(comment_icon);
+                    let _ = out.write_str("\n</div>\n");
                     cursor = next_cursor;
                 } else {
-                    let _ = write!(
-                        out,
-                        "<a href=\"{src_val}\" target=\"_blank\" rel=\"noopener noreferrer\">{alt_text}</a>"
-                    );
+                    let _ = out.write_str("<a href=\"");
+                    let _ = out.write_str(src_val);
+                    let _ = out.write_str("\" target=\"_blank\" rel=\"noopener noreferrer\">");
+                    let _ = out.write_str(alt_text);
+                    let _ = out.write_str("</a>");
                     cursor = img_end;
                 }
                 continue;
