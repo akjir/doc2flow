@@ -43,6 +43,12 @@ function toggleSection(headerElement) {
     }
 }
 
+function autoExpandTextarea(el) {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+}
+
 function getOrCreateCommentBox(checkItem, initialValue) {
     if (!checkItem) return null;
     let box = checkItem.querySelector('.item-comment-box');
@@ -51,8 +57,8 @@ function getOrCreateCommentBox(checkItem, initialValue) {
         box = document.createElement('div');
         box.className = 'item-comment-box';
         
-        input = document.createElement('input');
-        input.type = 'text';
+        input = document.createElement('textarea');
+        input.rows = 1;
         input.className = 'item-comment-input';
         const i18n = window.D2F_I18N || {};
         input.placeholder = i18n.comment_placeholder || 'Add a comment...';
@@ -73,9 +79,12 @@ function getOrCreateCommentBox(checkItem, initialValue) {
     
     if (typeof initialValue === 'string') {
         input.value = initialValue;
+        input.textContent = initialValue;
         input.setAttribute('value', initialValue);
     }
     
+    autoExpandTextarea(input);
+
     return { box, input };
 }
 
@@ -296,6 +305,12 @@ function exportPDF() {
     const collapsed = Array.from(document.querySelectorAll('.sb.collapsed'));
     collapsed.forEach(el => el.classList.remove('collapsed'));
     
+    document.querySelectorAll('textarea.item-comment-input').forEach(ta => {
+        ta.textContent = ta.value;
+        ta.setAttribute('value', ta.value);
+        autoExpandTextarea(ta);
+    });
+
     const restore = () => {
         collapsed.forEach(el => el.classList.add('collapsed'));
         window.removeEventListener('afterprint', restore);
@@ -518,7 +533,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (target.classList.contains('item-comment-input')) {
+            target.textContent = target.value;
             target.setAttribute('value', target.value);
+            autoExpandTextarea(target);
             saveState();
         }
 
@@ -542,6 +559,18 @@ document.addEventListener('DOMContentLoaded', () => {
             saveState();
         }
     }, true);
+
+    window.addEventListener('beforeprint', () => {
+        document.querySelectorAll('textarea.item-comment-input').forEach(ta => {
+            ta.textContent = ta.value;
+            ta.setAttribute('value', ta.value);
+            autoExpandTextarea(ta);
+        });
+    });
+
+    window.addEventListener('resize', () => {
+        document.querySelectorAll('textarea.item-comment-input').forEach(autoExpandTextarea);
+    });
 
     // Initialize document state
     loadState();

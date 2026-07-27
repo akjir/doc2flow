@@ -410,7 +410,7 @@ hr {
   flex-basis: 100%;
   width: 100%;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
   margin-top: 4px;
   background: var(--gray-light);
@@ -430,6 +430,14 @@ hr {
   font-family: var(--font-sans);
   font-size: 12px;
   color: var(--gray);
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding: 0;
+  margin: 0;
+  line-height: 1.4;
+  min-height: 20px;
 }
 
 .item-comment-input::placeholder {
@@ -858,6 +866,12 @@ hr {
 
   .item-comment-input {
     color: #333;
+    overflow: hidden !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    resize: none !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
   }
 
   .sb.collapsed {
@@ -1269,7 +1283,7 @@ hr {
 
 <script>
 window.D2F_DOC_ID = 'd2f_id_c9c539743b5bb460';
-window.D2F_I18N = {"agent":"Agent","setup_in_progress":"Process in Progress","save_state":"Save State","confirm_reset":"Are you sure you want to reset all markings?","callout_important":"Important","lang_code":"en","name_placeholder":"Name","export_pdf":"Export as PDF","callout_caution":"Caution","copied":"Copied!","comment_placeholder":"Add a comment...","callout_warning":"Warning","signature_date":"Date","reset_all":"Reset","loading":"Loading...","contact":"Contact","setup_completed":"Process Completed","date_placeholder":"MM/DD/YYYY","copy_code":"Copy code","progress_template":"{done} of {total} tasks completed ({pct}%)","company":"Company","date":"Date","callout_note":"Note","callout_tip":"Tip"};
+window.D2F_I18N = {"callout_caution":"Caution","copy_code":"Copy code","comment_placeholder":"Add a comment...","contact":"Contact","setup_in_progress":"Process in Progress","date_placeholder":"MM/DD/YYYY","confirm_reset":"Are you sure you want to reset all markings?","progress_template":"{done} of {total} tasks completed ({pct}%)","export_pdf":"Export as PDF","company":"Company","lang_code":"en","agent":"Agent","loading":"Loading...","callout_important":"Important","reset_all":"Reset","setup_completed":"Process Completed","name_placeholder":"Name","date":"Date","signature_date":"Date","copied":"Copied!","callout_note":"Note","callout_tip":"Tip","callout_warning":"Warning","save_state":"Save State"};
 // Doc2Flow Generic Checklist Logic
 
 const DOC_ID = window.D2F_DOC_ID || '';
@@ -1315,6 +1329,12 @@ function toggleSection(headerElement) {
     }
 }
 
+function autoExpandTextarea(el) {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+}
+
 function getOrCreateCommentBox(checkItem, initialValue) {
     if (!checkItem) return null;
     let box = checkItem.querySelector('.item-comment-box');
@@ -1323,8 +1343,8 @@ function getOrCreateCommentBox(checkItem, initialValue) {
         box = document.createElement('div');
         box.className = 'item-comment-box';
         
-        input = document.createElement('input');
-        input.type = 'text';
+        input = document.createElement('textarea');
+        input.rows = 1;
         input.className = 'item-comment-input';
         const i18n = window.D2F_I18N || {};
         input.placeholder = i18n.comment_placeholder || 'Add a comment...';
@@ -1345,9 +1365,12 @@ function getOrCreateCommentBox(checkItem, initialValue) {
     
     if (typeof initialValue === 'string') {
         input.value = initialValue;
+        input.textContent = initialValue;
         input.setAttribute('value', initialValue);
     }
     
+    autoExpandTextarea(input);
+
     return { box, input };
 }
 
@@ -1568,6 +1591,12 @@ function exportPDF() {
     const collapsed = Array.from(document.querySelectorAll('.sb.collapsed'));
     collapsed.forEach(el => el.classList.remove('collapsed'));
     
+    document.querySelectorAll('textarea.item-comment-input').forEach(ta => {
+        ta.textContent = ta.value;
+        ta.setAttribute('value', ta.value);
+        autoExpandTextarea(ta);
+    });
+
     const restore = () => {
         collapsed.forEach(el => el.classList.add('collapsed'));
         window.removeEventListener('afterprint', restore);
@@ -1790,7 +1819,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (target.classList.contains('item-comment-input')) {
+            target.textContent = target.value;
             target.setAttribute('value', target.value);
+            autoExpandTextarea(target);
             saveState();
         }
 
@@ -1814,6 +1845,18 @@ document.addEventListener('DOMContentLoaded', () => {
             saveState();
         }
     }, true);
+
+    window.addEventListener('beforeprint', () => {
+        document.querySelectorAll('textarea.item-comment-input').forEach(ta => {
+            ta.textContent = ta.value;
+            ta.setAttribute('value', ta.value);
+            autoExpandTextarea(ta);
+        });
+    });
+
+    window.addEventListener('resize', () => {
+        document.querySelectorAll('textarea.item-comment-input').forEach(autoExpandTextarea);
+    });
 
     // Initialize document state
     loadState();

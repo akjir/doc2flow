@@ -403,7 +403,7 @@ hr {
   flex-basis: 100%;
   width: 100%;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
   margin-top: 4px;
   background: var(--gray-light);
@@ -423,6 +423,14 @@ hr {
   font-family: var(--font-sans);
   font-size: 12px;
   color: var(--gray);
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding: 0;
+  margin: 0;
+  line-height: 1.4;
+  min-height: 20px;
 }
 
 .item-comment-input::placeholder {
@@ -851,6 +859,12 @@ hr {
 
   .item-comment-input {
     color: #333;
+    overflow: hidden !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    resize: none !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
   }
 
   .sb.collapsed {
