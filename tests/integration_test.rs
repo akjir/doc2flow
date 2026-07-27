@@ -199,7 +199,7 @@ language: "de"
 
 #[test]
 fn test_showcase_en_fixture_conversion() {
-    let md_content = std::fs::read_to_string("tests/showcase_en.md")
+    let md_content = doc2flow::io::read_file_to_string(std::path::Path::new("tests/showcase_en.md"))
         .expect("Failed to read tests/showcase_en.md");
     let (fm, body) = doc2flow::converter::parse_frontmatter(&md_content);
     let locale = doc2flow::i18n::Locale::from_lang_code(&fm.language);
@@ -228,7 +228,7 @@ fn test_showcase_en_fixture_conversion() {
 
 #[test]
 fn test_showcase_de_fixture_conversion() {
-    let md_content = std::fs::read_to_string("tests/showcase_de.md")
+    let md_content = doc2flow::io::read_file_to_string(std::path::Path::new("tests/showcase_de.md"))
         .expect("Failed to read tests/showcase_de.md");
     let (fm, body) = doc2flow::converter::parse_frontmatter(&md_content);
     let locale = doc2flow::i18n::Locale::from_lang_code(&fm.language);
@@ -361,24 +361,19 @@ date: "2026-07-26"
 
 #[test]
 fn test_auto_scale_integration_test() {
-    use std::io::Write;
-
     let dir = std::env::temp_dir().join("d2f_integration_auto_scale");
-    let _ = std::fs::create_dir_all(&dir);
+    let _ = doc2flow::io::create_dir_all(&dir);
     let img_path = dir.join("heavy.png");
     let img_buf = image::RgbImage::new(1200, 800);
     img_buf
         .save_with_format(&img_path, image::ImageFormat::Png)
         .unwrap();
 
-    let metadata = std::fs::metadata(&img_path).unwrap();
-    if metadata.len() <= doc2flow::image::MAX_IMAGE_SIZE_BYTES {
-        let mut file = std::fs::OpenOptions::new()
-            .append(true)
-            .open(&img_path)
-            .unwrap();
-        let pad = vec![0u8; (doc2flow::image::MAX_IMAGE_SIZE_BYTES + 50 * 1024) as usize];
-        file.write_all(&pad).unwrap();
+    let file_size = doc2flow::io::get_file_size(&img_path).unwrap();
+    if file_size <= doc2flow::image::MAX_IMAGE_SIZE_BYTES {
+        let mut existing = doc2flow::io::read_file_bytes(&img_path).unwrap();
+        existing.resize((doc2flow::image::MAX_IMAGE_SIZE_BYTES + 50 * 1024) as usize, 0);
+        doc2flow::io::write_file(&img_path, &existing).unwrap();
     }
 
     let input = r#"---
@@ -409,7 +404,7 @@ date: "2026-07-26"
     )
     .expect("scaling should succeed");
 
-    let _ = std::fs::remove_dir_all(&dir);
+    let _ = doc2flow::io::remove_dir_all(&dir);
 
     assert!(html.contains("data:image/webp;base64,"));
 }
@@ -536,10 +531,7 @@ language: "fr"
 #[test]
 fn test_non_existent_input_file_handling() {
     let non_existent_path = std::path::PathBuf::from("tests/non_existent_file_xyz123.md");
-    let err = std::fs::read_to_string(&non_existent_path).map_err(|e| doc2flow::error::Doc2FlowError::Io {
-        path: Some(non_existent_path.clone()),
-        source: e,
-    }).unwrap_err();
+    let err = doc2flow::io::read_file_to_string(&non_existent_path).unwrap_err();
 
     match err {
         doc2flow::error::Doc2FlowError::Io { path, .. } => {
@@ -554,17 +546,17 @@ fn test_custom_logo_frontmatter_and_cli_precedence_integration() {
     use std::path::Path;
 
     let temp_dir = std::env::temp_dir().join("d2f_integration_logo");
-    let _ = std::fs::create_dir_all(&temp_dir);
+    let _ = doc2flow::io::create_dir_all(&temp_dir);
 
     let fm_logo_path = temp_dir.join("fm_logo.svg");
-    std::fs::write(
+    doc2flow::io::write_file(
         &fm_logo_path,
         "<svg id=\"fm-logo\" width=\"10\"><rect/></svg>",
     )
     .unwrap();
 
     let cli_logo_path = temp_dir.join("cli_logo.png");
-    std::fs::write(&cli_logo_path, b"cli png data").unwrap();
+    doc2flow::io::write_file(&cli_logo_path, b"cli png data").unwrap();
 
     let input = format!(
         r#"---
@@ -611,7 +603,7 @@ logo: "{}"
     assert!(rendered_cli.contains("<img src=\"data:image/png;base64,"));
     assert!(!rendered_cli.contains("id=\"fm-logo\""));
 
-    let _ = std::fs::remove_dir_all(&temp_dir);
+    let _ = doc2flow::io::remove_dir_all(&temp_dir);
 }
 
 

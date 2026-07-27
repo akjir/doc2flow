@@ -124,7 +124,23 @@ d2f.exe --version
 
 ---
 
-## 5. Roadmap & Architecture Preparation (Multi-File & Directories)
+## 5. Module Architecture & Subsystem Decoupling
+
+To ensure clean separation of concerns, long-term maintainability, and high performance, Doc2Flow (`d2f`) enforces strict modular boundaries:
+
+* **Filesystem & I/O Isolation (`src/io.rs`):**
+  * `src/io.rs` serves as the exclusive domain for all filesystem interactions, file reading/writing, path resolution (`std::path::Path`, `PathBuf`), and asset byte retrieval.
+  * Direct `std::fs` and `std::io` calls are prohibited in processing modules. All disk and path operations must be performed via helper functions in `src/io.rs`.
+* **Pure In-Memory Processing Core:**
+  * Core processing modules (`src/converter.rs`, `src/template.rs`, `src/i18n.rs`, `src/hasher.rs`, `src/id.rs`) perform purely in-memory data processing on strings, vectors, and syntax trees.
+  * These modules operate entirely decoupled from disk I/O, allowing effortless unit testing and future pipeline extensions (e.g. streaming or in-memory execution).
+* **Centralized Diagnostic Error Handling (`src/error.rs`):**
+  * All runtime, I/O, and syntax errors map strictly to domain error types defined in `src/error.rs` (`Doc2FlowError`).
+  * Compiler-style human-readable diagnostics and non-blocking `stderr` warning reporting (`print_warning`) remain centrally anchored in `src/error.rs`.
+
+---
+
+## 6. Roadmap & Architecture Preparation (Multi-File & Directories)
 
 To enable future expansions without requiring significant refactoring, the internal processing pipeline is designed with abstraction in mind:
 
@@ -134,15 +150,16 @@ To enable future expansions without requiring significant refactoring, the inter
 
 ---
 
-## 6. Technical Framework & Quality Standards
+## 7. Technical Framework & Quality Standards
 
 * **Programming Language:** Rust (Edition 2024).
 * **Target Platform:** Windows 64-Bit (`x86_64-pc-windows-msvc`).
 * **File Size:** Target size of `d2f.exe` `< 10 MB` (utilizing binary stripping, LTO, and release optimizations).
-* **Core Libraries:** `pulldown-cmark`, `serde`, `serde_json`, `image` (custom zero-dependency modules in `src/utils.rs` for Base64 encoding, MIME type guessing, and CLI argument parsing).
+* **Core Libraries:** `pulldown-cmark`, `serde`, `serde_json`, `image` (custom zero-dependency modules in `src/utils.rs` for Base64 encoding, MIME type guessing, and CLI argument parsing; `src/io.rs` for central I/O).
 * **Error Handling:**
   * No panics or crashes when encountering invalid paths or missing permissions.
   * Human-readable, color-coded diagnostic compiler-style error messages output to `stderr`.
 * **Testing:**
-  * Unit tests for Markdown parsing, frontmatter validation, callout parsing, i18n locale resolution, document hashing, and Base64 image embedding.
+  * Unit tests for Markdown parsing, frontmatter validation, callout parsing, i18n locale resolution, document hashing, Base64 image embedding, and file I/O operations in `src/io.rs`.
   * Integration tests for CLI parameters and end-to-end HTML generation with fixture validation.
+

@@ -1,8 +1,8 @@
 //! Utility module providing custom implementations for Base64 encoding,
 //! MIME type guessing, file Data-URI conversion, and zero-dependency CLI argument parsing.
 
-use crate::error::{Doc2FlowError, Result};
-use std::fs;
+use crate::error::Result;
+use crate::io;
 use std::path::{Path, PathBuf};
 
 const BASE64_CHARS: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -145,10 +145,7 @@ pub fn guess_mime_type(path: &Path) -> &'static str {
 /// Returns [`Doc2FlowError::Io`] if the file cannot be read.
 pub fn file_to_data_uri(path: &Path) -> Result<String> {
     let mime = guess_mime_type(path);
-    let bytes = fs::read(path).map_err(|source| Doc2FlowError::Io {
-        path: Some(path.to_path_buf()),
-        source,
-    })?;
+    let bytes = io::read_file_bytes(path)?;
 
     let b64_len = bytes.len().div_ceil(3) * 4;
     let prefix = "data:";
@@ -313,6 +310,7 @@ pub fn help_message() -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::error::Doc2FlowError;
 
     #[test]
     fn test_base64_rfc4648_test_vectors() {
@@ -373,9 +371,9 @@ mod tests {
     #[test]
     fn test_file_to_data_uri_success_and_error() {
         let temp_dir = std::env::temp_dir().join("d2f_test_data_uri");
-        let _ = fs::create_dir_all(&temp_dir);
+        let _ = io::create_dir_all(&temp_dir);
         let test_file = temp_dir.join("sample.png");
-        fs::write(&test_file, b"test image payload").unwrap();
+        io::write_file(&test_file, b"test image payload").unwrap();
 
         let data_uri = file_to_data_uri(&test_file).expect("should convert file to data uri");
         assert!(data_uri.starts_with("data:image/png;base64,"));
@@ -391,7 +389,7 @@ mod tests {
             _ => panic!("Expected Doc2FlowError::Io error variant"),
         }
 
-        let _ = fs::remove_dir_all(&temp_dir);
+        let _ = io::remove_dir_all(&temp_dir);
     }
 
     #[test]

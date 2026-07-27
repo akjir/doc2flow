@@ -1,11 +1,11 @@
 use crate::error::{DiagnosticError, Doc2FlowError, Result, print_warning};
+use crate::io;
 use crate::template::DEFAULT_LOGO_SVG;
 use crate::utils::{base64_encode, file_to_data_uri, guess_mime_type};
 use image::{GenericImageView, ImageFormat, imageops::FilterType};
 use std::collections::HashMap;
 use std::fmt::Write as _;
-use std::fs;
-use std::io::{Cursor, IsTerminal, Write as _};
+use std::io::Cursor;
 use std::path::{Path, PathBuf};
 
 /// Maximum allowed size in bytes for a local image embedded into HTML (250 KB).
@@ -13,23 +13,7 @@ pub const MAX_IMAGE_SIZE_BYTES: u64 = 250 * 1024;
 
 /// Resolves a logo image file path relative to `base_dir` if specified and relative.
 pub fn resolve_logo_path(path: &Path, base_dir: Option<&Path>) -> PathBuf {
-    if path.is_absolute() {
-        return path.to_path_buf();
-    }
-    if let Some(base) = base_dir {
-        let combined = base.join(path);
-        if combined.exists() {
-            return combined;
-        }
-    }
-    if path.exists() {
-        return path.to_path_buf();
-    }
-    if let Some(base) = base_dir {
-        base.join(path)
-    } else {
-        path.to_path_buf()
-    }
+    io::resolve_logo_path(path, base_dir)
 }
 
 /// Loads and processes a custom logo image (SVG or raster), or falls back to the default embedded SVG logo.
@@ -57,7 +41,7 @@ pub fn load_logo(logo_path: Option<&Path>, base_dir: Option<&Path>) -> String {
 
     let resolved_path = resolve_logo_path(path, base_dir);
 
-    if !resolved_path.exists() {
+    if !io::path_exists(&resolved_path) {
         print_warning(&format!(
             "Custom logo file '{}' not found. Falling back to default logo.",
             resolved_path.display()
@@ -68,7 +52,7 @@ pub fn load_logo(logo_path: Option<&Path>, base_dir: Option<&Path>) -> String {
     let mime = guess_mime_type(&resolved_path);
 
     if mime == "image/svg+xml" {
-        match fs::read_to_string(&resolved_path) {
+        match io::read_file_to_string(&resolved_path) {
             Ok(content) => {
                 let trimmed = content.trim();
                 if let Some(svg_start) = trimmed.find("<svg") {
@@ -193,7 +177,7 @@ pub fn embed_images_as_base64_with_source(
                 let path = Path::new(src_val);
                 if let Some(resolved_path) = resolve_image_path(path, base_dir) {
                     if !cache.contains_key(&resolved_path) {
-                        match fs::read(&resolved_path) {
+                        match io::read_file_bytes(&resolved_path) {
                             Ok(bytes) => {
                                 let size = bytes.len() as u64;
                                 if size > MAX_IMAGE_SIZE_BYTES {
@@ -275,9 +259,7 @@ pub fn process_and_encode_image_as_webp(image_path: &Path) -> Result<String> {
     })?;
 
     let (orig_w, orig_h) = img.dimensions();
-    let file_size = fs::metadata(image_path)
-        .map(|m| m.len())
-        .unwrap_or(MAX_IMAGE_SIZE_BYTES + 1);
+    let file_size = io::get_file_size(image_path).unwrap_or(MAX_IMAGE_SIZE_BYTES + 1);
 
     let scale_ratio = (MAX_IMAGE_SIZE_BYTES as f64 / file_size as f64)
         .sqrt()
@@ -311,7 +293,7 @@ pub fn process_and_encode_image_as_webp(image_path: &Path) -> Result<String> {
     };
 
     let webp_path = image_path.with_extension("webp");
-    let _ = fs::write(&webp_path, &buffer);
+    let _ = io::write_file(&webp_path, &buffer);
 
     let orig_kb = file_size as f64 / 1024.0;
     let new_kb = buffer.len() as f64 / 1024.0;
@@ -330,22 +312,10 @@ pub fn process_and_encode_image_as_webp(image_path: &Path) -> Result<String> {
 
 /// Asks user interactively via stderr/stdin whether to resize/convert an image that exceeds 250 KB.
 fn prompt_user_for_resizing(src_val: &str, size_bytes: u64) -> bool {
-    if !std::io::stdin().is_terminal() {
-        return false;
-    }
-
     let size_kb = size_bytes as f64 / 1024.0;
-    eprint!(
+    io::prompt_user_yes_no(&format!(
         "\nWarning: Image '{src_val}' ({size_kb:.1} KB) exceeds the 250 KB limit.\nDo you want to resize and convert it to WebP? [y/N]: "
-    );
-    let _ = std::io::stderr().flush();
-
-    let mut input = String::new();
-    if std::io::stdin().read_line(&mut input).is_ok() {
-        let trimmed = input.trim().to_lowercase();
-        return trimmed == "y" || trimmed == "yes";
-    }
-    false
+    ))
 }
 
 /// Finds the line number (1-based), column number (1-based), and line snippet in Markdown for an image source string.
@@ -456,32 +426,12 @@ fn is_image_source(src: &str, base_dir: Option<&Path>) -> bool {
 
 /// Resolves an image path relative to base_dir or current working directory.
 fn resolve_image_path(path: &Path, base_dir: Option<&Path>) -> Option<PathBuf> {
-    if path.is_absolute() {
-        if path.exists() {
-            return Some(path.to_path_buf());
-        }
-        return None;
-    }
-
-    if let Some(base) = base_dir {
-        let combined = base.join(path);
-        if combined.exists() {
-            return Some(combined);
-        }
-    }
-
-    if path.exists() {
-        return Some(path.to_path_buf());
-    }
-
-    None
+    io::resolve_image_path(path, base_dir)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fs::File;
-    use std::io::Write;
 
     #[test]
     fn test_extract_attribute_src_and_alt() {
@@ -524,15 +474,14 @@ mod tests {
     #[test]
     fn test_embed_images_as_base64_local_file() {
         let dir = std::env::temp_dir().join("d2f_test_img_1");
-        let _ = fs::create_dir_all(&dir);
+        let _ = io::create_dir_all(&dir);
         let img_path = dir.join("test.png");
-        let mut file = File::create(&img_path).unwrap();
-        file.write_all(b"fake png content").unwrap();
+        io::write_file(&img_path, b"fake png content").unwrap();
 
         let html = "<p><img src=\"test.png\" alt=\"demo\"></p>".to_string();
         let embedded = embed_images_as_base64(&html, Some(&dir)).unwrap();
 
-        let _ = fs::remove_dir_all(&dir);
+        let _ = io::remove_dir_all(&dir);
 
         assert!(embedded.contains("src=\"data:image/png;base64,"));
         assert!(!embedded.contains("src=\"test.png\""));
@@ -541,15 +490,14 @@ mod tests {
     #[test]
     fn test_embed_images_deduplication() {
         let dir = std::env::temp_dir().join("d2f_test_img_2");
-        let _ = fs::create_dir_all(&dir);
+        let _ = io::create_dir_all(&dir);
         let img_path = dir.join("logo.jpg");
-        let mut file = File::create(&img_path).unwrap();
-        file.write_all(b"sample image data").unwrap();
+        io::write_file(&img_path, b"sample image data").unwrap();
 
         let html = "<img src=\"logo.jpg\"><p>text</p><img src=\"logo.jpg\">";
         let embedded = embed_images_as_base64(html, Some(&dir)).unwrap();
 
-        let _ = fs::remove_dir_all(&dir);
+        let _ = io::remove_dir_all(&dir);
 
         let matches: Vec<_> = embedded.matches("data:image/jpeg;base64,").collect();
         assert_eq!(matches.len(), 2);
@@ -558,17 +506,17 @@ mod tests {
     #[test]
     fn test_auto_scale_large_image_to_webp() {
         let dir = std::env::temp_dir().join("d2f_test_auto_scale");
-        let _ = fs::create_dir_all(&dir);
+        let _ = io::create_dir_all(&dir);
         let img_path = dir.join("big_photo.png");
 
         let img_buf = image::RgbImage::new(1000, 1000);
         img_buf.save_with_format(&img_path, ImageFormat::Png).unwrap();
 
-        let metadata = fs::metadata(&img_path).unwrap();
-        if metadata.len() <= MAX_IMAGE_SIZE_BYTES {
-            let mut file = fs::OpenOptions::new().append(true).open(&img_path).unwrap();
-            let pad = vec![0u8; (MAX_IMAGE_SIZE_BYTES + 50 * 1024) as usize];
-            file.write_all(&pad).unwrap();
+        let file_size = io::get_file_size(&img_path).unwrap();
+        if file_size <= MAX_IMAGE_SIZE_BYTES {
+            let mut existing = io::read_file_bytes(&img_path).unwrap();
+            existing.resize((MAX_IMAGE_SIZE_BYTES + 50 * 1024) as usize, 0);
+            io::write_file(&img_path, &existing).unwrap();
         }
 
         let html = "<img src=\"big_photo.png\">";
@@ -581,7 +529,7 @@ mod tests {
         )
         .expect("auto scale should succeed");
 
-        let _ = fs::remove_dir_all(&dir);
+        let _ = io::remove_dir_all(&dir);
 
         assert!(result.contains("src=\"data:image/webp;base64,"));
     }
@@ -622,12 +570,12 @@ mod tests {
 
         // Temp dir for testing custom SVG & PNG logos
         let temp_dir = std::env::temp_dir().join("d2f_test_logo");
-        let _ = fs::create_dir_all(&temp_dir);
+        let _ = io::create_dir_all(&temp_dir);
 
         // Custom SVG
         let svg_path = temp_dir.join("test_logo.svg");
         let svg_content = "<?xml version=\"1.0\"?><svg width=\"100\" height=\"100\"><circle cx=\"50\" cy=\"50\" r=\"40\"/></svg>";
-        fs::write(&svg_path, svg_content).unwrap();
+        io::write_file(&svg_path, svg_content).unwrap();
 
         let loaded_svg = load_logo(Some(&svg_path), None);
         assert!(loaded_svg.starts_with("<svg"));
@@ -636,13 +584,13 @@ mod tests {
 
         // Custom PNG
         let png_path = temp_dir.join("test_logo.png");
-        fs::write(&png_path, b"fake png data").unwrap();
+        io::write_file(&png_path, b"fake png data").unwrap();
 
         let loaded_png = load_logo(Some(&png_path), None);
         assert!(loaded_png.starts_with("<img src=\"data:image/png;base64,"));
         assert!(loaded_png.contains("alt=\"Logo\""));
 
-        let _ = fs::remove_dir_all(&temp_dir);
+        let _ = io::remove_dir_all(&temp_dir);
     }
 
     #[test]
@@ -655,16 +603,16 @@ mod tests {
     #[test]
     fn test_resolve_logo_path() {
         let base_dir = std::env::temp_dir().join("d2f_test_resolve");
-        let _ = fs::create_dir_all(&base_dir);
+        let _ = io::create_dir_all(&base_dir);
         let rel_file = base_dir.join("sub/logo.png");
-        let _ = fs::create_dir_all(rel_file.parent().unwrap());
-        fs::write(&rel_file, b"data").unwrap();
+        let _ = io::create_dir_all(rel_file.parent().unwrap());
+        io::write_file(&rel_file, b"data").unwrap();
 
         let rel_path = Path::new("sub/logo.png");
         let resolved = resolve_logo_path(rel_path, Some(&base_dir));
         assert_eq!(resolved, rel_file);
 
-        let _ = fs::remove_dir_all(&base_dir);
+        let _ = io::remove_dir_all(&base_dir);
     }
 }
 

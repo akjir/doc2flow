@@ -1,10 +1,10 @@
 use doc2flow::converter;
 use doc2flow::error::{Doc2FlowError, Result};
 use doc2flow::i18n::Locale;
+use doc2flow::io;
 use doc2flow::template;
 use doc2flow::utils::{help_message, parse_args};
 use std::env;
-use std::fs;
 
 fn main() -> Result<()> {
     let args = parse_args(env::args()).map_err(Doc2FlowError::Message)?;
@@ -21,10 +21,7 @@ fn main() -> Result<()> {
 
     if let Some(init_path) = args.init {
         let template_content = template::generate_template_markdown();
-        fs::write(&init_path, template_content).map_err(|e| Doc2FlowError::Io {
-            path: Some(init_path.clone()),
-            source: e,
-        })?;
+        io::write_file(&init_path, template_content)?;
         println!("Successfully generated template {}", init_path.display());
         return Ok(());
     }
@@ -45,10 +42,7 @@ fn main() -> Result<()> {
         p
     });
 
-    let md_content = fs::read_to_string(&input_path).map_err(|e| Doc2FlowError::Io {
-        path: Some(input_path.clone()),
-        source: e,
-    })?;
+    let md_content = io::read_file_to_string(&input_path)?;
 
     let file_name = input_path.to_str();
     let (frontmatter, markdown_body) =
@@ -80,10 +74,7 @@ fn main() -> Result<()> {
         args.auto_scale,
     )?;
 
-    fs::write(&output_path, final_html).map_err(|e| Doc2FlowError::Io {
-        path: Some(output_path.clone()),
-        source: e,
-    })?;
+    io::write_file(&output_path, final_html)?;
 
     println!("Successfully generated {}", output_path.display());
     Ok(())
