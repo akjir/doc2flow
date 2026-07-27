@@ -171,7 +171,7 @@ language: "de"
     let html_body = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale)
         .expect("body conversion failed");
 
-    let final_html = doc2flow::template::render(&fm, &locale, &html_body, "doc_test_123")
+    let final_html = doc2flow::template::render(&fm, &locale, &html_body, "doc_test_123", None)
         .expect("template rendering failed");
 
     assert!(final_html.contains("<!DOCTYPE html>"));
@@ -207,7 +207,7 @@ fn test_showcase_en_fixture_conversion() {
         .expect("conversion failed");
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).expect("id gen failed");
     let rendered =
-        doc2flow::template::render(&fm, &locale, &html_body, &d2f_id).expect("rendering failed");
+        doc2flow::template::render(&fm, &locale, &html_body, &d2f_id, None).expect("rendering failed");
     let html = doc2flow::image::embed_images_as_base64(
         &rendered,
         Some(std::path::Path::new("tests")),
@@ -236,7 +236,7 @@ fn test_showcase_de_fixture_conversion() {
         .expect("conversion failed");
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).expect("id gen failed");
     let rendered =
-        doc2flow::template::render(&fm, &locale, &html_body, &d2f_id).expect("rendering failed");
+        doc2flow::template::render(&fm, &locale, &html_body, &d2f_id, None).expect("rendering failed");
     let html = doc2flow::image::embed_images_as_base64(
         &rendered,
         Some(std::path::Path::new("tests")),
@@ -264,7 +264,7 @@ fn test_template_generator_conversion() {
         .expect("conversion failed");
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).expect("id gen failed");
     let html =
-        doc2flow::template::render(&fm, &locale, &html_body, &d2f_id).expect("rendering failed");
+        doc2flow::template::render(&fm, &locale, &html_body, &d2f_id, None).expect("rendering failed");
 
     assert!(html.contains("Doc2Flow Standard Operating Procedure"));
     assert!(!html.contains("DOC2FLOW (D2F) - TEMPLATE & USAGE GUIDE"));
@@ -351,7 +351,7 @@ date: "2026-07-26"
     let locale = doc2flow::i18n::Locale::from_lang_code(&fm.language);
     let html_body = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).unwrap();
-    let rendered = doc2flow::template::render(&fm, &locale, &html_body, &d2f_id).unwrap();
+    let rendered = doc2flow::template::render(&fm, &locale, &html_body, &d2f_id, None).unwrap();
 
     assert!(rendered.contains(r#"<div class="sh sh-h1"><span>Main Section</span></div>"#));
     assert!(!rendered.contains(r#"badge-s1"#));
@@ -398,7 +398,7 @@ date: "2026-07-26"
     let html_body =
         doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).unwrap();
-    let rendered = doc2flow::template::render(&fm, &locale, &html_body, &d2f_id).unwrap();
+    let rendered = doc2flow::template::render(&fm, &locale, &html_body, &d2f_id, None).unwrap();
 
     let html = doc2flow::image::embed_images_as_base64_with_source(
         &rendered,
@@ -443,7 +443,7 @@ date: "2026-07-26"
     let locale = doc2flow::i18n::Locale::from_lang_code(&fm.language);
     let html_body = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).unwrap();
-    let html = doc2flow::template::render(&fm, &locale, &html_body, &d2f_id).unwrap();
+    let html = doc2flow::template::render(&fm, &locale, &html_body, &d2f_id, None).unwrap();
 
     assert!(html.contains("<html lang=\"de\">"));
     assert!(html.contains("data-label=\"Hinweis\""));
@@ -471,7 +471,7 @@ date: "2026-07-26"
     let locale = doc2flow::i18n::Locale::from_lang_code(&fm.language);
     let html_body = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).unwrap();
-    let rendered = doc2flow::template::render(&fm, &locale, &html_body, &d2f_id).unwrap();
+    let rendered = doc2flow::template::render(&fm, &locale, &html_body, &d2f_id, None).unwrap();
     let html = doc2flow::image::embed_images_as_base64(&rendered, None).unwrap();
 
     assert!(html.contains("<div class=\"check-item text-item\">"));
@@ -527,7 +527,7 @@ language: "fr"
     assert_eq!(locale.lang_code, "en"); // Fallback to English
     let html_body = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).unwrap();
-    let html = doc2flow::template::render(&fm, &locale, &html_body, &d2f_id).unwrap();
+    let html = doc2flow::template::render(&fm, &locale, &html_body, &d2f_id, None).unwrap();
 
     assert!(html.contains("<html lang=\"en\">"));
     assert!(html.contains("Save State"));
@@ -547,6 +547,71 @@ fn test_non_existent_input_file_handling() {
         }
         _ => panic!("Expected Doc2FlowError::Io variant"),
     }
+}
+
+#[test]
+fn test_custom_logo_frontmatter_and_cli_precedence_integration() {
+    use std::path::Path;
+
+    let temp_dir = std::env::temp_dir().join("d2f_integration_logo");
+    let _ = std::fs::create_dir_all(&temp_dir);
+
+    let fm_logo_path = temp_dir.join("fm_logo.svg");
+    std::fs::write(
+        &fm_logo_path,
+        "<svg id=\"fm-logo\" width=\"10\"><rect/></svg>",
+    )
+    .unwrap();
+
+    let cli_logo_path = temp_dir.join("cli_logo.png");
+    std::fs::write(&cli_logo_path, b"cli png data").unwrap();
+
+    let input = format!(
+        r#"---
+title: "Custom Logo Spec"
+company: "Logo Inc"
+date: "2026-07-27"
+logo: "{}"
+---
+## Section 1
+- [ ] Check logo
+"#,
+        fm_logo_path.file_name().unwrap().to_str().unwrap()
+    );
+
+    let (fm, body) =
+        doc2flow::converter::parse_and_validate_frontmatter(&input, Some("logo_spec.md")).unwrap();
+    let locale = doc2flow::i18n::Locale::from_lang_code(&fm.language);
+    let html_body =
+        doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
+    let d2f_id = doc2flow::id::generate_d2f_id(&fm).unwrap();
+
+    // 1. Frontmatter logo resolution
+    let fm_logo_html = doc2flow::image::load_logo(
+        Some(Path::new(&fm.logo)),
+        Some(&temp_dir),
+    );
+    assert!(fm_logo_html.contains("id=\"fm-logo\""));
+
+    let rendered_fm =
+        doc2flow::template::render(&fm, &locale, &html_body, &d2f_id, Some(&fm_logo_html))
+            .unwrap();
+    assert!(rendered_fm.contains("id=\"fm-logo\""));
+
+    // 2. CLI logo precedence over frontmatter logo
+    let cli_logo_html = doc2flow::image::load_logo(
+        Some(&cli_logo_path),
+        Some(&temp_dir),
+    );
+    assert!(cli_logo_html.contains("<img src=\"data:image/png;base64,"));
+
+    let rendered_cli =
+        doc2flow::template::render(&fm, &locale, &html_body, &d2f_id, Some(&cli_logo_html))
+            .unwrap();
+    assert!(rendered_cli.contains("<img src=\"data:image/png;base64,"));
+    assert!(!rendered_cli.contains("id=\"fm-logo\""));
+
+    let _ = std::fs::remove_dir_all(&temp_dir);
 }
 
 

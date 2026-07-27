@@ -172,6 +172,8 @@ pub struct Args {
     pub output: Option<PathBuf>,
     /// Optional target path for generating a starter template Markdown file.
     pub init: Option<PathBuf>,
+    /// Optional path to a custom logo image file (SVG, PNG, JPG, WebP).
+    pub logo: Option<PathBuf>,
     /// Automatically resize local images exceeding 250 KB to WebP.
     pub auto_scale: bool,
     /// Whether the user requested help information.
@@ -218,6 +220,12 @@ where
                     .ok_or_else(|| "Option '--output' requires a path value".to_string())?;
                 parsed.output = Some(PathBuf::from(val.as_ref()));
             }
+            "-l" | "--logo" => {
+                let val = iter
+                    .next()
+                    .ok_or_else(|| "Option '--logo' requires a path value".to_string())?;
+                parsed.logo = Some(PathBuf::from(val.as_ref()));
+            }
             "-i" | "--init" => {
                 if let Some(next_arg) = iter.peek() {
                     let next_str = next_arg.as_ref();
@@ -237,6 +245,20 @@ where
                     return Err("Option '--output' requires a non-empty path value".to_string());
                 }
                 parsed.output = Some(PathBuf::from(val));
+            }
+            opt if opt.starts_with("--logo=") => {
+                let val = &opt["--logo=".len()..];
+                if val.is_empty() {
+                    return Err("Option '--logo' requires a non-empty path value".to_string());
+                }
+                parsed.logo = Some(PathBuf::from(val));
+            }
+            opt if opt.starts_with("-l=") => {
+                let val = &opt["-l=".len()..];
+                if val.is_empty() {
+                    return Err("Option '--logo' requires a non-empty path value".to_string());
+                }
+                parsed.logo = Some(PathBuf::from(val));
             }
             opt if opt.starts_with("--init=") => {
                 let val = &opt["--init=".len()..];
@@ -280,6 +302,7 @@ pub fn help_message() -> &'static str {
         "    <INPUT>    Path to the input Markdown file\n\n",
         "OPTIONS:\n",
         "    -o, --output <PATH>         Path to the output HTML file (optional)\n",
+        "    -l, --logo <PATH>           Path to a custom logo image (SVG, PNG, JPG, WebP)\n",
         "    -i, --init [PATH]           Generate a starter template Markdown file (default: template.md)\n",
         "    -s, --auto-scale            Automatically resize local images exceeding 250 KB to WebP\n",
         "    -h, --help                  Print help information\n",
@@ -418,9 +441,27 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_args_logo_options() {
+        let args_l = parse_args(&["d2f", "input.md", "-l", "my_logo.png"]).unwrap();
+        assert_eq!(args_l.logo, Some(PathBuf::from("my_logo.png")));
+
+        let args_long = parse_args(&["d2f", "input.md", "--logo", "brand/logo.svg"]).unwrap();
+        assert_eq!(args_long.logo, Some(PathBuf::from("brand/logo.svg")));
+
+        let args_eq = parse_args(&["d2f", "input.md", "--logo=assets/logo.webp"]).unwrap();
+        assert_eq!(args_eq.logo, Some(PathBuf::from("assets/logo.webp")));
+
+        let args_short_eq = parse_args(&["d2f", "input.md", "-l=assets/logo.png"]).unwrap();
+        assert_eq!(args_short_eq.logo, Some(PathBuf::from("assets/logo.png")));
+    }
+
+    #[test]
     fn test_parse_args_errors() {
         assert!(parse_args(&["d2f", "--unknown"]).is_err());
         assert!(parse_args(&["d2f", "-o"]).is_err());
+        assert!(parse_args(&["d2f", "-l"]).is_err());
+        assert!(parse_args(&["d2f", "--logo="]).is_err());
+        assert!(parse_args(&["d2f", "-l="]).is_err());
         assert!(parse_args(&["d2f", "input1.md", "input2.md"]).is_err());
     }
 }

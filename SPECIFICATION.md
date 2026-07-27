@@ -23,6 +23,10 @@ d2f.exe input.md
 # Explicit output path
 d2f.exe input.md -o custom_output.html
 
+# Specify a custom header logo image
+d2f.exe input.md -l logo.png
+d2f.exe input.md --logo=custom_logo.svg
+
 # Enable automatic image compression and WebP conversion for local images > 250 KB
 d2f.exe input.md -s
 
@@ -41,6 +45,7 @@ d2f.exe --version
 | --- | --- | --- | --- | --- |
 | `INPUT` | — | Path to the source Markdown file | Conditional (unless `--init` is used) | — |
 | `OUTPUT` | `-o`, `--output` | Target path for the generated HTML file | No | `<INPUT_NAME>.html` |
+| `LOGO` | `-l`, `--logo` | Path to a custom logo image file (SVG, PNG, JPG, WebP) | No | Default embedded SVG logo |
 | `INIT` | `-i`, `--init` | Generates a starter template Markdown file | No | `template.md` |
 | `AUTO_SCALE` | `-s`, `--auto-scale` | Automatically resizes local images exceeding 250 KB to WebP | No | `false` |
 
@@ -60,6 +65,7 @@ d2f.exe --version
   date: "2026-07-25"
   version: "1.0.0"
   language: "de"
+  logo: "images/custom_logo.svg"
   ---
   ```
   * `title`: Document main header title.
@@ -70,6 +76,7 @@ d2f.exe --version
   * `date`: Document creation date (used alongside metadata for `d2f_id` document identity generation).
   * `version`: Document version string (included in document identity hash).
   * `language` / `lang`: Specifies locale code (`en`, `de`) for static UI translations.
+  * `logo`: Path to a custom header logo image file (SVG, PNG, JPG, WebP). CLI `-l`/`--logo` option takes precedence if specified.
   * **Upper Metadata Table:** Header table renders Company (`{{COMPANY}}`), Contact (`{{CONTACT}}`), Agent (`{{AGENT}}`), and an interactive persistent Date input field.
 * **Callout / Note Box Annotations:** Blockquotes are transformed into styled visual alert panels using prefix conventions:
   * `>` or `> Note`: Standard Note box (`.note`, neutral styling).

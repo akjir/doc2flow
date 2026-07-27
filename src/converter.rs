@@ -117,6 +117,7 @@ pub struct Frontmatter {
     pub date: String,
     pub version: String,
     pub language: String,
+    pub logo: String,
 }
 
 /// Finds the character indices for frontmatter block delimiters `---`.
@@ -182,6 +183,7 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
                     "date" => fm.date = val.to_string(),
                     "version" => fm.version = val.to_string(),
                     "language" | "lang" => fm.language = val.to_string(),
+                    "logo" => fm.logo = val.to_string(),
                     _ => {}
                 }
             }
@@ -729,10 +731,11 @@ mod tests {
 
     #[test]
     fn test_parse_frontmatter_split_once() {
-        let input = "---\ntitle: \"My Title\"\nlanguage: de\n---\nBody text";
+        let input = "---\ntitle: \"My Title\"\nlanguage: de\nlogo: \"custom_logo.svg\"\n---\nBody text";
         let (fm, body) = parse_frontmatter(input);
         assert_eq!(fm.title, "My Title");
         assert_eq!(fm.language, "de");
+        assert_eq!(fm.logo, "custom_logo.svg");
         assert_eq!(body, "Body text");
     }
 

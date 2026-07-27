@@ -1,5 +1,6 @@
-use crate::error::{DiagnosticError, Doc2FlowError, Result};
-use crate::utils::{base64_encode, guess_mime_type};
+use crate::error::{DiagnosticError, Doc2FlowError, Result, print_warning};
+use crate::template::DEFAULT_LOGO_SVG;
+use crate::utils::{base64_encode, file_to_data_uri, guess_mime_type};
 use image::{GenericImageView, ImageFormat, imageops::FilterType};
 use std::collections::HashMap;
 use std::fmt::Write as _;
@@ -9,6 +10,107 @@ use std::path::{Path, PathBuf};
 
 /// Maximum allowed size in bytes for a local image embedded into HTML (250 KB).
 pub const MAX_IMAGE_SIZE_BYTES: u64 = 250 * 1024;
+
+/// Resolves a logo image file path relative to `base_dir` if specified and relative.
+pub fn resolve_logo_path(path: &Path, base_dir: Option<&Path>) -> PathBuf {
+    if path.is_absolute() {
+        return path.to_path_buf();
+    }
+    if let Some(base) = base_dir {
+        let combined = base.join(path);
+        if combined.exists() {
+            return combined;
+        }
+    }
+    if path.exists() {
+        return path.to_path_buf();
+    }
+    if let Some(base) = base_dir {
+        base.join(path)
+    } else {
+        path.to_path_buf()
+    }
+}
+
+/// Loads and processes a custom logo image (SVG or raster), or falls back to the default embedded SVG logo.
+///
+/// If `logo_path` is `None` or points to an empty path, returns [`DEFAULT_LOGO_SVG`].
+/// If the custom logo file cannot be found or read, outputs a user-friendly warning message to `stderr`
+/// via [`print_warning`] and falls back to [`DEFAULT_LOGO_SVG`].
+///
+/// Relative paths are resolved against `base_dir` if provided.
+///
+/// # Examples
+///
+/// ```no_run
+/// use std::path::Path;
+/// use doc2flow::image::load_logo;
+///
+/// let logo_html = load_logo(Some(Path::new("custom_logo.svg")), Some(Path::new("docs")));
+/// assert!(logo_html.contains("<svg") || logo_html.contains("<img"));
+/// ```
+pub fn load_logo(logo_path: Option<&Path>, base_dir: Option<&Path>) -> String {
+    let path = match logo_path {
+        Some(p) if !p.as_os_str().is_empty() => p,
+        _ => return DEFAULT_LOGO_SVG.to_string(),
+    };
+
+    let resolved_path = resolve_logo_path(path, base_dir);
+
+    if !resolved_path.exists() {
+        print_warning(&format!(
+            "Custom logo file '{}' not found. Falling back to default logo.",
+            resolved_path.display()
+        ));
+        return DEFAULT_LOGO_SVG.to_string();
+    }
+
+    let mime = guess_mime_type(&resolved_path);
+
+    if mime == "image/svg+xml" {
+        match fs::read_to_string(&resolved_path) {
+            Ok(content) => {
+                let trimmed = content.trim();
+                if let Some(svg_start) = trimmed.find("<svg") {
+                    if let Some(svg_end_rel) = trimmed[svg_start..].rfind("</svg>") {
+                        let svg_end = svg_start + svg_end_rel + "</svg>".len();
+                        trimmed[svg_start..svg_end].to_string()
+                    } else {
+                        trimmed[svg_start..].to_string()
+                    }
+                } else {
+                    print_warning(&format!(
+                        "Custom logo file '{}' does not contain valid SVG markup. Falling back to default logo.",
+                        resolved_path.display()
+                    ));
+                    DEFAULT_LOGO_SVG.to_string()
+                }
+            }
+            Err(e) => {
+                print_warning(&format!(
+                    "Failed to read custom logo file '{}': {}. Falling back to default logo.",
+                    resolved_path.display(),
+                    e
+                ));
+                DEFAULT_LOGO_SVG.to_string()
+            }
+        }
+    } else {
+        match file_to_data_uri(&resolved_path) {
+            Ok(data_uri) => {
+                format!("<img src=\"{data_uri}\" alt=\"Logo\">")
+            }
+            Err(e) => {
+                print_warning(&format!(
+                    "Failed to process custom logo image '{}': {}. Falling back to default logo.",
+                    resolved_path.display(),
+                    e
+                ));
+                DEFAULT_LOGO_SVG.to_string()
+            }
+        }
+    }
+}
 
 /// Embeds local image references in HTML as Base64 `data:` URIs and converts non-image tags to links.
 ///
@@ -507,6 +609,62 @@ mod tests {
         assert_eq!(line_no, 3);
         assert_eq!(col_no, 8);
         assert_eq!(snippet, "![Alt](images/photo.png)");
+    }
+
+    #[test]
+    fn test_load_logo_default_and_custom() {
+        // None or empty returns default logo
+        let default_logo = load_logo(None, None);
+        assert_eq!(default_logo, DEFAULT_LOGO_SVG);
+
+        let empty_logo = load_logo(Some(Path::new("")), None);
+        assert_eq!(empty_logo, DEFAULT_LOGO_SVG);
+
+        // Temp dir for testing custom SVG & PNG logos
+        let temp_dir = std::env::temp_dir().join("d2f_test_logo");
+        let _ = fs::create_dir_all(&temp_dir);
+
+        // Custom SVG
+        let svg_path = temp_dir.join("test_logo.svg");
+        let svg_content = "<?xml version=\"1.0\"?><svg width=\"100\" height=\"100\"><circle cx=\"50\" cy=\"50\" r=\"40\"/></svg>";
+        fs::write(&svg_path, svg_content).unwrap();
+
+        let loaded_svg = load_logo(Some(&svg_path), None);
+        assert!(loaded_svg.starts_with("<svg"));
+        assert!(loaded_svg.contains("circle"));
+        assert!(loaded_svg.ends_with("</svg>"));
+
+        // Custom PNG
+        let png_path = temp_dir.join("test_logo.png");
+        fs::write(&png_path, b"fake png data").unwrap();
+
+        let loaded_png = load_logo(Some(&png_path), None);
+        assert!(loaded_png.starts_with("<img src=\"data:image/png;base64,"));
+        assert!(loaded_png.contains("alt=\"Logo\""));
+
+        let _ = fs::remove_dir_all(&temp_dir);
+    }
+
+    #[test]
+    fn test_load_logo_missing_fallback() {
+        let missing_path = Path::new("non_existent_logo_12345.svg");
+        let fallback = load_logo(Some(missing_path), None);
+        assert_eq!(fallback, DEFAULT_LOGO_SVG);
+    }
+
+    #[test]
+    fn test_resolve_logo_path() {
+        let base_dir = std::env::temp_dir().join("d2f_test_resolve");
+        let _ = fs::create_dir_all(&base_dir);
+        let rel_file = base_dir.join("sub/logo.png");
+        let _ = fs::create_dir_all(rel_file.parent().unwrap());
+        fs::write(&rel_file, b"data").unwrap();
+
+        let rel_path = Path::new("sub/logo.png");
+        let resolved = resolve_logo_path(rel_path, Some(&base_dir));
+        assert_eq!(resolved, rel_file);
+
+        let _ = fs::remove_dir_all(&base_dir);
     }
 }
 

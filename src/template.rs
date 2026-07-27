@@ -94,6 +94,7 @@ pub fn render(
     locale: &Locale,
     html_content: &str,
     doc_id: &str,
+    logo_html: Option<&str>,
 ) -> Result<String> {
     let base_html = include_str!("../templates/base.html");
     let style_css = include_str!("../templates/style.css");
@@ -103,6 +104,8 @@ pub fn render(
 
     let i18n_json = serde_json::to_string(&locale.entries)
         .map_err(|e| Doc2FlowError::Json(e.to_string()))?;
+
+    let logo = logo_html.filter(|s| !s.is_empty()).unwrap_or(DEFAULT_LOGO_SVG);
 
     let mut vars = HashMap::with_capacity(13);
     vars.insert("LANG_CODE", locale.lang_code.as_str());
@@ -117,7 +120,7 @@ pub fn render(
     vars.insert("JS", script_js);
     vars.insert("CONTENT", html_content);
     vars.insert("DOC_ID", doc_id);
-    vars.insert("LOGO", DEFAULT_LOGO_SVG);
+    vars.insert("LOGO", logo);
 
     Ok(substitute_template(base_html, &vars, Some(locale)))
 }
@@ -137,6 +140,7 @@ mod tests {
         assert!(content.contains("date:"));
         assert!(content.contains("version:"));
         assert!(content.contains("language:"));
+        assert!(content.contains("logo:"));
         assert!(content.contains("## Section 1: Initial System Verification"));
         assert!(content.contains("### Prerequisites Checklist"));
         assert!(content.contains("<!--"));
@@ -189,7 +193,7 @@ mod tests {
         let body = "<p>Body Content</p>";
         let doc_id = "test_id_99";
 
-        let html = render(&fm, &locale, body, doc_id).expect("Render failed");
+        let html = render(&fm, &locale, body, doc_id, None).expect("Render failed");
         assert!(html.contains("lang=\"de\""));
         assert!(html.contains("Doc Title"));
         assert!(html.contains("<p>Body Content</p>"));
@@ -200,6 +204,23 @@ mod tests {
         assert!(!html.contains("{{LOGO}}"));
         assert!(html.contains("<svg"));
         assert!(html.contains("Firma"));
+    }
+
+    #[test]
+    fn test_render_with_custom_logo() {
+        let fm = Frontmatter {
+            title: "Doc Title".into(),
+            company: "Acme".into(),
+            ..Frontmatter::default()
+        };
+        let locale = Locale::from_lang_code("en");
+        let custom_logo = "<img src=\"data:image/png;base64,1234\" alt=\"Logo\">";
+
+        let html = render(&fm, &locale, "<p>Content</p>", "doc_1", Some(custom_logo))
+            .expect("Render failed");
+
+        assert!(html.contains("<img src=\"data:image/png;base64,1234\" alt=\"Logo\">"));
+        assert!(!html.contains(DEFAULT_LOGO_SVG));
     }
 
     #[test]

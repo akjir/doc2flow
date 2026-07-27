@@ -12,6 +12,7 @@ DOC2FLOW (D2F) - TEMPLATE & USAGE GUIDE
    - date: Protocol date (YYYY-MM-DD).
    - version: Document version.
    - language / lang: Language code for static UI translation ('en', 'de').
+   - logo: Optional path to a custom logo image (SVG, PNG, JPG, WebP).
 
 2. DOCUMENT STRUCTURE:
    - Level 1 Headings (# Heading): Define non-collapsible section headers.

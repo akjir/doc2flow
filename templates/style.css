@@ -117,7 +117,8 @@ hr {
   max-height: 48px;
 }
 
-.logo-wrap svg {
+.logo-wrap svg,
+.logo-wrap img {
   max-height: 48px;
   max-width: 160px;
   width: auto;

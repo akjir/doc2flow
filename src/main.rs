@@ -57,10 +57,21 @@ fn main() -> Result<()> {
 
     let html_content = converter::convert_markdown_to_html_with_locale(markdown_body, &locale)?;
 
-    let d2f_id = doc2flow::id::generate_d2f_id(&frontmatter)?;
-    let rendered_html = template::render(&frontmatter, &locale, &html_content, &d2f_id)?;
-
     let base_dir = input_path.parent();
+
+    let logo_path = args.logo.as_deref().or_else(|| {
+        if !frontmatter.logo.trim().is_empty() {
+            Some(std::path::Path::new(&frontmatter.logo))
+        } else {
+            None
+        }
+    });
+    let logo_html = doc2flow::image::load_logo(logo_path, base_dir);
+
+    let d2f_id = doc2flow::id::generate_d2f_id(&frontmatter)?;
+    let rendered_html =
+        template::render(&frontmatter, &locale, &html_content, &d2f_id, Some(&logo_html))?;
+
     let final_html = doc2flow::image::embed_images_as_base64_with_source(
         &rendered_html,
         Some(&md_content),
