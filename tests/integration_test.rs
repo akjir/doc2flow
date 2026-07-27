@@ -505,7 +505,7 @@ fn test_cli_version_output_formatting() {
     let args = parse_args(&["d2f", "--version"]).unwrap();
     assert!(args.show_version);
     let version_str = env!("CARGO_PKG_VERSION");
-    assert_eq!(version_str, "0.9.0");
+    assert_eq!(version_str, "0.9.1");
 }
 
 #[test]

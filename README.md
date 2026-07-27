@@ -18,6 +18,8 @@ The generated HTML files are completely self-contained—embedding all CSS styli
 - 🌐 **Multi-Language / i18n Support:**
   - Built-in English (`en`) and German (`de`) static UI translations.
   - Selectable per document via the YAML frontmatter `language: "de"` setting.
+- 🎨 **Custom Header Logo Support:**
+  - Embed custom header logos (SVG, PNG, JPG, WebP) via CLI option (`-l` / `--logo`) or YAML frontmatter (`logo: "..."`).
 - 📣 **Rich Callout & Alert Panels:**
   - Styled alert boxes using simple blockquote prefix notation (`Note`, `Tip`, `Important`, `Warning`, `Caution`).
 - 💻 **Enhanced Code Blocks:**
@@ -39,6 +41,9 @@ d2f input.md
 
 # Specify custom output path
 d2f input.md -o /path/to/output.html
+
+# Specify custom header logo image
+d2f input.md -l logo.png
 
 # Enable automatic image scaling to WebP for local images > 250 KB
 d2f input.md -s
@@ -69,6 +74,7 @@ contact: "Jane Doe"
 agent: "John Smith"
 date: "2026-07-25"
 language: "de"
+logo: "images/company_logo.svg"
 ---
 ```
 
