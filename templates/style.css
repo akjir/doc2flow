@@ -8,11 +8,11 @@
   --font-mono: 'Courier New', monospace;
 
   /* Primary & Brand Colors */
-  --bd: #1F4E79;
+  --bd: #163A5C;
   --bm: #2E75B6;
   --bl: #D6E4F0;
   --bbg: #EBF3FB;
-  --bh2: #2B6AA0;
+  --bh2: #317AB9;
   --callout-accent: var(--bm);
   --header-sub-color: #BDD7EE;
 
@@ -223,17 +223,33 @@ hr {
 }
 
 .sh:hover {
-  background: #215480;
+  background: #25649B;
 }
 
 .sh.sh-h1 {
   background: var(--bd);
   font-size: 16px;
-  cursor: default;
+  cursor: pointer;
 }
 
 .sh.sh-h1:hover {
+  background: #102B45;
+}
+
+.sh.no-toggle {
+  cursor: default;
+}
+
+.sh.no-toggle:hover {
+  background: var(--bh2);
+}
+
+.sh.sh-h1.no-toggle:hover {
   background: var(--bd);
+}
+
+.sh.no-toggle .stog {
+  display: none !important;
 }
 
 .sbadge {

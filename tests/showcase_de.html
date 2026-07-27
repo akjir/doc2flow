@@ -15,11 +15,11 @@
   --font-mono: 'Courier New', monospace;
 
   /* Primary & Brand Colors */
-  --bd: #1F4E79;
+  --bd: #163A5C;
   --bm: #2E75B6;
   --bl: #D6E4F0;
   --bbg: #EBF3FB;
-  --bh2: #2B6AA0;
+  --bh2: #317AB9;
   --callout-accent: var(--bm);
   --header-sub-color: #BDD7EE;
 
@@ -230,17 +230,33 @@ hr {
 }
 
 .sh:hover {
-  background: #215480;
+  background: #25649B;
 }
 
 .sh.sh-h1 {
   background: var(--bd);
   font-size: 16px;
-  cursor: default;
+  cursor: pointer;
 }
 
 .sh.sh-h1:hover {
+  background: #102B45;
+}
+
+.sh.no-toggle {
+  cursor: default;
+}
+
+.sh.no-toggle:hover {
+  background: var(--bh2);
+}
+
+.sh.sh-h1.no-toggle:hover {
   background: var(--bd);
+}
+
+.sh.no-toggle .stog {
+  display: none !important;
 }
 
 .sbadge {
@@ -1034,7 +1050,8 @@ hr {
 <!-- START GENERATED CONTENT -->
 <!-- S1 -->
 <div class="section" id="s1">
-<div class="sh sh-h1"><span>Teil 1: Systemeinrichtung &amp; Vorbereitung</span></div>
+<div class="sh sh-h1"><span>Teil 1: Systemeinrichtung &amp; Vorbereitung</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s1"></span><span class="stog" id="tog-s1">&#9660;</span></div></div>
 <div class="sb" id="body-s1">
 <div class="check-item text-item" id="txt_s1_1">
   <span class="text-content">Dieser übergeordnete Abschnitt beschreibt die grundlegende Systemkonfiguration. Aufgaben in H1-Abschnitten besitzen keinen eigenen Badge-Indikator, fließen aber voll in die Gesamtfortschrittsanzeige ein.</span>
@@ -1049,7 +1066,7 @@ hr {
 
 <!-- S2 -->
 <div class="section" id="s2">
-<div class="sh" onclick="toggleSection('s2')"><span>Abschnitt 1: Übersicht &amp; Richtlinien</span>
+<div class="sh"><span>Abschnitt 1: Übersicht &amp; Richtlinien</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s2"></span><span class="stog" id="tog-s2">&#9660;</span></div></div>
 <div class="sb" id="body-s2">
 <div class="check-item text-item" id="txt_s2_2">
@@ -1072,7 +1089,7 @@ hr {
 
 <!-- S3 -->
 <div class="section" id="s3">
-<div class="sh" onclick="toggleSection('s3')"><span>Abschnitt 2: Aufgaben-Checkliste</span>
+<div class="sh"><span>Abschnitt 2: Aufgaben-Checkliste</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s3"></span><span class="stog" id="tog-s3">&#9660;</span></div></div>
 <div class="sb" id="body-s3">
 <div class="subh">Einrichtung &amp; Vorbereitung</div>
@@ -1147,13 +1164,14 @@ hr {
 
 <!-- S4 -->
 <div class="section" id="s4">
-<div class="sh sh-h1"><span>Teil 2: Wartung &amp; Systemreferenz</span></div>
+<div class="sh sh-h1 no-toggle"><span>Teil 2: Wartung &amp; Systemreferenz</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s4"></span><span class="stog" id="tog-s4">&#9660;</span></div></div>
 <div class="sb" id="body-s4">
 </div></div>
 
 <!-- S5 -->
 <div class="section" id="s5">
-<div class="sh" onclick="toggleSection('s5')"><span>Abschnitt 3: Referenz &amp; Code-Blöcke</span>
+<div class="sh"><span>Abschnitt 3: Referenz &amp; Code-Blöcke</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s5"></span><span class="stog" id="tog-s5">&#9660;</span></div></div>
 <div class="sb" id="body-s5">
 <div class="subh">System-Registrierungseinstellungen</div>
@@ -1171,7 +1189,7 @@ hr {
 
 <!-- S6 -->
 <div class="section" id="s6">
-<div class="sh" onclick="toggleSection('s6')"><span>Abschnitt 4: Informationslisten</span>
+<div class="sh"><span>Abschnitt 4: Informationslisten</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s6"></span><span class="stog" id="tog-s6">&#9660;</span></div></div>
 <div class="sb" id="body-s6">
 <div class="check-item simple-item" id="item_s6_3">
@@ -1258,6 +1276,20 @@ hr {
 </div>
 </div></div>
 
+<!-- S7 -->
+<div class="section" id="s7">
+<div class="sh sh-h1 no-toggle"><span>Leerer Hauptabschnitt</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s7"></span><span class="stog" id="tog-s7">&#9660;</span></div></div>
+<div class="sb" id="body-s7">
+</div></div>
+
+<!-- S8 -->
+<div class="section" id="s8">
+<div class="sh no-toggle"><span>Leerer Unterabschnitt</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s8"></span><span class="stog" id="tog-s8">&#9660;</span></div></div>
+<div class="sb" id="body-s8">
+</div></div>
+
 <!-- END GENERATED CONTENT -->
 
 <div class="finish" id="finish-box">
@@ -1283,7 +1315,7 @@ hr {
 
 <script>
 window.D2F_DOC_ID = 'd2f_id_468e65bc2ccf89b4';
-window.D2F_I18N = {"copied":"Kopiert!","callout_note":"Hinweis","confirm_reset":"Sind Sie sicher, dass Sie alle Markierungen zurücksetzen möchten?","date":"Datum","loading":"Lade...","comment_placeholder":"Kommentar hinzufügen...","save_state":"Stand sichern","callout_caution":"Achtung","setup_in_progress":"Vorgang in Bearbeitung","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","callout_tip":"Tipp","contact":"Ansprechpartner","name_placeholder":"Name","lang_code":"de","setup_completed":"Vorgang abgeschlossen","date_placeholder":"TT.MM.JJJJ","signature_date":"Datum","company":"Firma","export_pdf":"Als PDF exportieren","reset_all":"Zurücksetzen","callout_warning":"Warnung","callout_important":"Wichtig","copy_code":"Code kopieren","agent":"Bearbeiter"};
+window.D2F_I18N = {"callout_warning":"Warnung","reset_all":"Zurücksetzen","signature_date":"Datum","callout_tip":"Tipp","contact":"Ansprechpartner","confirm_reset":"Sind Sie sicher, dass Sie alle Markierungen zurücksetzen möchten?","agent":"Bearbeiter","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","save_state":"Stand sichern","callout_caution":"Achtung","copy_code":"Code kopieren","lang_code":"de","comment_placeholder":"Kommentar hinzufügen...","copied":"Kopiert!","setup_completed":"Vorgang abgeschlossen","setup_in_progress":"Vorgang in Bearbeitung","name_placeholder":"Name","callout_note":"Hinweis","date":"Datum","company":"Firma","date_placeholder":"TT.MM.JJJJ","export_pdf":"Als PDF exportieren","loading":"Lade...","callout_important":"Wichtig"};
 // Doc2Flow Generic Checklist Logic
 
 const DOC_ID = window.D2F_DOC_ID || '';
@@ -1315,12 +1347,29 @@ function closeLightbox() {
     document.removeEventListener('keydown', handleLightboxKeydown);
 }
 
+function updateEmptySections() {
+    document.querySelectorAll('.section').forEach(sec => {
+        const sh = sec.querySelector('.sh');
+        const body = sec.querySelector('.sb');
+        if (sh && body) {
+            const isEmpty = body.children.length === 0 && body.innerHTML.trim() === '';
+            if (isEmpty) {
+                sh.classList.add('no-toggle');
+            }
+        }
+    });
+}
+
 function toggleSection(headerElement) {
-    if (!headerElement || (headerElement.classList && headerElement.classList.contains('sh-h1'))) return;
+    if (typeof headerElement === 'string') {
+        const sec = document.getElementById(headerElement);
+        headerElement = sec ? sec.querySelector('.sh') : null;
+    }
+    if (!headerElement || (headerElement.classList && headerElement.classList.contains('no-toggle'))) return;
     const section = headerElement.closest('.section');
     const body = section ? section.querySelector('.sb') : null;
     
-    if (body) {
+    if (body && (body.children.length > 0 || body.innerHTML.trim() !== '')) {
         const isCollapsed = body.classList.toggle('collapsed');
         const toggler = headerElement.querySelector('.stog');
         if (toggler) {
@@ -1754,7 +1803,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const sh = e.target.closest('.sh');
-        if (sh && !sh.classList.contains('sh-h1')) {
+        if (sh && !sh.classList.contains('no-toggle')) {
             toggleSection(sh);
             return;
         }
@@ -1859,6 +1908,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Initialize document state
+    updateEmptySections();
     loadState();
     syncLinkedFields();
     updateProgress();

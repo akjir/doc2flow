@@ -15,11 +15,11 @@
   --font-mono: 'Courier New', monospace;
 
   /* Primary & Brand Colors */
-  --bd: #1F4E79;
+  --bd: #163A5C;
   --bm: #2E75B6;
   --bl: #D6E4F0;
   --bbg: #EBF3FB;
-  --bh2: #2B6AA0;
+  --bh2: #317AB9;
   --callout-accent: var(--bm);
   --header-sub-color: #BDD7EE;
 
@@ -230,17 +230,33 @@ hr {
 }
 
 .sh:hover {
-  background: #215480;
+  background: #25649B;
 }
 
 .sh.sh-h1 {
   background: var(--bd);
   font-size: 16px;
-  cursor: default;
+  cursor: pointer;
 }
 
 .sh.sh-h1:hover {
+  background: #102B45;
+}
+
+.sh.no-toggle {
+  cursor: default;
+}
+
+.sh.no-toggle:hover {
+  background: var(--bh2);
+}
+
+.sh.sh-h1.no-toggle:hover {
   background: var(--bd);
+}
+
+.sh.no-toggle .stog {
+  display: none !important;
 }
 
 .sbadge {
@@ -1034,7 +1050,8 @@ hr {
 <!-- START GENERATED CONTENT -->
 <!-- S1 -->
 <div class="section" id="s1">
-<div class="sh sh-h1"><span>Part 1: System Setup &amp; Preparation</span></div>
+<div class="sh sh-h1"><span>Part 1: System Setup &amp; Preparation</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s1"></span><span class="stog" id="tog-s1">&#9660;</span></div></div>
 <div class="sb" id="body-s1">
 <div class="check-item text-item" id="txt_s1_1">
   <span class="text-content">This top-level section describes the basic system configuration. Tasks within H1 sections do not display an individual badge indicator, but contribute fully to the overall progress tracking.</span>
@@ -1049,7 +1066,7 @@ hr {
 
 <!-- S2 -->
 <div class="section" id="s2">
-<div class="sh" onclick="toggleSection('s2')"><span>Section 1: Overview &amp; Guidelines</span>
+<div class="sh"><span>Section 1: Overview &amp; Guidelines</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s2"></span><span class="stog" id="tog-s2">&#9660;</span></div></div>
 <div class="sb" id="body-s2">
 <div class="check-item text-item" id="txt_s2_2">
@@ -1072,7 +1089,7 @@ hr {
 
 <!-- S3 -->
 <div class="section" id="s3">
-<div class="sh" onclick="toggleSection('s3')"><span>Section 2: Task Checklist</span>
+<div class="sh"><span>Section 2: Task Checklist</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s3"></span><span class="stog" id="tog-s3">&#9660;</span></div></div>
 <div class="sb" id="body-s3">
 <div class="subh">Setup &amp; Preparation</div>
@@ -1147,13 +1164,14 @@ hr {
 
 <!-- S4 -->
 <div class="section" id="s4">
-<div class="sh sh-h1"><span>Part 2: Maintenance &amp; System Reference</span></div>
+<div class="sh sh-h1 no-toggle"><span>Part 2: Maintenance &amp; System Reference</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s4"></span><span class="stog" id="tog-s4">&#9660;</span></div></div>
 <div class="sb" id="body-s4">
 </div></div>
 
 <!-- S5 -->
 <div class="section" id="s5">
-<div class="sh" onclick="toggleSection('s5')"><span>Section 3: Reference &amp; Code Blocks</span>
+<div class="sh"><span>Section 3: Reference &amp; Code Blocks</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s5"></span><span class="stog" id="tog-s5">&#9660;</span></div></div>
 <div class="sb" id="body-s5">
 <div class="subh">System Registry Settings</div>
@@ -1171,7 +1189,7 @@ hr {
 
 <!-- S6 -->
 <div class="section" id="s6">
-<div class="sh" onclick="toggleSection('s6')"><span>Section 4: Informational Lists</span>
+<div class="sh"><span>Section 4: Informational Lists</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s6"></span><span class="stog" id="tog-s6">&#9660;</span></div></div>
 <div class="sb" id="body-s6">
 <div class="check-item simple-item" id="item_s6_3">
@@ -1258,6 +1276,20 @@ hr {
 </div>
 </div></div>
 
+<!-- S7 -->
+<div class="section" id="s7">
+<div class="sh sh-h1 no-toggle"><span>Empty Top-Level Section</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s7"></span><span class="stog" id="tog-s7">&#9660;</span></div></div>
+<div class="sb" id="body-s7">
+</div></div>
+
+<!-- S8 -->
+<div class="section" id="s8">
+<div class="sh no-toggle"><span>Empty Sub-Section</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s8"></span><span class="stog" id="tog-s8">&#9660;</span></div></div>
+<div class="sb" id="body-s8">
+</div></div>
+
 <!-- END GENERATED CONTENT -->
 
 <div class="finish" id="finish-box">
@@ -1283,7 +1315,7 @@ hr {
 
 <script>
 window.D2F_DOC_ID = 'd2f_id_c9c539743b5bb460';
-window.D2F_I18N = {"callout_caution":"Caution","copy_code":"Copy code","comment_placeholder":"Add a comment...","contact":"Contact","setup_in_progress":"Process in Progress","date_placeholder":"MM/DD/YYYY","confirm_reset":"Are you sure you want to reset all markings?","progress_template":"{done} of {total} tasks completed ({pct}%)","export_pdf":"Export as PDF","company":"Company","lang_code":"en","agent":"Agent","loading":"Loading...","callout_important":"Important","reset_all":"Reset","setup_completed":"Process Completed","name_placeholder":"Name","date":"Date","signature_date":"Date","copied":"Copied!","callout_note":"Note","callout_tip":"Tip","callout_warning":"Warning","save_state":"Save State"};
+window.D2F_I18N = {"save_state":"Save State","setup_in_progress":"Process in Progress","copied":"Copied!","callout_caution":"Caution","lang_code":"en","setup_completed":"Process Completed","date":"Date","copy_code":"Copy code","callout_warning":"Warning","callout_tip":"Tip","contact":"Contact","company":"Company","date_placeholder":"MM/DD/YYYY","agent":"Agent","signature_date":"Date","export_pdf":"Export as PDF","name_placeholder":"Name","confirm_reset":"Are you sure you want to reset all markings?","callout_important":"Important","loading":"Loading...","progress_template":"{done} of {total} tasks completed ({pct}%)","reset_all":"Reset","callout_note":"Note","comment_placeholder":"Add a comment..."};
 // Doc2Flow Generic Checklist Logic
 
 const DOC_ID = window.D2F_DOC_ID || '';
@@ -1315,12 +1347,29 @@ function closeLightbox() {
     document.removeEventListener('keydown', handleLightboxKeydown);
 }
 
+function updateEmptySections() {
+    document.querySelectorAll('.section').forEach(sec => {
+        const sh = sec.querySelector('.sh');
+        const body = sec.querySelector('.sb');
+        if (sh && body) {
+            const isEmpty = body.children.length === 0 && body.innerHTML.trim() === '';
+            if (isEmpty) {
+                sh.classList.add('no-toggle');
+            }
+        }
+    });
+}
+
 function toggleSection(headerElement) {
-    if (!headerElement || (headerElement.classList && headerElement.classList.contains('sh-h1'))) return;
+    if (typeof headerElement === 'string') {
+        const sec = document.getElementById(headerElement);
+        headerElement = sec ? sec.querySelector('.sh') : null;
+    }
+    if (!headerElement || (headerElement.classList && headerElement.classList.contains('no-toggle'))) return;
     const section = headerElement.closest('.section');
     const body = section ? section.querySelector('.sb') : null;
     
-    if (body) {
+    if (body && (body.children.length > 0 || body.innerHTML.trim() !== '')) {
         const isCollapsed = body.classList.toggle('collapsed');
         const toggler = headerElement.querySelector('.stog');
         if (toggler) {
@@ -1754,7 +1803,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const sh = e.target.closest('.sh');
-        if (sh && !sh.classList.contains('sh-h1')) {
+        if (sh && !sh.classList.contains('no-toggle')) {
             toggleSection(sh);
             return;
         }
@@ -1859,6 +1908,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Initialize document state
+    updateEmptySections();
     loadState();
     syncLinkedFields();
     updateProgress();

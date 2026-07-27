@@ -382,25 +382,21 @@ pub fn convert_markdown_to_html_with_locale(
                 html::push_html(&mut heading_html, events[start_idx..idx].iter().cloned());
                 let heading_text = heading_html.trim();
 
+                let is_empty = is_section_empty(&events[idx + 1..]);
+                let h1_class = if target_level == HeadingLevel::H1 { " sh-h1" } else { "" };
+                let empty_class = if is_empty { " no-toggle" } else { "" };
+
                 use std::fmt::Write;
                 let _ = writeln!(out, "<!-- S{section_count} -->");
                 let _ = writeln!(out, "<div class=\"section\" id=\"s{section_count}\">");
-
-                if target_level == HeadingLevel::H1 {
-                    let _ = writeln!(
-                        out,
-                        "<div class=\"sh sh-h1\"><span>{heading_text}</span></div>"
-                    );
-                } else {
-                    let _ = writeln!(
-                        out,
-                        "<div class=\"sh\" onclick=\"toggleSection('s{section_count}')\"><span>{heading_text}</span>"
-                    );
-                    let _ = writeln!(
-                        out,
-                        "<div style=\"display:flex;align-items:center;gap:8px\"><span class=\"sbadge\" id=\"badge-s{section_count}\"></span><span class=\"stog\" id=\"tog-s{section_count}\">&#9660;</span></div></div>"
-                    );
-                }
+                let _ = writeln!(
+                    out,
+                    "<div class=\"sh{h1_class}{empty_class}\"><span>{heading_text}</span>"
+                );
+                let _ = writeln!(
+                    out,
+                    "<div style=\"display:flex;align-items:center;gap:8px\"><span class=\"sbadge\" id=\"badge-s{section_count}\"></span><span class=\"stog\" id=\"tog-s{section_count}\">&#9660;</span></div></div>"
+                );
 
                 let _ = writeln!(out, "<div class=\"sb\" id=\"body-s{section_count}\">");
             }
@@ -715,6 +711,22 @@ pub fn convert_markdown_to_html_with_locale(
     Ok(out)
 }
 
+fn is_section_empty(events: &[Event]) -> bool {
+    for event in events {
+        match event {
+            Event::Start(Tag::Heading {
+                level: HeadingLevel::H1 | HeadingLevel::H2,
+                ..
+            }) => break,
+            Event::Start(_) => return false,
+            Event::Text(text) if !text.trim().is_empty() => return false,
+            Event::Code(_) | Event::Html(_) | Event::Rule => return false,
+            _ => {}
+        }
+    }
+    true
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -943,16 +955,24 @@ mod tests {
 
         assert!(html.contains(r#"<!-- S1 -->"#));
         assert!(html.contains(r#"<div class="section" id="s1">"#));
-        assert!(html.contains(r#"<div class="sh sh-h1"><span>Top Level Header</span></div>"#));
-        assert!(!html.contains(r#"badge-s1"#));
-        assert!(!html.contains(r#"tog-s1"#));
+        assert!(html.contains(r#"<div class="sh sh-h1"><span>Top Level Header</span>"#));
+        assert!(html.contains(r#"badge-s1"#));
+        assert!(html.contains(r#"tog-s1"#));
         assert!(html.contains(r#"id="wrap-cb_s1_1""#));
 
         assert!(html.contains(r#"<!-- S2 -->"#));
         assert!(html.contains(r#"<div class="section" id="s2">"#));
-        assert!(html.contains(r#"<div class="sh" onclick="toggleSection('s2')"><span>Sub Section</span>"#));
-        assert!(html.contains(r#"badge-s2"#));
-        assert!(html.contains(r#"tog-s2"#));
+        assert!(html.contains(r#"<div class="sh"><span>Sub Section</span>"#));
+    }
+
+    #[test]
+    fn test_empty_heading_conversion() {
+        let input = "# Empty H1 Header\n\n## Empty H2 Header\n\n## Non Empty H2\n\nSome paragraph content";
+        let html = convert_markdown_to_html(input).expect("conversion failed");
+
+        assert!(html.contains(r#"<div class="sh sh-h1 no-toggle"><span>Empty H1 Header</span>"#));
+        assert!(html.contains(r#"<div class="sh no-toggle"><span>Empty H2 Header</span>"#));
+        assert!(html.contains(r#"<div class="sh"><span>Non Empty H2</span>"#));
     }
 
     #[test]

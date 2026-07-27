@@ -102,3 +102,7 @@ echo "Initializing Doc2Flow showcase environment..."
 ![System Information Overview](../images/example3.jpg)
 
 ![White Background Test Image](../images/example4.png)
+
+# Empty Top-Level Section
+
+## Empty Sub-Section

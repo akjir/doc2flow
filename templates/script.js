@@ -29,12 +29,29 @@ function closeLightbox() {
     document.removeEventListener('keydown', handleLightboxKeydown);
 }
 
+function updateEmptySections() {
+    document.querySelectorAll('.section').forEach(sec => {
+        const sh = sec.querySelector('.sh');
+        const body = sec.querySelector('.sb');
+        if (sh && body) {
+            const isEmpty = body.children.length === 0 && body.innerHTML.trim() === '';
+            if (isEmpty) {
+                sh.classList.add('no-toggle');
+            }
+        }
+    });
+}
+
 function toggleSection(headerElement) {
-    if (!headerElement || (headerElement.classList && headerElement.classList.contains('sh-h1'))) return;
+    if (typeof headerElement === 'string') {
+        const sec = document.getElementById(headerElement);
+        headerElement = sec ? sec.querySelector('.sh') : null;
+    }
+    if (!headerElement || (headerElement.classList && headerElement.classList.contains('no-toggle'))) return;
     const section = headerElement.closest('.section');
     const body = section ? section.querySelector('.sb') : null;
     
-    if (body) {
+    if (body && (body.children.length > 0 || body.innerHTML.trim() !== '')) {
         const isCollapsed = body.classList.toggle('collapsed');
         const toggler = headerElement.querySelector('.stog');
         if (toggler) {
@@ -468,7 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const sh = e.target.closest('.sh');
-        if (sh && !sh.classList.contains('sh-h1')) {
+        if (sh && !sh.classList.contains('no-toggle')) {
             toggleSection(sh);
             return;
         }
@@ -573,6 +590,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Initialize document state
+    updateEmptySections();
     loadState();
     syncLinkedFields();
     updateProgress();
