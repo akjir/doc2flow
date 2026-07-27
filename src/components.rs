@@ -37,7 +37,7 @@ pub fn render_section_close(out: &mut impl Write) {
 /// Renders a subheading component (H3-H6) directly into the output buffer.
 #[inline]
 pub fn render_subheading(out: &mut impl Write, sub_html: &str) {
-    let _ = write!(out, "<div class=\"subh\">{}</div>\n", sub_html.trim());
+    let _ = writeln!(out, "<div class=\"subh\">{}</div>", sub_html.trim());
 }
 
 /// Renders an alert or callout box component directly into the output buffer.
@@ -48,9 +48,9 @@ pub fn render_callout(
     escaped_label: &str,
     note_content: &str,
 ) {
-    let _ = write!(
+    let _ = writeln!(
         out,
-        "<div class=\"{note_cls}\" data-label=\"{escaped_label}\">{}</div>\n",
+        "<div class=\"{note_cls}\" data-label=\"{escaped_label}\">{}</div>",
         note_content.trim()
     );
 }
@@ -74,7 +74,7 @@ pub fn render_code_block(
     if let Some(lang) = lang_opt {
         let _ = write!(out, " language-{lang}");
     }
-    let _ = write!(out, "\"><code>{escaped_code}</code></pre></div>\n");
+    let _ = writeln!(out, "\"><code>{escaped_code}</code></pre></div>");
 }
 
 /// Renders a task list checkbox item directly into the output buffer.
