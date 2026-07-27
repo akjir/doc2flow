@@ -625,6 +625,7 @@ hr {
   height: auto;
   margin: 0 auto;
   border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
 }
 
 .lightbox {
@@ -869,7 +870,7 @@ hr {
     cursor: default;
   }
 
-  .note, .bw-block, .finish, .code-block, hr {
+  .note, .bw-block, .finish, .code-block, hr, .doc-body img {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
