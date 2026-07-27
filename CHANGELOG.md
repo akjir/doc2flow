@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Embed Doc2Flow version, license, and repository URL as metadata in generated HTML header comments, head meta tags, and CLI initialization templates.
 
 ### Changed
+- Updated starter template (`template.md`) to showcase Level 1 headings (#), bold and strikethrough text formatting, ordered lists, and nested task lists.
 - Unified H1 and H2 section collapsing behavior and suppressed expand/collapse toggle icons for empty headings.
 - Replaced single-line comment inputs with auto-expanding multiline textareas for improved text wrapping, persistence, and print/PDF readability.
 - Added a subtle 1px border (`var(--border-color)`) to embedded document body images (`.doc-body img`) for improved visual distinction against light backgrounds.

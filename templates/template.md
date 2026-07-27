@@ -8,7 +8,7 @@ License: GPL-3.0-or-later
 1. FRONTMATTER METADATA:
    - title: Main document title.
    - subtitle: Subtitle or document description.
-   - company: Company organization name.
+   - company: Company organization name (required).
    - contact: Responsible contact person name.
    - agent: Executing agent name.
    - date: Protocol date (YYYY-MM-DD).
@@ -17,19 +17,21 @@ License: GPL-3.0-or-later
    - logo: Optional path to a custom logo image (SVG, PNG, JPG, WebP).
 
 2. DOCUMENT STRUCTURE:
-   - Level 1 Headings (# Heading): Define non-collapsible section headers.
-   - Level 2 Headings (## Heading): Define collapsible sections with progress badges.
-   - Level 3 Headings (### Subheading): Define subheadings within sections.
+   - Level 1 Headings (# Heading): Collapsible main section headers (without completion badge).
+   - Level 2 Headings (## Heading): Collapsible sections with completion badges.
+   - Level 3-6 Headings (### Subheading): Styled subheadings inside sections.
 
-3. CHECKLISTS & BULLETS:
-   - Task items (- [ ] or - [x]): Interactive checkboxes saved in browser localStorage.
-   - Bullet items (- Item): Standard bullet list entries.
+3. CHECKLISTS & LISTS:
+   - Task items (- [ ] or - [x]): Interactive checkboxes saved in browser storage.
+   - Nested task items (  - [ ] Subtask): Indented sub-checklists.
+   - Bullet items (- Item): Standard bullet list entries with nesting support.
+   - Ordered items (1. Item): Sequential numbered list entries.
 
 4. CALLOUT / NOTE BOXES:
    - > Note: Neutral information panel.
    - >? Tip: Success / tip panel (green accent).
-   - >! Important: Important note panel (blue accent).
-   - >!! Warning: Warning alert panel (orange accent).
+   - >! Important: Important note panel (purple accent).
+   - >!! Warning: Warning alert panel (yellow accent).
    - >!!! Caution: Danger / caution panel (red accent).
 
 5. CODE BLOCKS:
@@ -41,11 +43,14 @@ License: GPL-3.0-or-later
    - Non-image files (![Doc](./manual.pdf)) are automatically converted to external <a> links.
    - Hyperlinks ([Link text](https://example.com)) render as clickable links.
 
-7. COMMENTS:
+7. TEXT FORMATTING:
+   - Bold (**bold text**) and strikethrough (~~deleted text~~) styling.
+
+8. COMMENTS:
    - HTML comments (like this) are ignored during parsing and omitted from output HTML.
 
-8. DATE SHORTCUTS & INTERACTIVE INPUTS:
-   - Type "today" into any date input field to automatically replace it with today's date (formatted via date_placeholder or browser locale).
+9. DATE SHORTCUTS & INTERACTIVE INPUTS:
+   - Type "today" into any date input field to automatically insert today's date.
 ===============================================================================
 -->
 ---
@@ -59,6 +64,10 @@ date: "2026-07-25"
 language: "en"
 ---
 
+# Part 1: System Setup & Preparation
+
+This top-level section defines the overall operational scope. It replaces ~~legacy manual procedures~~ with **modern automated verification workflows**.
+
 ## Section 1: Initial System Verification
 
 <!-- Verification of baseline prerequisites -->
@@ -66,8 +75,16 @@ language: "en"
 ### Prerequisites Checklist
 
 - [ ] Check operating system compatibility and network connectivity
+  - [ ] Verify primary network interface (eth0 / IPv4)
+  - [x] Test DNS resolution and gateway reachability
 - [x] Verify administrator credentials and execution permissions
 - [ ] Confirm target directory layout and storage capacity
+
+### Execution Steps
+
+1. Review system architecture diagrams and prerequisites.
+2. Initialize runtime environment configuration.
+3. Validate operational readiness before service deployment.
 
 ### Reference Links & Documentation
 
@@ -76,9 +93,11 @@ language: "en"
 
 ### Essential Information
 
-> Note: All actions in this procedure are logged and stored locally.
+> Note: All actions in this procedure are logged and stored locally in browser storage.
 
 >? Tip: You can toggle section completion by checking off all interactive items.
+
+# Part 2: Maintenance & Reference
 
 ## Section 2: Configuration & Service Deployment
 
@@ -98,4 +117,6 @@ d2f --init custom_guide.md
 >!!! Caution: Do not delete existing database volumes without a verified backup.
 
 - Standard bullet item 1: Verify log directory permissions
+  - Sub-item A: Ensure log rotation is active
+  - Sub-item B: Check disk quota limits
 - Standard bullet item 2: Backup system configuration before final sign-off
