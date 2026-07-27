@@ -75,9 +75,10 @@ Adhere strictly to these guidelines:
 * **Zero-Dependency Ecosystem (B-ZERO-DEPS):** Prefer standard library solutions (`HashMap`, `PathBuf`, slice parsing) over third-party crates unless strictly required.
 * **Release Artifact Shrinking (B-STRIP-BINARY):** Release profiles must set `lto = true`, `opt-level = "z"` / `"s"`, `codegen-units = 1`, and enable binary stripping.
 
-## 5. Language Interaction
+## 5. Language & Response Style
 * Respond and write **EXCLUSIVELY in English**.
 * Never use German in code, comments, files, or artifacts, even if queried in German.
+* **Concise Communication:** Keep AI response output short, simple, direct, and restricted to a single line.
 
 ## 6. Cross-Platform Guidelines
 * Primary OS: Linux (development and testing).
@@ -125,3 +126,6 @@ Adhere strictly to these guidelines:
   * Force exact background/color rendering: Use `-webkit-print-color-adjust: exact; print-color-adjust: exact;` on section headers (`.sh`), code blocks, callouts (`.note`), and finish signatures box (`.finish`).
   * Remove strikethrough on checked items: `.check-item.checked { background: transparent !important; }` and `.check-item.checked .check-label { text-decoration: none !important; color: var(--gray) !important; }`.
 * **File Code Structure (CSS-STRUCTURE):** Subdivide `templates/style.css` using explicit comment header blocks: `1. Base`, `2. Layout`, `3. Components`, `4. Print`, and `5. Responsive`.
+
+## 12. Changelog Policy
+* Automatically update `CHANGELOG.md` under `[Unreleased]` whenever relevant features, fixes, or user-facing changes are made. Keep entries short, simple, and limited to concise single-line bullet points.
