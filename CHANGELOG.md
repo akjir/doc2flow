@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Optimized HTML output size by embedding the item comment SVG icon once as a symbol (`#icon-comment`) and referencing it via `<use>` elements.
+- Refactored HTML structure to Semantic HTML5, replacing generic container `<div>` elements with `<header>`, `<main>`, `<section>`, `<h2>`, and `<h3>` landmark and heading tags for enhanced accessibility.
 
 ### Fixed
 - Fixed Markdown task list conversion to render interactive checkboxes (`.check-item`) when empty lines are present between task items (loose list format).

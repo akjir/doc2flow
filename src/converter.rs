@@ -888,15 +888,15 @@ mod tests {
         let html = convert_markdown_to_html(input).expect("conversion failed");
 
         assert!(html.contains(r#"<!-- S1 -->"#));
-        assert!(html.contains(r#"<div class="section" id="s1">"#));
-        assert!(html.contains(r#"<div class="sh sh-h1" role="button" tabindex="0" aria-expanded="true"><span>Top Level Header</span>"#));
+        assert!(html.contains(r#"<section class="section" id="s1">"#));
+        assert!(html.contains(r#"<h2 class="sh sh-h1" role="button" tabindex="0" aria-expanded="true"><span>Top Level Header</span>"#));
         assert!(html.contains(r#"badge-s1"#));
         assert!(html.contains(r#"tog-s1"#));
         assert!(html.contains(r#"id="wrap-cb_s1_1""#));
 
         assert!(html.contains(r#"<!-- S2 -->"#));
-        assert!(html.contains(r#"<div class="section" id="s2">"#));
-        assert!(html.contains(r#"<div class="sh" role="button" tabindex="0" aria-expanded="true"><span>Sub Section</span>"#));
+        assert!(html.contains(r#"<section class="section" id="s2">"#));
+        assert!(html.contains(r#"<h2 class="sh" role="button" tabindex="0" aria-expanded="true"><span>Sub Section</span>"#));
     }
 
     #[test]
@@ -904,9 +904,9 @@ mod tests {
         let input = "# Empty H1 Header\n\n## Empty H2 Header\n\n## Non Empty H2\n\nSome paragraph content";
         let html = convert_markdown_to_html(input).expect("conversion failed");
 
-        assert!(html.contains(r#"<div class="sh sh-h1 no-toggle"><span>Empty H1 Header</span>"#));
-        assert!(html.contains(r#"<div class="sh no-toggle"><span>Empty H2 Header</span>"#));
-        assert!(html.contains(r#"<div class="sh" role="button" tabindex="0" aria-expanded="true"><span>Non Empty H2</span>"#));
+        assert!(html.contains(r#"<h2 class="sh sh-h1 no-toggle"><span>Empty H1 Header</span>"#));
+        assert!(html.contains(r#"<h2 class="sh no-toggle"><span>Empty H2 Header</span>"#));
+        assert!(html.contains(r#"<h2 class="sh" role="button" tabindex="0" aria-expanded="true"><span>Non Empty H2</span>"#));
     }
 
     #[test]
@@ -922,10 +922,10 @@ mod tests {
         let input = "## Section 1\n\n### Sub 3\n\n#### Sub 4\n\n##### Sub 5\n\n###### Sub 6";
         let html = convert_markdown_to_html(input).expect("conversion failed");
 
-        assert!(html.contains(r#"<div class="subh">Sub 3</div>"#));
-        assert!(html.contains(r#"<div class="subh">Sub 4</div>"#));
-        assert!(html.contains(r#"<div class="subh">Sub 5</div>"#));
-        assert!(html.contains(r#"<div class="subh">Sub 6</div>"#));
+        assert!(html.contains(r#"<h3 class="subh">Sub 3</h3>"#));
+        assert!(html.contains(r#"<h3 class="subh">Sub 4</h3>"#));
+        assert!(html.contains(r#"<h3 class="subh">Sub 5</h3>"#));
+        assert!(html.contains(r#"<h3 class="subh">Sub 6</h3>"#));
     }
 
     #[test]

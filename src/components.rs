@@ -28,20 +28,20 @@ pub fn render_section_header(
     };
     let _ = write!(
         out,
-        "<!-- S{section_count} -->\n<div class=\"section\" id=\"s{section_count}\">\n<div class=\"sh{h1_class}{empty_class}\"{a11y_attrs}><span>{heading_text}</span>\n<div style=\"display:flex;align-items:center;gap:8px\"><span class=\"sbadge\" id=\"badge-s{section_count}\"></span><span class=\"stog\" id=\"tog-s{section_count}\">&#9660;</span></div></div>\n<div class=\"sb\" id=\"body-s{section_count}\">\n"
+        "<!-- S{section_count} -->\n<section class=\"section\" id=\"s{section_count}\">\n<h2 class=\"sh{h1_class}{empty_class}\"{a11y_attrs}><span>{heading_text}</span>\n<div style=\"display:flex;align-items:center;gap:8px\"><span class=\"sbadge\" id=\"badge-s{section_count}\"></span><span class=\"stog\" id=\"tog-s{section_count}\">&#9660;</span></div></h2>\n<div class=\"sb\" id=\"body-s{section_count}\">\n"
     );
 }
 
 /// Renders section body and container closing tags directly into the output buffer.
 #[inline]
 pub fn render_section_close(out: &mut impl Write) {
-    let _ = out.write_str("</div></div>\n\n");
+    let _ = out.write_str("</div></section>\n\n");
 }
 
 /// Renders a subheading component (H3-H6) directly into the output buffer.
 #[inline]
 pub fn render_subheading(out: &mut impl Write, sub_html: &str) {
-    let _ = writeln!(out, "<div class=\"subh\">{}</div>", sub_html.trim());
+    let _ = writeln!(out, "<h3 class=\"subh\">{}</h3>", sub_html.trim());
 }
 
 /// Renders an alert or callout box component directly into the output buffer.
@@ -170,7 +170,7 @@ mod tests {
         let mut buf = String::new();
         render_section_header(&mut buf, 1, "Section Title", true, false);
         assert!(buf.contains("<!-- S1 -->"));
-        assert!(buf.contains("<div class=\"section\" id=\"s1\">"));
+        assert!(buf.contains("<section class=\"section\" id=\"s1\">"));
         assert!(buf.contains("class=\"sh sh-h1\""));
         assert!(buf.contains("role=\"button\""));
         assert!(buf.contains("tabindex=\"0\""));
@@ -178,14 +178,14 @@ mod tests {
         assert!(buf.contains("Section Title"));
 
         render_section_close(&mut buf);
-        assert!(buf.contains("</div></div>\n\n"));
+        assert!(buf.contains("</div></section>\n\n"));
     }
 
     #[test]
     fn test_render_subheading() {
         let mut buf = String::new();
         render_subheading(&mut buf, "Subheading Text");
-        assert_eq!(buf, "<div class=\"subh\">Subheading Text</div>\n");
+        assert_eq!(buf, "<h3 class=\"subh\">Subheading Text</h3>\n");
     }
 
     #[test]

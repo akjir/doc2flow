@@ -220,6 +220,7 @@ hr {
   justify-content: space-between;
   cursor: pointer;
   user-select: none;
+  margin: 0;
 }
 
 .sh:hover {
