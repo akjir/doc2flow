@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added dynamic SemVer 2.0.0 version and build metadata generation in build.rs (`v<VERSION>+<COUNT>.<HASH>[.dev]`) propagated to CLI (`--version`), HTML meta generator tags, document headers, and template files.
 - Added automatic SVG minification and metadata stripping for imported SVG images and custom logos, removing Inkscape/Sodipodi editor clutter and XML comments.
 - Enhanced accessibility (A11y) and keyboard navigation for collapsible section headers (role="button", tabindex, Enter/Space toggling), progress bar ARIA attributes, and form field screen reader labels.
 

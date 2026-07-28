@@ -15,7 +15,7 @@ fn main() -> Result<()> {
     }
 
     if args.show_version {
-        println!("d2f {} (Beta 1)", env!("CARGO_PKG_VERSION"));
+        println!("d2f {}", env!("D2F_FULL_VERSION"));
         return Ok(());
     }
 

@@ -158,6 +158,10 @@ To enable future expansions without requiring significant refactoring, the inter
 
 * **Programming Language:** Rust (Edition 2024).
 * **Target Platform:** Windows 64-Bit (`x86_64-pc-windows-msvc`).
+* **Version & Build Metadata:** Dynamic, SemVer 2.0.0 compliant versioning evaluated at compile time in `build.rs`:
+  * **Format Schema:** `v<MAJOR>.<MINOR>.<PATCH>+<COMMIT_COUNT>.<COMMIT_HASH>[.dev]`
+  * **SemVer 2.0.0 Build Metadata (`+`):** Combines base package version (`CARGO_PKG_VERSION`), total commit count (`git rev-list --count HEAD`, fallback `0`), short commit hash (`git rev-parse --short HEAD`, fallback `unknown`), and optional `.dev` suffix when uncommitted changes exist (`git status --porcelain`).
+  * **Integration Points:** Exported as `D2F_FULL_VERSION` compiler env var and embedded into `d2f --version` CLI output, HTML `<meta name="generator">` tags, document header comments, and starter templates.
 * **File Size:** Target size of `d2f.exe` `< 10 MB` (utilizing binary stripping, LTO, and release optimizations).
 * **Core Libraries:** `pulldown-cmark`, `serde`, `serde_json`, `image` (custom zero-dependency modules in `src/utils.rs` for Base64 encoding, MIME type guessing, and CLI argument parsing; `src/io.rs` for central I/O).
 * **Error Handling:**

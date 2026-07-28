@@ -1,6 +1,6 @@
 <!--
 ===============================================================================
-DOC2FLOW (D2F) v{{APP_VERSION}} - TEMPLATE & USAGE GUIDE
+DOC2FLOW (D2F) {{APP_VERSION}} - TEMPLATE & USAGE GUIDE
 Repository: https://github.com/akjir/doc2flow
 License: GPL-3.0-or-later
 ===============================================================================

@@ -7,6 +7,8 @@ fn main() {
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=locales");
 
+    generate_version_metadata();
+
     let out_dir = env::var("OUT_DIR").expect("OUT_DIR environment variable not set");
     let dest_path = Path::new(&out_dir).join("locales_gen.rs");
 
@@ -59,4 +61,62 @@ fn main() {
     );
 
     fs::write(dest_path, generated_code).expect("Failed to write generated locales file");
+}
+
+fn get_git_commit_count() -> String {
+    let output = std::process::Command::new("git")
+        .args(["rev-list", "--count", "HEAD"])
+        .output();
+    match output {
+        Ok(out) if out.status.success() => {
+            let count = String::from_utf8_lossy(&out.stdout).trim().to_string();
+            if !count.is_empty() && count.chars().all(|c| c.is_ascii_digit()) {
+                count
+            } else {
+                "0".to_string()
+            }
+        }
+        _ => "0".to_string(),
+    }
+}
+
+fn get_git_commit_hash() -> String {
+    let output = std::process::Command::new("git")
+        .args(["rev-parse", "--short", "HEAD"])
+        .output();
+    match output {
+        Ok(out) if out.status.success() => {
+            let hash = String::from_utf8_lossy(&out.stdout).trim().to_string();
+            if !hash.is_empty() {
+                hash
+            } else {
+                "unknown".to_string()
+            }
+        }
+        _ => "unknown".to_string(),
+    }
+}
+
+fn is_git_dirty() -> bool {
+    let output = std::process::Command::new("git")
+        .args(["status", "--porcelain"])
+        .output();
+    match output {
+        Ok(out) if out.status.success() => !String::from_utf8_lossy(&out.stdout).trim().is_empty(),
+        _ => false,
+    }
+}
+
+fn generate_version_metadata() {
+    let pkg_version = env::var("CARGO_PKG_VERSION").unwrap_or_else(|_| "0.0.0".to_string());
+    let commit_count = get_git_commit_count();
+    let commit_hash = get_git_commit_hash();
+    let suffix = if is_git_dirty() { ".dev" } else { "" };
+
+    let full_version = format!("v{}+{}.{}{}", pkg_version, commit_count, commit_hash, suffix);
+    println!("cargo:rustc-env=D2F_FULL_VERSION={}", full_version);
+
+    println!("cargo:rerun-if-changed=.git/HEAD");
+    println!("cargo:rerun-if-changed=.git/index");
+    println!("cargo:rerun-if-changed=.git/refs");
 }
