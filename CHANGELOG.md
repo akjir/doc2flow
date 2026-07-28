@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.9.2] - 2026-07-28
 
 ### Added
 - Added dynamic SemVer 2.0.0 version and build metadata generation in build.rs (`v<VERSION>+<COUNT>.<HASH>[.dev]`) propagated to CLI (`--version`), HTML meta generator tags, document headers, and template files.
