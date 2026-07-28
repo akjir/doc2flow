@@ -36,7 +36,7 @@ pub fn resolve_logo_path(path: &Path, base_dir: Option<&Path>) -> PathBuf {
 pub fn load_logo(logo_path: Option<&Path>, base_dir: Option<&Path>) -> String {
     let path = match logo_path {
         Some(p) if !p.as_os_str().is_empty() => p,
-        _ => return DEFAULT_LOGO_SVG.to_string(),
+        _ => return clean_svg(DEFAULT_LOGO_SVG),
     };
 
     let resolved_path = resolve_logo_path(path, base_dir);
@@ -46,7 +46,7 @@ pub fn load_logo(logo_path: Option<&Path>, base_dir: Option<&Path>) -> String {
             "Custom logo file '{}' not found. Falling back to default logo.",
             resolved_path.display()
         ));
-        return DEFAULT_LOGO_SVG.to_string();
+        return clean_svg(DEFAULT_LOGO_SVG);
     }
 
     let mime = guess_mime_type(&resolved_path);
@@ -54,20 +54,15 @@ pub fn load_logo(logo_path: Option<&Path>, base_dir: Option<&Path>) -> String {
     if mime == "image/svg+xml" {
         match io::read_file_to_string(&resolved_path) {
             Ok(content) => {
-                let trimmed = content.trim();
-                if let Some(svg_start) = trimmed.find("<svg") {
-                    if let Some(svg_end_rel) = trimmed[svg_start..].rfind("</svg>") {
-                        let svg_end = svg_start + svg_end_rel + "</svg>".len();
-                        trimmed[svg_start..svg_end].to_string()
-                    } else {
-                        trimmed[svg_start..].to_string()
-                    }
+                let cleaned = clean_svg(&content);
+                if cleaned.contains("<svg") {
+                    cleaned
                 } else {
                     print_warning(&format!(
                         "Custom logo file '{}' does not contain valid SVG markup. Falling back to default logo.",
                         resolved_path.display()
                     ));
-                    DEFAULT_LOGO_SVG.to_string()
+                    clean_svg(DEFAULT_LOGO_SVG)
                 }
             }
             Err(e) => {
@@ -76,7 +71,7 @@ pub fn load_logo(logo_path: Option<&Path>, base_dir: Option<&Path>) -> String {
                     resolved_path.display(),
                     e
                 ));
-                DEFAULT_LOGO_SVG.to_string()
+                clean_svg(DEFAULT_LOGO_SVG)
             }
         }
     } else {
@@ -211,7 +206,16 @@ pub fn embed_images_as_base64_with_source(
                                     }
                                 } else {
                                     let mime = guess_mime_type(&resolved_path);
-                                    let b64 = base64_encode(&bytes);
+                                    let bytes_to_encode = if mime == "image/svg+xml" {
+                                        if let Ok(utf8_str) = std::str::from_utf8(&bytes) {
+                                            clean_svg(utf8_str).into_bytes()
+                                        } else {
+                                            bytes
+                                        }
+                                    } else {
+                                        bytes
+                                    };
+                                    let b64 = base64_encode(&bytes_to_encode);
                                     cache.insert(
                                         resolved_path.clone(),
                                         format!("data:{mime};base64,{b64}"),
@@ -433,6 +437,212 @@ fn resolve_image_path(path: &Path, base_dir: Option<&Path>) -> Option<PathBuf> {
     io::resolve_image_path(path, base_dir)
 }
 
+/// Cleans and minifies SVG content by removing XML headers, comments, editor metadata tags
+/// (e.g. `<sodipodi:namedview>`, `<metadata>`), empty `<defs/>`, and Inkscape/Sodipodi namespace attributes.
+pub fn clean_svg(input: &str) -> String {
+    let mut s = input.trim();
+
+    // 1. Strip XML declarations <?xml ...?> and <!DOCTYPE ...>
+    while let Some(start) = s.find("<?") {
+        if let Some(end) = s[start..].find("?>") {
+            s = s[end + 2..].trim();
+        } else {
+            break;
+        }
+    }
+    while let Some(start) = s.find("<!DOCTYPE") {
+        if let Some(end) = s[start..].find('>') {
+            s = s[end + 1..].trim();
+        } else {
+            break;
+        }
+    }
+
+    // 2. Strip comments <!-- ... -->
+    let mut no_comments = String::with_capacity(s.len());
+    let mut cur = 0;
+    while let Some(rel_start) = s[cur..].find("<!--") {
+        let start = cur + rel_start;
+        no_comments.push_str(&s[cur..start]);
+        if let Some(rel_end) = s[start..].find("-->") {
+            cur = start + rel_end + 3;
+        } else {
+            cur = s.len();
+            break;
+        }
+    }
+    no_comments.push_str(&s[cur..]);
+
+    // 3. Process XML tags & elements
+    let mut result = String::with_capacity(no_comments.len());
+    let mut rest = no_comments.as_str();
+
+    while let Some(tag_start) = rest.find('<') {
+        let text_before = rest[..tag_start].trim();
+        if !text_before.is_empty() {
+            result.push_str(text_before);
+        }
+
+        let tag_rest = &rest[tag_start..];
+        if let Some(tag_end) = tag_rest.find('>') {
+            let full_tag = &tag_rest[..=tag_end];
+            rest = &tag_rest[tag_end + 1..];
+
+            let is_closing = full_tag.starts_with("</");
+            let tag_inner = if is_closing {
+                full_tag[2..full_tag.len() - 1].trim()
+            } else if full_tag.ends_with("/>") {
+                full_tag[1..full_tag.len() - 2].trim()
+            } else {
+                full_tag[1..full_tag.len() - 1].trim()
+            };
+
+            let tag_name = tag_inner
+                .split_whitespace()
+                .next()
+                .unwrap_or("")
+                .trim_end_matches('/');
+
+            // Skip editor-specific metadata tags
+            if tag_name.starts_with("sodipodi:") || tag_name == "metadata" {
+                if !is_closing && !full_tag.ends_with("/>") {
+                    let closing = format!("</{tag_name}>");
+                    if let Some(close_pos) = rest.find(&closing) {
+                        rest = &rest[close_pos + closing.len()..];
+                    }
+                }
+                continue;
+            }
+
+            if is_closing && (tag_name.starts_with("sodipodi:") || tag_name == "metadata") {
+                continue;
+            }
+
+            // Skip empty <defs .../> tags without children
+            if !is_closing && tag_name == "defs" && full_tag.ends_with("/>") {
+                continue;
+            }
+
+            if is_closing {
+                let _ = write!(result, "</{tag_name}>");
+            } else {
+                let is_self_closing = full_tag.ends_with("/>");
+                let cleaned_attrs = clean_tag_attributes(tag_name, tag_inner);
+                if cleaned_attrs.is_empty() {
+                    if is_self_closing {
+                        let _ = write!(result, "<{tag_name}/>");
+                    } else {
+                        let _ = write!(result, "<{tag_name}>");
+                    }
+                } else if is_self_closing {
+                    let _ = write!(result, "<{tag_name} {cleaned_attrs}/>");
+                } else {
+                    let _ = write!(result, "<{tag_name} {cleaned_attrs}>");
+                }
+            }
+        } else {
+            result.push_str(tag_rest);
+            break;
+        }
+    }
+
+    result
+}
+
+/// Helper function to clean attributes of an XML tag, stripping editor namespaces and attributes.
+fn clean_tag_attributes(tag_name: &str, tag_inner: &str) -> String {
+    let mut attrs = Vec::new();
+    let tag_name_len = tag_name.len();
+    let attr_str = if tag_inner.len() > tag_name_len {
+        tag_inner[tag_name_len..].trim()
+    } else {
+        ""
+    };
+
+    let mut cursor = 0;
+    let bytes = attr_str.as_bytes();
+
+    while cursor < bytes.len() {
+        while cursor < bytes.len() && bytes[cursor].is_ascii_whitespace() {
+            cursor += 1;
+        }
+        if cursor >= bytes.len() {
+            break;
+        }
+
+        let name_start = cursor;
+        while cursor < bytes.len()
+            && !bytes[cursor].is_ascii_whitespace()
+            && bytes[cursor] != b'='
+            && bytes[cursor] != b'/'
+        {
+            cursor += 1;
+        }
+        let name = &attr_str[name_start..cursor];
+        if name.is_empty() {
+            break;
+        }
+
+        while cursor < bytes.len() && bytes[cursor].is_ascii_whitespace() {
+            cursor += 1;
+        }
+
+        let mut val = "";
+        if cursor < bytes.len() && bytes[cursor] == b'=' {
+            cursor += 1;
+            while cursor < bytes.len() && bytes[cursor].is_ascii_whitespace() {
+                cursor += 1;
+            }
+            if cursor < bytes.len() {
+                let quote = bytes[cursor];
+                if quote == b'"' || quote == b'\'' {
+                    cursor += 1;
+                    let val_start = cursor;
+                    while cursor < bytes.len() && bytes[cursor] != quote {
+                        cursor += 1;
+                    }
+                    val = &attr_str[val_start..cursor];
+                    if cursor < bytes.len() {
+                        cursor += 1;
+                    }
+                } else {
+                    let val_start = cursor;
+                    while cursor < bytes.len()
+                        && !bytes[cursor].is_ascii_whitespace()
+                        && bytes[cursor] != b'/'
+                    {
+                        cursor += 1;
+                    }
+                    val = &attr_str[val_start..cursor];
+                }
+            }
+        }
+
+        let is_generic_svg_id = name == "id"
+            && val.starts_with("svg")
+            && val.len() > 3
+            && val[3..].chars().all(|c| c.is_ascii_digit());
+
+        let should_remove = name.starts_with("inkscape:")
+            || name.starts_with("sodipodi:")
+            || name.starts_with("xmlns:inkscape")
+            || name.starts_with("xmlns:sodipodi")
+            || name == "xmlns:svg"
+            || (tag_name == "svg" && (name == "version" || is_generic_svg_id))
+            || (tag_name == "g" && name == "id" && val.starts_with("layer"));
+
+        if !should_remove {
+            if val.is_empty() && !attr_str[name_start..cursor].contains('=') {
+                attrs.push(name.to_string());
+            } else {
+                attrs.push(format!("{name}=\"{val}\""));
+            }
+        }
+    }
+
+    attrs.join(" ")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -567,10 +777,10 @@ mod tests {
     fn test_load_logo_default_and_custom() {
         // None or empty returns default logo
         let default_logo = load_logo(None, None);
-        assert_eq!(default_logo, DEFAULT_LOGO_SVG);
+        assert_eq!(default_logo, clean_svg(DEFAULT_LOGO_SVG));
 
         let empty_logo = load_logo(Some(Path::new("")), None);
-        assert_eq!(empty_logo, DEFAULT_LOGO_SVG);
+        assert_eq!(empty_logo, clean_svg(DEFAULT_LOGO_SVG));
 
         // Temp dir for testing custom SVG & PNG logos
         let temp_dir = std::env::temp_dir().join("d2f_test_logo");
@@ -601,7 +811,7 @@ mod tests {
     fn test_load_logo_missing_fallback() {
         let missing_path = Path::new("non_existent_logo_12345.svg");
         let fallback = load_logo(Some(missing_path), None);
-        assert_eq!(fallback, DEFAULT_LOGO_SVG);
+        assert_eq!(fallback, clean_svg(DEFAULT_LOGO_SVG));
     }
 
     #[test]
@@ -617,6 +827,42 @@ mod tests {
         assert_eq!(resolved, rel_file);
 
         let _ = io::remove_dir_all(&base_dir);
+    }
+
+    #[test]
+    fn test_clean_svg_inkscape_clutter() {
+        let raw_svg = r##"<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+   width="350"
+   height="200"
+   viewBox="0 0 175 100"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.4"
+   sodipodi:docname="drawing.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview id="namedview1" pagecolor="#ffffff" />
+  <metadata id="metadata1">Some metadata</metadata>
+  <defs id="defs1" />
+  <g inkscape:label="Layer 1" inkscape:groupmode="layer" id="layer1">
+    <path d="M 10 10 L 20 20 Z" fill="#ffffff" id="path5" />
+  </g>
+</svg>"##;
+
+        let cleaned = clean_svg(raw_svg);
+        assert!(!cleaned.contains("inkscape"));
+        assert!(!cleaned.contains("sodipodi"));
+        assert!(!cleaned.contains("metadata"));
+        assert!(!cleaned.contains("defs1"));
+        assert!(!cleaned.contains("<?xml"));
+        assert!(!cleaned.contains("<!--"));
+        assert!(cleaned.contains("viewBox=\"0 0 175 100\""));
+        assert!(cleaned.contains("fill=\"#ffffff\""));
+        assert!(cleaned.contains("path"));
     }
 }
 

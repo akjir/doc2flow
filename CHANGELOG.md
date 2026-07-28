@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added automatic SVG minification and metadata stripping for imported SVG images and custom logos, removing Inkscape/Sodipodi editor clutter and XML comments.
+
+### Changed
+- Optimized HTML output size by embedding the item comment SVG icon once as a symbol (`#icon-comment`) and referencing it via `<use>` elements.
+
 ### Fixed
 - Fixed Markdown task list conversion to render interactive checkboxes (`.check-item`) when empty lines are present between task items (loose list format).
 
