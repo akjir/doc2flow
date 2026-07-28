@@ -36,7 +36,7 @@ License: {{LICENSE_TERMS}}
       {{LOGO}}
     </div>
   </div>
-  <div class="pb-wrap"><div class="pb" id="pb"></div></div>
+  <div class="pb-wrap" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><div class="pb" id="pb"></div></div>
   <div class="pt" id="pt">{{L_LOADING}}</div>
 </div>
 <div class="doc-body">
@@ -45,9 +45,9 @@ License: {{LICENSE_TERMS}}
   <tr><th>{{L_COMPANY}}</th><th>{{L_CONTACT}}</th><th>{{L_AGENT}}</th><th>{{L_DATE}}</th></tr>
   <tr>
     <td>{{COMPANY}}</td>
-    <td><input type="text" class="sf persistent-field" id="f_info_contact" value="{{CONTACT}}" placeholder="{{L_NAME_PLACEHOLDER}}"></td>
-    <td><input type="text" class="sf persistent-field" id="f_info_agent" value="{{AGENT}}" placeholder="{{L_NAME_PLACEHOLDER}}"></td>
-    <td><input type="text" class="sf persistent-field" id="f_info_date" value="{{DATE}}" placeholder="{{L_DATE_PLACEHOLDER}}"></td>
+    <td><input type="text" class="sf persistent-field" id="f_info_contact" value="{{CONTACT}}" placeholder="{{L_NAME_PLACEHOLDER}}" aria-label="{{L_CONTACT}}"></td>
+    <td><input type="text" class="sf persistent-field" id="f_info_agent" value="{{AGENT}}" placeholder="{{L_NAME_PLACEHOLDER}}" aria-label="{{L_AGENT}}"></td>
+    <td><input type="text" class="sf persistent-field" id="f_info_date" value="{{DATE}}" placeholder="{{L_DATE_PLACEHOLDER}}" aria-label="{{L_DATE}}"></td>
   </tr>
 </table>
 
@@ -59,8 +59,8 @@ License: {{LICENSE_TERMS}}
   <div class="big" id="finish-icon">&#x2714;</div>
   <h2 id="finish-title">{{L_SETUP_COMPLETED}}</h2>
   <div class="sigs">
-    <div><input type="text" class="sf persistent-field" id="f_sign_agent" placeholder="{{L_NAME_PLACEHOLDER}}"><div style="margin-top:4px">{{L_AGENT}}</div></div>
-    <div><input type="text" class="sf persistent-field" id="f_sign_date" placeholder="{{L_DATE_PLACEHOLDER}}"><div style="margin-top:4px">{{L_SIGNATURE_DATE}}</div></div>
+    <div><input type="text" class="sf persistent-field" id="f_sign_agent" placeholder="{{L_NAME_PLACEHOLDER}}" aria-label="{{L_AGENT}}"><div style="margin-top:4px">{{L_AGENT}}</div></div>
+    <div><input type="text" class="sf persistent-field" id="f_sign_date" placeholder="{{L_DATE_PLACEHOLDER}}" aria-label="{{L_SIGNATURE_DATE}}"><div style="margin-top:4px">{{L_SIGNATURE_DATE}}</div></div>
   </div>
 </div>
 <div class="btnrow">

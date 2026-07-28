@@ -215,7 +215,7 @@ fn test_showcase_en_fixture_conversion() {
     .expect("image embedding failed");
 
     assert!(html.contains("Doc2Flow English Showcase"));
-    assert!(html.contains("<div class=\"sh sh-h1\"><span>Part 1: System Setup &amp; Preparation</span>"));
+    assert!(html.contains("<div class=\"sh sh-h1\" role=\"button\" tabindex=\"0\" aria-expanded=\"true\"><span>Part 1: System Setup &amp; Preparation</span>"));
     assert!(html.contains("no-toggle"));
     assert!(html.contains("<div class=\"check-item text-item\" id=\"txt_s1_1\">"));
     assert!(html.contains("<input type=\"checkbox\" id=\"cb_s1_1\" checked>"));
@@ -245,7 +245,7 @@ fn test_showcase_de_fixture_conversion() {
     .expect("image embedding failed");
 
     assert!(html.contains("Doc2Flow Deutscher Showcase"));
-    assert!(html.contains("<div class=\"sh sh-h1\"><span>Teil 1: Systemeinrichtung &amp; Vorbereitung</span>"));
+    assert!(html.contains("<div class=\"sh sh-h1\" role=\"button\" tabindex=\"0\" aria-expanded=\"true\"><span>Teil 1: Systemeinrichtung &amp; Vorbereitung</span>"));
     assert!(html.contains("no-toggle"));
     assert!(html.contains("<div class=\"check-item text-item\" id=\"txt_s1_1\">"));
     assert!(html.contains("<input type=\"checkbox\" id=\"cb_s1_1\" checked>"));
@@ -355,9 +355,9 @@ date: "2026-07-26"
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).unwrap();
     let rendered = doc2flow::template::render(&fm, &locale, &html_body, &d2f_id, None).unwrap();
 
-    assert!(rendered.contains(r#"<div class="sh sh-h1"><span>Main Section</span>"#));
+    assert!(rendered.contains(r#"<div class="sh sh-h1" role="button" tabindex="0" aria-expanded="true"><span>Main Section</span>"#));
     assert!(rendered.contains(r#"badge-s1"#));
-    assert!(rendered.contains(r#"<div class="sh"><span>Sub Section</span>"#));
+    assert!(rendered.contains(r#"<div class="sh" role="button" tabindex="0" aria-expanded="true"><span>Sub Section</span>"#));
     assert!(rendered.contains(r#"badge-s2"#));
     assert!(!html_body.contains("onclick="));
 }

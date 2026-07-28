@@ -889,14 +889,14 @@ mod tests {
 
         assert!(html.contains(r#"<!-- S1 -->"#));
         assert!(html.contains(r#"<div class="section" id="s1">"#));
-        assert!(html.contains(r#"<div class="sh sh-h1"><span>Top Level Header</span>"#));
+        assert!(html.contains(r#"<div class="sh sh-h1" role="button" tabindex="0" aria-expanded="true"><span>Top Level Header</span>"#));
         assert!(html.contains(r#"badge-s1"#));
         assert!(html.contains(r#"tog-s1"#));
         assert!(html.contains(r#"id="wrap-cb_s1_1""#));
 
         assert!(html.contains(r#"<!-- S2 -->"#));
         assert!(html.contains(r#"<div class="section" id="s2">"#));
-        assert!(html.contains(r#"<div class="sh"><span>Sub Section</span>"#));
+        assert!(html.contains(r#"<div class="sh" role="button" tabindex="0" aria-expanded="true"><span>Sub Section</span>"#));
     }
 
     #[test]
@@ -906,7 +906,7 @@ mod tests {
 
         assert!(html.contains(r#"<div class="sh sh-h1 no-toggle"><span>Empty H1 Header</span>"#));
         assert!(html.contains(r#"<div class="sh no-toggle"><span>Empty H2 Header</span>"#));
-        assert!(html.contains(r#"<div class="sh"><span>Non Empty H2</span>"#));
+        assert!(html.contains(r#"<div class="sh" role="button" tabindex="0" aria-expanded="true"><span>Non Empty H2</span>"#));
     }
 
     #[test]

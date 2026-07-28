@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Added automatic SVG minification and metadata stripping for imported SVG images and custom logos, removing Inkscape/Sodipodi editor clutter and XML comments.
+- Enhanced accessibility (A11y) and keyboard navigation for collapsible section headers (role="button", tabindex, Enter/Space toggling), progress bar ARIA attributes, and form field screen reader labels.
 
 ### Changed
 - Optimized HTML output size by embedding the item comment SVG icon once as a symbol (`#icon-comment`) and referencing it via `<use>` elements.

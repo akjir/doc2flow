@@ -21,10 +21,14 @@ pub fn render_section_header(
     is_empty: bool,
 ) {
     let h1_class = if is_h1 { " sh-h1" } else { "" };
-    let empty_class = if is_empty { " no-toggle" } else { "" };
+    let (empty_class, a11y_attrs) = if is_empty {
+        (" no-toggle", "")
+    } else {
+        ("", " role=\"button\" tabindex=\"0\" aria-expanded=\"true\"")
+    };
     let _ = write!(
         out,
-        "<!-- S{section_count} -->\n<div class=\"section\" id=\"s{section_count}\">\n<div class=\"sh{h1_class}{empty_class}\"><span>{heading_text}</span>\n<div style=\"display:flex;align-items:center;gap:8px\"><span class=\"sbadge\" id=\"badge-s{section_count}\"></span><span class=\"stog\" id=\"tog-s{section_count}\">&#9660;</span></div></div>\n<div class=\"sb\" id=\"body-s{section_count}\">\n"
+        "<!-- S{section_count} -->\n<div class=\"section\" id=\"s{section_count}\">\n<div class=\"sh{h1_class}{empty_class}\"{a11y_attrs}><span>{heading_text}</span>\n<div style=\"display:flex;align-items:center;gap:8px\"><span class=\"sbadge\" id=\"badge-s{section_count}\"></span><span class=\"stog\" id=\"tog-s{section_count}\">&#9660;</span></div></div>\n<div class=\"sb\" id=\"body-s{section_count}\">\n"
     );
 }
 
@@ -168,6 +172,9 @@ mod tests {
         assert!(buf.contains("<!-- S1 -->"));
         assert!(buf.contains("<div class=\"section\" id=\"s1\">"));
         assert!(buf.contains("class=\"sh sh-h1\""));
+        assert!(buf.contains("role=\"button\""));
+        assert!(buf.contains("tabindex=\"0\""));
+        assert!(buf.contains("aria-expanded=\"true\""));
         assert!(buf.contains("Section Title"));
 
         render_section_close(&mut buf);

@@ -37,6 +37,9 @@ function updateEmptySections() {
             const isEmpty = body.children.length === 0 && body.innerHTML.trim() === '';
             if (isEmpty) {
                 sh.classList.add('no-toggle');
+                sh.removeAttribute('role');
+                sh.removeAttribute('tabindex');
+                sh.removeAttribute('aria-expanded');
             }
         }
     });
@@ -53,6 +56,7 @@ function toggleSection(headerElement) {
     
     if (body && (body.children.length > 0 || body.innerHTML.trim() !== '')) {
         const isCollapsed = body.classList.toggle('collapsed');
+        headerElement.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
         const toggler = headerElement.querySelector('.stog');
         if (toggler) {
             toggler.innerHTML = isCollapsed ? '&#9650;' : '&#9660;';
@@ -78,7 +82,9 @@ function getOrCreateCommentBox(checkItem, initialValue) {
         input.rows = 1;
         input.className = 'item-comment-input';
         const i18n = window.D2F_I18N || {};
-        input.placeholder = i18n.comment_placeholder || 'Add a comment...';
+        const commentLabel = i18n.comment_placeholder || 'Add a comment...';
+        input.placeholder = commentLabel;
+        input.setAttribute('aria-label', commentLabel);
         
         const delBtn = document.createElement('button');
         delBtn.type = 'button';
@@ -223,7 +229,12 @@ function updateProgress() {
 
     const pct = total ? Math.round((done / total) * 100) : 0;
     const pb = document.getElementById('pb');
-    if (pb) pb.style.width = pct + '%';
+    if (pb) {
+        pb.style.width = pct + '%';
+        if (pb.parentElement) {
+            pb.parentElement.setAttribute('aria-valuenow', pct);
+        }
+    }
 
     const pt = document.getElementById('pt');
     if (pt) {
@@ -475,7 +486,17 @@ function showCopiedFeedback(btn) {
 
 // Global Event Delegation & Initialization (JS-EVENT-LIFECYCLE & JS-DOM-EFFICIENT)
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Delegated click listener for interactive items, headers, and images
+    // 1. Delegated click & keydown listeners for interactive items, headers, and images
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+            const sh = e.target.closest('.sh');
+            if (sh && !sh.classList.contains('no-toggle')) {
+                e.preventDefault();
+                toggleSection(sh);
+            }
+        }
+    });
+
     document.addEventListener('click', (e) => {
         const img = e.target.closest('.doc-body img');
         if (img) {
