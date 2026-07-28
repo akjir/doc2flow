@@ -648,6 +648,45 @@ date: "2026-07-27"
     assert!(init_tmpl.contains("License: GPL-3.0-or-later"));
 }
 
+#[test]
+fn test_loose_task_list_integration() {
+    let input = r#"---
+title: "Loose Task List Test"
+company: "Acme Corp"
+date: "2026-07-28"
+---
+## Loose Checklist
+
+- [ ] Item 1
+
+- [x] Item 2
+
+- [ ] Item 3
+"#;
+
+    let (fm, body) =
+        doc2flow::converter::parse_and_validate_frontmatter(input, Some("loose_task.md")).unwrap();
+    let locale = doc2flow::i18n::Locale::from_lang_code(&fm.language);
+    let html_body =
+        doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
+
+    assert!(html_body.contains(r#"<div class="check-item" id="wrap-cb_s1_1">"#));
+    assert!(html_body.contains(r#"<input type="checkbox" id="cb_s1_1">"#));
+    assert!(html_body.contains(r#"<label class="check-label" for="cb_s1_1">Item 1</label>"#));
+
+    assert!(html_body.contains(r#"<div class="check-item checked" id="wrap-cb_s1_2">"#));
+    assert!(html_body.contains(r#"<input type="checkbox" id="cb_s1_2" checked=""#) || html_body.contains(r#"<input type="checkbox" id="cb_s1_2" checked>"#));
+    assert!(html_body.contains(r#"<label class="check-label" for="cb_s1_2">Item 2</label>"#));
+
+    assert!(html_body.contains(r#"<div class="check-item" id="wrap-cb_s1_3">"#));
+    assert!(html_body.contains(r#"<input type="checkbox" id="cb_s1_3">"#));
+    assert!(html_body.contains(r#"<label class="check-label" for="cb_s1_3">Item 3</label>"#));
+
+    assert!(!html_body.contains("simple-item"));
+    assert!(!html_body.contains("<p>Item"));
+    assert!(!html_body.contains("Item 1</p>"));
+}
+
 
 
 

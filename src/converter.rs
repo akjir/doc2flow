@@ -488,24 +488,16 @@ pub fn convert_markdown_to_html_with_locale(
 
             // Task List Items (- [ ] or - [x]) or Simple List Items (-)
             Event::Start(Tag::Item) => {
-                let is_task = matches!(events.get(idx + 1), Some(Event::TaskListMarker(_)));
-                let is_checked = if is_task {
-                    if let Some(Event::TaskListMarker(checked)) = events.get(idx + 1) {
-                        *checked
-                    } else {
-                        false
+                let (is_task, is_checked) = match (events.get(idx + 1), events.get(idx + 2)) {
+                    (Some(Event::TaskListMarker(checked)), _) => (true, *checked),
+                    (Some(Event::Start(Tag::Paragraph)), Some(Event::TaskListMarker(checked))) => {
+                        (true, *checked)
                     }
-                } else {
-                    false
+                    _ => (false, false),
                 };
 
-                if is_task {
-                    idx += 2;
-                } else {
-                    idx += 1;
-                }
-
-                let start_idx = idx;
+                let start_idx = idx + 1;
+                idx = start_idx;
                 let mut depth = 1;
                 while idx < events.len() {
                     match &events[idx] {
@@ -526,7 +518,17 @@ pub fn convert_markdown_to_html_with_locale(
                 }
 
                 let mut label_html = String::new();
-                html::push_html(&mut label_html, events[start_idx..idx].iter().cloned());
+                if is_task {
+                    html::push_html(
+                        &mut label_html,
+                        events[start_idx..idx]
+                            .iter()
+                            .filter(|ev| !matches!(ev, Event::TaskListMarker(_)))
+                            .cloned(),
+                    );
+                } else {
+                    html::push_html(&mut label_html, events[start_idx..idx].iter().cloned());
+                }
                 let trimmed = label_html.trim();
                 let clean_label = strip_paragraph_tags(trimmed);
 
@@ -1025,6 +1027,28 @@ mod tests {
         assert!(html.contains("&lt;script&gt;alert(1)&lt;/script&gt;"));
         assert!(html.contains("&amp; More"));
         assert!(html.contains("&lt;div id=&quot;app&quot;&gt;&amp;amp;&lt;/div&gt;"));
+    }
+
+    #[test]
+    fn test_loose_task_list_conversion() {
+        let input = "## Section 1\n\n- [ ] Task 1\n\n- [x] Task 2\n\n- [ ] Task 3\n";
+        let html = convert_markdown_to_html(input).expect("conversion failed");
+
+        assert!(html.contains(r#"<div class="check-item" id="wrap-cb_s1_1">"#));
+        assert!(html.contains(r#"<input type="checkbox" id="cb_s1_1">"#));
+        assert!(html.contains(r#"<label class="check-label" for="cb_s1_1">Task 1</label>"#));
+
+        assert!(html.contains(r#"<div class="check-item checked" id="wrap-cb_s1_2">"#));
+        assert!(html.contains(r#"<input type="checkbox" id="cb_s1_2" checked=""#) || html.contains(r#"<input type="checkbox" id="cb_s1_2" checked>"#));
+        assert!(html.contains(r#"<label class="check-label" for="cb_s1_2">Task 2</label>"#));
+
+        assert!(html.contains(r#"<div class="check-item" id="wrap-cb_s1_3">"#));
+        assert!(html.contains(r#"<input type="checkbox" id="cb_s1_3">"#));
+        assert!(html.contains(r#"<label class="check-label" for="cb_s1_3">Task 3</label>"#));
+
+        assert!(!html.contains("simple-item"));
+        assert!(!html.contains("<p>Task"));
+        assert!(!html.contains("Task 1</p>"));
     }
 }
 

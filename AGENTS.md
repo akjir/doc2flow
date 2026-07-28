@@ -137,4 +137,5 @@ Adhere strictly to these guidelines:
 
 ## 12. Changelog Policy
 * Automatically update `CHANGELOG.md` under `[Unreleased]` ONLY when user-facing features, bug fixes, or user-facing changes are made. Keep entries short, simple, and limited to concise single-line bullet points.
+* Do NOT leave an empty `## [Unreleased]` section in `CHANGELOG.md`. When releasing a new version, omit `## [Unreleased]` until new changes are added.
 * **STRICT PROHIBITION:** Do NOT include internal code refactorings, module restructuring, optimizations, or test infrastructure changes in `CHANGELOG.md`. Only user-visible changes belong in the changelog.

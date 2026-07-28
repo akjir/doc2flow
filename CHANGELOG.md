@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fixed Markdown task list conversion to render interactive checkboxes (`.check-item`) when empty lines are present between task items (loose list format).
+
 ## [0.9.1] - 2026-07-28
 
 ### Added
