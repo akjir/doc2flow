@@ -53,7 +53,6 @@ pub fn format_iso8601_utc(time: std::time::SystemTime) -> String {
     out
 }
 
-
 /// Renders a section header component directly into the output buffer.
 #[inline]
 pub fn render_section_header(
@@ -120,7 +119,14 @@ pub fn render_task_item(
     clean_label: &str,
     indent_depth: usize,
 ) {
-    components::render_task_item(out, sec_num, cb_count, is_checked, clean_label, indent_depth);
+    components::render_task_item(
+        out,
+        sec_num,
+        cb_count,
+        is_checked,
+        clean_label,
+        indent_depth,
+    );
 }
 
 /// Renders a simple list item component directly into the output buffer.
@@ -153,7 +159,6 @@ pub fn render_text_item(
 pub fn render_image_item(out: &mut impl Write, clean_content: &str) {
     components::render_image_item(out, clean_content);
 }
-
 
 /// Returns the pre-populated default starter Markdown template string.
 ///
@@ -197,15 +202,13 @@ pub fn substitute_template(
     locale: Option<&Locale>,
 ) -> String {
     let total_vars_len: usize = vars.values().map(|v| v.len()).sum();
-    let total_locale_len: usize = locale
-        .map_or(0, |l| l.entries.values().map(String::len).sum());
+    let total_locale_len: usize = locale.map_or(0, |l| l.entries.values().map(String::len).sum());
     let mut result = String::with_capacity(template.len() + total_vars_len + total_locale_len);
 
     let mut cursor = 0;
     while let Some(start) = template[cursor..].find("{{") {
         let abs_start = cursor + start;
         result.push_str(&template[cursor..abs_start]);
-
         if let Some(end) = template[abs_start + 2..].find("}}") {
             let abs_end = abs_start + 2 + end;
             let key = &template[abs_start + 2..abs_end];
@@ -249,10 +252,12 @@ pub fn render(
 
     validate_locale_coverage(base_html, locale);
 
-    let i18n_json = serde_json::to_string(&locale.entries)
-        .map_err(|e| Doc2FlowError::Json(e.to_string()))?;
+    let i18n_json =
+        serde_json::to_string(&locale.entries).map_err(|e| Doc2FlowError::Json(e.to_string()))?;
 
-    let logo = logo_html.filter(|s| !s.is_empty()).unwrap_or(DEFAULT_LOGO_SVG);
+    let logo = logo_html
+        .filter(|s| !s.is_empty())
+        .unwrap_or(DEFAULT_LOGO_SVG);
 
     let app_version_raw = APP_VERSION.strip_prefix('v').unwrap_or(APP_VERSION);
     let created_at = format_iso8601_utc(std::time::SystemTime::now());
@@ -420,12 +425,27 @@ mod tests {
 
         let app_version_raw = APP_VERSION.strip_prefix('v').unwrap_or(APP_VERSION);
 
-        assert!(html.contains(&format!("<meta name=\"generator\" content=\"Doc2Flow {}\">", APP_VERSION)));
-        assert!(html.contains(&format!("<meta name=\"version\" content=\"{}\">", app_version_raw)));
-        assert!(html.contains(&format!("<meta name=\"repository\" content=\"{}\">", REPOSITORY_URL)));
-        assert!(html.contains(&format!("<meta name=\"license\" content=\"{}\">", LICENSE_URL)));
+        assert!(html.contains(&format!(
+            "<meta name=\"generator\" content=\"Doc2Flow {}\">",
+            APP_VERSION
+        )));
+        assert!(html.contains(&format!(
+            "<meta name=\"version\" content=\"{}\">",
+            app_version_raw
+        )));
+        assert!(html.contains(&format!(
+            "<meta name=\"repository\" content=\"{}\">",
+            REPOSITORY_URL
+        )));
+        assert!(html.contains(&format!(
+            "<meta name=\"license\" content=\"{}\">",
+            LICENSE_URL
+        )));
         assert!(html.contains("<meta name=\"dcterms.created\" content=\""));
-        assert!(html.contains(&format!("<meta name=\"dcterms.source\" content=\"{}\">", REPOSITORY_URL)));
+        assert!(html.contains(&format!(
+            "<meta name=\"dcterms.source\" content=\"{}\">",
+            REPOSITORY_URL
+        )));
         assert!(!html.contains("{{APP_VERSION}}"));
         assert!(!html.contains("{{APP_VERSION_RAW}}"));
         assert!(!html.contains("{{REPOSITORY_URL}}"));
@@ -480,11 +500,23 @@ mod tests {
     #[test]
     fn test_app_version_format() {
         assert!(!APP_VERSION.is_empty());
-        assert!(APP_VERSION.starts_with('v'), "Version string must start with 'v', got: {}", APP_VERSION);
-        assert!(APP_VERSION.contains('+'), "Version string must contain build metadata separator '+', got: {}", APP_VERSION);
+        assert!(
+            APP_VERSION.starts_with('v'),
+            "Version string must start with 'v', got: {}",
+            APP_VERSION
+        );
+        assert!(
+            APP_VERSION.contains('+'),
+            "Version string must contain build metadata separator '+', got: {}",
+            APP_VERSION
+        );
 
         let parts: Vec<&str> = APP_VERSION.split('+').collect();
-        assert_eq!(parts.len(), 2, "Version string must split into version and build metadata");
+        assert_eq!(
+            parts.len(),
+            2,
+            "Version string must split into version and build metadata"
+        );
 
         let semver_part = parts[0];
         let metadata_part = parts[1];
@@ -500,4 +532,3 @@ mod tests {
         }
     }
 }
-
