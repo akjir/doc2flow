@@ -22,5 +22,7 @@
   "callout_important": "Wichtig",
   "callout_warning": "Warnung",
   "callout_caution": "Achtung",
-  "comment_placeholder": "Kommentar hinzufügen..."
+  "comment_placeholder": "Kommentar hinzufügen...",
+  "search_placeholder": "Suchen... (Ctrl+K)",
+  "sections_visible": "{visible} / {total} Abschnitte sichtbar"
 }

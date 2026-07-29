@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Doc2Flow v0.9.2+65.027903e.dev">
-<meta name="version" content="0.9.2+65.027903e.dev">
+<meta name="generator" content="Doc2Flow v0.9.2+66.69afbea.dev">
+<meta name="version" content="0.9.2+66.69afbea.dev">
 <meta name="repository" content="https://github.com/akjir/doc2flow">
 <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-<meta name="dcterms.created" content="2026-07-29T17:44:38Z">
+<meta name="dcterms.created" content="2026-07-29T18:29:44Z">
 <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
 <title>Doc2Flow English Showcase</title>
 <style>
@@ -139,12 +139,60 @@ hr {
   display: block;
 }
 
-.pb-wrap {
+.header-pb-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   margin-top: 10px;
+}
+
+.pb-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pb-wrap {
+  width: 100%;
+  margin-top: 0;
   background: rgba(255, 255, 255, 0.2);
   border-radius: var(--radius-lg);
   height: 9px;
   overflow: hidden;
+}
+
+.search-toggle-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  margin-top: -6px;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.search-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.search-toggle-btn.active {
+  background: white;
+  color: var(--bd);
+  border-color: white;
+}
+
+.search-toggle-btn svg {
+  width: 13px;
+  height: 13px;
+  fill: currentColor;
 }
 
 .pb {
@@ -160,6 +208,100 @@ hr {
   color: var(--header-sub-color);
   margin-top: 3px;
   text-align: right;
+}
+
+/* Search & Quick-Filter Toolbar */
+.search-toolbar {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.search-toolbar.hidden {
+  display: none !important;
+}
+
+.search-input-wrap {
+  position: relative;
+  flex: 1 1 240px;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  width: 100%;
+  padding: 6px 12px;
+  padding-right: 190px;
+  font-size: 13px;
+  font-family: var(--font-sans);
+  color: var(--gray);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-input:focus {
+  border-color: var(--bm);
+  box-shadow: 0 0 0 2px rgba(46, 117, 182, 0.25);
+}
+
+.search-input-badges {
+  position: absolute;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.search-clear-btn {
+  pointer-events: auto;
+  font-size: 11px;
+  font-family: var(--font-sans);
+  color: var(--gray-muted);
+  background: var(--bg-body);
+  border: 1px solid var(--border-color);
+  padding: 2px 6px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  line-height: 1;
+}
+
+.search-clear-btn:hover {
+  color: var(--gray);
+  border-color: var(--bm);
+  background: var(--bg-surface);
+}
+
+.search-clear-btn.hidden {
+  display: none !important;
+}
+
+.search-counter {
+  font-size: 11px;
+  font-family: var(--font-sans);
+  color: var(--gray-muted);
+  background: var(--bg-body);
+  border: 1px solid var(--border-color);
+  padding: 2px 6px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+/* Highlighted Search Results */
+mark.d2f-highlight {
+  background: #ffe066;
+  color: #111111;
+  border-radius: 2px;
+  padding: 0 2px;
 }
 
 .doc-body {
@@ -883,7 +1025,7 @@ hr {
     padding: 0;
   }
 
-  .btnrow, .copy-btn, .stog, .item-comment-icon, .item-comment-del, .sbadge, .pb-wrap, .pb, .pt {
+  .btnrow, .copy-btn, .stog, .item-comment-icon, .item-comment-del, .sbadge, .pb-wrap, .pb, .pt, .search-toolbar, .search-toggle-btn {
     display: none !important;
   }
 
@@ -906,7 +1048,8 @@ hr {
     display: block !important;
   }
 
-  .section {
+  .section, .d2f-section {
+    display: block !important;
     box-shadow: none;
     border: 1px solid #ccc;
     break-inside: auto;
@@ -1005,8 +1148,24 @@ hr {
 
     </div>
   </div>
-  <div class="pb-wrap" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><div class="pb" id="pb"></div></div>
-  <div class="pt" id="pt">Loading...</div>
+  <div class="header-pb-row">
+    <button type="button" class="search-toggle-btn" id="search-toggle-btn" title="Search... (Ctrl+K)" aria-label="Search... (Ctrl+K)">
+      <svg width="13" height="13" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true"><path d="M281.1 0C153.782 0 50.2 103.582 50.2 230.9c0 45.12 13.019 87.25 35.483 122.853l-70.654 70.654c-20.039 20.039-20.039 52.527 0 72.564 20.039 20.039 52.527 20.039 72.564 0l70.654-70.654c35.605 22.464 77.735 35.483 122.853 35.483C408.418 461.8 512 358.218 512 230.9S408.42 0 281.1 0zm0 410.489c-99.025 0-179.589-80.564-179.589-179.589S182.074 51.311 281.1 51.311 460.689 131.875 460.689 230.9 380.127 410.489 281.1 410.489z"/></svg>
+    </button>
+    <div class="pb-col">
+      <div class="pb-wrap" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><div class="pb" id="pb"></div></div>
+      <div class="pt" id="pt">Loading...</div>
+    </div>
+  </div>
+  <div class="search-toolbar hidden" id="search-toolbar">
+    <div class="search-input-wrap">
+      <input type="text" class="search-input" id="search-input" placeholder="Search... (Ctrl+K)" aria-label="Search... (Ctrl+K)">
+      <div class="search-input-badges">
+        <button type="button" class="search-clear-btn hidden" id="search-clear-btn" title="Clear search" aria-label="Clear search">&#10006;</button>
+        <span class="search-counter" id="search-counter"></span>
+      </div>
+    </div>
+  </div>
 </header>
 <main class="doc-body">
 
@@ -1022,7 +1181,7 @@ hr {
 
 <!-- START GENERATED CONTENT -->
 <!-- S1 -->
-<section class="section" id="s1">
+<section class="section d2f-section" id="s1" data-has-checklist="true">
 <h2 class="sh sh-h1" role="button" tabindex="0" aria-expanded="true"><span>1. Part 1: System Setup &amp; Preparation</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s1"></span><span class="stog" id="tog-s1">&#9660;</span></div></h2>
 <div class="sb" id="body-s1">
@@ -1038,7 +1197,7 @@ hr {
 </div></section>
 
 <!-- S2 -->
-<section class="section" id="s2">
+<section class="section d2f-section" id="s2" data-callout-type="note tip important warning caution">
 <h2 class="sh" role="button" tabindex="0" aria-expanded="true"><span>1.1 Section 1: Overview &amp; Guidelines</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s2"></span><span class="stog" id="tog-s2">&#9660;</span></div></h2>
 <div class="sb" id="body-s2">
@@ -1061,7 +1220,7 @@ hr {
 </div></section>
 
 <!-- S3 -->
-<section class="section" id="s3">
+<section class="section d2f-section" id="s3" data-has-checklist="true">
 <h2 class="sh" role="button" tabindex="0" aria-expanded="true"><span>1.2 Section 2: Task Checklist</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s3"></span><span class="stog" id="tog-s3">&#9660;</span></div></h2>
 <div class="sb" id="body-s3">
@@ -1136,14 +1295,14 @@ hr {
 </div></section>
 
 <!-- S4 -->
-<section class="section" id="s4">
+<section class="section d2f-section" id="s4">
 <h2 class="sh sh-h1 no-toggle"><span>2. Part 2: Maintenance &amp; System Reference</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s4"></span><span class="stog" id="tog-s4">&#9660;</span></div></h2>
 <div class="sb" id="body-s4">
 </div></section>
 
 <!-- S5 -->
-<section class="section" id="s5">
+<section class="section d2f-section" id="s5">
 <h2 class="sh" role="button" tabindex="0" aria-expanded="true"><span>2.1 Section 3: Reference &amp; Code Blocks</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s5"></span><span class="stog" id="tog-s5">&#9660;</span></div></h2>
 <div class="sb" id="body-s5">
@@ -1161,7 +1320,7 @@ hr {
 </div></section>
 
 <!-- S6 -->
-<section class="section" id="s6">
+<section class="section d2f-section" id="s6" data-has-checklist="true">
 <h2 class="sh" role="button" tabindex="0" aria-expanded="true"><span>2.2 Section 4: Informational Lists</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s6"></span><span class="stog" id="tog-s6">&#9660;</span></div></h2>
 <div class="sb" id="body-s6">
@@ -1250,14 +1409,14 @@ hr {
 </div></section>
 
 <!-- S7 -->
-<section class="section" id="s7">
+<section class="section d2f-section" id="s7">
 <h2 class="sh sh-h1 no-toggle"><span>3. Empty Top-Level Section</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s7"></span><span class="stog" id="tog-s7">&#9660;</span></div></h2>
 <div class="sb" id="body-s7">
 </div></section>
 
 <!-- S8 -->
-<section class="section" id="s8">
+<section class="section d2f-section" id="s8">
 <h2 class="sh no-toggle"><span>3.1 Empty Sub-Section</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s8"></span><span class="stog" id="tog-s8">&#9660;</span></div></h2>
 <div class="sb" id="body-s8">
@@ -1289,7 +1448,7 @@ hr {
 
 <script>
 window.D2F_DOC_ID = 'd2f_id_c9c539743b5bb460';
-window.D2F_I18N = {"save_state":"Save State","date_placeholder":"MM/DD/YYYY","copy_code":"Copy code","callout_note":"Note","signature_date":"Date","progress_template":"{done} of {total} tasks completed ({pct}%)","contact":"Contact","date":"Date","reset_all":"Reset","lang_code":"en","callout_important":"Important","callout_caution":"Caution","callout_warning":"Warning","setup_in_progress":"Process in Progress","company":"Company","comment_placeholder":"Add a comment...","export_pdf":"Export as PDF","name_placeholder":"Name","setup_completed":"Process Completed","loading":"Loading...","callout_tip":"Tip","copied":"Copied!","confirm_reset":"Are you sure you want to reset all markings?","agent":"Agent"};
+window.D2F_I18N = {"contact":"Contact","date_placeholder":"MM/DD/YYYY","signature_date":"Date","progress_template":"{done} of {total} tasks completed ({pct}%)","save_state":"Save State","export_pdf":"Export as PDF","copy_code":"Copy code","agent":"Agent","loading":"Loading...","callout_note":"Note","callout_important":"Important","callout_caution":"Caution","callout_tip":"Tip","comment_placeholder":"Add a comment...","setup_in_progress":"Process in Progress","name_placeholder":"Name","confirm_reset":"Are you sure you want to reset all markings?","lang_code":"en","search_placeholder":"Search... (Ctrl+K)","sections_visible":"{visible} / {total} sections visible","copied":"Copied!","company":"Company","date":"Date","callout_warning":"Warning","setup_completed":"Process Completed","reset_all":"Reset"};
 // Doc2Flow Generic Checklist Logic
 
 const DOC_ID = window.D2F_DOC_ID || '';
@@ -1321,8 +1480,221 @@ function closeLightbox() {
     document.removeEventListener('keydown', handleLightboxKeydown);
 }
 
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+function removeHighlights(container) {
+    if (!container) return;
+    const highlights = container.querySelectorAll('mark.d2f-highlight');
+    highlights.forEach(mark => {
+        const parent = mark.parentNode;
+        if (parent) {
+            parent.replaceChild(document.createTextNode(mark.textContent), mark);
+            parent.normalize();
+        }
+    });
+}
+
+function highlightTextNodes(container, query) {
+    if (!container || !query) return;
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escaped, 'gi');
+
+    const walker = document.createTreeWalker(
+        container,
+        NodeFilter.SHOW_TEXT,
+        {
+            acceptNode: function(node) {
+                const parent = node.parentNode;
+                if (!parent) return NodeFilter.FILTER_REJECT;
+                const tag = parent.nodeName.toLowerCase();
+                if (tag === 'script' || tag === 'style' || tag === 'input' || tag === 'textarea' || tag === 'select' || tag === 'button' || parent.classList.contains('d2f-highlight')) {
+                    return NodeFilter.FILTER_REJECT;
+                }
+                return NodeFilter.FILTER_ACCEPT;
+            }
+        }
+    );
+
+    const textNodes = [];
+    while (walker.nextNode()) {
+        textNodes.push(walker.currentNode);
+    }
+
+    textNodes.forEach(textNode => {
+        const val = textNode.nodeValue;
+        if (!val) return;
+        regex.lastIndex = 0;
+        if (!regex.test(val)) return;
+
+        regex.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let lastIdx = 0;
+        let match;
+
+        while ((match = regex.exec(val)) !== null) {
+            if (match.index > lastIdx) {
+                frag.appendChild(document.createTextNode(val.slice(lastIdx, match.index)));
+            }
+            const mark = document.createElement('mark');
+            mark.className = 'd2f-highlight';
+            mark.textContent = match[0];
+            frag.appendChild(mark);
+            lastIdx = regex.lastIndex;
+            if (match[0].length === 0) break;
+        }
+        if (lastIdx < val.length) {
+            frag.appendChild(document.createTextNode(val.slice(lastIdx)));
+        }
+        if (textNode.parentNode) {
+            textNode.parentNode.replaceChild(frag, textNode);
+        }
+    });
+}
+
+let preSearchCollapsedState = null;
+let lastMatchedSectionIds = new Set();
+
+function performSearchAndFilter() {
+    const searchInput = document.getElementById('search-input');
+    const searchCounter = document.getElementById('search-counter');
+    const sections = document.querySelectorAll('.d2f-section, .section');
+    if (!sections.length) return;
+
+    const query = searchInput ? searchInput.value.trim() : '';
+    const queryLower = query.toLowerCase();
+    let visibleCount = 0;
+    const totalCount = sections.length;
+
+    if (queryLower.length > 0) {
+        if (preSearchCollapsedState === null) {
+            preSearchCollapsedState = new Map();
+            sections.forEach(sec => {
+                const body = sec.querySelector('.sb');
+                if (body && sec.id) {
+                    preSearchCollapsedState.set(sec.id, body.classList.contains('collapsed'));
+                }
+            });
+        }
+
+        const currentMatchedIds = new Set();
+
+        sections.forEach(sec => {
+            removeHighlights(sec);
+
+            const secText = sec.textContent || '';
+            const passesQuery = secText.toLowerCase().includes(queryLower);
+
+            if (passesQuery) {
+                sec.style.display = '';
+                visibleCount++;
+                if (sec.id) {
+                    currentMatchedIds.add(sec.id);
+                }
+
+                const body = sec.querySelector('.sb');
+                if (body) {
+                    highlightTextNodes(body, query);
+                    if (body.classList.contains('collapsed')) {
+                        body.classList.remove('collapsed');
+                        const sh = sec.querySelector('.sh');
+                        if (sh) {
+                            sh.setAttribute('aria-expanded', 'true');
+                            const toggler = sh.querySelector('.stog');
+                            if (toggler) {
+                                toggler.innerHTML = '&#9660;';
+                            }
+                        }
+                    }
+                }
+            } else {
+                sec.style.display = 'none';
+            }
+        });
+
+        lastMatchedSectionIds = currentMatchedIds;
+    } else {
+        sections.forEach(sec => {
+            removeHighlights(sec);
+            sec.style.display = '';
+            visibleCount++;
+
+            const secId = sec.id;
+            const body = sec.querySelector('.sb');
+            const sh = sec.querySelector('.sh');
+
+            if (body && secId && preSearchCollapsedState !== null) {
+                const wasMatched = lastMatchedSectionIds.has(secId);
+                const wasCollapsedBeforeSearch = preSearchCollapsedState.get(secId);
+
+                if (!wasMatched && wasCollapsedBeforeSearch === true) {
+                    body.classList.add('collapsed');
+                    if (sh) {
+                        sh.setAttribute('aria-expanded', 'false');
+                        const toggler = sh.querySelector('.stog');
+                        if (toggler) {
+                            toggler.innerHTML = '&#9650;';
+                        }
+                    }
+                }
+            }
+        });
+
+        preSearchCollapsedState = null;
+        lastMatchedSectionIds.clear();
+    }
+
+    const searchClearBtn = document.getElementById('search-clear-btn');
+    if (searchClearBtn) {
+        if (query.length > 0) {
+            searchClearBtn.classList.remove('hidden');
+        } else {
+            searchClearBtn.classList.add('hidden');
+        }
+    }
+
+    if (searchCounter) {
+        const i18n = window.D2F_I18N || {};
+        const template = i18n.sections_visible || '{visible} / {total} sections visible';
+        searchCounter.textContent = template
+            .replace('{visible}', visibleCount)
+            .replace('{total}', totalCount);
+    }
+}
+
+function toggleSearchToolbar(show) {
+    const toolbar = document.getElementById('search-toolbar');
+    const toggleBtn = document.getElementById('search-toggle-btn');
+    const input = document.getElementById('search-input');
+    if (!toolbar) return;
+
+    const isCurrentlyHidden = toolbar.classList.contains('hidden');
+    const shouldShow = typeof show === 'boolean' ? show : isCurrentlyHidden;
+
+    if (shouldShow) {
+        toolbar.classList.remove('hidden');
+        if (toggleBtn) toggleBtn.classList.add('active');
+        if (input) {
+            input.focus();
+            input.select();
+        }
+    } else {
+        toolbar.classList.add('hidden');
+        if (toggleBtn) toggleBtn.classList.remove('active');
+        if (input) {
+            input.value = '';
+        }
+        performSearchAndFilter();
+    }
+}
+
 function updateEmptySections() {
-    document.querySelectorAll('.section').forEach(sec => {
+    document.querySelectorAll('.d2f-section, .section').forEach(sec => {
         const sh = sec.querySelector('.sh');
         const body = sec.querySelector('.sb');
         if (sh && body) {
@@ -1902,11 +2274,47 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('textarea.item-comment-input').forEach(autoExpandTextarea);
     });
 
+    // Search & Quick-Filter Toolbar Setup
+    const searchToggleBtn = document.getElementById('search-toggle-btn');
+    if (searchToggleBtn) {
+        searchToggleBtn.addEventListener('click', () => {
+            toggleSearchToolbar();
+        });
+    }
+
+    const searchInput = document.getElementById('search-input');
+    const debouncedSearch = debounce(() => {
+        performSearchAndFilter();
+    }, 100);
+
+    if (searchInput) {
+        searchInput.addEventListener('input', debouncedSearch);
+    }
+
+    const searchClearBtn = document.getElementById('search-clear-btn');
+    if (searchClearBtn) {
+        searchClearBtn.addEventListener('click', () => {
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.focus();
+            }
+            performSearchAndFilter();
+        });
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+            e.preventDefault();
+            toggleSearchToolbar(true);
+        }
+    });
+
     // Initialize document state
     updateEmptySections();
     loadState();
     syncLinkedFields();
     updateProgress();
+    performSearchAndFilter();
 });
 
 </script>

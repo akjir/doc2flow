@@ -385,7 +385,7 @@ where
     type Item = Event<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        while let Some(ev) = self.iter.next() {
+        for ev in self.iter.by_ref() {
             match &ev {
                 Event::Html(text) | Event::InlineHtml(text) => {
                     let s = text.as_ref();
@@ -508,12 +508,17 @@ pub fn convert_markdown_to_html_with_options(
                     final_heading_text = heading_text;
                 }
 
+                let (has_checklist, callout_type) =
+                    inspect_section_metadata(&events[idx + 1..], locale);
+
                 template::render_section_header(
                     &mut out,
                     section_count,
                     final_heading_text,
                     is_h1,
                     is_empty,
+                    has_checklist,
+                    callout_type.as_deref(),
                 );
             }
 
@@ -781,6 +786,70 @@ fn is_section_empty(events: &[Event]) -> bool {
     true
 }
 
+fn inspect_section_metadata(events: &[Event], locale: &Locale) -> (bool, Option<String>) {
+    let mut has_checklist = false;
+    let mut callout_types: Vec<&'static str> = Vec::new();
+
+    let mut i = 0;
+    while i < events.len() {
+        match &events[i] {
+            Event::Start(Tag::Heading {
+                level: HeadingLevel::H1 | HeadingLevel::H2,
+                ..
+            }) => break,
+            Event::TaskListMarker(_) => {
+                has_checklist = true;
+            }
+            Event::Start(Tag::BlockQuote(_)) => {
+                let start_idx = i + 1;
+                i += 1;
+                let mut depth = 1;
+                while i < events.len() {
+                    match &events[i] {
+                        Event::Start(Tag::BlockQuote(_)) => depth += 1,
+                        Event::End(TagEnd::BlockQuote(_)) => {
+                            depth -= 1;
+                            if depth == 0 {
+                                break;
+                            }
+                        }
+                        _ => {}
+                    }
+                    i += 1;
+                }
+                let mut bq_html = String::new();
+                html::push_html(&mut bq_html, events[start_idx..i].iter().cloned());
+                let inner = strip_paragraph_tags(bq_html.trim());
+                let (note_cls, _, _) = parse_callout(inner, locale);
+                let ctype = if note_cls.contains("note-caution") {
+                    "caution"
+                } else if note_cls.contains("note-warning") {
+                    "warning"
+                } else if note_cls.contains("note-important") {
+                    "important"
+                } else if note_cls.contains("note-tip") {
+                    "tip"
+                } else {
+                    "note"
+                };
+                if !callout_types.contains(&ctype) {
+                    callout_types.push(ctype);
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+
+    let callout_type = if callout_types.is_empty() {
+        None
+    } else {
+        Some(callout_types.join(" "))
+    };
+
+    (has_checklist, callout_type)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1003,15 +1072,24 @@ mod tests {
         let html = convert_markdown_to_html(input).expect("conversion failed");
 
         assert!(html.contains(r#"<!-- S1 -->"#));
-        assert!(html.contains(r#"<section class="section" id="s1">"#));
+        assert!(html.contains(r#"<section class="section d2f-section" id="s1" data-has-checklist="true">"#));
         assert!(html.contains(r#"<h2 class="sh sh-h1" role="button" tabindex="0" aria-expanded="true"><span>Top Level Header</span>"#));
         assert!(html.contains(r#"badge-s1"#));
         assert!(html.contains(r#"tog-s1"#));
         assert!(html.contains(r#"id="wrap-cb_s1_1""#));
 
         assert!(html.contains(r#"<!-- S2 -->"#));
-        assert!(html.contains(r#"<section class="section" id="s2">"#));
+        assert!(html.contains(r#"<section class="section d2f-section" id="s2" data-has-checklist="true">"#));
         assert!(html.contains(r#"<h2 class="sh" role="button" tabindex="0" aria-expanded="true"><span>Sub Section</span>"#));
+    }
+
+    #[test]
+    fn test_section_metadata_attributes() {
+        let input = "# Checklist Sec\n\n- [ ] Item 1\n\n## Callout Sec\n\n>! Important note";
+        let html = convert_markdown_to_html(input).expect("conversion failed");
+
+        assert!(html.contains(r#"<section class="section d2f-section" id="s1" data-has-checklist="true">"#));
+        assert!(html.contains(r#"<section class="section d2f-section" id="s2" data-callout-type="important">"#));
     }
 
     #[test]

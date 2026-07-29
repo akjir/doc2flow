@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Added optional automatic section numbering (`number_sections: true`) for H1 and H2 headings.
+- Added live-in-browser search bar and quick-filter toolbar with keyboard shortcut (Ctrl+K), toggle button next to progress bar, clear button (✖), term highlighting, and printable CSS compatibility.
 
 ## [0.9.2] - 2026-07-28
 

@@ -19,6 +19,8 @@ pub fn render_section_header(
     heading_text: &str,
     is_h1: bool,
     is_empty: bool,
+    has_checklist: bool,
+    callout_type: Option<&str>,
 ) {
     let h1_class = if is_h1 { " sh-h1" } else { "" };
     let (empty_class, a11y_attrs) = if is_empty {
@@ -26,9 +28,18 @@ pub fn render_section_header(
     } else {
         ("", " role=\"button\" tabindex=\"0\" aria-expanded=\"true\"")
     };
+    let checklist_attr = if has_checklist {
+        " data-has-checklist=\"true\""
+    } else {
+        ""
+    };
+    let callout_attr = match callout_type {
+        Some(ct) if !ct.is_empty() => format!(" data-callout-type=\"{ct}\""),
+        _ => String::new(),
+    };
     let _ = write!(
         out,
-        "<!-- S{section_count} -->\n<section class=\"section\" id=\"s{section_count}\">\n<h2 class=\"sh{h1_class}{empty_class}\"{a11y_attrs}><span>{heading_text}</span>\n<div style=\"display:flex;align-items:center;gap:8px\"><span class=\"sbadge\" id=\"badge-s{section_count}\"></span><span class=\"stog\" id=\"tog-s{section_count}\">&#9660;</span></div></h2>\n<div class=\"sb\" id=\"body-s{section_count}\">\n"
+        "<!-- S{section_count} -->\n<section class=\"section d2f-section\" id=\"s{section_count}\"{checklist_attr}{callout_attr}>\n<h2 class=\"sh{h1_class}{empty_class}\"{a11y_attrs}><span>{heading_text}</span>\n<div style=\"display:flex;align-items:center;gap:8px\"><span class=\"sbadge\" id=\"badge-s{section_count}\"></span><span class=\"stog\" id=\"tog-s{section_count}\">&#9660;</span></div></h2>\n<div class=\"sb\" id=\"body-s{section_count}\">\n"
     );
 }
 
@@ -168,9 +179,9 @@ mod tests {
     #[test]
     fn test_render_section_header_and_close() {
         let mut buf = String::new();
-        render_section_header(&mut buf, 1, "Section Title", true, false);
+        render_section_header(&mut buf, 1, "Section Title", true, false, true, Some("note"));
         assert!(buf.contains("<!-- S1 -->"));
-        assert!(buf.contains("<section class=\"section\" id=\"s1\">"));
+        assert!(buf.contains("<section class=\"section d2f-section\" id=\"s1\" data-has-checklist=\"true\" data-callout-type=\"note\">"));
         assert!(buf.contains("class=\"sh sh-h1\""));
         assert!(buf.contains("role=\"button\""));
         assert!(buf.contains("tabindex=\"0\""));

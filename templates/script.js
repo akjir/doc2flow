@@ -29,8 +29,221 @@ function closeLightbox() {
     document.removeEventListener('keydown', handleLightboxKeydown);
 }
 
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+function removeHighlights(container) {
+    if (!container) return;
+    const highlights = container.querySelectorAll('mark.d2f-highlight');
+    highlights.forEach(mark => {
+        const parent = mark.parentNode;
+        if (parent) {
+            parent.replaceChild(document.createTextNode(mark.textContent), mark);
+            parent.normalize();
+        }
+    });
+}
+
+function highlightTextNodes(container, query) {
+    if (!container || !query) return;
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escaped, 'gi');
+
+    const walker = document.createTreeWalker(
+        container,
+        NodeFilter.SHOW_TEXT,
+        {
+            acceptNode: function(node) {
+                const parent = node.parentNode;
+                if (!parent) return NodeFilter.FILTER_REJECT;
+                const tag = parent.nodeName.toLowerCase();
+                if (tag === 'script' || tag === 'style' || tag === 'input' || tag === 'textarea' || tag === 'select' || tag === 'button' || parent.classList.contains('d2f-highlight')) {
+                    return NodeFilter.FILTER_REJECT;
+                }
+                return NodeFilter.FILTER_ACCEPT;
+            }
+        }
+    );
+
+    const textNodes = [];
+    while (walker.nextNode()) {
+        textNodes.push(walker.currentNode);
+    }
+
+    textNodes.forEach(textNode => {
+        const val = textNode.nodeValue;
+        if (!val) return;
+        regex.lastIndex = 0;
+        if (!regex.test(val)) return;
+
+        regex.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let lastIdx = 0;
+        let match;
+
+        while ((match = regex.exec(val)) !== null) {
+            if (match.index > lastIdx) {
+                frag.appendChild(document.createTextNode(val.slice(lastIdx, match.index)));
+            }
+            const mark = document.createElement('mark');
+            mark.className = 'd2f-highlight';
+            mark.textContent = match[0];
+            frag.appendChild(mark);
+            lastIdx = regex.lastIndex;
+            if (match[0].length === 0) break;
+        }
+        if (lastIdx < val.length) {
+            frag.appendChild(document.createTextNode(val.slice(lastIdx)));
+        }
+        if (textNode.parentNode) {
+            textNode.parentNode.replaceChild(frag, textNode);
+        }
+    });
+}
+
+let preSearchCollapsedState = null;
+let lastMatchedSectionIds = new Set();
+
+function performSearchAndFilter() {
+    const searchInput = document.getElementById('search-input');
+    const searchCounter = document.getElementById('search-counter');
+    const sections = document.querySelectorAll('.d2f-section, .section');
+    if (!sections.length) return;
+
+    const query = searchInput ? searchInput.value.trim() : '';
+    const queryLower = query.toLowerCase();
+    let visibleCount = 0;
+    const totalCount = sections.length;
+
+    if (queryLower.length > 0) {
+        if (preSearchCollapsedState === null) {
+            preSearchCollapsedState = new Map();
+            sections.forEach(sec => {
+                const body = sec.querySelector('.sb');
+                if (body && sec.id) {
+                    preSearchCollapsedState.set(sec.id, body.classList.contains('collapsed'));
+                }
+            });
+        }
+
+        const currentMatchedIds = new Set();
+
+        sections.forEach(sec => {
+            removeHighlights(sec);
+
+            const secText = sec.textContent || '';
+            const passesQuery = secText.toLowerCase().includes(queryLower);
+
+            if (passesQuery) {
+                sec.style.display = '';
+                visibleCount++;
+                if (sec.id) {
+                    currentMatchedIds.add(sec.id);
+                }
+
+                const body = sec.querySelector('.sb');
+                if (body) {
+                    highlightTextNodes(body, query);
+                    if (body.classList.contains('collapsed')) {
+                        body.classList.remove('collapsed');
+                        const sh = sec.querySelector('.sh');
+                        if (sh) {
+                            sh.setAttribute('aria-expanded', 'true');
+                            const toggler = sh.querySelector('.stog');
+                            if (toggler) {
+                                toggler.innerHTML = '&#9660;';
+                            }
+                        }
+                    }
+                }
+            } else {
+                sec.style.display = 'none';
+            }
+        });
+
+        lastMatchedSectionIds = currentMatchedIds;
+    } else {
+        sections.forEach(sec => {
+            removeHighlights(sec);
+            sec.style.display = '';
+            visibleCount++;
+
+            const secId = sec.id;
+            const body = sec.querySelector('.sb');
+            const sh = sec.querySelector('.sh');
+
+            if (body && secId && preSearchCollapsedState !== null) {
+                const wasMatched = lastMatchedSectionIds.has(secId);
+                const wasCollapsedBeforeSearch = preSearchCollapsedState.get(secId);
+
+                if (!wasMatched && wasCollapsedBeforeSearch === true) {
+                    body.classList.add('collapsed');
+                    if (sh) {
+                        sh.setAttribute('aria-expanded', 'false');
+                        const toggler = sh.querySelector('.stog');
+                        if (toggler) {
+                            toggler.innerHTML = '&#9650;';
+                        }
+                    }
+                }
+            }
+        });
+
+        preSearchCollapsedState = null;
+        lastMatchedSectionIds.clear();
+    }
+
+    const searchClearBtn = document.getElementById('search-clear-btn');
+    if (searchClearBtn) {
+        if (query.length > 0) {
+            searchClearBtn.classList.remove('hidden');
+        } else {
+            searchClearBtn.classList.add('hidden');
+        }
+    }
+
+    if (searchCounter) {
+        const i18n = window.D2F_I18N || {};
+        const template = i18n.sections_visible || '{visible} / {total} sections visible';
+        searchCounter.textContent = template
+            .replace('{visible}', visibleCount)
+            .replace('{total}', totalCount);
+    }
+}
+
+function toggleSearchToolbar(show) {
+    const toolbar = document.getElementById('search-toolbar');
+    const toggleBtn = document.getElementById('search-toggle-btn');
+    const input = document.getElementById('search-input');
+    if (!toolbar) return;
+
+    const isCurrentlyHidden = toolbar.classList.contains('hidden');
+    const shouldShow = typeof show === 'boolean' ? show : isCurrentlyHidden;
+
+    if (shouldShow) {
+        toolbar.classList.remove('hidden');
+        if (toggleBtn) toggleBtn.classList.add('active');
+        if (input) {
+            input.focus();
+            input.select();
+        }
+    } else {
+        toolbar.classList.add('hidden');
+        if (toggleBtn) toggleBtn.classList.remove('active');
+        if (input) {
+            input.value = '';
+        }
+        performSearchAndFilter();
+    }
+}
+
 function updateEmptySections() {
-    document.querySelectorAll('.section').forEach(sec => {
+    document.querySelectorAll('.d2f-section, .section').forEach(sec => {
         const sh = sec.querySelector('.sh');
         const body = sec.querySelector('.sb');
         if (sh && body) {
@@ -610,9 +823,45 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('textarea.item-comment-input').forEach(autoExpandTextarea);
     });
 
+    // Search & Quick-Filter Toolbar Setup
+    const searchToggleBtn = document.getElementById('search-toggle-btn');
+    if (searchToggleBtn) {
+        searchToggleBtn.addEventListener('click', () => {
+            toggleSearchToolbar();
+        });
+    }
+
+    const searchInput = document.getElementById('search-input');
+    const debouncedSearch = debounce(() => {
+        performSearchAndFilter();
+    }, 100);
+
+    if (searchInput) {
+        searchInput.addEventListener('input', debouncedSearch);
+    }
+
+    const searchClearBtn = document.getElementById('search-clear-btn');
+    if (searchClearBtn) {
+        searchClearBtn.addEventListener('click', () => {
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.focus();
+            }
+            performSearchAndFilter();
+        });
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+            e.preventDefault();
+            toggleSearchToolbar(true);
+        }
+    });
+
     // Initialize document state
     updateEmptySections();
     loadState();
     syncLinkedFields();
     updateProgress();
+    performSearchAndFilter();
 });

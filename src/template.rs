@@ -62,8 +62,18 @@ pub fn render_section_header(
     heading_text: &str,
     is_h1: bool,
     is_empty: bool,
+    has_checklist: bool,
+    callout_type: Option<&str>,
 ) {
-    components::render_section_header(out, section_count, heading_text, is_h1, is_empty);
+    components::render_section_header(
+        out,
+        section_count,
+        heading_text,
+        is_h1,
+        is_empty,
+        has_checklist,
+        callout_type,
+    );
 }
 
 /// Renders section container closing tags directly into the output buffer.

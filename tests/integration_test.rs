@@ -739,12 +739,43 @@ number_sections: true
     assert!(html_body.contains("<span>2. Deployment Guide</span>"));
     assert!(html_body.contains("<span>2.1 Prerequisites</span>"));
 
-    // Verify section IDs are preserved without corruption
-    assert!(html_body.contains(r#"<section class="section" id="s1">"#));
+    // Verify section IDs and classes are preserved
+    assert!(html_body.contains(r#"<section class="section d2f-section" id="s1">"#));
     assert!(html_body.contains(r#"id="badge-s1""#));
     assert!(html_body.contains(r#"id="tog-s1""#));
-    assert!(html_body.contains(r#"<section class="section" id="s2">"#));
-    assert!(html_body.contains(r#"<section class="section" id="s3">"#));
+    assert!(html_body.contains(r#"<section class="section d2f-section" id="s2" data-has-checklist="true">"#));
+    assert!(html_body.contains(r#"<section class="section d2f-section" id="s3" data-has-checklist="true">"#));
+}
+
+#[test]
+fn test_search_toolbar_integration() {
+    let input = r#"---
+title: "Search Toolbar Test"
+company: "Test Corp"
+date: "2026-07-29"
+---
+# Main Section
+
+- [ ] Task 1
+
+## Callout Section
+
+>!! Warning note
+"#;
+
+    let (fm, body) =
+        doc2flow::converter::parse_and_validate_frontmatter(input, Some("test.md")).unwrap();
+    let locale = doc2flow::i18n::Locale::from_lang_code("en");
+    let html_body = doc2flow::converter::convert_markdown_to_html(&body).unwrap();
+    let full_doc = doc2flow::template::render(&fm, &locale, &html_body, "doc123", None).unwrap();
+
+    assert!(full_doc.contains(r#"<div class="search-toolbar hidden" id="search-toolbar">"#));
+    assert!(full_doc.contains(r#"id="search-toggle-btn""#));
+    assert!(full_doc.contains(r#"id="search-input""#));
+    assert!(full_doc.contains(r#"id="search-clear-btn""#));
+    assert!(full_doc.contains(r#"id="search-counter""#));
+    assert!(full_doc.contains(r#"data-has-checklist="true""#));
+    assert!(full_doc.contains(r#"data-callout-type="warning""#));
 }
 
 
