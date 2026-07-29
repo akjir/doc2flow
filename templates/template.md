@@ -15,6 +15,7 @@ License: GPL-3.0-or-later
    - version: Document version.
    - language / lang: Language code for static UI translation ('en', 'de').
    - logo: Optional path to a custom logo image (SVG, PNG, JPG, WebP).
+   - number_sections: Enable automatic section numbering for H1 and H2 headings (true / false, default: true).
 
 2. DOCUMENT STRUCTURE:
    - Level 1 Headings (# Heading): Collapsible main section headers (without completion badge).
@@ -62,6 +63,7 @@ agent: "John Smith"
 version: "1.0.0"
 date: "2026-07-25"
 language: "en"
+number_sections: true
 ---
 
 # Part 1: System Setup & Preparation

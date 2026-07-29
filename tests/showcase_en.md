@@ -7,6 +7,7 @@ agent: "Jane Smith"
 date: "2026-07-25"
 version: "1.0.0"
 language: "en"
+number_sections: true
 ---
 
 # Part 1: System Setup & Preparation

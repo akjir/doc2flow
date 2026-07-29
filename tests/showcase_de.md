@@ -7,6 +7,7 @@ agent: "Erika Musterfrau"
 date: "25.07.2026"
 version: "1.0.0"
 language: "de"
+number_sections: true
 ---
 
 # Teil 1: Systemeinrichtung & Vorbereitung

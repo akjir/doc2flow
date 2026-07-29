@@ -77,6 +77,7 @@ d2f.exe --version
   * `version`: Document version string (included in document identity hash).
   * `language` / `lang`: Specifies locale code (`en`, `de`) for static UI translations.
   * `logo`: Path to a custom header logo image file (SVG, PNG, JPG, WebP). CLI `-l`/`--logo` option takes precedence if specified.
+  * `number_sections`: Boolean flag (`true` / `false`, default: `true`) to enable automatic hierarchical section numbering for top-level H1 (`1. `, `2. `) and H2 (`1.1 `, `1.2 `) headings.
   * **Upper Metadata Table:** Header table renders Company (`{{COMPANY}}`), Contact (`{{CONTACT}}`), Agent (`{{AGENT}}`), and an interactive persistent Date input field.
 * **Callout / Note Box Annotations:** Blockquotes are transformed into styled visual alert panels using prefix conventions:
   * `>` or `> Note`: Standard Note box (`.note`, neutral styling).

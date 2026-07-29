@@ -22,21 +22,19 @@ const HEX_CHARS: &[u8; 16] = b"0123456789abcdef";
 /// use doc2flow::converter::Frontmatter;
 /// use doc2flow::id::generate_d2f_id;
 ///
-/// let fm = Frontmatter {
-///     title: "Server Guide".into(),
-///     version: "1.0.0".into(),
-///     date: "2026-07-25".into(),
-///     ..Default::default()
-/// };
+/// let mut fm = Frontmatter::new("Acme Corp");
+/// fm.title = Some("Server Guide".into());
+/// fm.version = Some("1.0.0".into());
+/// fm.date = Some("2026-07-25".into());
 ///
 /// let id = generate_d2f_id(&fm).unwrap();
 /// assert!(id.starts_with("d2f_id_"));
 /// assert_eq!(id.len(), 23);
 /// ```
 pub fn generate_d2f_id(frontmatter: &Frontmatter) -> Result<String> {
-    let norm_title = normalize_field(&frontmatter.title);
-    let norm_date = normalize_field(&frontmatter.date);
-    let raw_version = normalize_field(&frontmatter.version);
+    let norm_title = normalize_field(frontmatter.title.as_deref());
+    let norm_date = normalize_field(frontmatter.date.as_deref());
+    let raw_version = normalize_field(frontmatter.version.as_deref());
 
     let missing_count = [norm_title.is_empty(), norm_date.is_empty(), raw_version.is_empty()]
         .into_iter()
@@ -77,15 +75,20 @@ pub fn generate_d2f_id(frontmatter: &Frontmatter) -> Result<String> {
     Ok(result)
 }
 
-/// Normalizes a string field by trimming whitespace and lowercasing.
+/// Normalizes an optional string field by trimming whitespace and lowercasing.
 ///
 /// Returns `Cow::Borrowed` if the string requires no lowercasing, avoiding heap allocations.
-fn normalize_field(input: &str) -> Cow<'_, str> {
-    let trimmed = input.trim();
-    if trimmed.chars().any(char::is_uppercase) {
-        Cow::Owned(trimmed.to_lowercase())
-    } else {
-        Cow::Borrowed(trimmed)
+fn normalize_field<'a>(input: Option<&'a str>) -> Cow<'a, str> {
+    match input {
+        Some(s) => {
+            let trimmed = s.trim();
+            if trimmed.chars().any(char::is_uppercase) {
+                Cow::Owned(trimmed.to_lowercase())
+            } else {
+                Cow::Borrowed(trimmed)
+            }
+        }
+        None => Cow::Borrowed(""),
     }
 }
 
@@ -95,12 +98,10 @@ mod tests {
 
     #[test]
     fn test_generate_d2f_id_success() {
-        let fm = Frontmatter {
-            title: "Maintenance Protocol".into(),
-            version: "v1.2.3".into(),
-            date: "2026-07-25".into(),
-            ..Default::default()
-        };
+        let mut fm = Frontmatter::new("Test Corp");
+        fm.title = Some("Maintenance Protocol".into());
+        fm.version = Some("v1.2.3".into());
+        fm.date = Some("2026-07-25".into());
 
         let result = generate_d2f_id(&fm).expect("d2f_id generation failed");
         assert!(result.starts_with("d2f_id_"));
@@ -109,19 +110,15 @@ mod tests {
 
     #[test]
     fn test_generate_d2f_id_determinism() {
-        let fm1 = Frontmatter {
-            title: "  Maintenance Protocol  ".into(),
-            version: "V1.2.3".into(),
-            date: "2026-07-25".into(),
-            ..Default::default()
-        };
+        let mut fm1 = Frontmatter::new("Test Corp");
+        fm1.title = Some("  Maintenance Protocol  ".into());
+        fm1.version = Some("V1.2.3".into());
+        fm1.date = Some("2026-07-25".into());
 
-        let fm2 = Frontmatter {
-            title: "maintenance protocol".into(),
-            version: "v1.2.3".into(),
-            date: "2026-07-25".into(),
-            ..Default::default()
-        };
+        let mut fm2 = Frontmatter::new("Test Corp");
+        fm2.title = Some("maintenance protocol".into());
+        fm2.version = Some("v1.2.3".into());
+        fm2.date = Some("2026-07-25".into());
 
         let id1 = generate_d2f_id(&fm1).unwrap();
         let id2 = generate_d2f_id(&fm2).unwrap();
@@ -130,19 +127,15 @@ mod tests {
 
     #[test]
     fn test_generate_d2f_id_version_truncation() {
-        let fm = Frontmatter {
-            title: "System Spec".into(),
-            version: "1.0.0-beta.release.99".into(), // > 12 chars
-            date: "2026-07-25".into(),
-            ..Default::default()
-        };
+        let mut fm = Frontmatter::new("Test Corp");
+        fm.title = Some("System Spec".into());
+        fm.version = Some("1.0.0-beta.release.99".into());
+        fm.date = Some("2026-07-25".into());
 
-        let fm_truncated_manually = Frontmatter {
-            title: "System Spec".into(),
-            version: "1.0.0-beta.r".into(), // exact 12 chars
-            date: "2026-07-25".into(),
-            ..Default::default()
-        };
+        let mut fm_truncated_manually = Frontmatter::new("Test Corp");
+        fm_truncated_manually.title = Some("System Spec".into());
+        fm_truncated_manually.version = Some("1.0.0-beta.r".into());
+        fm_truncated_manually.date = Some("2026-07-25".into());
 
         let id1 = generate_d2f_id(&fm).unwrap();
         let id2 = generate_d2f_id(&fm_truncated_manually).unwrap();
@@ -151,12 +144,10 @@ mod tests {
 
     #[test]
     fn test_generate_d2f_id_version_truncation_unicode() {
-        let fm = Frontmatter {
-            title: "System Spec".into(),
-            version: "1.0.0-beta.äöü.99".into(), // > 12 unicode chars
-            date: "2026-07-25".into(),
-            ..Default::default()
-        };
+        let mut fm = Frontmatter::new("Test Corp");
+        fm.title = Some("System Spec".into());
+        fm.version = Some("1.0.0-beta.äöü.99".into());
+        fm.date = Some("2026-07-25".into());
 
         let id = generate_d2f_id(&fm).unwrap();
         assert!(id.starts_with("d2f_id_"));
@@ -165,22 +156,19 @@ mod tests {
 
     #[test]
     fn test_normalize_field_borrowed_vs_owned() {
-        let borrowed = normalize_field("  clean_string  ");
+        let borrowed = normalize_field(Some("  clean_string  "));
         assert!(matches!(borrowed, Cow::Borrowed("clean_string")));
 
-        let owned = normalize_field("  UPPER_STRING  ");
+        let owned = normalize_field(Some("  UPPER_STRING  "));
         assert!(matches!(owned, Cow::Owned(_)));
         assert_eq!(owned, "upper_string");
     }
 
     #[test]
     fn test_generate_d2f_id_one_missing_field_allowed() {
-        let fm = Frontmatter {
-            title: "System Spec".into(),
-            version: "1.0".into(),
-            date: "".into(), // 1 missing field
-            ..Default::default()
-        };
+        let mut fm = Frontmatter::new("Test Corp");
+        fm.title = Some("System Spec".into());
+        fm.version = Some("1.0".into());
 
         let result = generate_d2f_id(&fm);
         assert!(result.is_ok());
@@ -188,12 +176,8 @@ mod tests {
 
     #[test]
     fn test_generate_d2f_id_two_missing_fields_fatal() {
-        let fm = Frontmatter {
-            title: "System Spec".into(),
-            version: "".into(), // missing
-            date: "".into(),    // missing
-            ..Default::default()
-        };
+        let mut fm = Frontmatter::new("Test Corp");
+        fm.title = Some("System Spec".into());
 
         let result = generate_d2f_id(&fm);
         assert!(result.is_err());
@@ -207,19 +191,17 @@ mod tests {
 
     #[test]
     fn test_generate_d2f_id_three_missing_fields_fatal() {
-        let fm = Frontmatter::default();
+        let fm = Frontmatter::new("Test Corp");
         let result = generate_d2f_id(&fm);
         assert!(result.is_err());
     }
 
     #[test]
     fn test_generate_d2f_id_exact_12_char_version() {
-        let fm = Frontmatter {
-            title: "System Spec".into(),
-            version: "123456789012".into(), // exactly 12 chars
-            date: "2026-07-26".into(),
-            ..Default::default()
-        };
+        let mut fm = Frontmatter::new("Test Corp");
+        fm.title = Some("System Spec".into());
+        fm.version = Some("123456789012".into());
+        fm.date = Some("2026-07-26".into());
 
         let result = generate_d2f_id(&fm).unwrap();
         assert!(result.starts_with("d2f_id_"));
@@ -227,12 +209,10 @@ mod tests {
 
     #[test]
     fn test_generate_d2f_id_emoji_unicode_truncation() {
-        let fm = Frontmatter {
-            title: "Unicode Test".into(),
-            version: "v1.0.0-🚀🌟✨🎉🎈🎊".into(), // > 12 unicode characters (multi-byte)
-            date: "2026-07-26".into(),
-            ..Default::default()
-        };
+        let mut fm = Frontmatter::new("Test Corp");
+        fm.title = Some("Unicode Test".into());
+        fm.version = Some("v1.0.0-🚀🌟✨🎉🎈🎊".into());
+        fm.date = Some("2026-07-26".into());
 
         let result = generate_d2f_id(&fm);
         assert!(result.is_ok(), "d2f_id generation should handle multi-byte emoji truncation safely");
@@ -243,12 +223,9 @@ mod tests {
 
     #[test]
     fn test_generate_d2f_id_missing_title_allowed() {
-        let fm = Frontmatter {
-            title: "".into(), // missing
-            version: "v1.0".into(),
-            date: "2026-07-26".into(),
-            ..Default::default()
-        };
+        let mut fm = Frontmatter::new("Test Corp");
+        fm.version = Some("v1.0".into());
+        fm.date = Some("2026-07-26".into());
 
         let result = generate_d2f_id(&fm);
         assert!(result.is_ok());
@@ -256,15 +233,11 @@ mod tests {
 
     #[test]
     fn test_generate_d2f_id_missing_version_allowed() {
-        let fm = Frontmatter {
-            title: "Title Only".into(),
-            version: "".into(), // missing
-            date: "2026-07-26".into(),
-            ..Default::default()
-        };
+        let mut fm = Frontmatter::new("Test Corp");
+        fm.title = Some("Title Only".into());
+        fm.date = Some("2026-07-26".into());
 
         let result = generate_d2f_id(&fm);
         assert!(result.is_ok());
     }
 }
-

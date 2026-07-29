@@ -47,19 +47,21 @@ fn main() -> Result<()> {
     let file_name = input_path.to_str();
     let (frontmatter, markdown_body) =
         converter::parse_and_validate_frontmatter(&md_content, file_name)?;
-    let locale = Locale::from_lang_code(&frontmatter.language);
+    let language_code = frontmatter.language.as_deref().unwrap_or("en");
+    let locale = Locale::from_lang_code(language_code);
 
-    let html_content = converter::convert_markdown_to_html_with_locale(markdown_body, &locale)?;
+    let html_content = converter::convert_markdown_to_html_with_options(
+        markdown_body,
+        &locale,
+        frontmatter.number_sections,
+    )?;
 
     let base_dir = input_path.parent();
 
-    let logo_path = args.logo.as_deref().or_else(|| {
-        if !frontmatter.logo.trim().is_empty() {
-            Some(std::path::Path::new(&frontmatter.logo))
-        } else {
-            None
-        }
-    });
+    let logo_path = args
+        .logo
+        .as_deref()
+        .or_else(|| frontmatter.logo.as_deref().map(std::path::Path::new));
     let logo_html = doc2flow::image::load_logo(logo_path, base_dir);
 
     let d2f_id = doc2flow::id::generate_d2f_id(&frontmatter)?;

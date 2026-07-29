@@ -6,14 +6,21 @@ use pulldown_cmark::{
 };
 use std::borrow::Cow;
 
-
 /// Escapes HTML special characters in code strings. Returns Cow::Borrowed if no escaping is needed.
 fn html_escape(input: &str) -> Cow<'_, str> {
-    if !input.bytes().any(|b| matches!(b, b'&' | b'<' | b'>' | b'"')) {
-        return Cow::Borrowed(input);
-    }
+    let bytes = input.as_bytes();
+    let first_pos = match bytes
+        .iter()
+        .position(|&b| matches!(b, b'&' | b'<' | b'>' | b'"'))
+    {
+        Some(pos) => pos,
+        None => return Cow::Borrowed(input),
+    };
+
     let mut escaped = String::with_capacity(input.len() + 8);
-    for ch in input.chars() {
+    escaped.push_str(&input[..first_pos]);
+
+    for ch in input[first_pos..].chars() {
         match ch {
             '&' => escaped.push_str("&amp;"),
             '<' => escaped.push_str("&lt;"),
@@ -25,7 +32,6 @@ fn html_escape(input: &str) -> Cow<'_, str> {
     Cow::Owned(escaped)
 }
 
-/// Frontmatter metadata extracted from Markdown header.
 #[derive(Debug, Clone, Copy)]
 enum ListKind {
     Unordered,
@@ -44,14 +50,15 @@ fn to_alpha(mut n: u64) -> Cow<'static, str> {
         ];
         return Cow::Borrowed(ALPHAS[(n - 1) as usize]);
     }
-    let mut result = String::new();
+    let mut buf = Vec::with_capacity(8);
     while n > 0 {
         n -= 1;
         let rem = (n % 26) as u8;
-        result.insert(0, (b'a' + rem) as char);
+        buf.push(b'a' + rem);
         n /= 26;
     }
-    Cow::Owned(result)
+    buf.reverse();
+    Cow::Owned(String::from_utf8(buf).expect("valid ASCII bytes"))
 }
 
 /// Converts a 1-based number to lowercase Roman numerals (1 -> i, 2 -> ii, 3 -> iii...).
@@ -106,101 +113,182 @@ fn format_bullet(kind: &mut ListKind, depth: usize) -> Cow<'static, str> {
     }
 }
 
-#[derive(Debug, Default)]
+/// Frontmatter metadata extracted from Markdown header.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Frontmatter {
-    pub title: String,
-    pub subtitle: String,
+    pub title: Option<String>,
+    pub subtitle: Option<String>,
     pub company: String,
-    pub contact: String,
-    pub agent: String,
-    pub date: String,
-    pub version: String,
-    pub language: String,
-    pub logo: String,
+    pub contact: Option<String>,
+    pub agent: Option<String>,
+    pub date: Option<String>,
+    pub version: Option<String>,
+    pub language: Option<String>,
+    pub logo: Option<String>,
+    pub number_sections: bool,
 }
 
-/// Finds the character indices for frontmatter block delimiters `---`.
-fn find_frontmatter_bounds(md_content: &str) -> Option<(usize, usize, usize, usize)> {
-    for (start_idx, _) in md_content.match_indices("---") {
-        if start_idx == 0 || md_content[..start_idx].ends_with('\n') {
-            let prefix = md_content[..start_idx].trim();
-            let is_valid_prefix =
-                prefix.is_empty() || (prefix.starts_with("<!--") && prefix.ends_with("-->"));
-
-            if is_valid_prefix {
-                let after_first = start_idx + 3;
-                let rest = &md_content[after_first..];
-                let content_start = rest
-                    .strip_prefix("\r\n")
-                    .or_else(|| rest.strip_prefix("\n"))
-                    .map(|s| md_content.len() - s.len())
-                    .unwrap_or(after_first);
-
-                if let Some((close_rel_idx, _)) = md_content[content_start..]
-                    .match_indices("---")
-                    .find(|(idx, _)| {
-                        let abs_idx = content_start + idx;
-                        (abs_idx == 0 || md_content[..abs_idx].ends_with('\n'))
-                            && (md_content[abs_idx + 3..].starts_with("\r\n")
-                                || md_content[abs_idx + 3..].starts_with('\n')
-                                || md_content[abs_idx + 3..].is_empty())
-                    })
-                {
-                    let close_idx = content_start + close_rel_idx;
-                    let after_close = close_idx + 3;
-                    let body_start = md_content[after_close..]
-                        .strip_prefix("\r\n")
-                        .or_else(|| md_content[after_close..].strip_prefix("\n"))
-                        .map(|s| md_content.len() - s.len())
-                        .unwrap_or(after_close);
-
-                    return Some((start_idx, content_start, close_idx, body_start));
-                }
-            }
+impl Frontmatter {
+    /// Creates a new `Frontmatter` instance with the required `company` field and default optional values.
+    pub fn new(company: impl Into<String>) -> Self {
+        Self {
+            company: company.into(),
+            title: None,
+            subtitle: None,
+            contact: None,
+            agent: None,
+            date: None,
+            version: None,
+            language: None,
+            logo: None,
+            number_sections: true,
         }
     }
-    None
+}
+
+/// Helper struct holding byte ranges and line info for frontmatter block.
+#[derive(Debug)]
+struct FrontmatterBounds<'a> {
+    frontmatter_text: &'a str,
+    body_text: &'a str,
+    start_line_no: usize,
+}
+
+/// Finds frontmatter bounds robustly using line-based iteration.
+fn find_frontmatter_bounds(md_content: &str) -> Option<FrontmatterBounds<'_>> {
+    let mut line_no = 1;
+    let mut in_leading_comment = false;
+
+    let mut start_line = 1;
+    let mut content_start_offset = None;
+
+    for line in md_content.lines() {
+        let trimmed = line.trim();
+        if in_leading_comment {
+            if trimmed.contains("-->") {
+                in_leading_comment = false;
+            }
+            line_no += 1;
+            continue;
+        }
+
+        if trimmed.starts_with("<!--") {
+            if !trimmed.contains("-->") {
+                in_leading_comment = true;
+            }
+            line_no += 1;
+            continue;
+        }
+
+        if trimmed.is_empty() {
+            line_no += 1;
+            continue;
+        }
+
+        if trimmed == "---" {
+            let line_offset = line.as_ptr() as usize - md_content.as_ptr() as usize;
+            let after_first = line_offset + line.len();
+            let content_start = md_content[after_first..]
+                .strip_prefix("\r\n")
+                .or_else(|| md_content[after_first..].strip_prefix("\n"))
+                .map(|s| md_content.len() - s.len())
+                .unwrap_or(after_first);
+
+            content_start_offset = Some(content_start);
+            start_line = line_no;
+            break;
+        } else {
+            return None;
+        }
+    }
+
+    let content_start = content_start_offset?;
+    let rest = &md_content[content_start..];
+    let mut close_start_offset = None;
+    let mut body_start_offset = None;
+
+    for line in rest.lines() {
+        let trimmed = line.trim();
+        if trimmed == "---" {
+            let line_offset = line.as_ptr() as usize - md_content.as_ptr() as usize;
+            close_start_offset = Some(line_offset);
+
+            let after_close = line_offset + line.len();
+            let body_start = md_content[after_close..]
+                .strip_prefix("\r\n")
+                .or_else(|| md_content[after_close..].strip_prefix("\n"))
+                .map(|s| md_content.len() - s.len())
+                .unwrap_or(after_close);
+
+            body_start_offset = Some(body_start);
+            break;
+        }
+    }
+
+    let close_offset = close_start_offset?;
+    let body_offset = body_start_offset?;
+
+    let frontmatter_text = &md_content[content_start..close_offset];
+    let body_text = &md_content[body_offset..];
+
+    Some(FrontmatterBounds {
+        frontmatter_text,
+        body_text,
+        start_line_no: start_line,
+    })
+}
+
+/// Trims surrounding quotes only if enclosed by identical matching single or double quotes.
+fn trim_matching_quotes(input: &str) -> &str {
+    let s = input.trim();
+    if (s.starts_with('"') && s.ends_with('"') && s.len() >= 2)
+        || (s.starts_with('\'') && s.ends_with('\'') && s.len() >= 2)
+    {
+        &s[1..s.len() - 1]
+    } else {
+        s
+    }
 }
 
 /// Parses YAML-style frontmatter delimited by `---`.
 pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
-    let mut fm = Frontmatter::default();
+    if let Some(bounds) = find_frontmatter_bounds(md_content) {
+        let mut fm = Frontmatter::new("");
 
-    if let Some((_, content_start, close_idx, body_start)) = find_frontmatter_bounds(md_content) {
-        let frontmatter_text = &md_content[content_start..close_idx];
-
-        for line in frontmatter_text.lines() {
+        for line in bounds.frontmatter_text.lines() {
             if let Some((key, val)) = line.split_once(':') {
                 let key = key.trim();
-                let val = val.trim().trim_matches('"').trim_matches('\'');
+                let val_trimmed = trim_matching_quotes(val);
+
+                if val_trimmed.is_empty() && key != "number_sections" {
+                    continue;
+                }
+
                 match key {
-                    "title" => fm.title = val.to_string(),
-                    "subtitle" => fm.subtitle = val.to_string(),
-                    "company" => fm.company = val.to_string(),
-                    "contact" => fm.contact = val.to_string(),
-                    "agent" => fm.agent = val.to_string(),
-                    "date" => fm.date = val.to_string(),
-                    "version" => fm.version = val.to_string(),
-                    "language" | "lang" => fm.language = val.to_string(),
-                    "logo" => fm.logo = val.to_string(),
+                    "title" => fm.title = Some(val_trimmed.to_string()),
+                    "subtitle" => fm.subtitle = Some(val_trimmed.to_string()),
+                    "company" => fm.company = val_trimmed.to_string(),
+                    "contact" => fm.contact = Some(val_trimmed.to_string()),
+                    "agent" => fm.agent = Some(val_trimmed.to_string()),
+                    "date" => fm.date = Some(val_trimmed.to_string()),
+                    "version" => fm.version = Some(val_trimmed.to_string()),
+                    "language" | "lang" => fm.language = Some(val_trimmed.to_string()),
+                    "logo" => fm.logo = Some(val_trimmed.to_string()),
+                    "number_sections" => {
+                        fm.number_sections = val_trimmed.eq_ignore_ascii_case("true");
+                    }
                     _ => {}
                 }
             }
         }
 
-        return (fm, &md_content[body_start..]);
+        return (fm, bounds.body_text);
     }
 
-    (fm, md_content)
+    (Frontmatter::new(""), md_content)
 }
 
 /// Validates frontmatter metadata for required fields, returning a compiler-style diagnostic error if invalid.
-///
-/// Ensures the `company` field is present and non-empty.
-///
-/// # Errors
-///
-/// Returns an error formatted like a Rust compiler diagnostic if `company` is missing or empty.
 pub fn validate_frontmatter(
     frontmatter: &Frontmatter,
     md_content: &str,
@@ -212,13 +300,12 @@ pub fn validate_frontmatter(
 
     let file_path = file_name.unwrap_or("input.md");
 
-    if let Some((start_idx, content_start, close_idx, _)) = find_frontmatter_bounds(md_content) {
-        let frontmatter_text = &md_content[content_start..close_idx];
+    if let Some(bounds) = find_frontmatter_bounds(md_content) {
         let mut company_line_info = None;
 
-        for (idx, line) in frontmatter_text.lines().enumerate() {
+        for (idx, line) in bounds.frontmatter_text.lines().enumerate() {
             if matches!(line.split_once(':'), Some((key, _)) if key.trim() == "company") {
-                let line_no = md_content[..content_start].lines().count() + idx + 1;
+                let line_no = bounds.start_line_no + idx + 1;
                 company_line_info = Some((line_no, line.to_string()));
                 break;
             }
@@ -231,9 +318,9 @@ pub fn validate_frontmatter(
                 &line_content,
             ))
         } else {
-            let start_line = (md_content[..start_idx].lines().count() + 1).max(1);
             Err(DiagnosticError::missing_frontmatter_field(
-                file_path, start_line,
+                file_path,
+                bounds.start_line_no,
             ))
         }
     } else {
@@ -245,10 +332,6 @@ pub fn validate_frontmatter(
 }
 
 /// Parses and validates YAML frontmatter from Markdown content.
-///
-/// # Errors
-///
-/// Returns a compiler-style diagnostic error if required fields like `company` are missing or empty.
 pub fn parse_and_validate_frontmatter<'a>(
     md_content: &'a str,
     file_name: Option<&str>,
@@ -280,42 +363,56 @@ fn parse_callout<'a>(inner: &'a str, locale: &'a Locale) -> (&'static str, &'a s
     ("note", inner, locale.get("callout_note"))
 }
 
-/// Converts Markdown body into interactive HTML following doc2flow structure using default English locale.
-/// Filters out HTML comments (both single-line and multiline) from a vector of Markdown events.
-fn filter_comment_events(events: Vec<Event>) -> Vec<Event> {
-    let mut filtered = Vec::with_capacity(events.len());
-    let mut in_comment = false;
+/// Iterator adapter filtering out HTML comment blocks from a stream of Markdown events.
+struct CommentFilter<I> {
+    iter: I,
+    in_comment: bool,
+}
 
-    for ev in events {
-        match &ev {
-            Event::Html(text) | Event::InlineHtml(text) => {
-                let s = text.as_ref();
-                if in_comment {
-                    if s.contains("-->") {
-                        in_comment = false;
-                    }
-                    continue;
-                } else if let Some(start_idx) = s.find("<!--") {
-                    if s[start_idx..].contains("-->") {
-                        // Single-line or self-contained comment in this event
-                        continue;
-                    } else {
-                        // Start of multiline comment
-                        in_comment = true;
-                        continue;
-                    }
-                }
-            }
-            _ => {
-                if in_comment {
-                    continue;
-                }
-            }
+impl<I> CommentFilter<I> {
+    fn new(iter: I) -> Self {
+        Self {
+            iter,
+            in_comment: false,
         }
-        filtered.push(ev);
     }
+}
 
-    filtered
+impl<'a, I> Iterator for CommentFilter<I>
+where
+    I: Iterator<Item = Event<'a>>,
+{
+    type Item = Event<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        while let Some(ev) = self.iter.next() {
+            match &ev {
+                Event::Html(text) | Event::InlineHtml(text) => {
+                    let s = text.as_ref();
+                    if self.in_comment {
+                        if s.contains("-->") {
+                            self.in_comment = false;
+                        }
+                        continue;
+                    } else if let Some(start_idx) = s.find("<!--") {
+                        if s[start_idx..].contains("-->") {
+                            continue;
+                        } else {
+                            self.in_comment = true;
+                            continue;
+                        }
+                    }
+                }
+                _ => {
+                    if self.in_comment {
+                        continue;
+                    }
+                }
+            }
+            return Some(ev);
+        }
+        None
+    }
 }
 
 /// Strips enclosing `<p>` and `</p>` HTML tags if present.
@@ -337,16 +434,27 @@ pub fn convert_markdown_to_html_with_locale(
     markdown_body: &str,
     locale: &Locale,
 ) -> Result<String> {
+    convert_markdown_to_html_with_options(markdown_body, locale, false)
+}
+
+/// Converts Markdown body into interactive HTML with specified locale and options (e.g. section numbering).
+pub fn convert_markdown_to_html_with_options(
+    markdown_body: &str,
+    locale: &Locale,
+    number_sections: bool,
+) -> Result<String> {
     let mut options = Options::empty();
     options.insert(Options::ENABLE_TASKLISTS);
     options.insert(Options::ENABLE_STRIKETHROUGH);
     options.insert(Options::ENABLE_TABLES);
 
     let parser = MarkdownParser::new_ext(markdown_body, options);
-    let events: Vec<Event> = filter_comment_events(parser.collect());
+    let events: Vec<Event> = CommentFilter::new(parser).collect();
 
     let mut out = String::with_capacity(markdown_body.len() * 2);
     let mut section_count = 0usize;
+    let mut h1_counter = 0u32;
+    let mut h2_counter = 0u32;
     let mut global_cb_count = 0usize;
     let mut global_txt_count = 0usize;
     let mut global_item_count = 0usize;
@@ -384,10 +492,26 @@ pub fn convert_markdown_to_html_with_locale(
                 let is_empty = is_section_empty(&events[idx + 1..]);
                 let is_h1 = target_level == HeadingLevel::H1;
 
+                let final_heading_text;
+                let formatted_heading;
+                if number_sections {
+                    if is_h1 {
+                        h1_counter += 1;
+                        h2_counter = 0;
+                        formatted_heading = format!("{h1_counter}. {heading_text}");
+                    } else {
+                        h2_counter += 1;
+                        formatted_heading = format!("{h1_counter}.{h2_counter} {heading_text}");
+                    }
+                    final_heading_text = formatted_heading.as_str();
+                } else {
+                    final_heading_text = heading_text;
+                }
+
                 template::render_section_header(
                     &mut out,
                     section_count,
-                    heading_text,
+                    final_heading_text,
                     is_h1,
                     is_empty,
                 );
@@ -509,7 +633,6 @@ pub fn convert_markdown_to_html_with_locale(
                             }
                         }
                         Event::Start(Tag::List(_)) => {
-                            // Sub-list encountered within list item, stop collecting item heading content
                             break;
                         }
                         _ => {}
@@ -568,9 +691,7 @@ pub fn convert_markdown_to_html_with_locale(
                 continue;
             }
 
-            Event::End(TagEnd::Item) => {
-                // Suppress standard </li> tags
-            }
+            Event::End(TagEnd::Item) => {}
 
             // Standalone Text Paragraphs
             Event::Start(Tag::Paragraph) => {
@@ -642,7 +763,6 @@ pub fn convert_markdown_to_html_with_locale(
     }
 
     Ok(out)
-
 }
 
 fn is_section_empty(events: &[Event]) -> bool {
@@ -679,9 +799,9 @@ mod tests {
     fn test_parse_frontmatter_split_once() {
         let input = "---\ntitle: \"My Title\"\nlanguage: de\nlogo: \"custom_logo.svg\"\n---\nBody text";
         let (fm, body) = parse_frontmatter(input);
-        assert_eq!(fm.title, "My Title");
-        assert_eq!(fm.language, "de");
-        assert_eq!(fm.logo, "custom_logo.svg");
+        assert_eq!(fm.title.as_deref(), Some("My Title"));
+        assert_eq!(fm.language.as_deref(), Some("de"));
+        assert_eq!(fm.logo.as_deref(), Some("custom_logo.svg"));
         assert_eq!(body, "Body text");
     }
 
@@ -689,8 +809,8 @@ mod tests {
     fn test_parse_frontmatter_with_leading_comments() {
         let input = "<!-- Leading comment -->\n\n---\ntitle: \"Header Title\"\nlanguage: en\n---\nBody content";
         let (fm, body) = parse_frontmatter(input);
-        assert_eq!(fm.title, "Header Title");
-        assert_eq!(fm.language, "en");
+        assert_eq!(fm.title.as_deref(), Some("Header Title"));
+        assert_eq!(fm.language.as_deref(), Some("en"));
         assert_eq!(body, "Body content");
     }
 
@@ -765,7 +885,6 @@ mod tests {
         assert!(!html.contains("Secret internal comment"));
         assert!(!html.contains("Another hidden comment"));
         assert!(html.contains("This is visible content."));
-        // Ensure comments don't create dummy text-items
         assert_eq!(html.matches("class=\"check-item text-item\"").count(), 1);
     }
 
@@ -792,12 +911,10 @@ mod tests {
 "#;
         let html = convert_markdown_to_html(input).expect("conversion failed");
 
-        // Top level unordered item: depth 0 (no --indent style)
         assert!(html.contains(r#"<div class="check-item simple-item" id="item_s1_1">"#));
         assert!(html.contains(r#"<span class="list-bullet">&bull;</span>"#));
         assert!(html.contains(r#"<span class="check-label">Top Task</span>"#));
 
-        // Sub-steps A & B: ordered at depth 1 (--indent: 1)
         assert!(html.contains(r#"<div class="check-item simple-item" id="item_s1_2" style="--indent: 1;">"#));
         assert!(html.contains(r#"<span class="list-bullet">a.</span>"#));
         assert!(html.contains(r#"<span class="check-label">Sub step A</span>"#));
@@ -806,12 +923,10 @@ mod tests {
         assert!(html.contains(r#"<span class="list-bullet">b.</span>"#));
         assert!(html.contains(r#"<span class="check-label">Sub step B</span>"#));
 
-        // Sub-task 1: task checkbox at depth 1 (--indent: 1)
         assert!(html.contains(r#"<div class="check-item" id="wrap-cb_s1_1" style="--indent: 1;">"#));
         assert!(html.contains(r#"<input type="checkbox" id="cb_s1_1">"#));
         assert!(html.contains(r#"<label class="check-label" for="cb_s1_1">Sub-task 1</label>"#));
 
-        // Deep details X & Y: unordered at depth 2 (--indent: 2) with bullet (&bull;)
         assert!(html.contains(r#"<div class="check-item simple-item" id="item_s1_5" style="--indent: 2;">"#));
         assert!(html.contains(r#"<span class="list-bullet">&bull;</span>"#));
         assert!(html.contains(r#"<span class="check-label">Deep detail X</span>"#));
@@ -869,7 +984,7 @@ mod tests {
     #[test]
     fn test_validate_frontmatter_missing_block() {
         let input = "# No Frontmatter Document\n\nContent paragraph.";
-        let fm = Frontmatter::default();
+        let fm = Frontmatter::new("");
         let err = validate_frontmatter(&fm, input, Some("doc.md")).unwrap_err();
         let err_str = err.to_string();
 
@@ -932,9 +1047,9 @@ mod tests {
     fn test_frontmatter_windows_crlf_line_endings() {
         let input = "---\r\ntitle: \"CRLF Title\"\r\ncompany: \"CRLF Corp\"\r\nlanguage: de\r\n---\r\n## Section 1\r\nBody line";
         let (fm, body) = parse_frontmatter(input);
-        assert_eq!(fm.title, "CRLF Title");
+        assert_eq!(fm.title.as_deref(), Some("CRLF Title"));
         assert_eq!(fm.company, "CRLF Corp");
-        assert_eq!(fm.language, "de");
+        assert_eq!(fm.language.as_deref(), Some("de"));
         assert_eq!(body, "## Section 1\r\nBody line");
     }
 
@@ -942,14 +1057,22 @@ mod tests {
     fn test_frontmatter_quoted_and_unquoted_fields() {
         let input = "---\ntitle: 'Single Quoted'\nsubtitle: \"Double Quoted\"\ncompany:   Unquoted Spaced   \ncontact: 'person@example.com'\nagent: \"Agent 007\"\ndate: 2026-07-26\nversion: '1.2.3'\nlang: en\n---\nBody";
         let (fm, _) = parse_frontmatter(input);
-        assert_eq!(fm.title, "Single Quoted");
-        assert_eq!(fm.subtitle, "Double Quoted");
+        assert_eq!(fm.title.as_deref(), Some("Single Quoted"));
+        assert_eq!(fm.subtitle.as_deref(), Some("Double Quoted"));
         assert_eq!(fm.company, "Unquoted Spaced");
-        assert_eq!(fm.contact, "person@example.com");
-        assert_eq!(fm.agent, "Agent 007");
-        assert_eq!(fm.date, "2026-07-26");
-        assert_eq!(fm.version, "1.2.3");
-        assert_eq!(fm.language, "en");
+        assert_eq!(fm.contact.as_deref(), Some("person@example.com"));
+        assert_eq!(fm.agent.as_deref(), Some("Agent 007"));
+        assert_eq!(fm.date.as_deref(), Some("2026-07-26"));
+        assert_eq!(fm.version.as_deref(), Some("1.2.3"));
+        assert_eq!(fm.language.as_deref(), Some("en"));
+    }
+
+    #[test]
+    fn test_trim_matching_quotes() {
+        assert_eq!(trim_matching_quotes("\"quoted\""), "quoted");
+        assert_eq!(trim_matching_quotes("'single'"), "single");
+        assert_eq!(trim_matching_quotes("\"mismatched'"), "\"mismatched'");
+        assert_eq!(trim_matching_quotes("plain"), "plain");
     }
 
     #[test]
@@ -976,7 +1099,6 @@ mod tests {
     #[test]
     fn test_callout_parsing_variants_and_formatting() {
         let locale = Locale::default();
-        // Check "!" vs "! " vs "!! " vs "!!! " vs "?" vs "? "
         let (cls, text, lbl) = parse_callout("!Important message", &locale);
         assert_eq!(cls, "note note-important");
         assert_eq!(text, "Important message");
@@ -1009,13 +1131,9 @@ mod tests {
 "#;
         let html = convert_markdown_to_html(input).expect("conversion failed");
 
-        // Level 1: 1.
         assert!(html.contains(r#"<span class="list-bullet">1.</span>"#));
-        // Level 2: a. (--indent: 1)
         assert!(html.contains(r#"<span class="list-bullet">a.</span>"#));
-        // Level 3: i. (--indent: 2)
         assert!(html.contains(r#"<span class="list-bullet">i.</span>"#));
-        // Level 4: 1. (--indent: 3)
         assert!(html.contains(r#"<span class="list-bullet">1.</span>"#));
     }
 
@@ -1050,6 +1168,60 @@ mod tests {
         assert!(!html.contains("<p>Task"));
         assert!(!html.contains("Task 1</p>"));
     }
+
+    #[test]
+    fn test_number_sections_frontmatter_parsing() {
+        let input1 = "---\nnumber_sections: true\n---";
+        let (fm1, _) = parse_frontmatter(input1);
+        assert!(fm1.number_sections);
+
+        let input2 = "---\nnumber_sections: True\n---";
+        let (fm2, _) = parse_frontmatter(input2);
+        assert!(fm2.number_sections);
+
+        let input3 = "---\nnumber_sections: false\n---";
+        let (fm3, _) = parse_frontmatter(input3);
+        assert!(!fm3.number_sections);
+
+        let input4 = "---\ntitle: \"Default Test\"\n---";
+        let (fm4, _) = parse_frontmatter(input4);
+        assert!(fm4.number_sections);
+    }
+
+    #[test]
+    fn test_section_numbering_conversion() {
+        let input = r#"# First H1
+- [ ] Task 1.1
+
+## First Sub H2
+- [ ] Task 1.1.1
+
+## Second Sub H2
+- [ ] Task 1.2.1
+
+# Second H1
+- [ ] Task 2.1
+
+## Third Sub H2
+- [ ] Task 2.1.1
+"#;
+        let locale = Locale::default();
+        let html_enabled = convert_markdown_to_html_with_options(input, &locale, true)
+            .expect("conversion failed");
+
+        assert!(html_enabled.contains("<span>1. First H1</span>"));
+        assert!(html_enabled.contains("<span>1.1 First Sub H2</span>"));
+        assert!(html_enabled.contains("<span>1.2 Second Sub H2</span>"));
+        assert!(html_enabled.contains("<span>2. Second H1</span>"));
+        assert!(html_enabled.contains("<span>2.1 Third Sub H2</span>"));
+
+        let html_disabled = convert_markdown_to_html_with_options(input, &locale, false)
+            .expect("conversion failed");
+
+        assert!(html_disabled.contains("<span>First H1</span>"));
+        assert!(html_disabled.contains("<span>First Sub H2</span>"));
+        assert!(html_disabled.contains("<span>Second Sub H2</span>"));
+        assert!(html_disabled.contains("<span>Second H1</span>"));
+        assert!(html_disabled.contains("<span>Third Sub H2</span>"));
+    }
 }
-
-

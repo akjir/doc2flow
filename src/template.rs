@@ -258,12 +258,12 @@ pub fn render(
     vars.insert("LICENSE_URL", LICENSE_URL);
     vars.insert("CREATED_AT", created_at.as_str());
     vars.insert("LANG_CODE", locale.lang_code.as_str());
-    vars.insert("TITLE", frontmatter.title.as_str());
-    vars.insert("SUBTITLE", frontmatter.subtitle.as_str());
+    vars.insert("TITLE", frontmatter.title.as_deref().unwrap_or(""));
+    vars.insert("SUBTITLE", frontmatter.subtitle.as_deref().unwrap_or(""));
     vars.insert("COMPANY", frontmatter.company.as_str());
-    vars.insert("CONTACT", frontmatter.contact.as_str());
-    vars.insert("AGENT", frontmatter.agent.as_str());
-    vars.insert("DATE", frontmatter.date.as_str());
+    vars.insert("CONTACT", frontmatter.contact.as_deref().unwrap_or(""));
+    vars.insert("AGENT", frontmatter.agent.as_deref().unwrap_or(""));
+    vars.insert("DATE", frontmatter.date.as_deref().unwrap_or(""));
     vars.insert("I18N_JSON", i18n_json.as_str());
     vars.insert("CSS", style_css);
     vars.insert("JS", script_js);
@@ -335,11 +335,9 @@ mod tests {
 
     #[test]
     fn test_render_full_document() {
-        let fm = Frontmatter {
-            title: "Doc Title".into(),
-            language: "de".into(),
-            ..Frontmatter::default()
-        };
+        let mut fm = Frontmatter::new("Test Corp");
+        fm.title = Some("Doc Title".into());
+        fm.language = Some("de".into());
 
         let locale = Locale::from_lang_code("de");
         let body = "<p>Body Content</p>";
@@ -360,11 +358,8 @@ mod tests {
 
     #[test]
     fn test_render_with_custom_logo() {
-        let fm = Frontmatter {
-            title: "Doc Title".into(),
-            company: "Acme".into(),
-            ..Frontmatter::default()
-        };
+        let mut fm = Frontmatter::new("Acme");
+        fm.title = Some("Doc Title".into());
         let locale = Locale::from_lang_code("en");
         let custom_logo = "<img src=\"data:image/png;base64,1234\" alt=\"Logo\">";
 
@@ -412,7 +407,7 @@ mod tests {
 
     #[test]
     fn test_render_metadata_injection() {
-        let fm = Frontmatter::default();
+        let fm = Frontmatter::new("Test Corp");
         let locale = Locale::from_lang_code("en");
         let html = render(&fm, &locale, "<p>Content</p>", "doc_meta", None).expect("Render failed");
 
