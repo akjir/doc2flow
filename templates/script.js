@@ -855,6 +855,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
             e.preventDefault();
             toggleSearchToolbar(true);
+        } else if (e.key === 'Escape' || e.key === 'Esc') {
+            const toolbar = document.getElementById('search-toolbar');
+            if (toolbar && !toolbar.classList.contains('hidden')) {
+                e.preventDefault();
+                toggleSearchToolbar(false);
+            }
         }
     });
 

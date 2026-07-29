@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Doc2Flow v0.9.2+66.69afbea.dev">
-<meta name="version" content="0.9.2+66.69afbea.dev">
+<meta name="generator" content="Doc2Flow v0.9.2+67.e197219.dev">
+<meta name="version" content="0.9.2+67.e197219.dev">
 <meta name="repository" content="https://github.com/akjir/doc2flow">
 <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-<meta name="dcterms.created" content="2026-07-29T18:29:44Z">
+<meta name="dcterms.created" content="2026-07-29T18:32:50Z">
 <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
 <title>Doc2Flow English Showcase</title>
 <style>
@@ -1448,7 +1448,7 @@ mark.d2f-highlight {
 
 <script>
 window.D2F_DOC_ID = 'd2f_id_c9c539743b5bb460';
-window.D2F_I18N = {"contact":"Contact","date_placeholder":"MM/DD/YYYY","signature_date":"Date","progress_template":"{done} of {total} tasks completed ({pct}%)","save_state":"Save State","export_pdf":"Export as PDF","copy_code":"Copy code","agent":"Agent","loading":"Loading...","callout_note":"Note","callout_important":"Important","callout_caution":"Caution","callout_tip":"Tip","comment_placeholder":"Add a comment...","setup_in_progress":"Process in Progress","name_placeholder":"Name","confirm_reset":"Are you sure you want to reset all markings?","lang_code":"en","search_placeholder":"Search... (Ctrl+K)","sections_visible":"{visible} / {total} sections visible","copied":"Copied!","company":"Company","date":"Date","callout_warning":"Warning","setup_completed":"Process Completed","reset_all":"Reset"};
+window.D2F_I18N = {"company":"Company","comment_placeholder":"Add a comment...","date_placeholder":"MM/DD/YYYY","contact":"Contact","export_pdf":"Export as PDF","copied":"Copied!","agent":"Agent","confirm_reset":"Are you sure you want to reset all markings?","callout_note":"Note","callout_tip":"Tip","callout_important":"Important","callout_warning":"Warning","search_placeholder":"Search... (Ctrl+K)","name_placeholder":"Name","loading":"Loading...","lang_code":"en","date":"Date","reset_all":"Reset","save_state":"Save State","callout_caution":"Caution","progress_template":"{done} of {total} tasks completed ({pct}%)","sections_visible":"{visible} / {total} sections visible","setup_in_progress":"Process in Progress","signature_date":"Date","setup_completed":"Process Completed","copy_code":"Copy code"};
 // Doc2Flow Generic Checklist Logic
 
 const DOC_ID = window.D2F_DOC_ID || '';
@@ -2306,6 +2306,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
             e.preventDefault();
             toggleSearchToolbar(true);
+        } else if (e.key === 'Escape' || e.key === 'Esc') {
+            const toolbar = document.getElementById('search-toolbar');
+            if (toolbar && !toolbar.classList.contains('hidden')) {
+                e.preventDefault();
+                toggleSearchToolbar(false);
+            }
         }
     });
 
