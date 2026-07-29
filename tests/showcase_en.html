@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Doc2Flow v0.9.2+68.a07b150.dev">
-<meta name="version" content="0.9.2+68.a07b150.dev">
+<meta name="generator" content="Doc2Flow v0.9.2+69.fa43805.dev">
+<meta name="version" content="0.9.2+69.fa43805.dev">
 <meta name="repository" content="https://github.com/akjir/doc2flow">
 <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-<meta name="dcterms.created" content="2026-07-29T18:43:53Z">
+<meta name="dcterms.created" content="2026-07-29T18:51:13Z">
 <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
 <title>Doc2Flow English Showcase</title>
 <style>
@@ -1448,7 +1448,7 @@ mark.d2f-highlight {
 
 <script>
 window.D2F_DOC_ID = 'd2f_id_c9c539743b5bb460';
-window.D2F_I18N = {"agent":"Agent","date":"Date","setup_completed":"Process Completed","progress_template":"{done} of {total} tasks completed ({pct}%)","company":"Company","signature_date":"Date","setup_in_progress":"Process in Progress","copied":"Copied!","callout_note":"Note","reset_all":"Reset","export_pdf":"Export as PDF","callout_important":"Important","search_placeholder":"Search... (Ctrl+K)","date_placeholder":"MM/DD/YYYY","callout_tip":"Tip","loading":"Loading...","lang_code":"en","confirm_reset":"Are you sure you want to reset all markings?","save_state":"Save State","callout_warning":"Warning","name_placeholder":"Name","contact":"Contact","callout_caution":"Caution","comment_placeholder":"Add a comment...","sections_visible":"{visible} / {total} sections visible","copy_code":"Copy code"};
+window.D2F_I18N = {"date":"Date","signature_date":"Date","setup_completed":"Process Completed","company":"Company","lang_code":"en","date_placeholder":"MM/DD/YYYY","reset_all":"Reset","progress_template":"{done} of {total} tasks completed ({pct}%)","name_placeholder":"Name","copied":"Copied!","contact":"Contact","copy_code":"Copy code","callout_warning":"Warning","callout_caution":"Caution","search_placeholder":"Search... (Ctrl+K)","sections_visible":"{visible} / {total} sections visible","setup_in_progress":"Process in Progress","callout_tip":"Tip","confirm_reset":"Are you sure you want to reset all markings?","loading":"Loading...","save_state":"Save State","callout_note":"Note","callout_important":"Important","comment_placeholder":"Add a comment...","export_pdf":"Export as PDF","agent":"Agent"};
 // Doc2Flow Generic Checklist Logic
 
 const DOC_ID = window.D2F_DOC_ID || '';
@@ -1647,6 +1647,7 @@ function performSearchAndFilter() {
 
         preSearchCollapsedState = null;
         lastMatchedSectionIds.clear();
+        saveState();
     }
 
     const searchClearBtn = document.getElementById('search-clear-btn');
@@ -1725,6 +1726,7 @@ function toggleSection(headerElement) {
         if (toggler) {
             toggler.innerHTML = isCollapsed ? '&#9650;' : '&#9660;';
         }
+        saveState();
     }
 }
 
@@ -1803,8 +1805,17 @@ function saveState() {
         }
     });
 
+    const sections = {};
+    document.querySelectorAll('.d2f-section, .section').forEach((sec, index) => {
+        const key = sec.id || ('sec_' + index);
+        const body = sec.querySelector('.sb');
+        if (body) {
+            sections[key] = body.classList.contains('collapsed');
+        }
+    });
+
     try { 
-        localStorage.setItem(STATE_KEY, JSON.stringify({ checks: state, texts: textStates, fields: fields, comments: comments })); 
+        localStorage.setItem(STATE_KEY, JSON.stringify({ checks: state, texts: textStates, fields: fields, comments: comments, sections: sections })); 
     } catch (e) {
         console.warn('Failed to save state to localStorage', e);
     }
@@ -1846,6 +1857,24 @@ function loadState() {
                 const key = item.id || ('item_' + index);
                 if (data.comments[key] !== undefined) {
                     getOrCreateCommentBox(item, data.comments[key]);
+                }
+            });
+        }
+        if (data.sections) {
+            document.querySelectorAll('.d2f-section, .section').forEach((sec, index) => {
+                const key = sec.id || ('sec_' + index);
+                if (data.sections[key] === undefined) return;
+                const body = sec.querySelector('.sb');
+                const sh = sec.querySelector('.sh');
+                if (!body) return;
+                const shouldCollapse = data.sections[key];
+                body.classList.toggle('collapsed', shouldCollapse);
+                if (sh) {
+                    sh.setAttribute('aria-expanded', shouldCollapse ? 'false' : 'true');
+                    const toggler = sh.querySelector('.stog');
+                    if (toggler) {
+                        toggler.innerHTML = shouldCollapse ? '&#9650;' : '&#9660;';
+                    }
                 }
             });
         }
@@ -1975,6 +2004,20 @@ function saveDocumentState() {
                 opt.removeAttribute('selected');
             }
         });
+    });
+
+    // Sync section collapsed state into the DOM so the exported HTML preserves it (JS-STATE-DOM-SYNC)
+    document.querySelectorAll('.d2f-section, .section').forEach(sec => {
+        const body = sec.querySelector('.sb');
+        const sh = sec.querySelector('.sh');
+        if (!body) return;
+        if (body.classList.contains('collapsed')) {
+            body.classList.add('collapsed');
+            if (sh) sh.setAttribute('aria-expanded', 'false');
+        } else {
+            body.classList.remove('collapsed');
+            if (sh) sh.setAttribute('aria-expanded', 'true');
+        }
     });
 
     const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;

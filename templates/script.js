@@ -196,6 +196,7 @@ function performSearchAndFilter() {
 
         preSearchCollapsedState = null;
         lastMatchedSectionIds.clear();
+        saveState();
     }
 
     const searchClearBtn = document.getElementById('search-clear-btn');
@@ -274,6 +275,7 @@ function toggleSection(headerElement) {
         if (toggler) {
             toggler.innerHTML = isCollapsed ? '&#9650;' : '&#9660;';
         }
+        saveState();
     }
 }
 
@@ -352,8 +354,17 @@ function saveState() {
         }
     });
 
+    const sections = {};
+    document.querySelectorAll('.d2f-section, .section').forEach((sec, index) => {
+        const key = sec.id || ('sec_' + index);
+        const body = sec.querySelector('.sb');
+        if (body) {
+            sections[key] = body.classList.contains('collapsed');
+        }
+    });
+
     try { 
-        localStorage.setItem(STATE_KEY, JSON.stringify({ checks: state, texts: textStates, fields: fields, comments: comments })); 
+        localStorage.setItem(STATE_KEY, JSON.stringify({ checks: state, texts: textStates, fields: fields, comments: comments, sections: sections })); 
     } catch (e) {
         console.warn('Failed to save state to localStorage', e);
     }
@@ -395,6 +406,24 @@ function loadState() {
                 const key = item.id || ('item_' + index);
                 if (data.comments[key] !== undefined) {
                     getOrCreateCommentBox(item, data.comments[key]);
+                }
+            });
+        }
+        if (data.sections) {
+            document.querySelectorAll('.d2f-section, .section').forEach((sec, index) => {
+                const key = sec.id || ('sec_' + index);
+                if (data.sections[key] === undefined) return;
+                const body = sec.querySelector('.sb');
+                const sh = sec.querySelector('.sh');
+                if (!body) return;
+                const shouldCollapse = data.sections[key];
+                body.classList.toggle('collapsed', shouldCollapse);
+                if (sh) {
+                    sh.setAttribute('aria-expanded', shouldCollapse ? 'false' : 'true');
+                    const toggler = sh.querySelector('.stog');
+                    if (toggler) {
+                        toggler.innerHTML = shouldCollapse ? '&#9650;' : '&#9660;';
+                    }
                 }
             });
         }
@@ -524,6 +553,20 @@ function saveDocumentState() {
                 opt.removeAttribute('selected');
             }
         });
+    });
+
+    // Sync section collapsed state into the DOM so the exported HTML preserves it (JS-STATE-DOM-SYNC)
+    document.querySelectorAll('.d2f-section, .section').forEach(sec => {
+        const body = sec.querySelector('.sb');
+        const sh = sec.querySelector('.sh');
+        if (!body) return;
+        if (body.classList.contains('collapsed')) {
+            body.classList.add('collapsed');
+            if (sh) sh.setAttribute('aria-expanded', 'false');
+        } else {
+            body.classList.remove('collapsed');
+            if (sh) sh.setAttribute('aria-expanded', 'true');
+        }
     });
 
     const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
