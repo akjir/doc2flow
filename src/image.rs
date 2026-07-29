@@ -36,7 +36,7 @@ pub fn resolve_logo_path(path: &Path, base_dir: Option<&Path>) -> PathBuf {
 pub fn load_logo(logo_path: Option<&Path>, base_dir: Option<&Path>) -> String {
     let path = match logo_path {
         Some(p) if !p.as_os_str().is_empty() => p,
-        _ => return clean_svg(DEFAULT_LOGO_SVG),
+        _ => return DEFAULT_LOGO_SVG.to_string(),
     };
 
     let resolved_path = resolve_logo_path(path, base_dir);
@@ -46,7 +46,7 @@ pub fn load_logo(logo_path: Option<&Path>, base_dir: Option<&Path>) -> String {
             "Custom logo file '{}' not found. Falling back to default logo.",
             resolved_path.display()
         ));
-        return clean_svg(DEFAULT_LOGO_SVG);
+        return DEFAULT_LOGO_SVG.to_string();
     }
 
     let mime = guess_mime_type(&resolved_path);
@@ -62,7 +62,7 @@ pub fn load_logo(logo_path: Option<&Path>, base_dir: Option<&Path>) -> String {
                         "Custom logo file '{}' does not contain valid SVG markup. Falling back to default logo.",
                         resolved_path.display()
                     ));
-                    clean_svg(DEFAULT_LOGO_SVG)
+                    DEFAULT_LOGO_SVG.to_string()
                 }
             }
             Err(e) => {
@@ -71,7 +71,7 @@ pub fn load_logo(logo_path: Option<&Path>, base_dir: Option<&Path>) -> String {
                     resolved_path.display(),
                     e
                 ));
-                clean_svg(DEFAULT_LOGO_SVG)
+                DEFAULT_LOGO_SVG.to_string()
             }
         }
     } else {
@@ -777,10 +777,10 @@ mod tests {
     fn test_load_logo_default_and_custom() {
         // None or empty returns default logo
         let default_logo = load_logo(None, None);
-        assert_eq!(default_logo, clean_svg(DEFAULT_LOGO_SVG));
+        assert_eq!(default_logo, DEFAULT_LOGO_SVG);
 
         let empty_logo = load_logo(Some(Path::new("")), None);
-        assert_eq!(empty_logo, clean_svg(DEFAULT_LOGO_SVG));
+        assert_eq!(empty_logo, DEFAULT_LOGO_SVG);
 
         // Temp dir for testing custom SVG & PNG logos
         let temp_dir = std::env::temp_dir().join("d2f_test_logo");
@@ -811,7 +811,7 @@ mod tests {
     fn test_load_logo_missing_fallback() {
         let missing_path = Path::new("non_existent_logo_12345.svg");
         let fallback = load_logo(Some(missing_path), None);
-        assert_eq!(fallback, clean_svg(DEFAULT_LOGO_SVG));
+        assert_eq!(fallback, DEFAULT_LOGO_SVG);
     }
 
     #[test]
