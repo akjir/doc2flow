@@ -445,14 +445,14 @@ pub fn clean_svg(input: &str) -> String {
     // 1. Strip XML declarations <?xml ...?> and <!DOCTYPE ...>
     while let Some(start) = s.find("<?") {
         if let Some(end) = s[start..].find("?>") {
-            s = s[end + 2..].trim();
+            s = s[start + end + 2..].trim();
         } else {
             break;
         }
     }
     while let Some(start) = s.find("<!DOCTYPE") {
         if let Some(end) = s[start..].find('>') {
-            s = s[end + 1..].trim();
+            s = s[start + end + 1..].trim();
         } else {
             break;
         }
@@ -489,12 +489,11 @@ pub fn clean_svg(input: &str) -> String {
             rest = &tag_rest[tag_end + 1..];
 
             let is_closing = full_tag.starts_with("</");
-            let tag_inner = if is_closing {
-                full_tag[2..full_tag.len() - 1].trim()
-            } else if full_tag.ends_with("/>") {
-                full_tag[1..full_tag.len() - 2].trim()
-            } else {
-                full_tag[1..full_tag.len() - 1].trim()
+            let is_self_closing = full_tag.ends_with("/>");
+            let tag_inner = match (is_closing, is_self_closing) {
+                (true, _) => full_tag[2..full_tag.len() - 1].trim(),
+                (false, true) => full_tag[1..full_tag.len() - 2].trim(),
+                (false, false) => full_tag[1..full_tag.len() - 1].trim(),
             };
 
             let tag_name = tag_inner
@@ -505,7 +504,7 @@ pub fn clean_svg(input: &str) -> String {
 
             // Skip editor-specific metadata tags
             if tag_name.starts_with("sodipodi:") || tag_name == "metadata" {
-                if !is_closing && !full_tag.ends_with("/>") {
+                if !is_closing && !is_self_closing {
                     let closing = format!("</{tag_name}>");
                     if let Some(close_pos) = rest.find(&closing) {
                         rest = &rest[close_pos + closing.len()..];
@@ -519,25 +518,27 @@ pub fn clean_svg(input: &str) -> String {
             }
 
             // Skip empty <defs .../> tags without children
-            if !is_closing && tag_name == "defs" && full_tag.ends_with("/>") {
+            if !is_closing && tag_name == "defs" && is_self_closing {
                 continue;
             }
 
             if is_closing {
                 let _ = write!(result, "</{tag_name}>");
             } else {
-                let is_self_closing = full_tag.ends_with("/>");
                 let cleaned_attrs = clean_tag_attributes(tag_name, tag_inner);
-                if cleaned_attrs.is_empty() {
-                    if is_self_closing {
+                match (cleaned_attrs.is_empty(), is_self_closing) {
+                    (true, true) => {
                         let _ = write!(result, "<{tag_name}/>");
-                    } else {
+                    }
+                    (true, false) => {
                         let _ = write!(result, "<{tag_name}>");
                     }
-                } else if is_self_closing {
-                    let _ = write!(result, "<{tag_name} {cleaned_attrs}/>");
-                } else {
-                    let _ = write!(result, "<{tag_name} {cleaned_attrs}>");
+                    (false, true) => {
+                        let _ = write!(result, "<{tag_name} {cleaned_attrs}/>");
+                    }
+                    (false, false) => {
+                        let _ = write!(result, "<{tag_name} {cleaned_attrs}>");
+                    }
                 }
             }
         } else {

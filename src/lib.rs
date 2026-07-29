@@ -10,5 +10,3 @@ pub mod image;
 pub mod io;
 pub mod template;
 pub mod utils;
-
-

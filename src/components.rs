@@ -33,13 +33,18 @@ pub fn render_section_header(
     } else {
         ""
     };
-    let callout_attr = match callout_type {
-        Some(ct) if !ct.is_empty() => format!(" data-callout-type=\"{ct}\""),
-        _ => String::new(),
-    };
     let _ = write!(
         out,
-        "<!-- S{section_count} -->\n<section class=\"section d2f-section\" id=\"s{section_count}\"{checklist_attr}{callout_attr}>\n<h2 class=\"sh{h1_class}{empty_class}\"{a11y_attrs}><span>{heading_text}</span>\n<div style=\"display:flex;align-items:center;gap:8px\"><span class=\"sbadge\" id=\"badge-s{section_count}\"></span><span class=\"stog\" id=\"tog-s{section_count}\">&#9660;</span></div></h2>\n<div class=\"sb\" id=\"body-s{section_count}\">\n"
+        "<!-- S{section_count} -->\n<section class=\"section d2f-section\" id=\"s{section_count}\"{checklist_attr}"
+    );
+    if let Some(ct) = callout_type
+        && !ct.is_empty()
+    {
+        let _ = write!(out, " data-callout-type=\"{ct}\"");
+    }
+    let _ = write!(
+        out,
+        ">\n<h2 class=\"sh{h1_class}{empty_class}\"{a11y_attrs}><span>{heading_text}</span>\n<div style=\"display:flex;align-items:center;gap:8px\"><span class=\"sbadge\" id=\"badge-s{section_count}\"></span><span class=\"stog\" id=\"tog-s{section_count}\">&#9660;</span></div></h2>\n<div class=\"sb\" id=\"body-s{section_count}\">\n"
     );
 }
 

@@ -7,6 +7,7 @@ Doc2Flow (`d2f`) is a command-line interface (CLI) tool built for Windows that c
 - **Single Binary Output:** The build must result in a single executable file (`d2f.exe`) with no external runtime dependencies.
 - **Zero-Dependency HTML:** The generated HTML file must contain all necessary assets (CSS, JS, images via Base64) embedded directly within it. There must be absolutely no references to external servers or local directories.
 - **Integrated Templates & Localization:** All required HTML/CSS/JS templates and i18n locale definitions must be embedded into the binary at compile time (e.g., using `include_str!`).
+- **100% Safe Rust:** Strict prohibition of `unsafe` code blocks across the entire codebase to guarantee memory safety and soundness.
 
 ---
 

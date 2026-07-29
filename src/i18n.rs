@@ -51,15 +51,12 @@ impl Locale {
     /// locale file is embedded, falls back to default English (`"en"`).
     pub fn from_lang_code(code: &str) -> Self {
         let normalized = code.trim().to_lowercase();
-        if let Some(json_str) = get_embedded_locale(&normalized) {
-            Self::from_json(json_str)
-        } else if let Some(fallback_str) = get_embedded_locale("en") {
-            Self::from_json(fallback_str)
-        } else {
-            Locale {
+        match get_embedded_locale(&normalized).or_else(|| get_embedded_locale("en")) {
+            Some(json_str) => Self::from_json(json_str),
+            None => Locale {
                 lang_code: normalized,
                 entries: HashMap::new(),
-            }
+            },
         }
     }
 

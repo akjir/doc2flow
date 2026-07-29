@@ -198,8 +198,7 @@ pub fn substitute_template(
 ) -> String {
     let total_vars_len: usize = vars.values().map(|v| v.len()).sum();
     let total_locale_len: usize = locale
-        .map(|l| l.entries.values().map(|v| v.len()).sum())
-        .unwrap_or(0);
+        .map_or(0, |l| l.entries.values().map(String::len).sum());
     let mut result = String::with_capacity(template.len() + total_vars_len + total_locale_len);
 
     let mut cursor = 0;
@@ -211,15 +210,13 @@ pub fn substitute_template(
             let abs_end = abs_start + 2 + end;
             let key = &template[abs_start + 2..abs_end];
 
-            if let Some(val) = vars.get(key) {
-                result.push_str(val);
-            } else if let Some(val) = key
-                .strip_prefix("L_")
-                .and_then(|key_name| locale.and_then(|loc| loc.get_ignore_ascii_case(key_name)))
-            {
-                result.push_str(val);
-            } else {
-                result.push_str(&template[abs_start..abs_end + 2]);
+            let val_opt = vars.get(key).copied().or_else(|| {
+                key.strip_prefix("L_")
+                    .and_then(|key_name| locale.and_then(|loc| loc.get_ignore_ascii_case(key_name)))
+            });
+            match val_opt {
+                Some(val) => result.push_str(val),
+                None => result.push_str(&template[abs_start..abs_end + 2]),
             }
             cursor = abs_end + 2;
         } else {

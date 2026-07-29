@@ -26,14 +26,11 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
-    let input_path = match args.input {
-        Some(path) => path,
-        None => {
-            return Err(Doc2FlowError::Message(
-                "Missing input file. Specify input path or use --init to generate a template."
-                    .to_string(),
-            ));
-        }
+    let Some(input_path) = args.input else {
+        return Err(Doc2FlowError::Message(
+            "Missing input file. Specify input path or use --init to generate a template."
+                .to_string(),
+        ));
     };
 
     let output_path = args.output.unwrap_or_else(|| {

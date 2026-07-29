@@ -341,26 +341,29 @@ pub fn parse_and_validate_frontmatter<'a>(
     Ok((fm, body))
 }
 
-/// Parses callout metadata (CSS class, inner text, callout label) from raw blockquote inner string.
-fn parse_callout<'a>(inner: &'a str, locale: &'a Locale) -> (&'static str, &'a str, &'a str) {
-    let prefixes: &[(&str, &'static str, &str)] = &[
-        ("!!! ", "note note-caution", locale.get("callout_caution")),
-        ("!!!", "note note-caution", locale.get("callout_caution")),
-        ("!! ", "note note-warning", locale.get("callout_warning")),
-        ("!!", "note note-warning", locale.get("callout_warning")),
-        ("! ", "note note-important", locale.get("callout_important")),
-        ("!", "note note-important", locale.get("callout_important")),
-        ("? ", "note note-tip", locale.get("callout_tip")),
-        ("?", "note note-tip", locale.get("callout_tip")),
+/// Parses callout metadata (CSS class, inner text, callout label, callout type) from raw blockquote inner string.
+fn parse_callout<'a>(
+    inner: &'a str,
+    locale: &'a Locale,
+) -> (&'static str, &'a str, &'a str, &'static str) {
+    let prefixes: &[(&str, &'static str, &str, &'static str)] = &[
+        ("!!! ", "note note-caution", locale.get("callout_caution"), "caution"),
+        ("!!!", "note note-caution", locale.get("callout_caution"), "caution"),
+        ("!! ", "note note-warning", locale.get("callout_warning"), "warning"),
+        ("!!", "note note-warning", locale.get("callout_warning"), "warning"),
+        ("! ", "note note-important", locale.get("callout_important"), "important"),
+        ("!", "note note-important", locale.get("callout_important"), "important"),
+        ("? ", "note note-tip", locale.get("callout_tip"), "tip"),
+        ("?", "note note-tip", locale.get("callout_tip"), "tip"),
     ];
 
-    for &(prefix, css_class, label) in prefixes {
+    for &(prefix, css_class, label, ctype) in prefixes {
         if let Some(stripped) = inner.strip_prefix(prefix) {
-            return (css_class, stripped, label);
+            return (css_class, stripped, label, ctype);
         }
     }
 
-    ("note", inner, locale.get("callout_note"))
+    ("note", inner, locale.get("callout_note"), "note")
 }
 
 /// Iterator adapter filtering out HTML comment blocks from a stream of Markdown events.
@@ -394,13 +397,12 @@ where
                             self.in_comment = false;
                         }
                         continue;
-                    } else if let Some(start_idx) = s.find("<!--") {
-                        if s[start_idx..].contains("-->") {
-                            continue;
-                        } else {
+                    }
+                    if let Some(start_idx) = s.find("<!--") {
+                        if !s[start_idx..].contains("-->") {
                             self.in_comment = true;
-                            continue;
                         }
+                        continue;
                     }
                 }
                 _ => {
@@ -569,7 +571,7 @@ pub fn convert_markdown_to_html_with_options(
                 let trimmed = bq_html.trim();
 
                 let inner = strip_paragraph_tags(trimmed);
-                let (note_cls, note_content, callout_label) = parse_callout(inner, locale);
+                let (note_cls, note_content, callout_label, _) = parse_callout(inner, locale);
 
                 let escaped_label = html_escape(callout_label);
                 template::render_callout(&mut out, note_cls, &escaped_label, note_content);
@@ -820,18 +822,7 @@ fn inspect_section_metadata(events: &[Event], locale: &Locale) -> (bool, Option<
                 let mut bq_html = String::new();
                 html::push_html(&mut bq_html, events[start_idx..i].iter().cloned());
                 let inner = strip_paragraph_tags(bq_html.trim());
-                let (note_cls, _, _) = parse_callout(inner, locale);
-                let ctype = if note_cls.contains("note-caution") {
-                    "caution"
-                } else if note_cls.contains("note-warning") {
-                    "warning"
-                } else if note_cls.contains("note-important") {
-                    "important"
-                } else if note_cls.contains("note-tip") {
-                    "tip"
-                } else {
-                    "note"
-                };
+                let (_, _, _, ctype) = parse_callout(inner, locale);
                 if !callout_types.contains(&ctype) {
                     callout_types.push(ctype);
                 }
@@ -888,23 +879,23 @@ mod tests {
         let locale = Locale::default();
         assert_eq!(
             parse_callout("!!! Danger zone", &locale),
-            ("note note-caution", "Danger zone", "Caution")
+            ("note note-caution", "Danger zone", "Caution", "caution")
         );
         assert_eq!(
             parse_callout("!! Be careful", &locale),
-            ("note note-warning", "Be careful", "Warning")
+            ("note note-warning", "Be careful", "Warning", "warning")
         );
         assert_eq!(
             parse_callout("! Read this", &locale),
-            ("note note-important", "Read this", "Important")
+            ("note note-important", "Read this", "Important", "important")
         );
         assert_eq!(
             parse_callout("? Pro tip", &locale),
-            ("note note-tip", "Pro tip", "Tip")
+            ("note note-tip", "Pro tip", "Tip", "tip")
         );
         assert_eq!(
             parse_callout("Just text", &locale),
-            ("note", "Just text", "Note")
+            ("note", "Just text", "Note", "note")
         );
     }
 
@@ -1177,22 +1168,22 @@ mod tests {
     #[test]
     fn test_callout_parsing_variants_and_formatting() {
         let locale = Locale::default();
-        let (cls, text, lbl) = parse_callout("!Important message", &locale);
+        let (cls, text, lbl, _ctype) = parse_callout("!Important message", &locale);
         assert_eq!(cls, "note note-important");
         assert_eq!(text, "Important message");
         assert_eq!(lbl, "Important");
 
-        let (cls, text, lbl) = parse_callout("?Tip without space", &locale);
+        let (cls, text, lbl, _ctype) = parse_callout("?Tip without space", &locale);
         assert_eq!(cls, "note note-tip");
         assert_eq!(text, "Tip without space");
         assert_eq!(lbl, "Tip");
 
-        let (cls, text, lbl) = parse_callout("!!Warning without space", &locale);
+        let (cls, text, lbl, _ctype) = parse_callout("!!Warning without space", &locale);
         assert_eq!(cls, "note note-warning");
         assert_eq!(text, "Warning without space");
         assert_eq!(lbl, "Warning");
 
-        let (cls, text, lbl) = parse_callout("!!!Caution without space", &locale);
+        let (cls, text, lbl, _ctype) = parse_callout("!!!Caution without space", &locale);
         assert_eq!(cls, "note note-caution");
         assert_eq!(text, "Caution without space");
         assert_eq!(lbl, "Caution");

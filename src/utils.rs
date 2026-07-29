@@ -79,25 +79,9 @@ pub fn base64_encode(data: &[u8]) -> String {
         _ => {}
     }
 
-    // SAFETY: BASE64_CHARS and '=' consist solely of valid ASCII characters (0x00..=0x7F),
-    // which are guaranteed to be valid UTF-8.
-    unsafe { String::from_utf8_unchecked(buf) }
+    String::from_utf8(buf).expect("Base64 output must be valid UTF-8")
 }
 
-/// Encodes binary data into an RFC 4648 standard Base64 string representation.
-///
-/// Direct alias for [`base64_encode`].
-///
-/// # Examples
-///
-/// ```
-/// use doc2flow::utils::encode_base64;
-///
-/// assert_eq!(encode_base64(b"foo"), "Zm9v");
-/// ```
-pub fn encode_base64(data: &[u8]) -> String {
-    base64_encode(data)
-}
 
 /// Guesses the MIME type based on a file path extension without heap allocations.
 ///
@@ -113,16 +97,14 @@ pub fn encode_base64(data: &[u8]) -> String {
 /// assert_eq!(guess_mime_type(Path::new("file.unknown")), "application/octet-stream");
 /// ```
 pub fn guess_mime_type(path: &Path) -> &'static str {
-    let ext = match path.extension().and_then(|e| e.to_str()) {
-        Some(e) => e,
-        None => return "application/octet-stream",
+    let Some(ext) = path.extension().and_then(|e| e.to_str()) else {
+        return "application/octet-stream";
     };
 
     MIME_TYPES
         .iter()
         .find(|(exts, _)| exts.iter().any(|&e| e.eq_ignore_ascii_case(ext)))
-        .map(|(_, mime)| *mime)
-        .unwrap_or("application/octet-stream")
+        .map_or("application/octet-stream", |(_, mime)| *mime)
 }
 
 /// Reads a local file and encodes its content into a Base64 Data URI string.
@@ -226,11 +208,11 @@ where
             "-i" | "--init" => {
                 if let Some(next_arg) = iter.peek() {
                     let next_str = next_arg.as_ref();
-                    if !next_str.starts_with('-') {
-                        let val = iter.next().unwrap();
-                        parsed.init = Some(PathBuf::from(val.as_ref()));
-                    } else {
+                    if next_str.starts_with('-') {
                         parsed.init = Some(PathBuf::from("template.md"));
+                    } else {
+                        let val = iter.next().expect("peeked value must be present");
+                        parsed.init = Some(PathBuf::from(val.as_ref()));
                     }
                 } else {
                     parsed.init = Some(PathBuf::from("template.md"));
@@ -321,8 +303,6 @@ mod tests {
         assert_eq!(base64_encode(b"foob"), "Zm9vYg==");
         assert_eq!(base64_encode(b"fooba"), "Zm9vYmE=");
         assert_eq!(base64_encode(b"foobar"), "Zm9vYmFy");
-
-        assert_eq!(encode_base64(b"foo"), "Zm9v");
     }
 
     #[test]
