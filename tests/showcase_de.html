@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Doc2Flow v0.9.3+100.ba75aa0.dev">
-<meta name="version" content="0.9.3+100.ba75aa0.dev">
+<meta name="generator" content="Doc2Flow v0.9.3+110.cc9cb58.dev">
+<meta name="version" content="0.9.3+110.cc9cb58.dev">
 <meta name="repository" content="https://github.com/akjir/doc2flow">
 <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-<meta name="dcterms.created" content="2026-08-01T18:51:49Z">
+<meta name="dcterms.created" content="2026-08-01T23:00:12Z">
 <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
 <title>Doc2Flow Deutscher Showcase</title>
 <style>
@@ -883,17 +883,97 @@ mark.d2f-highlight {
   line-height: 1.6;
 }
 
-.code-block .c { color: #6A9955; }
-.code-block .s { color: #CE9178; }
+.code-block .c {
+  color: #6A9955;
+}
 
-/* Print Rules for Code Blocks */
+.code-block .s {
+  color: #CE9178;
+}
+
+/* Print Rules for Code Blocks & Variables Table */
 @media print {
   .code-block {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+
+  .item-table-var-wrap {
+    display: none !important;
+  }
 }
 
+/* ==========================================================================
+   Code Variables Table Feature Styles (Darker Gray theme, hidden from print)
+   ========================================================================== */
+
+.item-table-var-wrap {
+  margin: 12px 0 16px;
+  border: 1px solid #94a3b8;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background: #e2e8f0;
+}
+
+.item-table-var {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-family: var(--font-sans);
+}
+
+.item-table-var th,
+.item-table-var td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid #cbd5e1;
+}
+
+.item-table-var th {
+  background: #cbd5e1;
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.item-table-var tr:last-child td {
+  border-bottom: none;
+}
+
+.item-table-var td:first-child {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: #0f172a;
+  width: 35%;
+}
+
+.item-table-var td:nth-child(2) {
+  font-family: var(--font-mono);
+  color: #334155;
+  padding: 4px 8px;
+}
+
+.item-table-var-input {
+  width: 100%;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-sm, 4px);
+  padding: 4px 8px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: #0f172a;
+  box-sizing: border-box;
+  transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+}
+
+.item-table-var-input:focus {
+  outline: none;
+  background: #f1f5f9;
+  border-color: var(--bm, #2E75B6);
+  box-shadow: 0 0 0 2px rgba(46, 117, 182, 0.2);
+}
 /* ==========================================================================
    Tasks & Checklist Feature Styles
    ========================================================================== */
@@ -1216,6 +1296,11 @@ mark.d2f-highlight {
 </table>
 
 <!-- START GENERATED CONTENT -->
+<div class="item-table-var-wrap"><table class="item-table-var" data-variables="{&quot;API_KEY&quot;:&quot;&quot;,&quot;PORT&quot;:&quot;8080&quot;,&quot;SERVER_NAME&quot;:&quot;prod-srv-de-01&quot;}"><thead><tr><th>Variable</th><th>Wert</th></tr></thead><tbody>
+<tr><td>SERVER_NAME</td><td><input type="text" class="item-table-var-input persistent-field" id="f_var_SERVER_NAME" data-var-key="SERVER_NAME" data-default-value="prod-srv-de-01" value="prod-srv-de-01"></td></tr>
+<tr><td>PORT</td><td><input type="text" class="item-table-var-input persistent-field" id="f_var_PORT" data-var-key="PORT" data-default-value="8080" value="8080"></td></tr>
+<tr><td>API_KEY</td><td><input type="text" class="item-table-var-input persistent-field" id="f_var_API_KEY" data-var-key="API_KEY" data-default-value="" value=""></td></tr>
+</tbody></table></div>
 <!-- S1 -->
 <section class="section" id="s1" data-has-checklist="true">
 <h2 class="sh sh-h1" role="button" tabindex="0" aria-expanded="true"><span>1. Teil 1: Systemeinrichtung &amp; Vorbereitung</span>
@@ -1349,9 +1434,10 @@ mark.d2f-highlight {
 </div>
 <div class="code-block-wrap"><div class="code-header"><span class="code-lang">ini</span><button class="copy-btn" onclick="copyCode(this)" title="Code kopieren" aria-label="Code kopieren"><svg aria-hidden="true" class="svg-icon iconCopy" width="14" height="15" viewBox="0 0 17 18"><path fill="currentColor" d="M5 6c0-1.09.91-2 2-2h4.5L15 7.5V15c0 1.09-.91 2-2 2H7c-1.09 0-2-.91-2-2zm6-1.25V8h3.25z"/><path fill="currentColor" d="M10 1a2 2 0 0 1 2 2H6a2 2 0 0 0-2 2v9a2 2 0 0 1-2-2V4a3 3 0 0 1 3-3z" opacity=".4"/></svg></button></div><pre class="code-block language-ini"><code>[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate]
 &quot;DisableWindowsUpdateAccess&quot;=dword:00000001
+&quot;Server&quot;=&quot;{{SERVER_NAME}}&quot;
 </code></pre></div>
 <h3 class="subh">Unbeschrifteter Skript-Block</h3>
-<div class="code-block-wrap"><div class="code-header"><button class="copy-btn" onclick="copyCode(this)" title="Code kopieren" aria-label="Code kopieren"><svg aria-hidden="true" class="svg-icon iconCopy" width="14" height="15" viewBox="0 0 17 18"><path fill="currentColor" d="M5 6c0-1.09.91-2 2-2h4.5L15 7.5V15c0 1.09-.91 2-2 2H7c-1.09 0-2-.91-2-2zm6-1.25V8h3.25z"/><path fill="currentColor" d="M10 1a2 2 0 0 1 2 2H6a2 2 0 0 0-2 2v9a2 2 0 0 1-2-2V4a3 3 0 0 1 3-3z" opacity=".4"/></svg></button></div><pre class="code-block"><code>echo &quot;Doc2Flow Showcase-Umgebung wird initialisiert...&quot;
+<div class="code-block-wrap"><div class="code-header"><button class="copy-btn" onclick="copyCode(this)" title="Code kopieren" aria-label="Code kopieren"><svg aria-hidden="true" class="svg-icon iconCopy" width="14" height="15" viewBox="0 0 17 18"><path fill="currentColor" d="M5 6c0-1.09.91-2 2-2h4.5L15 7.5V15c0 1.09-.91 2-2 2H7c-1.09 0-2-.91-2-2zm6-1.25V8h3.25z"/><path fill="currentColor" d="M10 1a2 2 0 0 1 2 2H6a2 2 0 0 0-2 2v9a2 2 0 0 1-2-2V4a3 3 0 0 1 3-3z" opacity=".4"/></svg></button></div><pre class="code-block"><code>echo &quot;Doc2Flow Showcase-Umgebung {{SERVER_NAME}}:{{PORT}} mit Schlüssel {{API_KEY}} wird initialisiert...&quot;
 </code></pre></div>
 </div></section>
 
@@ -1485,7 +1571,7 @@ mark.d2f-highlight {
 
 <script>
 window.D2F_DOC_ID = 'd2f_id_468e65bc2ccf89b4';
-window.D2F_I18N = {"company":"Firma","date":"Datum","agent":"Bearbeiter","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","copied":"Kopiert!","copy_code":"Code kopieren","callout_note":"Hinweis","callout_tip":"Tipp","signature_date":"Datum","comment_placeholder":"Kommentar hinzufügen...","loading":"Lade...","name_placeholder":"Name","callout_caution":"Achtung","setup_in_progress":"Vorgang in Bearbeitung","lang_code":"de","save_state":"Stand sichern","search_placeholder":"Suchen... (Ctrl+K)","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","sections_visible":"{visible} / {total} Abschnitte sichtbar","callout_warning":"Warnung","export_pdf":"Als PDF exportieren","reset_all":"Zurücksetzen","callout_important":"Wichtig","date_placeholder":"TT.MM.JJJJ","setup_completed":"Vorgang abgeschlossen","contact":"Ansprechpartner"};
+window.D2F_I18N = {"agent":"Bearbeiter","setup_completed":"Vorgang abgeschlossen","date_placeholder":"TT.MM.JJJJ","copy_code":"Code kopieren","setup_in_progress":"Vorgang in Bearbeitung","var_table_value":"Wert","signature_date":"Datum","date":"Datum","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","reset_all":"Zurücksetzen","company":"Firma","comment_placeholder":"Kommentar hinzufügen...","contact":"Ansprechpartner","name_placeholder":"Name","callout_note":"Hinweis","loading":"Lade...","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","lang_code":"de","callout_tip":"Tipp","callout_caution":"Achtung","var_table_variable":"Variable","callout_important":"Wichtig","var_table_title":"Variablen","save_state":"Stand sichern","copied":"Kopiert!","sections_visible":"{visible} / {total} Abschnitte sichtbar","export_pdf":"Als PDF exportieren","search_placeholder":"Suchen... (Ctrl+K)","callout_warning":"Warnung"};
 window.d2f = window.d2f || {};
 "use strict";
 (() => {
@@ -2362,6 +2448,53 @@ window.d2f = window.d2f || {};
     }, 2e3);
     feedbackTimers.set(btn, timer);
   }
+  function getVariableMap() {
+    const map = {};
+    const elements = document.querySelectorAll(".item-table-var, .var-table, [data-variables]");
+    elements.forEach((el) => {
+      const rawJson = el.dataset.variables;
+      if (typeof rawJson === "string" && rawJson.length > 0) {
+        try {
+          const parsed = JSON.parse(rawJson);
+          if (typeof parsed === "object" && parsed !== null) {
+            const entries = Object.entries(parsed);
+            for (const entry of entries) {
+              const k = entry[0];
+              const v = entry[1];
+              if (typeof k === "string" && typeof v === "string") {
+                const trimmedKey = k.trim();
+                if (trimmedKey !== "") {
+                  map[trimmedKey] = v;
+                }
+              }
+            }
+          }
+        } catch {
+        }
+      }
+    });
+    const inputs = document.querySelectorAll("input.item-table-var-input, input[data-var-key]");
+    inputs.forEach((input) => {
+      const key = input.dataset.varKey || input.getAttribute("data-var-key");
+      if (typeof key === "string" && key.trim() !== "") {
+        map[key.trim()] = input.value;
+      }
+    });
+    return map;
+  }
+  function replaceCodeVariables(text) {
+    const varMap = getVariableMap();
+    if (Object.keys(varMap).length === 0) {
+      return text;
+    }
+    return text.replace(/\{\{([A-Za-z0-9_]+)\}\}/g, (match, key) => {
+      const val = varMap[key];
+      if (val !== void 0 && val.trim() !== "") {
+        return val;
+      }
+      return match;
+    });
+  }
   function fallbackCopyText(text, btn) {
     const ta = document.createElement("textarea");
     ta.value = text;
@@ -2394,7 +2527,8 @@ window.d2f = window.d2f || {};
     const codeEl = wrap.querySelector("code");
     if (!codeEl)
       return;
-    const text = codeEl.textContent ?? "";
+    const rawText = codeEl.textContent ?? "";
+    const text = replaceCodeVariables(rawText);
     if (navigator.clipboard && window.isSecureContext) {
       try {
         await navigator.clipboard.writeText(text);
@@ -2406,8 +2540,28 @@ window.d2f = window.d2f || {};
     }
     fallbackCopyText(text, btn);
   }
+  var printRawCodeMap = /* @__PURE__ */ new Map();
+  function preparePrintVariables() {
+    const codeElements = document.querySelectorAll(".code-block code");
+    codeElements.forEach((codeEl) => {
+      const rawText = codeEl.textContent ?? "";
+      printRawCodeMap.set(codeEl, rawText);
+      const replacedText = replaceCodeVariables(rawText);
+      if (replacedText !== rawText) {
+        codeEl.textContent = replacedText;
+      }
+    });
+  }
+  function restorePrintVariables() {
+    printRawCodeMap.forEach((rawText, codeEl) => {
+      codeEl.textContent = rawText;
+    });
+    printRawCodeMap.clear();
+  }
   if (typeof window !== "undefined") {
     window.copyCode = copyCode;
+    window.addEventListener("beforeprint", preparePrintVariables);
+    window.addEventListener("afterprint", restorePrintVariables);
   }
 })();
 

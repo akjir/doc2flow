@@ -90,7 +90,12 @@ d2f.exe --version
   * **Task Items (`- [ ]`, `- [x]`):** Interactive checkboxes (`.doc-item.check-item`) with dynamic completion tracking.
   * **Bullet & Ordered Items (`-`, `1.`):** Formatted list entries (`.doc-item.simple-item`) with nested list support.
   * **Text Paragraph Items:** Standalone text paragraph blocks (`.doc-item.text-item`).
-* **Code Blocks:** Fenced code blocks (` ```lang `) with language tags and 1-click **Copy Code** button.
+* **Code Blocks & Variable Substitution (`[Variables]` & `{{VARIABLE_NAME}}`):**
+  * Fenced code blocks (` ```lang `) with language tags and 1-click **Copy Code** button.
+  * **Dynamic Variable Substitution:** Markdown table annotated with `[Variables]` extracts key-value pairs and replaces `{{VARIABLE_NAME}}` placeholders inside code blocks when copying or printing.
+  * **Smart Variable Filtering & Validation:** Automatically scans code blocks for `{{VAR}}` placeholders. Only variables used in at least one code block are displayed in the table (unused table entries emit CLI warnings and are omitted; missing code block variables are added to the table with empty input fields and emit CLI warnings).
+  * **Interactive Table & State Persistence:** Rendered before Section 1 in a dark gray container (`.item-table-var-wrap`). Column 2 (`Value`) values are rendered as editable text inputs (`.item-table-var-input.persistent-field`) that save state in `localStorage` and single-file HTML exports.
+
 * **Image & Link Handling:**
   * Relative local images converted to embedded Base64 `data:image/...;base64,...` URIs.
   * Remote image URLs (`http://`, `https://`) preserved as `<img>` tags.

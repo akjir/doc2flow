@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Added dynamic code variable substitution from `[Variables]` tables for clipboard code copying.
+- Added dynamic code variable substitution from pre-section `[Variables]` tables with editable values, state persistence, code usage filtering, and print substitution.
+
 
 ### Fixed
 - Fixed state persistence and document export by registering storage handlers on script load and synchronizing HTML attributes (`value`, `checked`) for form fields and checkboxes.

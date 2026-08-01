@@ -10,6 +10,13 @@ language: "de"
 number_sections: true
 ---
 
+[Variables]
+| Variable | Value |
+| --- | --- |
+| SERVER_NAME | prod-srv-de-01 |
+| PORT | 8080 |
+| UNUSED_CONFIG | 100 |
+
 # Teil 1: Systemeinrichtung & Vorbereitung
 
 Dieser übergeordnete Abschnitt beschreibt die grundlegende Systemkonfiguration. Aufgaben in H1-Abschnitten besitzen keinen eigenen Badge-Indikator, fließen aber voll in die Gesamtfortschrittsanzeige ein.
@@ -72,11 +79,12 @@ Der folgende Konfigurationsauszug muss angewendet werden, um automatische Update
 ```ini
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate]
 "DisableWindowsUpdateAccess"=dword:00000001
+"Server"="{{SERVER_NAME}}"
 ```
 
 ### Unbeschrifteter Skript-Block
 ```
-echo "Doc2Flow Showcase-Umgebung wird initialisiert..."
+echo "Doc2Flow Showcase-Umgebung {{SERVER_NAME}}:{{PORT}} mit Schlüssel {{API_KEY}} wird initialisiert..."
 ```
 
 ## Abschnitt 4: Informationslisten

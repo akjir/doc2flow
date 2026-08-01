@@ -10,6 +10,13 @@ language: "en"
 number_sections: true
 ---
 
+[Variables]
+| Variable | Value |
+| --- | --- |
+| SERVER_NAME | prod-srv-01 |
+| PORT | 8080 |
+| UNUSED_CONFIG | 100 |
+
 # Part 1: System Setup & Preparation
 
 This top-level section describes the basic system configuration. Tasks within H1 sections do not display an individual badge indicator, but contribute fully to the overall progress tracking.
@@ -72,11 +79,12 @@ The following configuration snippet must be applied to disable automatic updates
 ```ini
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate]
 "DisableWindowsUpdateAccess"=dword:00000001
+"Server"="{{SERVER_NAME}}"
 ```
 
 ### Unlabelled Script Block
 ```
-echo "Initializing Doc2Flow showcase environment..."
+echo "Initializing Doc2Flow showcase environment {{SERVER_NAME}}:{{PORT}} with key {{API_KEY}}..."
 ```
 
 ## Section 4: Informational Lists
