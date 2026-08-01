@@ -1,0 +1,12 @@
+{
+  "name": "doc2flow-web",
+  "version": "0.9.2",
+  "private": true,
+  "scripts": {
+    "build": "esbuild src/core/main.ts --bundle --outfile=dist/script-core.js && esbuild src/features/tasks.ts --bundle --outfile=dist/script-tasks.js && esbuild src/features/images.ts --bundle --outfile=dist/script-images.js && esbuild src/features/toc.ts --bundle --outfile=dist/script-toc.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.20.0",
+    "typescript": "^7.0.0"
+  }
+}

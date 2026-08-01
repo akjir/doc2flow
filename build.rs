@@ -107,8 +107,43 @@ fn is_git_dirty() -> bool {
     }
 }
 
+fn sync_package_json_version(pkg_version: &str) {
+    let package_json_path = Path::new("web/package.json");
+    println!("cargo:rerun-if-changed=Cargo.toml");
+
+    if let Ok(content) = fs::read_to_string(package_json_path) {
+        let mut lines = Vec::new();
+        let mut modified = false;
+        for line in content.lines() {
+            let trimmed = line.trim_start();
+            if trimmed.starts_with("\"version\":") {
+                let indent = &line[..line.len() - trimmed.len()];
+                let has_comma = line.trim_end().ends_with(',');
+                let comma_str = if has_comma { "," } else { "" };
+                let new_line = format!("{indent}\"version\": \"{pkg_version}\"{comma_str}");
+                if line != new_line {
+                    lines.push(new_line);
+                    modified = true;
+                    continue;
+                }
+            }
+            lines.push(line.to_string());
+        }
+
+        if modified {
+            let mut new_content = lines.join("\n");
+            if content.ends_with('\n') {
+                new_content.push('\n');
+            }
+            let _ = fs::write(package_json_path, new_content);
+        }
+    }
+}
+
 fn generate_version_metadata() {
     let pkg_version = env::var("CARGO_PKG_VERSION").unwrap_or_else(|_| "0.0.0".to_string());
+    sync_package_json_version(&pkg_version);
+
     let commit_count = get_git_commit_count();
     let commit_hash = get_git_commit_hash();
     let suffix = if is_git_dirty() { ".dev" } else { "" };
@@ -120,3 +155,4 @@ fn generate_version_metadata() {
     println!("cargo:rerun-if-changed=.git/index");
     println!("cargo:rerun-if-changed=.git/refs");
 }
+

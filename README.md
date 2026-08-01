@@ -157,6 +157,7 @@ Link local images with standard Markdown image syntax. Doc2Flow reads local imag
 ### Prerequisites
 
 - [Rust Toolchain](https://www.rust-lang.org/) (2024 Edition)
+- [TypeScript](https://www.typescriptlang.org/) 7.0 (Client-side toolchain)
 
 ### Build Executable
 
