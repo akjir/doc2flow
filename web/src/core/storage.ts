@@ -77,3 +77,9 @@ function getStateKey(): string {
     const filename = decodeURIComponent(rawFilename);
     return 'd2f_state_' + (docId ? `${docId}_` : '') + filename;
 }
+
+if (typeof window !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+        loadState();
+    });
+}

@@ -32,6 +32,7 @@
   - Vars replaced via frontmatter
 - **TS:**
   - Config: `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax`
+  - Scope: NO function `export`/`import`; decouple via `window.d2f` namespace
   - State: Discriminated unions, `readonly`
   - Format: `interface` (expandable), `type` (unions), `satisfies` operator
   - BANNED: `any`, `as`, `!`, `enum`, `{}`/`Object`

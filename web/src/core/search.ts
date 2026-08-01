@@ -216,10 +216,10 @@ function resetSearch(): void {
     }
 }
 
-window.d2f.core.registerResetHandler(resetSearch);
-
 if (typeof window !== 'undefined') {
     document.addEventListener('DOMContentLoaded', () => {
+        window.d2f.core.registerResetHandler(resetSearch);
+
         const searchToggleBtn = document.getElementById('search-toggle-btn');
         if (searchToggleBtn) {
             searchToggleBtn.addEventListener('click', () => toggleSearchToolbar());

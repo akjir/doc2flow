@@ -123,11 +123,13 @@ function resetFields(): void {
     syncLinkedFields();
 }
 
-window.d2f.storage.registerSaveHandler(saveFields);
-window.d2f.storage.registerLoadHandler(loadFields);
-window.d2f.core.registerResetHandler(resetFields);
-
 if (typeof window !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.d2f.storage.registerSaveHandler(saveFields);
+        window.d2f.storage.registerLoadHandler(loadFields);
+        window.d2f.core.registerResetHandler(resetFields);
+    });
+
     const linkedIds: readonly string[] = ['f_info_agent', 'f_sign_agent', 'f_info_date', 'f_sign_date'];
     const saveStateDebounced = window.d2f.utils.debounce(() => window.d2f.storage.saveState(), 300);
 

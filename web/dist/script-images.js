@@ -24,8 +24,6 @@
     document.removeEventListener("keydown", handleLightboxKeydown);
   }
   if (typeof window !== "undefined") {
-    window.openLightbox = openLightbox;
-    window.closeLightbox = closeLightbox;
     document.addEventListener("DOMContentLoaded", () => {
       document.addEventListener("click", (e) => {
         const target = e.target;

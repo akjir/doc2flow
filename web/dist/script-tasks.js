@@ -127,11 +127,11 @@
     });
     updateProgress();
   }
-  window.d2f.core.registerResetHandler(resetTasks);
-  window.d2f.storage.registerSaveHandler(saveTasks);
-  window.d2f.storage.registerLoadHandler(loadTasks);
   if (typeof window !== "undefined") {
     document.addEventListener("DOMContentLoaded", () => {
+      window.d2f.core.registerResetHandler(resetTasks);
+      window.d2f.storage.registerSaveHandler(saveTasks);
+      window.d2f.storage.registerLoadHandler(loadTasks);
       updateProgress();
     });
     document.addEventListener("click", (e) => {

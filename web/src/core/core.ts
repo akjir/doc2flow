@@ -1,4 +1,10 @@
+import './storage.js';
+import './utils.js';
 import { ExportType } from './export.js';
+import './sections.js';
+import './comments.js';
+import './fields.js';
+import './search.js';
 
 export type ResetHandler = () => void;
 
@@ -8,11 +14,6 @@ export interface Core {
 }
 
 const resetHandlers = new Set<ResetHandler>();
-
-window.d2f.core = {
-    registerResetHandler,
-    resetAll,
-};
 
 function registerResetHandler(handler: ResetHandler): void {
     resetHandlers.add(handler);
@@ -38,9 +39,13 @@ function resetAll(): void {
     window.d2f.storage.saveState();
 }
 
+window.d2f.core = {
+    registerResetHandler,
+    resetAll,
+};
+
 if (typeof window !== 'undefined') {
     window.exportPDF = () => window.d2f.export.export(ExportType.PDF);
     window.saveDocumentState = () => window.d2f.export.export(ExportType.DOCUMENT);
     window.resetAll = () => window.d2f.core.resetAll();
 }
-

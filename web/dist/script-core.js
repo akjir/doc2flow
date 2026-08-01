@@ -61,6 +61,11 @@
     const filename = decodeURIComponent(rawFilename);
     return "d2f_state_" + (docId ? `${docId}_` : "") + filename;
   }
+  if (typeof window !== "undefined") {
+    document.addEventListener("DOMContentLoaded", () => {
+      loadState();
+    });
+  }
 
   // src/core/utils.ts
   function debounce(func, wait) {
@@ -79,6 +84,55 @@
     debounce,
     isRecord
   };
+
+  // src/core/export.ts
+  var ExportType = {
+    PDF: "PDF",
+    DOCUMENT: "DOCUMENT"
+  };
+  var exportHandlers = /* @__PURE__ */ new Set();
+  window.d2f.export = {
+    export: performExport,
+    registerExportHandler
+  };
+  function registerExportHandler(handler) {
+    exportHandlers.add(handler);
+  }
+  function performExport(type) {
+    for (const handler of exportHandlers) {
+      try {
+        handler(type);
+      } catch (e) {
+        console.warn("Failed to execute export handler", e);
+      }
+    }
+    if (type === ExportType.PDF) {
+      const collapsed = Array.from(document.querySelectorAll(".sb.collapsed"));
+      collapsed.forEach((el) => el.classList.remove("collapsed"));
+      const restore = () => {
+        collapsed.forEach((el) => el.classList.add("collapsed"));
+        window.removeEventListener("afterprint", restore);
+      };
+      window.addEventListener("afterprint", restore);
+      setTimeout(() => window.print(), 100);
+      return;
+    }
+    if (type === ExportType.DOCUMENT) {
+      window.d2f.storage.saveState();
+      const rawFilename = window.location.pathname.split("/").pop() ?? "index.html";
+      const filename = decodeURIComponent(rawFilename || "index.html");
+      const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  }
 
   // src/core/sections.ts
   var SECTION_SELECTOR = ".d2f-section, .section";
@@ -163,10 +217,12 @@
       body.classList.remove("collapsed");
     });
   }
-  window.d2f.storage.registerSaveHandler(saveSections);
-  window.d2f.storage.registerLoadHandler(loadSections);
-  window.d2f.core.registerResetHandler(resetSections);
   if (typeof window !== "undefined") {
+    document.addEventListener("DOMContentLoaded", () => {
+      window.d2f.storage.registerSaveHandler(saveSections);
+      window.d2f.storage.registerLoadHandler(loadSections);
+      window.d2f.core.registerResetHandler(resetSections);
+    });
     document.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
         const target = e.target;
@@ -265,10 +321,12 @@
       box.remove();
     });
   }
-  window.d2f.storage.registerSaveHandler(saveComments);
-  window.d2f.storage.registerLoadHandler(loadComments);
-  window.d2f.core.registerResetHandler(resetComments);
   if (typeof window !== "undefined") {
+    document.addEventListener("DOMContentLoaded", () => {
+      window.d2f.storage.registerSaveHandler(saveComments);
+      window.d2f.storage.registerLoadHandler(loadComments);
+      window.d2f.core.registerResetHandler(resetComments);
+    });
     const saveStateDebounced = window.d2f.utils.debounce(() => window.d2f.storage.saveState(), 300);
     document.addEventListener("click", (e) => {
       const target = e.target;
@@ -304,55 +362,6 @@
     };
     document.addEventListener("input", handleCommentInput);
     document.addEventListener("change", handleCommentInput);
-  }
-
-  // src/core/export.ts
-  var ExportType = {
-    PDF: "PDF",
-    DOCUMENT: "DOCUMENT"
-  };
-  var exportHandlers = /* @__PURE__ */ new Set();
-  window.d2f.export = {
-    export: performExport,
-    registerExportHandler
-  };
-  function registerExportHandler(handler) {
-    exportHandlers.add(handler);
-  }
-  function performExport(type) {
-    for (const handler of exportHandlers) {
-      try {
-        handler(type);
-      } catch (e) {
-        console.warn("Failed to execute export handler", e);
-      }
-    }
-    if (type === ExportType.PDF) {
-      const collapsed = Array.from(document.querySelectorAll(".sb.collapsed"));
-      collapsed.forEach((el) => el.classList.remove("collapsed"));
-      const restore = () => {
-        collapsed.forEach((el) => el.classList.add("collapsed"));
-        window.removeEventListener("afterprint", restore);
-      };
-      window.addEventListener("afterprint", restore);
-      setTimeout(() => window.print(), 100);
-      return;
-    }
-    if (type === ExportType.DOCUMENT) {
-      window.d2f.storage.saveState();
-      const rawFilename = window.location.pathname.split("/").pop() ?? "index.html";
-      const filename = decodeURIComponent(rawFilename || "index.html");
-      const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
-      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
   }
 
   // src/core/fields.ts
@@ -465,10 +474,12 @@
     });
     syncLinkedFields();
   }
-  window.d2f.storage.registerSaveHandler(saveFields);
-  window.d2f.storage.registerLoadHandler(loadFields);
-  window.d2f.core.registerResetHandler(resetFields);
   if (typeof window !== "undefined") {
+    document.addEventListener("DOMContentLoaded", () => {
+      window.d2f.storage.registerSaveHandler(saveFields);
+      window.d2f.storage.registerLoadHandler(loadFields);
+      window.d2f.core.registerResetHandler(resetFields);
+    });
     const linkedIds = ["f_info_agent", "f_sign_agent", "f_info_date", "f_sign_date"];
     const saveStateDebounced = window.d2f.utils.debounce(() => window.d2f.storage.saveState(), 300);
     const handleInputOrChange = (e) => {
@@ -693,9 +704,9 @@
       performSearchAndFilter();
     }
   }
-  window.d2f.core.registerResetHandler(resetSearch);
   if (typeof window !== "undefined") {
     document.addEventListener("DOMContentLoaded", () => {
+      window.d2f.core.registerResetHandler(resetSearch);
       const searchToggleBtn = document.getElementById("search-toggle-btn");
       if (searchToggleBtn) {
         searchToggleBtn.addEventListener("click", () => toggleSearchToolbar());
@@ -733,10 +744,6 @@
 
   // src/core/core.ts
   var resetHandlers = /* @__PURE__ */ new Set();
-  window.d2f.core = {
-    registerResetHandler,
-    resetAll
-  };
   function registerResetHandler(handler) {
     resetHandlers.add(handler);
   }
@@ -758,6 +765,10 @@
     }
     window.d2f.storage.saveState();
   }
+  window.d2f.core = {
+    registerResetHandler,
+    resetAll
+  };
   if (typeof window !== "undefined") {
     window.exportPDF = () => window.d2f.export.export(ExportType.PDF);
     window.saveDocumentState = () => window.d2f.export.export(ExportType.DOCUMENT);

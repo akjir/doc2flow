@@ -86,11 +86,13 @@ function resetComments(): void {
     });
 }
 
-window.d2f.storage.registerSaveHandler(saveComments);
-window.d2f.storage.registerLoadHandler(loadComments);
-window.d2f.core.registerResetHandler(resetComments);
-
 if (typeof window !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.d2f.storage.registerSaveHandler(saveComments);
+        window.d2f.storage.registerLoadHandler(loadComments);
+        window.d2f.core.registerResetHandler(resetComments);
+    });
+
     const saveStateDebounced = window.d2f.utils.debounce(() => window.d2f.storage.saveState(), 300);
 
     document.addEventListener('click', (e: MouseEvent) => {

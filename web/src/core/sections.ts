@@ -103,11 +103,13 @@ function resetSections(): void {
     });
 }
 
-window.d2f.storage.registerSaveHandler(saveSections);
-window.d2f.storage.registerLoadHandler(loadSections);
-window.d2f.core.registerResetHandler(resetSections);
-
 if (typeof window !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.d2f.storage.registerSaveHandler(saveSections);
+        window.d2f.storage.registerLoadHandler(loadSections);
+        window.d2f.core.registerResetHandler(resetSections);
+    });
+
     document.addEventListener('keydown', (e: KeyboardEvent) => {
         if (e.key === 'Enter' || e.key === ' ') {
             const target = e.target;
