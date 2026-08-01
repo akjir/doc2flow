@@ -8,7 +8,6 @@ import {
     checkDateShortcut
 } from './storage.js';
 import { styleItem, updateProgress, getOrCreateCommentBox } from '../features/tasks.js';
-import { openLightbox } from '../features/images.js';
 
 (() => {
     'use strict';
@@ -32,13 +31,6 @@ import { openLightbox } from '../features/images.js';
         document.addEventListener('click', (e: MouseEvent) => {
             const target = e.target;
             if (!(target instanceof Element)) return;
-
-            const img = target.closest<HTMLImageElement>('.doc-body img');
-            if (img) {
-                e.stopPropagation();
-                openLightbox(img.src);
-                return;
-            }
 
             const sh = target.closest<HTMLElement>('.sh');
             if (sh && !sh.classList.contains('no-toggle')) {

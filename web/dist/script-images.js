@@ -24,10 +24,20 @@
     document.removeEventListener("keydown", handleLightboxKeydown);
   }
   if (typeof window !== "undefined") {
+    window.openLightbox = openLightbox;
+    window.closeLightbox = closeLightbox;
     document.addEventListener("DOMContentLoaded", () => {
       document.addEventListener("click", (e) => {
         const target = e.target;
         if (target instanceof Element) {
+          const lb = target.closest("#lightbox");
+          if (lb) {
+            const lbImg = target.closest("#lb-img");
+            if (!lbImg) {
+              closeLightbox();
+            }
+            return;
+          }
           const img = target.closest(".doc-body img");
           if (img) {
             e.stopPropagation();

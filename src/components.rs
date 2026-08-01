@@ -177,6 +177,17 @@ pub fn render_image_item(out: &mut impl Write, clean_content: &str) {
     let _ = write!(out, "<div class=\"img-item\">\n  {clean_content}\n</div>\n");
 }
 
+/// Renders the image lightbox modal markup if the document contains images.
+#[inline]
+pub fn render_lightbox(out: &mut impl Write, has_images: bool) {
+    if has_images {
+        let _ = out.write_str(
+            "<div class=\"lightbox\" id=\"lightbox\">\n  <span class=\"lb-x\">&times;</span>\n  <img id=\"lb-img\" src=\"\" alt=\"\">\n</div>\n",
+        );
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -254,4 +265,16 @@ mod tests {
         render_image_item(&mut buf, "<img src=\"foo.png\">");
         assert_eq!(buf, "<div class=\"img-item\">\n  <img src=\"foo.png\">\n</div>\n");
     }
+
+    #[test]
+    fn test_render_lightbox() {
+        let mut buf_true = String::new();
+        render_lightbox(&mut buf_true, true);
+        assert!(buf_true.contains("<div class=\"lightbox\" id=\"lightbox\">"));
+
+        let mut buf_false = String::new();
+        render_lightbox(&mut buf_false, false);
+        assert_eq!(buf_false, "");
+    }
 }
+

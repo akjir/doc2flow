@@ -116,9 +116,13 @@ d2f.exe --version
 
 * **Filesystem & I/O Isolation (`src/io.rs`):** Exclusive module for filesystem interactions, file reading/writing, path resolution (`Path`, `PathBuf`), and asset retrieval. Direct `std::fs`/`std::io` calls prohibited in processing modules.
 * **Pure In-Memory Processing Core:** Core modules (`src/converter.rs`, `src/template.rs`, `src/components.rs`, `src/i18n.rs`, `src/hasher.rs`, `src/id.rs`) perform pure in-memory string/AST data transformations decoupled from disk I/O.
+* **Strict Modular Feature Isolation (HTML, CSS, TS/JS):**
+  * Extension features (`tasks`, `images`, `toc`) are fully decoupled and zero-knowledge of each other.
+  * Each feature maintains dedicated TypeScript (`web/src/features/`) and CSS (`styles/`) modules.
+  * If a feature is omitted/disabled (`DocumentFeatures`), zero HTML elements, zero CSS rules, and zero JS/TS code for that feature are emitted in the rendered document.
 * **HTML UI Components & Templating (`src/components.rs` & `src/template.rs`):**
   * `src/components.rs`: Reusable zero-allocation HTML UI building blocks (`out: &mut impl Write`).
-  * `src/template.rs`: Central HTML page orchestrator and component renderer.
+  * `src/template.rs`: Central HTML page orchestrator, feature style assembler (`render_styles`), and script bundle assembler (`render_scripts`).
 * **Centralized Diagnostic Error Handling (`src/error.rs`):** Runtime, I/O, and syntax errors map to domain error types (`Doc2FlowError`) with compiler-style `stderr` warnings (`print_warning`).
 
 ---
@@ -143,9 +147,13 @@ doc2flow/
 ├── .cargo/
 │   └── config.toml           # Cargo Aliases / Cross-Compile config
 ├── locales/                  # I18n JSON files (de.json, en.json)
-├── templates/                # HTML/CSS & starter Markdown templates
+├── styles/                   # Modular CSS stylesheets
+│   ├── core.css              # Core layout, typography, base styles, print & responsive
+│   ├── images.css            # Image & Lightbox feature styles
+│   ├── tasks.css             # Tasks, checklists, progress bar & finish box styles
+│   └── toc.css               # Table of Contents feature styles
+├── templates/                # HTML layout & starter Markdown templates
 │   ├── base.html             # Base layout template
-│   ├── style.css             # BEM styling & print rules
 │   └── template.md           # Starter Markdown template (--init)
 ├── web/                      # Client-side TypeScript toolchain
 │   ├── package.json          # Node/esbuild bundler config

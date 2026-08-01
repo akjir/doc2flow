@@ -1,0 +1,66 @@
+/* ==========================================================================
+   Image & Lightbox Feature Styles
+   ========================================================================== */
+
+.img-item {
+  margin: 12px 0;
+  padding: 0 10px;
+  background: transparent;
+  border: none;
+}
+
+.doc-body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  cursor: zoom-in;
+}
+
+.lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  z-index: 999;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+}
+
+.lightbox.active {
+  display: flex;
+}
+
+.lightbox img {
+  max-width: 94vw;
+  max-height: 94vh;
+  border-radius: var(--radius-lg);
+  border: none;
+  margin: 0;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.5);
+}
+
+.lb-x {
+  position: fixed;
+  top: 14px;
+  right: 18px;
+  color: white;
+  font-size: 32px;
+  cursor: pointer;
+  line-height: 1;
+  font-weight: bold;
+}
+
+@media print {
+  .doc-body img {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    cursor: default;
+    max-height: 8cm;
+    width: auto;
+    margin: 10px auto;
+  }
+}

@@ -1,0 +1,56 @@
+/* ==========================================================================
+   Table of Contents (TOC) Feature Styles
+   ========================================================================== */
+
+.toc-container {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.toc-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--bd);
+  margin-bottom: 10px;
+}
+
+.toc-list {
+  list-style-type: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.toc-item {
+  margin-bottom: 4px;
+}
+
+.toc-item.indent-1 {
+  margin-left: 12px;
+}
+
+.toc-item.indent-2 {
+  margin-left: 24px;
+}
+
+.toc-link {
+  color: var(--bm);
+  text-decoration: none;
+  font-size: 13px;
+  transition: color 0.15s ease;
+}
+
+.toc-link:hover {
+  color: var(--bd);
+  text-decoration: underline;
+}
+
+@media print {
+  .toc-container {
+    border: 1px solid #ccc;
+    box-shadow: none;
+  }
+}

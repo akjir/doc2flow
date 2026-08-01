@@ -5,6 +5,18 @@ use crate::i18n::{Locale, validate_locale_coverage};
 use std::collections::HashMap;
 use std::fmt::Write;
 
+/// Embedded core CSS styles.
+pub static STYLE_CORE: &str = include_str!("../styles/core.css");
+
+/// Embedded task list and checklist CSS feature styles.
+pub static STYLE_TASKS: &str = include_str!("../styles/tasks.css");
+
+/// Embedded image lightbox CSS feature styles.
+pub static STYLE_IMAGES: &str = include_str!("../styles/images.css");
+
+/// Embedded Table of Contents CSS feature styles.
+pub static STYLE_TOC: &str = include_str!("../styles/toc.css");
+
 /// Embedded core JavaScript bundle.
 pub static SCRIPT_CORE: &str = include_str!("../web/dist/script-core.js");
 
@@ -16,6 +28,27 @@ pub static SCRIPT_IMAGES: &str = include_str!("../web/dist/script-images.js");
 
 /// Embedded Table of Contents JavaScript feature bundle.
 pub static SCRIPT_TOC: &str = include_str!("../web/dist/script-toc.js");
+
+/// Assembles active CSS feature styles into the provided output string based on detected document features.
+pub fn render_styles(out: &mut String, features: &DocumentFeatures) {
+    out.push_str(STYLE_CORE);
+    out.push_str("\n");
+
+    if features.has_tasks {
+        out.push_str(STYLE_TASKS);
+        out.push_str("\n");
+    }
+
+    if features.has_images {
+        out.push_str(STYLE_IMAGES);
+        out.push_str("\n");
+    }
+
+    if features.has_toc {
+        out.push_str(STYLE_TOC);
+        out.push_str("\n");
+    }
+}
 
 /// Assembles active JavaScript feature bundles into the provided output string based on detected document features.
 pub fn render_scripts(out: &mut String, features: &DocumentFeatures) {
@@ -37,6 +70,13 @@ pub fn render_scripts(out: &mut String, features: &DocumentFeatures) {
         out.push_str("\n");
     }
 }
+
+/// Renders the image lightbox modal markup if the document contains images.
+#[inline]
+pub fn render_lightbox(out: &mut impl Write, features: &DocumentFeatures) {
+    components::render_lightbox(out, features.has_images);
+}
+
 
 /// Default embedded SVG header logo.
 pub const DEFAULT_LOGO_SVG: &str = components::DEFAULT_LOGO_SVG;
@@ -281,10 +321,15 @@ pub fn render(
     features: &DocumentFeatures,
 ) -> Result<String> {
     let base_html = include_str!("../templates/base.html");
-    let style_css = include_str!("../templates/style.css");
+
+    let mut style_css = String::with_capacity(32768);
+    render_styles(&mut style_css, features);
 
     let mut script_js = String::with_capacity(32768);
     render_scripts(&mut script_js, features);
+
+    let mut lightbox_html = String::with_capacity(256);
+    render_lightbox(&mut lightbox_html, features);
 
     validate_locale_coverage(base_html, locale);
 
@@ -298,7 +343,7 @@ pub fn render(
     let app_version_raw = APP_VERSION.strip_prefix('v').unwrap_or(APP_VERSION);
     let created_at = format_iso8601_utc(std::time::SystemTime::now());
 
-    let mut vars = HashMap::with_capacity(20);
+    let mut vars = HashMap::with_capacity(21);
     vars.insert("APP_VERSION", APP_VERSION);
     vars.insert("APP_VERSION_RAW", app_version_raw);
     vars.insert("REPOSITORY_URL", REPOSITORY_URL);
@@ -313,8 +358,9 @@ pub fn render(
     vars.insert("AGENT", frontmatter.agent.as_deref().unwrap_or(""));
     vars.insert("DATE", frontmatter.date.as_deref().unwrap_or(""));
     vars.insert("I18N_JSON", i18n_json.as_str());
-    vars.insert("CSS", style_css);
+    vars.insert("CSS", style_css.as_str());
     vars.insert("JS", script_js.as_str());
+    vars.insert("LIGHTBOX_HTML", lightbox_html.as_str());
     vars.insert("CONTENT", html_content);
     vars.insert("DOC_ID", doc_id);
     vars.insert("LOGO", logo);
@@ -456,13 +502,6 @@ mod tests {
     }
 
     #[test]
-    fn test_render_metadata_injection() {
-        let fm = Frontmatter::new("Test Corp");
-        let locale = Locale::from_lang_code("en");
-        let features = DocumentFeatures::default();
-        let html = render(&fm, &locale, "<p>Content</p>", "doc_meta", None, &features).expect("Render failed");
-
-    #[test]
     fn test_render_feature_assembly() {
         let mut features = DocumentFeatures::default();
         features.has_tasks = true;
@@ -475,8 +514,46 @@ mod tests {
         assert!(script_out.contains("d2f_state_")); // core script indicator
         assert!(script_out.contains("updateProgress")); // tasks feature indicator
         assert!(!script_out.contains("openLightbox")); // images feature excluded
+
+        let mut style_out = String::new();
+        render_styles(&mut style_out, &features);
+        assert!(!style_out.contains(".lightbox"));
     }
 
+    #[test]
+    fn test_render_feature_isolation_full() {
+        let fm = Frontmatter::new("Test Corp");
+        let locale = Locale::from_lang_code("en");
+
+        // Case 1: No images feature
+        let mut features_no_img = DocumentFeatures::default();
+        features_no_img.has_images = false;
+        let html_no_img = render(&fm, &locale, "<p>No images</p>", "doc_no_img", None, &features_no_img)
+            .expect("Render failed");
+
+        assert!(!html_no_img.contains("<div class=\"lightbox\""));
+        assert!(!html_no_img.contains(".lb-x"));
+        assert!(!html_no_img.contains("openLightbox"));
+        assert!(!html_no_img.contains("closeLightbox"));
+
+        // Case 2: Images feature active
+        let mut features_img = DocumentFeatures::default();
+        features_img.has_images = true;
+        let html_img = render(&fm, &locale, "<p>Has image</p>", "doc_img", None, &features_img)
+            .expect("Render failed");
+
+        assert!(html_img.contains("<div class=\"lightbox\" id=\"lightbox\">"));
+        assert!(html_img.contains(".lb-x"));
+        assert!(html_img.contains("openLightbox"));
+        assert!(html_img.contains("closeLightbox"));
+    }
+
+    #[test]
+    fn test_render_metadata_injection() {
+        let fm = Frontmatter::new("Test Corp");
+        let locale = Locale::from_lang_code("en");
+        let features = DocumentFeatures::default();
+        let html = render(&fm, &locale, "<p>Content</p>", "doc_meta", None, &features).expect("Render failed");
         let app_version_raw = APP_VERSION.strip_prefix('v').unwrap_or(APP_VERSION);
 
         assert!(html.contains(&format!(

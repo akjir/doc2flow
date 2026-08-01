@@ -1,0 +1,363 @@
+/* ==========================================================================
+   Tasks & Checklist Feature Styles
+   ========================================================================== */
+
+/* Progress Bar & Badges */
+.pb-wrap {
+  width: 100%;
+  margin-top: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-lg);
+  height: 9px;
+  overflow: hidden;
+}
+
+.pb {
+  height: 100%;
+  background: var(--progress-green);
+  border-radius: var(--radius-lg);
+  transition: width 0.3s;
+  width: 0%;
+}
+
+.pt {
+  font-size: 11px;
+  color: var(--header-sub-color);
+  margin-top: 3px;
+  text-align: right;
+}
+
+.sbadge {
+  font-size: 11px;
+  font-weight: normal;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+.sbadge:empty {
+  display: none;
+}
+
+.sbadge.done {
+  background: var(--progress-green);
+}
+
+/* Checklist Items */
+.check-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 3px 9px;
+  border-radius: var(--radius-md);
+  margin-bottom: 2px;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-left: calc(var(--indent, 0) * 18px);
+  position: relative;
+}
+
+.check-item[style*="--indent"]::before {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  background-color: var(--bl);
+  border-radius: 1px;
+  opacity: 0.7;
+}
+
+.check-item:first-child, *:not(.check-item) + .check-item {
+  margin-top: 3px;
+}
+
+.check-item:last-child, .check-item:not(:has(+ .check-item)) {
+  margin-bottom: 6px;
+}
+
+.check-item.simple-item {
+  cursor: pointer;
+}
+
+.check-item:hover {
+  background: #f5f9ff;
+}
+
+.check-item.checked {
+  background: var(--done);
+}
+
+.check-item.checked .check-label {
+  text-decoration: line-through;
+  color: #bbb;
+}
+
+.check-item.text-item.checked .text-content,
+.check-item.text-item.checked .check-label,
+.check-item.simple-item.checked .check-label {
+  text-decoration: none;
+  color: var(--gray);
+}
+
+.check-item input[type=checkbox] {
+  width: 15px;
+  height: 15px;
+  min-width: 15px;
+  margin-top: 2px;
+  cursor: pointer;
+  accent-color: var(--bm);
+}
+
+.list-bullet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 15px;
+  width: auto;
+  height: 15px;
+  margin-top: 2px;
+  color: var(--bm);
+  font-size: 13px;
+  font-weight: bold;
+  line-height: 1;
+  user-select: none;
+}
+
+.check-label, .text-content {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.check-label a, .text-content a {
+  color: var(--bm);
+}
+
+/* Item Comments */
+.item-comment-icon {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-muted);
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+  align-self: flex-start;
+  margin-top: 1px;
+}
+
+.check-item:hover .item-comment-icon {
+  opacity: 1;
+}
+
+.item-comment-icon:hover {
+  color: var(--bd);
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.item-comment-box {
+  flex-basis: 100%;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 4px;
+  background: var(--gray-light);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 4px 8px;
+  box-sizing: border-box;
+  margin-left: 24px;
+}
+
+.item-comment-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--gray);
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding: 0;
+  margin: 0;
+  line-height: 1.4;
+  min-height: 20px;
+}
+
+.item-comment-input::placeholder {
+  color: #94a3b8;
+}
+
+.item-comment-del {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--gray-muted);
+  font-size: 14px;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+}
+
+.item-comment-del:hover {
+  color: #c00000;
+  background: rgba(192, 0, 0, 0.08);
+}
+
+/* Finish & Signatures */
+.finish {
+  background: var(--gbg);
+  border: 2px solid var(--progress-green);
+  border-radius: var(--radius-xl);
+  padding: 18px 22px;
+  text-align: center;
+  margin-top: 20px;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.finish .big {
+  font-size: 34px;
+  color: var(--gc);
+}
+
+.finish h2 {
+  color: var(--gc);
+  font-size: 17px;
+  margin: 5px 0;
+}
+
+.finish .sigs {
+  margin-top: 14px;
+  font-size: 12px;
+  color: #555;
+  border-top: 1px solid #aaa;
+  padding-top: 12px;
+  display: flex;
+  justify-content: space-around;
+  gap: 16px;
+}
+
+.finish .sf {
+  border: none;
+  border-bottom: 1px solid #555;
+  min-width: 160px;
+  padding-bottom: 3px;
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  text-align: center;
+  color: var(--gc);
+  outline: none;
+}
+
+.finish .sf::placeholder {
+  color: #9bbf86;
+}
+
+.finish.completed {
+  background: var(--gbg);
+  border: 2px solid var(--progress-green);
+}
+
+.finish.completed .big, .finish.completed h2, .finish.completed .sf {
+  color: var(--gc);
+}
+
+.finish.completed .sf::placeholder {
+  color: #9bbf86;
+}
+
+.finish.pending {
+  background: #f0f4f8;
+  border: 2px solid #b0bec5;
+}
+
+.finish.pending .big, .finish.pending h2, .finish.pending .sf {
+  color: var(--bd);
+}
+
+.finish.pending .sf::placeholder {
+  color: #90a4ae;
+}
+
+.finish.no-tasks {
+  background: var(--bg-surface);
+  border: 1px solid var(--bl);
+}
+
+.finish.no-tasks .big, .finish.no-tasks h2 {
+  display: none;
+}
+
+.finish.no-tasks .sf {
+  color: var(--bd);
+}
+
+.finish.no-tasks .sf::placeholder {
+  color: #90a4ae;
+}
+
+/* Print Rules for Tasks */
+@media print {
+  .item-comment-icon, .item-comment-del, .sbadge, .pb-wrap, .pb, .pt {
+    display: none !important;
+  }
+
+  .item-comment-box {
+    border: 1px solid var(--border-color);
+    background: transparent;
+  }
+
+  .item-comment-input {
+    color: #333;
+    overflow: hidden !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    resize: none !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+  }
+
+  .finish {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .check-item.checked {
+    background: transparent !important;
+  }
+
+  .check-item.checked .check-label {
+    text-decoration: none !important;
+    color: var(--gray) !important;
+  }
+
+  .finish .sf {
+    border: none;
+  }
+}
+
+/* Responsive Rules for Tasks */
+@media (max-width: 600px) {
+  .finish .sigs {
+    flex-direction: column;
+    align-items: center;
+  }
+}
