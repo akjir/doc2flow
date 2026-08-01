@@ -1,11 +1,4 @@
-import { registerSaveHandler, registerLoadHandler } from './storage.js';
-import { registerResetHandler } from './core.js';
-
-function isRecord(val: unknown): val is Record<string, unknown> {
-    return typeof val === 'object' && val !== null && !Array.isArray(val);
-}
-
-export function syncFieldPair(id1: string, id2: string, sourceInput?: HTMLInputElement): void {
+function syncFieldPair(id1: string, id2: string, sourceInput?: HTMLInputElement): void {
     const raw1 = document.getElementById(id1);
     const raw2 = document.getElementById(id2);
     const el1 = raw1 instanceof HTMLInputElement ? raw1 : null;
@@ -23,12 +16,12 @@ export function syncFieldPair(id1: string, id2: string, sourceInput?: HTMLInputE
     }
 }
 
-export function syncLinkedFields(sourceInput?: HTMLInputElement): void {
+function syncLinkedFields(sourceInput?: HTMLInputElement): void {
     syncFieldPair('f_info_agent', 'f_sign_agent', sourceInput);
     syncFieldPair('f_info_date', 'f_sign_date', sourceInput);
 }
 
-export function formatDateFromTemplate(now: Date, template?: string): string | null {
+function formatDateFromTemplate(now: Date, template?: string): string | null {
     if (!template || typeof template !== 'string') return null;
 
     const tokenMap: Record<string, string> = {
@@ -53,7 +46,7 @@ export function formatDateFromTemplate(now: Date, template?: string): string | n
     return (hasMatches && !/[A-Za-z]/.test(formatted)) ? formatted : null;
 }
 
-export function getTodayFormatted(): string {
+function getTodayFormatted(): string {
     const i18n = window.D2F_I18N ?? {};
     const now = new Date();
     try {
@@ -65,7 +58,7 @@ export function getTodayFormatted(): string {
     return now.toLocaleDateString(navigator.language || undefined);
 }
 
-export function checkDateShortcut(input: HTMLInputElement): boolean {
+function checkDateShortcut(input: HTMLInputElement): boolean {
     if (typeof input.value !== 'string') return false;
     if (input.value.trim().toLowerCase() === 'today') {
         input.value = getTodayFormatted();
@@ -74,7 +67,18 @@ export function checkDateShortcut(input: HTMLInputElement): boolean {
     return false;
 }
 
-export function saveFields(): Record<string, unknown> {
+export interface Fields {
+    syncFieldPair(id1: string, id2: string, sourceInput?: HTMLInputElement): void;
+    syncLinkedFields(sourceInput?: HTMLInputElement): void;
+    formatDateFromTemplate(now: Date, template?: string): string | null;
+    getTodayFormatted(): string;
+    checkDateShortcut(input: HTMLInputElement): boolean;
+    saveFields(): Record<string, unknown>;
+    loadFields(state: Record<string, unknown>): boolean;
+    resetFields(): void;
+}
+
+function saveFields(): Record<string, unknown> {
     const fields: Record<string, string> = {};
     document.querySelectorAll<HTMLInputElement>('input.persistent-field').forEach((input, index) => {
         const key = input.id || ('f_' + String(index));
@@ -83,9 +87,9 @@ export function saveFields(): Record<string, unknown> {
     return { fields };
 }
 
-export function loadFields(state: Record<string, unknown>): boolean {
+function loadFields(state: Record<string, unknown>): boolean {
     const fieldsData = state['fields'];
-    if (isRecord(fieldsData)) {
+    if (window.d2f.utils.isRecord(fieldsData)) {
         document.querySelectorAll<HTMLInputElement>('input.persistent-field').forEach((input, index) => {
             const key = input.id || ('f_' + String(index));
             const val = fieldsData[key];
@@ -98,7 +102,7 @@ export function loadFields(state: Record<string, unknown>): boolean {
     return false;
 }
 
-export function resetFields(): void {
+function resetFields(): void {
     document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
         'input, textarea, select'
     ).forEach((el) => {
@@ -119,6 +123,6 @@ export function resetFields(): void {
     syncLinkedFields();
 }
 
-registerSaveHandler(saveFields);
-registerLoadHandler(loadFields);
-registerResetHandler(resetFields);
+window.d2f.storage.registerSaveHandler(saveFields);
+window.d2f.storage.registerLoadHandler(loadFields);
+window.d2f.core.registerResetHandler(resetFields);

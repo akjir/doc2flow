@@ -1,10 +1,10 @@
-export interface TocItem {
+interface TocItem {
     readonly id: string;
     readonly text: string;
     readonly level: number;
 }
 
-export function generateTocItems(): readonly TocItem[] {
+function generateTocItems(): readonly TocItem[] {
     const headings = document.querySelectorAll<HTMLElement>('.sh');
     const items: TocItem[] = [];
 
@@ -23,7 +23,7 @@ export function generateTocItems(): readonly TocItem[] {
     return items;
 }
 
-export function highlightActiveTocItem(activeId: string): void {
+function highlightActiveTocItem(activeId: string): void {
     const tocLinks = document.querySelectorAll<HTMLAnchorElement>('.toc-link');
     tocLinks.forEach((link) => {
         const isMatch = link.getAttribute('href') === '#' + activeId;

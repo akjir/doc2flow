@@ -3,6 +3,12 @@
   // src/core/storage.ts
   var saveHandlers = /* @__PURE__ */ new Set();
   var loadHandlers = /* @__PURE__ */ new Set();
+  window.d2f.storage = {
+    registerSaveHandler,
+    registerLoadHandler,
+    loadState,
+    saveState
+  };
   function registerSaveHandler(handler) {
     saveHandlers.add(handler);
   }
@@ -58,6 +64,10 @@
 
   // src/core/core.ts
   var resetHandlers = /* @__PURE__ */ new Set();
+  window.d2f.core = {
+    registerResetHandler,
+    resetAll
+  };
   function registerResetHandler(handler) {
     resetHandlers.add(handler);
   }
@@ -77,8 +87,22 @@
         console.warn("Failed to execute reset handler", e);
       }
     }
-    saveState();
+    window.d2f.storage.saveState();
   }
+
+  // src/core/utils.ts
+  function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+      if (timeout !== void 0) {
+        clearTimeout(timeout);
+      }
+      timeout = setTimeout(() => func(...args), wait);
+    };
+  }
+  window.d2f.utils = {
+    debounce
+  };
 
   // src/core/collapse.ts
   var SECTION_SELECTOR = ".d2f-section, .section";
@@ -175,9 +199,278 @@
       body.classList.remove("collapsed");
     });
   }
-  registerSaveHandler(saveSections);
-  registerLoadHandler(loadSections);
-  registerResetHandler(resetSections);
+  window.d2f.collapse = {
+    updateEmptySections,
+    toggleSection,
+    saveSections,
+    loadSections,
+    resetSections
+  };
+  window.d2f.storage.registerSaveHandler(saveSections);
+  window.d2f.storage.registerLoadHandler(loadSections);
+  window.d2f.core.registerResetHandler(resetSections);
+
+  // src/core/comments.ts
+  function autoExpandTextarea(el) {
+    if (!el)
+      return;
+    el.style.height = "auto";
+    el.style.height = String(el.scrollHeight) + "px";
+  }
+  function getOrCreateCommentBox(checkItem, initialValue) {
+    if (!checkItem)
+      return null;
+    let box = checkItem.querySelector(".item-comment-box");
+    let input = null;
+    if (!box) {
+      box = document.createElement("div");
+      box.className = "item-comment-box";
+      input = document.createElement("textarea");
+      input.rows = 1;
+      input.className = "item-comment-input";
+      const i18n = window.D2F_I18N ?? {};
+      const commentLabel = i18n.comment_placeholder ?? "Add a comment...";
+      input.placeholder = commentLabel;
+      input.setAttribute("aria-label", commentLabel);
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "item-comment-del";
+      delBtn.title = "Delete comment";
+      delBtn.setAttribute("aria-label", "Delete comment");
+      delBtn.innerHTML = "&#10006;";
+      box.appendChild(input);
+      box.appendChild(delBtn);
+      checkItem.appendChild(box);
+    } else {
+      const rawInput = box.querySelector(".item-comment-input");
+      input = rawInput instanceof HTMLTextAreaElement ? rawInput : null;
+    }
+    if (!input)
+      return null;
+    if (typeof initialValue === "string") {
+      input.value = initialValue;
+      input.textContent = initialValue;
+      input.setAttribute("value", initialValue);
+    }
+    autoExpandTextarea(input);
+    return { box, input };
+  }
+  function saveComments() {
+    const comments = {};
+    document.querySelectorAll(".check-item").forEach((item, index) => {
+      const input = item.querySelector(".item-comment-input");
+      if (input && input.value.trim() !== "") {
+        const key = item.id || "item_" + String(index);
+        comments[key] = input.value;
+      }
+    });
+    return { comments };
+  }
+  function loadComments(state) {
+    const comments = state["comments"];
+    if (typeof comments === "object" && comments !== null && !Array.isArray(comments)) {
+      const commentsRecord = comments;
+      document.querySelectorAll(".check-item").forEach((item, index) => {
+        const key = item.id || "item_" + String(index);
+        const val = commentsRecord[key];
+        if (val !== void 0 && typeof val === "string") {
+          getOrCreateCommentBox(item, val);
+        }
+      });
+    }
+    return false;
+  }
+  function resetComments() {
+    document.querySelectorAll(".item-comment-box").forEach((box) => {
+      box.remove();
+    });
+  }
+  window.d2f.comments = {
+    autoExpandTextarea,
+    getOrCreateCommentBox,
+    saveComments,
+    loadComments,
+    resetComments
+  };
+  window.d2f.storage.registerSaveHandler(saveComments);
+  window.d2f.storage.registerLoadHandler(loadComments);
+  window.d2f.core.registerResetHandler(resetComments);
+
+  // src/core/export.ts
+  function exportPDF() {
+    const collapsed = Array.from(document.querySelectorAll(".sb.collapsed"));
+    collapsed.forEach((el) => el.classList.remove("collapsed"));
+    const restore = () => {
+      collapsed.forEach((el) => el.classList.add("collapsed"));
+      window.removeEventListener("afterprint", restore);
+    };
+    window.addEventListener("afterprint", restore);
+    setTimeout(() => window.print(), 100);
+  }
+  function saveDocumentState() {
+    window.d2f.storage.saveState();
+    const checkboxes = document.querySelectorAll('.check-item input[type="checkbox"]');
+    checkboxes.forEach((cb) => {
+      if (cb.checked) {
+        cb.setAttribute("checked", "checked");
+      } else {
+        cb.removeAttribute("checked");
+      }
+      window.d2f.tasks?.styleItem(cb);
+    });
+    const inputs = document.querySelectorAll("input.persistent-field, .info-table input");
+    inputs.forEach((input) => {
+      input.setAttribute("value", input.value);
+    });
+    const textareas = document.querySelectorAll("textarea.item-comment-input");
+    textareas.forEach((ta) => {
+      ta.textContent = ta.value;
+      ta.setAttribute("value", ta.value);
+    });
+    const rawFilename = window.location.pathname.split("/").pop() ?? "index.html";
+    const filename = decodeURIComponent(rawFilename || "index.html");
+    const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+    const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  window.d2f.export = {
+    exportPDF,
+    saveDocumentState
+  };
+
+  // src/core/fields.ts
+  function isRecord2(val) {
+    return typeof val === "object" && val !== null && !Array.isArray(val);
+  }
+  function syncFieldPair(id1, id2, sourceInput) {
+    const raw1 = document.getElementById(id1);
+    const raw2 = document.getElementById(id2);
+    const el1 = raw1 instanceof HTMLInputElement ? raw1 : null;
+    const el2 = raw2 instanceof HTMLInputElement ? raw2 : null;
+    if (!el1 || !el2)
+      return;
+    if (sourceInput === el1) {
+      el2.value = el1.value;
+    } else if (sourceInput === el2) {
+      el1.value = el2.value;
+    } else {
+      if (el1.value && !el2.value)
+        el2.value = el1.value;
+      else if (el2.value && !el1.value)
+        el1.value = el2.value;
+      else if (el1.value)
+        el2.value = el1.value;
+    }
+  }
+  function syncLinkedFields(sourceInput) {
+    syncFieldPair("f_info_agent", "f_sign_agent", sourceInput);
+    syncFieldPair("f_info_date", "f_sign_date", sourceInput);
+  }
+  function formatDateFromTemplate(now, template) {
+    if (!template || typeof template !== "string")
+      return null;
+    const tokenMap = {
+      "YYYY": String(now.getFullYear()),
+      "YY": String(now.getFullYear()).slice(-2),
+      "MM": String(now.getMonth() + 1).padStart(2, "0"),
+      "DD": String(now.getDate()).padStart(2, "0"),
+      "M": String(now.getMonth() + 1),
+      "D": String(now.getDate())
+    };
+    const regex = /YYYY|YY|MM|DD|M|D/gi;
+    let hasMatches = false;
+    const formatted = template.replace(regex, (match) => {
+      hasMatches = true;
+      const key = match.toUpperCase();
+      const value = tokenMap[key];
+      return value ?? match;
+    });
+    return hasMatches && !/[A-Za-z]/.test(formatted) ? formatted : null;
+  }
+  function getTodayFormatted() {
+    const i18n = window.D2F_I18N ?? {};
+    const now = /* @__PURE__ */ new Date();
+    try {
+      const fromTemplate = formatDateFromTemplate(now, i18n.date_placeholder);
+      if (fromTemplate)
+        return fromTemplate;
+    } catch (e) {
+      console.warn("Failed to format date", e);
+    }
+    return now.toLocaleDateString(navigator.language || void 0);
+  }
+  function checkDateShortcut(input) {
+    if (typeof input.value !== "string")
+      return false;
+    if (input.value.trim().toLowerCase() === "today") {
+      input.value = getTodayFormatted();
+      return true;
+    }
+    return false;
+  }
+  function saveFields() {
+    const fields = {};
+    document.querySelectorAll("input.persistent-field").forEach((input, index) => {
+      const key = input.id || "f_" + String(index);
+      fields[key] = input.value;
+    });
+    return { fields };
+  }
+  function loadFields(state) {
+    const fieldsData = state["fields"];
+    if (isRecord2(fieldsData)) {
+      document.querySelectorAll("input.persistent-field").forEach((input, index) => {
+        const key = input.id || "f_" + String(index);
+        const val = fieldsData[key];
+        if (typeof val === "string") {
+          input.value = val;
+        }
+      });
+    }
+    syncLinkedFields();
+    return false;
+  }
+  function resetFields() {
+    document.querySelectorAll(
+      "input, textarea, select"
+    ).forEach((el) => {
+      if (el.id === "search-input" || el.classList.contains("search-input"))
+        return;
+      if (el instanceof HTMLInputElement) {
+        if (el.type === "checkbox" || el.type === "radio") {
+          el.checked = false;
+        } else {
+          el.value = "";
+        }
+      } else if (el instanceof HTMLTextAreaElement) {
+        el.value = "";
+        el.textContent = "";
+      } else if (el instanceof HTMLSelectElement) {
+        el.selectedIndex = 0;
+      }
+    });
+    syncLinkedFields();
+  }
+  window.d2f.fields = {
+    syncFieldPair,
+    syncLinkedFields,
+    formatDateFromTemplate,
+    getTodayFormatted,
+    checkDateShortcut,
+    saveFields,
+    loadFields,
+    resetFields
+  };
+  window.d2f.storage.registerSaveHandler(saveFields);
+  window.d2f.storage.registerLoadHandler(loadFields);
+  window.d2f.core.registerResetHandler(resetFields);
 
   // src/core/search.ts
   var preSearchCollapsedState = null;
@@ -381,406 +674,22 @@
       performSearchAndFilter();
     }
   }
-  registerResetHandler(resetSearch);
-
-  // src/core/fields.ts
-  function isRecord2(val) {
-    return typeof val === "object" && val !== null && !Array.isArray(val);
-  }
-  function syncFieldPair(id1, id2, sourceInput) {
-    const raw1 = document.getElementById(id1);
-    const raw2 = document.getElementById(id2);
-    const el1 = raw1 instanceof HTMLInputElement ? raw1 : null;
-    const el2 = raw2 instanceof HTMLInputElement ? raw2 : null;
-    if (!el1 || !el2)
-      return;
-    if (sourceInput === el1) {
-      el2.value = el1.value;
-    } else if (sourceInput === el2) {
-      el1.value = el2.value;
-    } else {
-      if (el1.value && !el2.value)
-        el2.value = el1.value;
-      else if (el2.value && !el1.value)
-        el1.value = el2.value;
-      else if (el1.value)
-        el2.value = el1.value;
-    }
-  }
-  function syncLinkedFields(sourceInput) {
-    syncFieldPair("f_info_agent", "f_sign_agent", sourceInput);
-    syncFieldPair("f_info_date", "f_sign_date", sourceInput);
-  }
-  function formatDateFromTemplate(now, template) {
-    if (!template || typeof template !== "string")
-      return null;
-    const tokenMap = {
-      "YYYY": String(now.getFullYear()),
-      "YY": String(now.getFullYear()).slice(-2),
-      "MM": String(now.getMonth() + 1).padStart(2, "0"),
-      "DD": String(now.getDate()).padStart(2, "0"),
-      "M": String(now.getMonth() + 1),
-      "D": String(now.getDate())
-    };
-    const regex = /YYYY|YY|MM|DD|M|D/gi;
-    let hasMatches = false;
-    const formatted = template.replace(regex, (match) => {
-      hasMatches = true;
-      const key = match.toUpperCase();
-      const value = tokenMap[key];
-      return value ?? match;
-    });
-    return hasMatches && !/[A-Za-z]/.test(formatted) ? formatted : null;
-  }
-  function getTodayFormatted() {
-    const i18n = window.D2F_I18N ?? {};
-    const now = /* @__PURE__ */ new Date();
-    try {
-      const fromTemplate = formatDateFromTemplate(now, i18n.date_placeholder);
-      if (fromTemplate)
-        return fromTemplate;
-    } catch (e) {
-      console.warn("Failed to format date", e);
-    }
-    return now.toLocaleDateString(navigator.language || void 0);
-  }
-  function checkDateShortcut(input) {
-    if (typeof input.value !== "string")
-      return false;
-    if (input.value.trim().toLowerCase() === "today") {
-      input.value = getTodayFormatted();
-      return true;
-    }
-    return false;
-  }
-  function saveFields() {
-    const fields = {};
-    document.querySelectorAll("input.persistent-field").forEach((input, index) => {
-      const key = input.id || "f_" + String(index);
-      fields[key] = input.value;
-    });
-    return { fields };
-  }
-  function loadFields(state) {
-    const fieldsData = state["fields"];
-    if (isRecord2(fieldsData)) {
-      document.querySelectorAll("input.persistent-field").forEach((input, index) => {
-        const key = input.id || "f_" + String(index);
-        const val = fieldsData[key];
-        if (typeof val === "string") {
-          input.value = val;
-        }
-      });
-    }
-    syncLinkedFields();
-    return false;
-  }
-  function resetFields() {
-    document.querySelectorAll(
-      "input, textarea, select"
-    ).forEach((el) => {
-      if (el.id === "search-input" || el.classList.contains("search-input"))
-        return;
-      if (el instanceof HTMLInputElement) {
-        if (el.type === "checkbox" || el.type === "radio") {
-          el.checked = false;
-        } else {
-          el.value = "";
-        }
-      } else if (el instanceof HTMLTextAreaElement) {
-        el.value = "";
-        el.textContent = "";
-      } else if (el instanceof HTMLSelectElement) {
-        el.selectedIndex = 0;
-      }
-    });
-    syncLinkedFields();
-  }
-  registerSaveHandler(saveFields);
-  registerLoadHandler(loadFields);
-  registerResetHandler(resetFields);
-
-  // src/core/comments.ts
-  function autoExpandTextarea(el) {
-    if (!el)
-      return;
-    el.style.height = "auto";
-    el.style.height = String(el.scrollHeight) + "px";
-  }
-  function getOrCreateCommentBox(checkItem, initialValue) {
-    if (!checkItem)
-      return null;
-    let box = checkItem.querySelector(".item-comment-box");
-    let input = null;
-    if (!box) {
-      box = document.createElement("div");
-      box.className = "item-comment-box";
-      input = document.createElement("textarea");
-      input.rows = 1;
-      input.className = "item-comment-input";
-      const i18n = window.D2F_I18N ?? {};
-      const commentLabel = i18n.comment_placeholder ?? "Add a comment...";
-      input.placeholder = commentLabel;
-      input.setAttribute("aria-label", commentLabel);
-      const delBtn = document.createElement("button");
-      delBtn.type = "button";
-      delBtn.className = "item-comment-del";
-      delBtn.title = "Delete comment";
-      delBtn.setAttribute("aria-label", "Delete comment");
-      delBtn.innerHTML = "&#10006;";
-      box.appendChild(input);
-      box.appendChild(delBtn);
-      checkItem.appendChild(box);
-    } else {
-      const rawInput = box.querySelector(".item-comment-input");
-      input = rawInput instanceof HTMLTextAreaElement ? rawInput : null;
-    }
-    if (!input)
-      return null;
-    if (typeof initialValue === "string") {
-      input.value = initialValue;
-      input.textContent = initialValue;
-      input.setAttribute("value", initialValue);
-    }
-    autoExpandTextarea(input);
-    return { box, input };
-  }
-  function saveComments() {
-    const comments = {};
-    document.querySelectorAll(".check-item").forEach((item, index) => {
-      const input = item.querySelector(".item-comment-input");
-      if (input && input.value.trim() !== "") {
-        const key = item.id || "item_" + String(index);
-        comments[key] = input.value;
-      }
-    });
-    return { comments };
-  }
-  function loadComments(state) {
-    const comments = state["comments"];
-    if (typeof comments === "object" && comments !== null && !Array.isArray(comments)) {
-      const commentsRecord = comments;
-      document.querySelectorAll(".check-item").forEach((item, index) => {
-        const key = item.id || "item_" + String(index);
-        const val = commentsRecord[key];
-        if (val !== void 0 && typeof val === "string") {
-          getOrCreateCommentBox(item, val);
-        }
-      });
-    }
-    return false;
-  }
-  function resetComments() {
-    document.querySelectorAll(".item-comment-box").forEach((box) => {
-      box.remove();
-    });
-  }
-  registerSaveHandler(saveComments);
-  registerLoadHandler(loadComments);
-  registerResetHandler(resetComments);
-
-  // src/features/tasks.ts
-  function isRecord3(val) {
-    return typeof val === "object" && val !== null && !Array.isArray(val);
-  }
-  function styleItem(cb) {
-    const item = cb.closest(".check-item");
-    if (item) {
-      item.classList.toggle("checked", cb.checked);
-    }
-  }
-  function updateProgress() {
-    const i18n = window.D2F_I18N ?? {};
-    const sections = document.querySelectorAll(".section");
-    let total = 0;
-    let done = 0;
-    const updates = Array.from(sections).map((sec) => {
-      const cbs = Array.from(sec.querySelectorAll('input[type="checkbox"]'));
-      const badge = sec.querySelector(".sbadge");
-      const count = cbs.length;
-      const checkedCount = cbs.filter((c) => c.checked).length;
-      total += count;
-      done += checkedCount;
-      return { badge, count, checkedCount };
-    });
-    updates.forEach(({ badge, count, checkedCount }) => {
-      if (!badge)
-        return;
-      if (count === 0) {
-        badge.textContent = "";
-        badge.style.display = "none";
-      } else {
-        badge.style.display = "";
-        badge.textContent = String(checkedCount) + " / " + String(count);
-        badge.className = "sbadge" + (checkedCount === count ? " done" : "");
-      }
-    });
-    const pct = total ? Math.round(done / total * 100) : 0;
-    const pb = document.getElementById("pb");
-    if (pb) {
-      pb.style.width = String(pct) + "%";
-      if (pb.parentElement) {
-        pb.parentElement.setAttribute("aria-valuenow", String(pct));
-      }
-    }
-    const pt = document.getElementById("pt");
-    if (pt) {
-      const tmpl = i18n.progress_template ?? "{done} of {total} tasks completed ({pct}%)";
-      pt.textContent = tmpl.replace("{done}", String(done)).replace("{total}", String(total)).replace("{pct}", String(pct));
-    }
-    const finishBox = document.getElementById("finish-box");
-    const finishIcon = document.getElementById("finish-icon");
-    const finishTitle = document.getElementById("finish-title");
-    const rawPdf = document.getElementById("btn-pdf");
-    const btnPdf = rawPdf instanceof HTMLButtonElement ? rawPdf : null;
-    if (finishBox) {
-      finishBox.classList.remove("completed", "pending", "no-tasks");
-      if (total === 0) {
-        finishBox.classList.add("no-tasks");
-        if (btnPdf)
-          btnPdf.disabled = false;
-      } else if (done < total) {
-        finishBox.classList.add("pending");
-        if (finishIcon)
-          finishIcon.innerHTML = "&#x29D6;";
-        if (finishTitle)
-          finishTitle.textContent = i18n.setup_in_progress ?? "Setup in Progress";
-        if (btnPdf)
-          btnPdf.disabled = true;
-      } else {
-        finishBox.classList.add("completed");
-        if (finishIcon)
-          finishIcon.innerHTML = "&#x2714;";
-        if (finishTitle)
-          finishTitle.textContent = i18n.setup_completed ?? "Setup Completed";
-        if (btnPdf)
-          btnPdf.disabled = false;
-      }
-    }
-  }
-  function saveTasks() {
-    const checks = {};
-    document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb, index) => {
-      const key = cb.id || "cb_" + String(index);
-      checks[key] = cb.checked;
-    });
-    const texts = {};
-    document.querySelectorAll(".check-item.text-item, .check-item.simple-item").forEach((item, index) => {
-      const key = item.id || "txt_" + String(index);
-      texts[key] = item.classList.contains("checked");
-    });
-    return {
-      checks,
-      texts
-    };
-  }
-  function loadTasks(state) {
-    const checksData = state["checks"];
-    if (isRecord3(checksData)) {
-      document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb, index) => {
-        const key = cb.id || "cb_" + String(index);
-        const val = checksData[key];
-        if (typeof val === "boolean") {
-          cb.checked = val;
-          styleItem(cb);
-        }
-      });
-    }
-    const textsData = state["texts"];
-    if (isRecord3(textsData)) {
-      document.querySelectorAll(".check-item.text-item, .check-item.simple-item").forEach((item, index) => {
-        const key = item.id || "txt_" + String(index);
-        const val = textsData[key];
-        if (typeof val === "boolean") {
-          item.classList.toggle("checked", val);
-        }
-      });
-    }
-    updateProgress();
-    return false;
-  }
-  function resetTasks() {
-    document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb) => {
-      cb.checked = false;
-      styleItem(cb);
-    });
-    document.querySelectorAll(".check-item.text-item, .check-item.simple-item").forEach((item) => {
-      item.classList.remove("checked");
-    });
-    updateProgress();
-  }
-  registerSaveHandler(saveTasks);
-  registerLoadHandler(loadTasks);
-  registerResetHandler(resetTasks);
-  if (typeof window !== "undefined") {
-    document.addEventListener("DOMContentLoaded", () => {
-      updateProgress();
-    });
-  }
-
-  // src/core/export.ts
-  function exportPDF() {
-    const collapsed = Array.from(document.querySelectorAll(".sb.collapsed"));
-    collapsed.forEach((el) => el.classList.remove("collapsed"));
-    const restore = () => {
-      collapsed.forEach((el) => el.classList.add("collapsed"));
-      window.removeEventListener("afterprint", restore);
-    };
-    window.addEventListener("afterprint", restore);
-    setTimeout(() => window.print(), 100);
-  }
-  function saveDocumentState() {
-    saveState();
-    const checkboxes = document.querySelectorAll('.check-item input[type="checkbox"]');
-    checkboxes.forEach((cb) => {
-      if (cb.checked) {
-        cb.setAttribute("checked", "checked");
-      } else {
-        cb.removeAttribute("checked");
-      }
-      styleItem(cb);
-    });
-    const inputs = document.querySelectorAll("input.persistent-field, .info-table input");
-    inputs.forEach((input) => {
-      input.setAttribute("value", input.value);
-    });
-    const textareas = document.querySelectorAll("textarea.item-comment-input");
-    textareas.forEach((ta) => {
-      ta.textContent = ta.value;
-      ta.setAttribute("value", ta.value);
-    });
-    const rawFilename = window.location.pathname.split("/").pop() ?? "index.html";
-    const filename = decodeURIComponent(rawFilename || "index.html");
-    const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
-    const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
-  // src/core/utils.ts
-  function debounce(func, wait) {
-    let timeout;
-    return function(...args) {
-      if (timeout !== void 0) {
-        clearTimeout(timeout);
-      }
-      timeout = setTimeout(() => func(...args), wait);
-    };
-  }
+  window.d2f.search = {
+    removeHighlights,
+    highlightTextNodes,
+    performSearchAndFilter,
+    toggleSearchToolbar,
+    resetSearch
+  };
+  window.d2f.core.registerResetHandler(resetSearch);
 
   // src/core/main.ts
-  window.exportPDF = exportPDF;
-  window.saveDocumentState = saveDocumentState;
-  window.resetAll = resetAll;
+  window.exportPDF = () => window.d2f.export.exportPDF();
+  window.saveDocumentState = () => window.d2f.export.saveDocumentState();
+  window.resetAll = () => window.d2f.core.resetAll();
   (() => {
     "use strict";
-    const saveStateDebounced = debounce(saveState, 300);
+    const saveStateDebounced = window.d2f.utils.debounce(() => window.d2f.storage.saveState(), 300);
     document.addEventListener("DOMContentLoaded", () => {
       document.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -789,7 +698,7 @@
             const sh = target.closest(".sh");
             if (sh && !sh.classList.contains("no-toggle")) {
               e.preventDefault();
-              toggleSection(sh, saveState);
+              window.d2f.collapse.toggleSection(sh, () => window.d2f.storage.saveState());
             }
           }
         }
@@ -800,14 +709,14 @@
           return;
         const sh = target.closest(".sh");
         if (sh && !sh.classList.contains("no-toggle")) {
-          toggleSection(sh, saveState);
+          window.d2f.collapse.toggleSection(sh, () => window.d2f.storage.saveState());
           return;
         }
         const commentBtn = target.closest(".item-comment-icon");
         if (commentBtn) {
           const checkItem2 = commentBtn.closest(".check-item");
           if (checkItem2) {
-            const res = getOrCreateCommentBox(checkItem2);
+            const res = window.d2f.comments.getOrCreateCommentBox(checkItem2);
             if (res?.input) {
               res.input.focus();
             }
@@ -819,7 +728,7 @@
           const box = commentDelBtn.closest(".item-comment-box");
           if (box) {
             box.remove();
-            saveState();
+            window.d2f.storage.saveState();
           }
           return;
         }
@@ -833,12 +742,12 @@
             if (target !== cb && !target.closest("label")) {
               cb.checked = !cb.checked;
             }
-            styleItem(cb);
-            updateProgress();
-            saveState();
+            window.d2f.tasks?.styleItem(cb);
+            window.d2f.tasks?.updateProgress();
+            window.d2f.storage.saveState();
           } else if (checkItem.classList.contains("text-item") || checkItem.classList.contains("simple-item")) {
             checkItem.classList.toggle("checked");
-            saveState();
+            window.d2f.storage.saveState();
           }
         }
       });
@@ -858,12 +767,12 @@
         if (target instanceof HTMLInputElement) {
           if (target.id && linkedIds.includes(target.id)) {
             if (target.id.toLowerCase().includes("date")) {
-              checkDateShortcut(target);
+              window.d2f.fields.checkDateShortcut(target);
             }
-            syncLinkedFields(target);
+            window.d2f.fields.syncLinkedFields(target);
             saveStateDebounced();
           } else if (target.matches('input[id*="date"], input[name*="date"], input.date-field')) {
-            checkDateShortcut(target);
+            window.d2f.fields.checkDateShortcut(target);
             saveStateDebounced();
           }
         }
@@ -872,12 +781,12 @@
       document.addEventListener("change", handleInputOrChange);
       const searchToggleBtn = document.getElementById("search-toggle-btn");
       if (searchToggleBtn) {
-        searchToggleBtn.addEventListener("click", () => toggleSearchToolbar());
+        searchToggleBtn.addEventListener("click", () => window.d2f.search.toggleSearchToolbar());
       }
       const rawSearchInput = document.getElementById("search-input");
       const searchInput = rawSearchInput instanceof HTMLInputElement ? rawSearchInput : null;
       if (searchInput) {
-        searchInput.addEventListener("input", () => performSearchAndFilter());
+        searchInput.addEventListener("input", () => window.d2f.search.performSearchAndFilter());
       }
       const searchClearBtn = document.getElementById("search-clear-btn");
       if (searchClearBtn) {
@@ -886,26 +795,26 @@
             searchInput.value = "";
             searchInput.focus();
           }
-          performSearchAndFilter(saveState);
+          window.d2f.search.performSearchAndFilter(() => window.d2f.storage.saveState());
         });
       }
       document.addEventListener("keydown", (e) => {
         if ((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "K")) {
           e.preventDefault();
-          toggleSearchToolbar(true);
+          window.d2f.search.toggleSearchToolbar(true);
         } else if (e.key === "Escape") {
           const toolbar = document.getElementById("search-toolbar");
           if (toolbar && !toolbar.classList.contains("hidden")) {
             e.preventDefault();
-            toggleSearchToolbar(false);
+            window.d2f.search.toggleSearchToolbar(false);
           }
         }
       });
-      updateEmptySections();
-      loadState();
-      syncLinkedFields();
-      updateProgress();
-      performSearchAndFilter();
+      window.d2f.collapse.updateEmptySections();
+      window.d2f.storage.loadState();
+      window.d2f.fields.syncLinkedFields();
+      window.d2f.tasks?.updateProgress();
+      window.d2f.search.performSearchAndFilter();
     });
   })();
 })();

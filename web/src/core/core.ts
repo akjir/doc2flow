@@ -1,22 +1,22 @@
-import { saveState } from './storage.js';
-
-// Types
-
 export type ResetHandler = () => void;
 
-// Constants
+export interface Core {
+    registerResetHandler(handler: ResetHandler): void;
+    resetAll(): void;
+}
 
 const resetHandlers = new Set<ResetHandler>();
 
-// Handler Functions
+window.d2f.core = {
+    registerResetHandler,
+    resetAll,
+};
 
-export function registerResetHandler(handler: ResetHandler): void {
+function registerResetHandler(handler: ResetHandler): void {
     resetHandlers.add(handler);
 }
 
-// Exported Functions
-
-export function resetAll(): void {
+function resetAll(): void {
     const i18n = window.D2F_I18N;
     const confirmMsg = i18n?.confirm_reset;
     if (!confirmMsg) {
@@ -33,5 +33,5 @@ export function resetAll(): void {
         }
     }
 
-    saveState();
+    window.d2f.storage.saveState();
 }

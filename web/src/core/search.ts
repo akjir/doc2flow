@@ -1,9 +1,15 @@
-import { registerResetHandler } from './core.js';
+export interface Search {
+    removeHighlights(container: HTMLElement | null): void;
+    highlightTextNodes(container: HTMLElement | null, query: string): void;
+    performSearchAndFilter(onSaveState?: () => void): void;
+    toggleSearchToolbar(show?: boolean): void;
+    resetSearch(): void;
+}
 
 let preSearchCollapsedState: Map<string, boolean> | null = null;
 let lastMatchedSectionIds: Set<string> = new Set();
 
-export function removeHighlights(container: HTMLElement | null): void {
+function removeHighlights(container: HTMLElement | null): void {
     if (!container) return;
     const highlights = container.querySelectorAll<HTMLElement>('mark.d2f-highlight');
     highlights.forEach((mark) => {
@@ -16,7 +22,7 @@ export function removeHighlights(container: HTMLElement | null): void {
     });
 }
 
-export function highlightTextNodes(container: HTMLElement | null, query: string): void {
+function highlightTextNodes(container: HTMLElement | null, query: string): void {
     if (!container || !query) return;
     const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(escaped, 'gi');
@@ -79,7 +85,7 @@ export function highlightTextNodes(container: HTMLElement | null, query: string)
     });
 }
 
-export function performSearchAndFilter(onSaveState?: () => void): void {
+function performSearchAndFilter(onSaveState?: () => void): void {
     const rawSearchInput = document.getElementById('search-input');
     const searchInput = rawSearchInput instanceof HTMLInputElement ? rawSearchInput : null;
     const searchCounter = document.getElementById('search-counter');
@@ -178,7 +184,7 @@ export function performSearchAndFilter(onSaveState?: () => void): void {
     }
 }
 
-export function toggleSearchToolbar(show?: boolean): void {
+function toggleSearchToolbar(show?: boolean): void {
     const toolbar = document.getElementById('search-toolbar');
     const toggleBtn = document.getElementById('search-toggle-btn');
     const rawInput = document.getElementById('search-input');
@@ -202,7 +208,7 @@ export function toggleSearchToolbar(show?: boolean): void {
     }
 }
 
-export function resetSearch(): void {
+function resetSearch(): void {
     preSearchCollapsedState = null;
     lastMatchedSectionIds.clear();
 
@@ -220,5 +226,6 @@ export function resetSearch(): void {
     }
 }
 
-registerResetHandler(resetSearch);
+window.d2f.core.registerResetHandler(resetSearch);
+
 

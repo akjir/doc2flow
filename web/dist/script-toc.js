@@ -24,4 +24,8 @@
       link.classList.toggle("active", isMatch);
     });
   }
+  window.d2f.toc = {
+    generateTocItems,
+    highlightActiveTocItem
+  };
 })();

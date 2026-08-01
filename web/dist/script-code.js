@@ -57,6 +57,11 @@
     }
     fallbackCopyText(text, btn);
   }
+  window.d2f.code = {
+    showCopiedFeedback,
+    fallbackCopyText,
+    copyCode
+  };
   if (typeof window !== "undefined") {
     window.copyCode = copyCode;
   }

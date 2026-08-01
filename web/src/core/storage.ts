@@ -1,27 +1,33 @@
-// Types
+export interface Storage {
+    registerSaveHandler(handler: SaveHandler): void;
+    registerLoadHandler(handler: LoadHandler): void;
+    loadState(): void;
+    saveState(): void;
+}
 
 export type State = Record<string, unknown>;
 export type SaveHandler = () => State;
 export type LoadHandler = (state: State) => void;
 
-// Constants
-
 const saveHandlers = new Set<SaveHandler>();
 const loadHandlers = new Set<LoadHandler>();
 
-// Handler Functions
+window.d2f.storage = {
+    registerSaveHandler,
+    registerLoadHandler,
+    loadState,
+    saveState,
+}
 
-export function registerSaveHandler(handler: SaveHandler): void {
+function registerSaveHandler(handler: SaveHandler): void {
     saveHandlers.add(handler);
 }
 
-export function registerLoadHandler(handler: LoadHandler): void {
+function registerLoadHandler(handler: LoadHandler): void {
     loadHandlers.add(handler);
 }
 
-// Exported Functions
-
-export function loadState(): void {
+function loadState(): void {
     const key = getStateKey();
     try {
         const raw = localStorage.getItem(key);
@@ -43,7 +49,7 @@ export function loadState(): void {
     }
 }
 
-export function saveState(): void {
+function saveState(): void {
     const combinedState: State = {};
 
     for (const handler of saveHandlers) {
@@ -65,7 +71,6 @@ export function saveState(): void {
     }
 }
 
-// Internal Functions
 
 function getStateKey(): string {
     const docId = window.D2F_DOC_ID ?? '';

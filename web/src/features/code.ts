@@ -1,13 +1,7 @@
-declare global {
-    interface Window {
-        copyCode?: (btn: HTMLElement | null) => Promise<void>;
-    }
-}
-
 // WeakMap stores the active timer per button to prevent race conditions
 const feedbackTimers = new WeakMap<HTMLElement, number>();
 
-export function showCopiedFeedback(btn: HTMLElement): void {
+function showCopiedFeedback(btn: HTMLElement): void {
     btn.classList.add('copied');
 
     // If a timer is already running for this button, clear it
@@ -23,7 +17,7 @@ export function showCopiedFeedback(btn: HTMLElement): void {
     feedbackTimers.set(btn, timer);
 }
 
-export function fallbackCopyText(text: string, btn: HTMLElement): boolean {
+function fallbackCopyText(text: string, btn: HTMLElement): boolean {
     const ta = document.createElement('textarea');
     ta.value = text;
     // Move out of viewport instead of opacity: 0 (more robust on mobile devices)
@@ -51,7 +45,7 @@ export function fallbackCopyText(text: string, btn: HTMLElement): boolean {
     return success;
 }
 
-export async function copyCode(btn: HTMLElement | null): Promise<void> {
+async function copyCode(btn: HTMLElement | null): Promise<void> {
     if (!btn) return;
 
     const wrap = btn.closest('.code-block-wrap');
@@ -76,8 +70,3 @@ export async function copyCode(btn: HTMLElement | null): Promise<void> {
     // Execute fallback if Clipboard API is unavailable or fails
     fallbackCopyText(text, btn);
 }
-
-if (typeof window !== 'undefined') {
-    window.copyCode = copyCode;
-}
- 

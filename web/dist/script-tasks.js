@@ -1,100 +1,5 @@
 "use strict";
 (() => {
-  // src/core/storage.ts
-  var saveHandlers = /* @__PURE__ */ new Set();
-  var loadHandlers = /* @__PURE__ */ new Set();
-  function registerSaveHandler(handler) {
-    saveHandlers.add(handler);
-  }
-  function registerLoadHandler(handler) {
-    loadHandlers.add(handler);
-  }
-
-  // src/core/core.ts
-  var resetHandlers = /* @__PURE__ */ new Set();
-  function registerResetHandler(handler) {
-    resetHandlers.add(handler);
-  }
-
-  // src/core/comments.ts
-  function autoExpandTextarea(el) {
-    if (!el)
-      return;
-    el.style.height = "auto";
-    el.style.height = String(el.scrollHeight) + "px";
-  }
-  function getOrCreateCommentBox(checkItem, initialValue) {
-    if (!checkItem)
-      return null;
-    let box = checkItem.querySelector(".item-comment-box");
-    let input = null;
-    if (!box) {
-      box = document.createElement("div");
-      box.className = "item-comment-box";
-      input = document.createElement("textarea");
-      input.rows = 1;
-      input.className = "item-comment-input";
-      const i18n = window.D2F_I18N ?? {};
-      const commentLabel = i18n.comment_placeholder ?? "Add a comment...";
-      input.placeholder = commentLabel;
-      input.setAttribute("aria-label", commentLabel);
-      const delBtn = document.createElement("button");
-      delBtn.type = "button";
-      delBtn.className = "item-comment-del";
-      delBtn.title = "Delete comment";
-      delBtn.setAttribute("aria-label", "Delete comment");
-      delBtn.innerHTML = "&#10006;";
-      box.appendChild(input);
-      box.appendChild(delBtn);
-      checkItem.appendChild(box);
-    } else {
-      const rawInput = box.querySelector(".item-comment-input");
-      input = rawInput instanceof HTMLTextAreaElement ? rawInput : null;
-    }
-    if (!input)
-      return null;
-    if (typeof initialValue === "string") {
-      input.value = initialValue;
-      input.textContent = initialValue;
-      input.setAttribute("value", initialValue);
-    }
-    autoExpandTextarea(input);
-    return { box, input };
-  }
-  function saveComments() {
-    const comments = {};
-    document.querySelectorAll(".check-item").forEach((item, index) => {
-      const input = item.querySelector(".item-comment-input");
-      if (input && input.value.trim() !== "") {
-        const key = item.id || "item_" + String(index);
-        comments[key] = input.value;
-      }
-    });
-    return { comments };
-  }
-  function loadComments(state) {
-    const comments = state["comments"];
-    if (typeof comments === "object" && comments !== null && !Array.isArray(comments)) {
-      const commentsRecord = comments;
-      document.querySelectorAll(".check-item").forEach((item, index) => {
-        const key = item.id || "item_" + String(index);
-        const val = commentsRecord[key];
-        if (val !== void 0 && typeof val === "string") {
-          getOrCreateCommentBox(item, val);
-        }
-      });
-    }
-    return false;
-  }
-  function resetComments() {
-    document.querySelectorAll(".item-comment-box").forEach((box) => {
-      box.remove();
-    });
-  }
-  registerSaveHandler(saveComments);
-  registerLoadHandler(loadComments);
-  registerResetHandler(resetComments);
-
   // src/features/tasks.ts
   function isRecord(val) {
     return typeof val === "object" && val !== null && !Array.isArray(val);
@@ -225,9 +130,16 @@
     });
     updateProgress();
   }
-  registerSaveHandler(saveTasks);
-  registerLoadHandler(loadTasks);
-  registerResetHandler(resetTasks);
+  window.d2f.tasks = {
+    styleItem,
+    updateProgress,
+    saveTasks,
+    loadTasks,
+    resetTasks
+  };
+  window.d2f.core.registerResetHandler(resetTasks);
+  window.d2f.storage.registerSaveHandler(saveTasks);
+  window.d2f.storage.registerLoadHandler(loadTasks);
   if (typeof window !== "undefined") {
     document.addEventListener("DOMContentLoaded", () => {
       updateProgress();

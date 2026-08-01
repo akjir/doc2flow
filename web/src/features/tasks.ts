@@ -1,24 +1,11 @@
-import { registerSaveHandler, registerLoadHandler } from '../core/storage.js';
-import { registerResetHandler } from '../core/core.js';
-
-function isRecord(val: unknown): val is Record<string, unknown> {
-    return typeof val === 'object' && val !== null && !Array.isArray(val);
-}
-
-export function styleItem(cb: HTMLInputElement): void {
+function styleItem(cb: HTMLInputElement): void {
     const item = cb.closest<HTMLElement>('.check-item');
     if (item) {
         item.classList.toggle('checked', cb.checked);
     }
 }
 
-export {
-    autoExpandTextarea,
-    getOrCreateCommentBox,
-    type CommentBoxResult
-} from '../core/comments.js';
-
-export function updateProgress(): void {
+function updateProgress(): void {
     const i18n = window.D2F_I18N ?? {};
     const sections = document.querySelectorAll<HTMLElement>('.section');
     let total = 0;
@@ -89,7 +76,7 @@ export function updateProgress(): void {
     }
 }
 
-export function saveTasks(): Record<string, unknown> {
+function saveTasks(): Record<string, unknown> {
     const checks: Record<string, boolean> = {};
     document.querySelectorAll<HTMLInputElement>('.check-item input[type="checkbox"]').forEach((cb, index) => {
         const key = cb.id || ('cb_' + String(index));
@@ -108,9 +95,9 @@ export function saveTasks(): Record<string, unknown> {
     };
 }
 
-export function loadTasks(state: Record<string, unknown>): boolean {
+function loadTasks(state: Record<string, unknown>): boolean {
     const checksData = state['checks'];
-    if (isRecord(checksData)) {
+    if (window.d2f.utils.isRecord(checksData)) {
         document.querySelectorAll<HTMLInputElement>('.check-item input[type="checkbox"]').forEach((cb, index) => {
             const key = cb.id || ('cb_' + String(index));
             const val = checksData[key];
@@ -122,7 +109,7 @@ export function loadTasks(state: Record<string, unknown>): boolean {
     }
 
     const textsData = state['texts'];
-    if (isRecord(textsData)) {
+    if (window.d2f.utils.isRecord(textsData)) {
         document.querySelectorAll<HTMLElement>('.check-item.text-item, .check-item.simple-item').forEach((item, index) => {
             const key = item.id || ('txt_' + String(index));
             const val = textsData[key];
@@ -136,7 +123,7 @@ export function loadTasks(state: Record<string, unknown>): boolean {
     return false;
 }
 
-export function resetTasks(): void {
+function resetTasks(): void {
     document.querySelectorAll<HTMLInputElement>('.check-item input[type="checkbox"]').forEach((cb) => {
         cb.checked = false;
         styleItem(cb);
@@ -147,9 +134,9 @@ export function resetTasks(): void {
     updateProgress();
 }
 
-registerSaveHandler(saveTasks);
-registerLoadHandler(loadTasks);
-registerResetHandler(resetTasks);
+window.d2f.core.registerResetHandler(resetTasks);
+window.d2f.storage.registerSaveHandler(saveTasks);
+window.d2f.storage.registerLoadHandler(loadTasks);
 
 if (typeof window !== 'undefined') {
     document.addEventListener('DOMContentLoaded', () => {

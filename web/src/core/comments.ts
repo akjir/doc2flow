@@ -1,18 +1,23 @@
-import { registerSaveHandler, registerLoadHandler } from './storage.js';
-import { registerResetHandler } from './core.js';
-
 export interface CommentBoxResult {
     readonly box: HTMLElement;
     readonly input: HTMLTextAreaElement;
 }
 
-export function autoExpandTextarea(el: HTMLTextAreaElement | null): void {
+export interface Comments {
+    autoExpandTextarea(el: HTMLTextAreaElement | null): void;
+    getOrCreateCommentBox(checkItem: HTMLElement | null, initialValue?: string): CommentBoxResult | null;
+    saveComments(): Record<string, unknown>;
+    loadComments(state: Record<string, unknown>): boolean;
+    resetComments(): void;
+}
+
+function autoExpandTextarea(el: HTMLTextAreaElement | null): void {
     if (!el) return;
     el.style.height = 'auto';
     el.style.height = String(el.scrollHeight) + 'px';
 }
 
-export function getOrCreateCommentBox(checkItem: HTMLElement | null, initialValue?: string): CommentBoxResult | null {
+function getOrCreateCommentBox(checkItem: HTMLElement | null, initialValue?: string): CommentBoxResult | null {
     if (!checkItem) return null;
     let box = checkItem.querySelector<HTMLElement>('.item-comment-box');
     let input: HTMLTextAreaElement | null = null;
@@ -56,7 +61,7 @@ export function getOrCreateCommentBox(checkItem: HTMLElement | null, initialValu
     return { box, input };
 }
 
-export function saveComments(): Record<string, unknown> {
+function saveComments(): Record<string, unknown> {
     const comments: Record<string, string> = {};
     document.querySelectorAll<HTMLElement>('.check-item').forEach((item, index) => {
         const input = item.querySelector<HTMLTextAreaElement>('.item-comment-input');
@@ -68,7 +73,7 @@ export function saveComments(): Record<string, unknown> {
     return { comments };
 }
 
-export function loadComments(state: Record<string, unknown>): boolean {
+function loadComments(state: Record<string, unknown>): boolean {
     const comments = state['comments'];
     if (typeof comments === 'object' && comments !== null && !Array.isArray(comments)) {
         const commentsRecord = comments as Record<string, string>;
@@ -83,12 +88,21 @@ export function loadComments(state: Record<string, unknown>): boolean {
     return false;
 }
 
-export function resetComments(): void {
+function resetComments(): void {
     document.querySelectorAll<HTMLElement>('.item-comment-box').forEach((box) => {
         box.remove();
     });
 }
 
-registerSaveHandler(saveComments);
-registerLoadHandler(loadComments);
-registerResetHandler(resetComments);
+window.d2f.comments = {
+    autoExpandTextarea,
+    getOrCreateCommentBox,
+    saveComments,
+    loadComments,
+    resetComments,
+};
+
+window.d2f.storage.registerSaveHandler(saveComments);
+window.d2f.storage.registerLoadHandler(loadComments);
+window.d2f.core.registerResetHandler(resetComments);
+

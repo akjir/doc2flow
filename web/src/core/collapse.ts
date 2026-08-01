@@ -1,7 +1,12 @@
-import { registerSaveHandler, registerLoadHandler } from './storage.js';
-import { registerResetHandler } from './core.js';
-
 const SECTION_SELECTOR = '.d2f-section, .section';
+
+export interface Collapse {
+    updateEmptySections(): void;
+    toggleSection(target: HTMLElement | string | null, onSave?: () => void): void;
+    saveSections(): Record<string, unknown>;
+    loadSections(state: Record<string, unknown>): boolean;
+    resetSections(): void;
+}
 
 function isRecord(val: unknown): val is Record<string, unknown> {
     return typeof val === 'object' && val !== null && !Array.isArray(val);
@@ -21,7 +26,7 @@ function setSectionCollapseState(sec: HTMLElement, isCollapsed: boolean): void {
     }
 }
 
-export function updateEmptySections(): void {
+function updateEmptySections(): void {
     document.querySelectorAll<HTMLElement>(SECTION_SELECTOR).forEach((sec) => {
         const sh = sec.querySelector<HTMLElement>('.sh');
         const body = sec.querySelector<HTMLElement>('.sb');
@@ -34,7 +39,7 @@ export function updateEmptySections(): void {
     });
 }
 
-export function toggleSection(target: HTMLElement | string | null, onSave?: () => void): void {
+function toggleSection(target: HTMLElement | string | null, onSave?: () => void): void {
     let headerElement: HTMLElement | null = null;
 
     if (typeof target === 'string') {
@@ -71,7 +76,7 @@ export function toggleSection(target: HTMLElement | string | null, onSave?: () =
     }
 }
 
-export function saveSections(): Record<string, unknown> {
+function saveSections(): Record<string, unknown> {
     const sections: Record<string, boolean> = {};
     document.querySelectorAll<HTMLElement>(SECTION_SELECTOR).forEach((sec, index) => {
         const body = sec.querySelector<HTMLElement>('.sb');
@@ -83,7 +88,7 @@ export function saveSections(): Record<string, unknown> {
     return { sections };
 }
 
-export function loadSections(state: Record<string, unknown>): boolean {
+function loadSections(state: Record<string, unknown>): boolean {
     const sectionsData = state['sections'];
     if (isRecord(sectionsData)) {
         document.querySelectorAll<HTMLElement>(SECTION_SELECTOR).forEach((sec, index) => {
@@ -97,7 +102,7 @@ export function loadSections(state: Record<string, unknown>): boolean {
     return false;
 }
 
-export function resetSections(): void {
+function resetSections(): void {
     document.querySelectorAll<HTMLElement>(SECTION_SELECTOR).forEach((sec) => {
         setSectionCollapseState(sec, false);
     });
@@ -106,6 +111,15 @@ export function resetSections(): void {
     });
 }
 
-registerSaveHandler(saveSections);
-registerLoadHandler(loadSections);
-registerResetHandler(resetSections);
+window.d2f.collapse = {
+    updateEmptySections,
+    toggleSection,
+    saveSections,
+    loadSections,
+    resetSections,
+};
+
+window.d2f.storage.registerSaveHandler(saveSections);
+window.d2f.storage.registerLoadHandler(loadSections);
+window.d2f.core.registerResetHandler(resetSections);
+

@@ -1,17 +1,10 @@
-declare global {
-    interface Window {
-        openLightbox?: (imgSrc: string) => void;
-        closeLightbox?: () => void;
-    }
-}
-
-export function handleLightboxKeydown(e: KeyboardEvent): void {
+function handleLightboxKeydown(e: KeyboardEvent): void {
     if (e.key === 'Escape') {
         closeLightbox();
     }
 }
 
-export function openLightbox(imgSrc: string): void {
+function openLightbox(imgSrc: string): void {
     const rawLbImg = document.getElementById('lb-img');
     const lbImg = rawLbImg instanceof HTMLImageElement ? rawLbImg : null;
     const lightbox = document.getElementById('lightbox');
@@ -22,7 +15,7 @@ export function openLightbox(imgSrc: string): void {
     }
 }
 
-export function closeLightbox(): void {
+function closeLightbox(): void {
     const lightbox = document.getElementById('lightbox');
     if (lightbox) {
         lightbox.classList.remove('active');
@@ -31,9 +24,6 @@ export function closeLightbox(): void {
 }
 
 if (typeof window !== 'undefined') {
-    window.openLightbox = openLightbox;
-    window.closeLightbox = closeLightbox;
-
     document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('click', (e: MouseEvent) => {
             const target = e.target;

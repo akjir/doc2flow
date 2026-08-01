@@ -1,7 +1,9 @@
-import { saveState } from './storage.js';
-import { styleItem } from '../features/tasks.js';
+export interface Export {
+    exportPDF(): void;
+    saveDocumentState(): void;
+}
 
-export function exportPDF(): void {
+function exportPDF(): void {
     const collapsed = Array.from(document.querySelectorAll<HTMLElement>('.sb.collapsed'));
     collapsed.forEach((el) => el.classList.remove('collapsed'));
 
@@ -14,8 +16,8 @@ export function exportPDF(): void {
     setTimeout(() => window.print(), 100);
 }
 
-export function saveDocumentState(): void {
-    saveState();
+function saveDocumentState(): void {
+    window.d2f.storage.saveState();
 
     const checkboxes = document.querySelectorAll<HTMLInputElement>('.check-item input[type="checkbox"]');
     checkboxes.forEach((cb) => {
@@ -24,7 +26,7 @@ export function saveDocumentState(): void {
         } else {
             cb.removeAttribute('checked');
         }
-        styleItem(cb);
+        window.d2f.tasks?.styleItem(cb);
     });
 
     const inputs = document.querySelectorAll<HTMLInputElement>('input.persistent-field, .info-table input');
@@ -52,3 +54,9 @@ export function saveDocumentState(): void {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
+
+window.d2f.export = {
+    exportPDF,
+    saveDocumentState,
+};
+

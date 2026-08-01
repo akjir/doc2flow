@@ -1,21 +1,21 @@
-import { updateEmptySections, toggleSection } from './collapse.js';
-import { performSearchAndFilter, toggleSearchToolbar } from './search.js';
-import { saveState, loadState } from './storage.js';
-import { syncLinkedFields, checkDateShortcut } from './fields.js';
-import { styleItem, updateProgress } from '../features/tasks.js';
-import { getOrCreateCommentBox } from './comments.js';
-import { exportPDF, saveDocumentState } from './export.js';
-import { resetAll } from './core.js';
-import { debounce } from './utils.js';
+import '../types.js';
+import './storage.js';
+import './core.js';
+import './utils.js';
+import './collapse.js';
+import './comments.js';
+import './export.js';
+import './fields.js';
+import './search.js';
 
-window.exportPDF = exportPDF;
-window.saveDocumentState = saveDocumentState;
-window.resetAll = resetAll;
+window.exportPDF = () => window.d2f.export.exportPDF();
+window.saveDocumentState = () => window.d2f.export.saveDocumentState();
+window.resetAll = () => window.d2f.core.resetAll();
 
 (() => {
     'use strict';
 
-    const saveStateDebounced = debounce(saveState, 300);
+    const saveStateDebounced = window.d2f.utils.debounce(() => window.d2f.storage.saveState(), 300);
 
     document.addEventListener('DOMContentLoaded', () => {
         // Keyboard navigation delegation for section toggles
@@ -26,7 +26,7 @@ window.resetAll = resetAll;
                     const sh = target.closest<HTMLElement>('.sh');
                     if (sh && !sh.classList.contains('no-toggle')) {
                         e.preventDefault();
-                        toggleSection(sh, saveState);
+                        window.d2f.collapse.toggleSection(sh, () => window.d2f.storage.saveState());
                     }
                 }
             }
@@ -39,7 +39,7 @@ window.resetAll = resetAll;
 
             const sh = target.closest<HTMLElement>('.sh');
             if (sh && !sh.classList.contains('no-toggle')) {
-                toggleSection(sh, saveState);
+                window.d2f.collapse.toggleSection(sh, () => window.d2f.storage.saveState());
                 return;
             }
 
@@ -47,7 +47,7 @@ window.resetAll = resetAll;
             if (commentBtn) {
                 const checkItem = commentBtn.closest<HTMLElement>('.check-item');
                 if (checkItem) {
-                    const res = getOrCreateCommentBox(checkItem);
+                    const res = window.d2f.comments.getOrCreateCommentBox(checkItem);
                     if (res?.input) {
                         res.input.focus();
                     }
@@ -60,7 +60,7 @@ window.resetAll = resetAll;
                 const box = commentDelBtn.closest<HTMLElement>('.item-comment-box');
                 if (box) {
                     box.remove();
-                    saveState();
+                    window.d2f.storage.saveState();
                 }
                 return;
             }
@@ -76,12 +76,12 @@ window.resetAll = resetAll;
                     if (target !== cb && !target.closest('label')) {
                         cb.checked = !cb.checked;
                     }
-                    styleItem(cb);
-                    updateProgress();
-                    saveState();
+                    window.d2f.tasks?.styleItem(cb);
+                    window.d2f.tasks?.updateProgress();
+                    window.d2f.storage.saveState();
                 } else if (checkItem.classList.contains('text-item') || checkItem.classList.contains('simple-item')) {
                     checkItem.classList.toggle('checked');
-                    saveState();
+                    window.d2f.storage.saveState();
                 }
             }
         });
@@ -104,12 +104,12 @@ window.resetAll = resetAll;
             if (target instanceof HTMLInputElement) {
                 if (target.id && linkedIds.includes(target.id)) {
                     if (target.id.toLowerCase().includes('date')) {
-                        checkDateShortcut(target);
+                        window.d2f.fields.checkDateShortcut(target);
                     }
-                    syncLinkedFields(target);
+                    window.d2f.fields.syncLinkedFields(target);
                     saveStateDebounced();
                 } else if (target.matches('input[id*="date"], input[name*="date"], input.date-field')) {
-                    checkDateShortcut(target);
+                    window.d2f.fields.checkDateShortcut(target);
                     saveStateDebounced();
                 }
             }
@@ -121,13 +121,13 @@ window.resetAll = resetAll;
         // Search Toolbar Listeners
         const searchToggleBtn = document.getElementById('search-toggle-btn');
         if (searchToggleBtn) {
-            searchToggleBtn.addEventListener('click', () => toggleSearchToolbar());
+            searchToggleBtn.addEventListener('click', () => window.d2f.search.toggleSearchToolbar());
         }
 
         const rawSearchInput = document.getElementById('search-input');
         const searchInput = rawSearchInput instanceof HTMLInputElement ? rawSearchInput : null;
         if (searchInput) {
-            searchInput.addEventListener('input', () => performSearchAndFilter());
+            searchInput.addEventListener('input', () => window.d2f.search.performSearchAndFilter());
         }
 
         const searchClearBtn = document.getElementById('search-clear-btn');
@@ -137,28 +137,29 @@ window.resetAll = resetAll;
                     searchInput.value = '';
                     searchInput.focus();
                 }
-                performSearchAndFilter(saveState);
+                window.d2f.search.performSearchAndFilter(() => window.d2f.storage.saveState());
             });
         }
 
         document.addEventListener('keydown', (e: KeyboardEvent) => {
             if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
                 e.preventDefault();
-                toggleSearchToolbar(true);
+                window.d2f.search.toggleSearchToolbar(true);
             } else if (e.key === 'Escape') {
                 const toolbar = document.getElementById('search-toolbar');
                 if (toolbar && !toolbar.classList.contains('hidden')) {
                     e.preventDefault();
-                    toggleSearchToolbar(false);
+                    window.d2f.search.toggleSearchToolbar(false);
                 }
             }
         });
 
         // Initialize Application
-        updateEmptySections();
-        loadState();
-        syncLinkedFields();
-        updateProgress();
-        performSearchAndFilter();
+        window.d2f.collapse.updateEmptySections();
+        window.d2f.storage.loadState();
+        window.d2f.fields.syncLinkedFields();
+        window.d2f.tasks?.updateProgress();
+        window.d2f.search.performSearchAndFilter();
     });
 })();
+
