@@ -19,7 +19,7 @@ Stars are born inside giant, dense clouds of interstellar gas and dust.
 
 ### Molecular Clouds
 
-Cold interstellar clouds consisting primarily of molecular hydrogen ($H_2$) provide the raw material for new stars.
+Cold interstellar clouds consisting primarily of molecular hydrogen (H₂) provide the raw material for new stars.
 
 - Gravitational instability causes fragments to collapse.
 - Core temperatures rise as gravitational energy converts into thermal energy.
@@ -30,7 +30,7 @@ Cold interstellar clouds consisting primarily of molecular hydrogen ($H_2$) prov
 
 As a collapsing core gains mass, it becomes a protostar surrounded by an accretion disk.
 
-- Core contraction reaches central temperatures of roughly $10^7 \text{ K}$.
+- Core contraction reaches central temperatures of roughly 10^7 K.
 - Ignition of hydrogen fusion marks the transition to a zero-age main sequence star.
 
 ## Main Sequence Stage
@@ -42,7 +42,7 @@ The main sequence is the longest stage of a star's life cycle, where hydrogen fu
 Energy generation in main-sequence stars relies on hydrogen burning processes:
 
 - **Proton-Proton Chain:** Dominates in low-mass stars like our Sun.
-- **CNO Cycle:** Dominates in stars with masses greater than $1.3 M_\odot$.
+- **CNO Cycle:** Dominates in stars with masses greater than 1.3 solar masses.
 
 >? Tip: Higher mass stars burn through their fuel at exponentially faster rates than low-mass stars.
 
@@ -58,14 +58,14 @@ When core hydrogen fuel is exhausted, stars evolve off the main sequence into fi
 
 ### White Dwarfs
 
-Low- to intermediate-mass stars ($M \le 8 M_\odot$) shed their outer layers as planetary nebulae and leave behind dense cores.
+Low- to intermediate-mass stars (M ≤ 8 solar masses) shed their outer layers as planetary nebulae and leave behind dense cores.
 
 - Composed mainly of carbon and oxygen.
 - Supported against gravitational collapse by electron degeneracy pressure.
 
 ### Neutron Stars and Black Holes
 
-Massive stars ($M > 8 M_\odot$) end their lives in violent supernova explosions.
+Massive stars (M > 8 solar masses) end their lives in violent supernova explosions.
 
 - **Neutron Stars:** Extremely dense remnants supported by neutron degeneracy pressure.
 - **Black Holes:** Remnants where core gravity overcomes all degeneracy pressures, forming a singularity.
