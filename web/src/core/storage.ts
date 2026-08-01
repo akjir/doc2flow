@@ -1,4 +1,94 @@
-import type { D2FState } from '../types.js';
+// Types
+
+type State = Record<string, unknown>;
+type SaveHandler = () => State;
+type LoadHandler = (state: State) => boolean;
+
+// Constants
+
+const saveHandlers = new Set<SaveHandler>();
+const loadHandlers = new Set<LoadHandler>();
+
+// Handler Functions
+
+export function registerSaveHandler(handler: SaveHandler): void {
+    saveHandlers.add(handler);
+}
+
+export function registerLoadHandler(handler: LoadHandler): void {
+    loadHandlers.add(handler);
+}
+
+// Exported Functions
+
+export function loadState(
+    styleItemFn?: (cb: HTMLInputElement) => void,
+    getOrCreateCommentBoxFn?: (item: HTMLElement, initialValue?: string) => void
+): void {
+    try {
+        const raw = localStorage.getItem(getStateKey());
+        if (!raw) return;
+
+        const data = parseRawStateJson(raw);
+        if (!data) return;
+
+        for (const handler of loadHandlers) {
+            try {
+                if (handler(data)) {
+                    return;
+                }
+            } catch (e) {
+                console.warn('Failed to execute load handler', e);
+            }
+        }
+
+        loadStateOld(data, styleItemFn, getOrCreateCommentBoxFn);
+    } catch (e) {
+        console.warn('Failed to load state from localStorage', e);
+    }
+}
+
+export function saveState(): void {
+    let combinedState: State = {};
+
+    try {
+        const oldState = saveStateOld();
+        combinedState = { ...combinedState, ...oldState };
+    } catch (e) {
+        console.warn('Failed to collect state from saveStateOld', e);
+    }
+
+    for (const handler of saveHandlers) {
+        try {
+            const providerState = handler();
+            combinedState = { ...combinedState, ...providerState };
+        } catch (e) {
+            console.warn('Failed to collect state from handler', e);
+        }
+    }
+
+    try {
+        localStorage.setItem(getStateKey(), JSON.stringify(combinedState));
+    } catch (e) {
+        console.warn('Failed to save state to localStorage', e);
+    }
+}
+
+// Internal Functions
+
+
+
+
+// -- old code 
+
+export interface D2FState {
+    readonly checks: Record<string, boolean>;
+    readonly texts: Record<string, boolean>;
+    readonly fields: Record<string, string>;
+    readonly comments: Record<string, string>;
+    readonly sections: Record<string, boolean>;
+}
+
 
 export function debounce<T extends (...args: readonly unknown[]) => void>(
     func: T,
@@ -20,7 +110,7 @@ export function getStateKey(): string {
     return 'd2f_state_' + (docId ? (docId + '_') : '') + filename;
 }
 
-export function saveState(): void {
+function saveStateOld(): State {
     const state: Record<string, boolean> = {};
     document.querySelectorAll<HTMLInputElement>('.check-item input[type="checkbox"]').forEach((cb, index) => {
         const key = cb.id || ('cb_' + String(index));
@@ -57,18 +147,13 @@ export function saveState(): void {
         }
     });
 
-    try {
-        const payload: D2FState = {
-            checks: state,
-            texts: textStates,
-            fields: fields,
-            comments: comments,
-            sections: sections
-        };
-        localStorage.setItem(getStateKey(), JSON.stringify(payload));
-    } catch (e) {
-        console.warn('Failed to save state to localStorage', e);
-    }
+    return {
+        checks: state,
+        texts: textStates,
+        fields: fields,
+        comments: comments,
+        sections: sections
+    };
 }
 
 export const saveStateDebounced = debounce(saveState, 300);
@@ -140,11 +225,11 @@ export function checkDateShortcut(input: HTMLInputElement): boolean {
     return false;
 }
 
-function parseStateJson(json: string): Partial<D2FState> | null {
+function parseRawStateJson(json: string): State | null {
     try {
         const parsed: unknown = JSON.parse(json);
-        if (typeof parsed === 'object' && parsed !== null) {
-            return parsed as Partial<D2FState>;
+        if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+            return parsed as State;
         }
     } catch {
         // ignore JSON parse error
@@ -152,72 +237,65 @@ function parseStateJson(json: string): Partial<D2FState> | null {
     return null;
 }
 
-export function loadState(
+function loadStateOld(
+    data: State,
     styleItemFn?: (cb: HTMLInputElement) => void,
     getOrCreateCommentBoxFn?: (item: HTMLElement, initialValue?: string) => void
 ): void {
-    try {
-        const raw = localStorage.getItem(getStateKey());
-        if (!raw) return;
+    const legacyData = data as Partial<D2FState>;
 
-        const data = parseStateJson(raw);
-        if (!data) return;
-
-        if (data.checks) {
-            document.querySelectorAll<HTMLInputElement>('.check-item input[type="checkbox"]').forEach((cb, index) => {
-                const key = cb.id || ('cb_' + String(index));
-                const val = data.checks?.[key];
-                if (val !== undefined) {
-                    cb.checked = val;
-                    if (styleItemFn) styleItemFn(cb);
-                }
-            });
-        }
-        if (data.texts) {
-            document.querySelectorAll<HTMLElement>('.check-item.text-item, .check-item.simple-item').forEach((item, index) => {
-                const key = item.id || ('txt_' + String(index));
-                const val = data.texts?.[key];
-                if (val !== undefined) {
-                    item.classList.toggle('checked', val);
-                }
-            });
-        }
-        if (data.fields) {
-            document.querySelectorAll<HTMLInputElement>('input.persistent-field').forEach((input, index) => {
-                const key = input.id || ('f_' + String(index));
-                const val = data.fields?.[key];
-                if (val !== undefined) {
-                    input.value = val;
-                }
-            });
-        }
-        if (data.comments && getOrCreateCommentBoxFn) {
-            document.querySelectorAll<HTMLElement>('.check-item').forEach((item, index) => {
-                const key = item.id || ('item_' + String(index));
-                const val = data.comments?.[key];
-                if (val !== undefined) {
-                    getOrCreateCommentBoxFn(item, val);
-                }
-            });
-        }
-        if (data.sections) {
-            document.querySelectorAll<HTMLElement>('.d2f-section, .section').forEach((sec, index) => {
-                const key = sec.id || ('sec_' + String(index));
-                const shouldCollapse = data.sections?.[key];
-                if (shouldCollapse === undefined) return;
-                const body = sec.querySelector<HTMLElement>('.sb');
-                const sh = sec.querySelector<HTMLElement>('.sh');
-                if (!body) return;
-                body.classList.toggle('collapsed', shouldCollapse);
-                if (sh) {
-                    sh.setAttribute('aria-expanded', shouldCollapse ? 'false' : 'true');
-                    const toggler = sh.querySelector<HTMLElement>('.stog');
-                    if (toggler) toggler.innerHTML = shouldCollapse ? '&#9650;' : '&#9660;';
-                }
-            });
-        }
-        syncLinkedFields();
-    } catch (e) {
-        console.warn('Failed to load state from localStorage', e);
+    if (legacyData.checks) {
+        document.querySelectorAll<HTMLInputElement>('.check-item input[type="checkbox"]').forEach((cb, index) => {
+            const key = cb.id || ('cb_' + String(index));
+            const val = legacyData.checks?.[key];
+            if (val !== undefined) {
+                cb.checked = val;
+                if (styleItemFn) styleItemFn(cb);
+            }
+        });
     }
+    if (legacyData.texts) {
+        document.querySelectorAll<HTMLElement>('.check-item.text-item, .check-item.simple-item').forEach((item, index) => {
+            const key = item.id || ('txt_' + String(index));
+            const val = legacyData.texts?.[key];
+            if (val !== undefined) {
+                item.classList.toggle('checked', val);
+            }
+        });
+    }
+    if (legacyData.fields) {
+        document.querySelectorAll<HTMLInputElement>('input.persistent-field').forEach((input, index) => {
+            const key = input.id || ('f_' + String(index));
+            const val = legacyData.fields?.[key];
+            if (val !== undefined) {
+                input.value = val;
+            }
+        });
+    }
+    if (legacyData.comments && getOrCreateCommentBoxFn) {
+        document.querySelectorAll<HTMLElement>('.check-item').forEach((item, index) => {
+            const key = item.id || ('item_' + String(index));
+            const val = legacyData.comments?.[key];
+            if (val !== undefined) {
+                getOrCreateCommentBoxFn(item, val);
+            }
+        });
+    }
+    if (legacyData.sections) {
+        document.querySelectorAll<HTMLElement>('.d2f-section, .section').forEach((sec, index) => {
+            const key = sec.id || ('sec_' + String(index));
+            const shouldCollapse = legacyData.sections?.[key];
+            if (shouldCollapse === undefined) return;
+            const body = sec.querySelector<HTMLElement>('.sb');
+            const sh = sec.querySelector<HTMLElement>('.sh');
+            if (!body) return;
+            body.classList.toggle('collapsed', shouldCollapse);
+            if (sh) {
+                sh.setAttribute('aria-expanded', shouldCollapse ? 'false' : 'true');
+                const toggler = sh.querySelector<HTMLElement>('.stog');
+                if (toggler) toggler.innerHTML = shouldCollapse ? '&#9650;' : '&#9660;';
+            }
+        });
+    }
+    syncLinkedFields();
 }

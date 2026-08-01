@@ -231,6 +231,52 @@
   }
 
   // src/core/storage.ts
+  var saveHandlers = /* @__PURE__ */ new Set();
+  var loadHandlers = /* @__PURE__ */ new Set();
+  function loadState(styleItemFn, getOrCreateCommentBoxFn) {
+    try {
+      const raw = localStorage.getItem(getStateKey());
+      if (!raw)
+        return;
+      const data = parseRawStateJson(raw);
+      if (!data)
+        return;
+      for (const handler of loadHandlers) {
+        try {
+          if (handler(data)) {
+            return;
+          }
+        } catch (e) {
+          console.warn("Failed to execute load handler", e);
+        }
+      }
+      loadStateOld(data, styleItemFn, getOrCreateCommentBoxFn);
+    } catch (e) {
+      console.warn("Failed to load state from localStorage", e);
+    }
+  }
+  function saveState() {
+    let combinedState = {};
+    try {
+      const oldState = saveStateOld();
+      combinedState = { ...combinedState, ...oldState };
+    } catch (e) {
+      console.warn("Failed to collect state from saveStateOld", e);
+    }
+    for (const handler of saveHandlers) {
+      try {
+        const providerState = handler();
+        combinedState = { ...combinedState, ...providerState };
+      } catch (e) {
+        console.warn("Failed to collect state from handler", e);
+      }
+    }
+    try {
+      localStorage.setItem(getStateKey(), JSON.stringify(combinedState));
+    } catch (e) {
+      console.warn("Failed to save state to localStorage", e);
+    }
+  }
   function debounce(func, wait) {
     let timeout;
     return function(...args) {
@@ -246,7 +292,7 @@
     const filename = decodeURIComponent(rawFilename);
     return "d2f_state_" + (docId ? docId + "_" : "") + filename;
   }
-  function saveState() {
+  function saveStateOld() {
     const state = {};
     document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb, index) => {
       const key = cb.id || "cb_" + String(index);
@@ -278,18 +324,13 @@
         sections[key] = body.classList.contains("collapsed");
       }
     });
-    try {
-      const payload = {
-        checks: state,
-        texts: textStates,
-        fields,
-        comments,
-        sections
-      };
-      localStorage.setItem(getStateKey(), JSON.stringify(payload));
-    } catch (e) {
-      console.warn("Failed to save state to localStorage", e);
-    }
+    return {
+      checks: state,
+      texts: textStates,
+      fields,
+      comments,
+      sections
+    };
   }
   var saveStateDebounced = debounce(saveState, 300);
   function syncFieldPair(id1, id2, sourceInput) {
@@ -356,85 +397,76 @@
     }
     return false;
   }
-  function parseStateJson(json) {
+  function parseRawStateJson(json) {
     try {
       const parsed = JSON.parse(json);
-      if (typeof parsed === "object" && parsed !== null) {
+      if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
         return parsed;
       }
     } catch {
     }
     return null;
   }
-  function loadState(styleItemFn, getOrCreateCommentBoxFn) {
-    try {
-      const raw = localStorage.getItem(getStateKey());
-      if (!raw)
-        return;
-      const data = parseStateJson(raw);
-      if (!data)
-        return;
-      if (data.checks) {
-        document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb, index) => {
-          const key = cb.id || "cb_" + String(index);
-          const val = data.checks?.[key];
-          if (val !== void 0) {
-            cb.checked = val;
-            if (styleItemFn)
-              styleItemFn(cb);
-          }
-        });
-      }
-      if (data.texts) {
-        document.querySelectorAll(".check-item.text-item, .check-item.simple-item").forEach((item, index) => {
-          const key = item.id || "txt_" + String(index);
-          const val = data.texts?.[key];
-          if (val !== void 0) {
-            item.classList.toggle("checked", val);
-          }
-        });
-      }
-      if (data.fields) {
-        document.querySelectorAll("input.persistent-field").forEach((input, index) => {
-          const key = input.id || "f_" + String(index);
-          const val = data.fields?.[key];
-          if (val !== void 0) {
-            input.value = val;
-          }
-        });
-      }
-      if (data.comments && getOrCreateCommentBoxFn) {
-        document.querySelectorAll(".check-item").forEach((item, index) => {
-          const key = item.id || "item_" + String(index);
-          const val = data.comments?.[key];
-          if (val !== void 0) {
-            getOrCreateCommentBoxFn(item, val);
-          }
-        });
-      }
-      if (data.sections) {
-        document.querySelectorAll(".d2f-section, .section").forEach((sec, index) => {
-          const key = sec.id || "sec_" + String(index);
-          const shouldCollapse = data.sections?.[key];
-          if (shouldCollapse === void 0)
-            return;
-          const body = sec.querySelector(".sb");
-          const sh = sec.querySelector(".sh");
-          if (!body)
-            return;
-          body.classList.toggle("collapsed", shouldCollapse);
-          if (sh) {
-            sh.setAttribute("aria-expanded", shouldCollapse ? "false" : "true");
-            const toggler = sh.querySelector(".stog");
-            if (toggler)
-              toggler.innerHTML = shouldCollapse ? "&#9650;" : "&#9660;";
-          }
-        });
-      }
-      syncLinkedFields();
-    } catch (e) {
-      console.warn("Failed to load state from localStorage", e);
+  function loadStateOld(data, styleItemFn, getOrCreateCommentBoxFn) {
+    const legacyData = data;
+    if (legacyData.checks) {
+      document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb, index) => {
+        const key = cb.id || "cb_" + String(index);
+        const val = legacyData.checks?.[key];
+        if (val !== void 0) {
+          cb.checked = val;
+          if (styleItemFn)
+            styleItemFn(cb);
+        }
+      });
     }
+    if (legacyData.texts) {
+      document.querySelectorAll(".check-item.text-item, .check-item.simple-item").forEach((item, index) => {
+        const key = item.id || "txt_" + String(index);
+        const val = legacyData.texts?.[key];
+        if (val !== void 0) {
+          item.classList.toggle("checked", val);
+        }
+      });
+    }
+    if (legacyData.fields) {
+      document.querySelectorAll("input.persistent-field").forEach((input, index) => {
+        const key = input.id || "f_" + String(index);
+        const val = legacyData.fields?.[key];
+        if (val !== void 0) {
+          input.value = val;
+        }
+      });
+    }
+    if (legacyData.comments && getOrCreateCommentBoxFn) {
+      document.querySelectorAll(".check-item").forEach((item, index) => {
+        const key = item.id || "item_" + String(index);
+        const val = legacyData.comments?.[key];
+        if (val !== void 0) {
+          getOrCreateCommentBoxFn(item, val);
+        }
+      });
+    }
+    if (legacyData.sections) {
+      document.querySelectorAll(".d2f-section, .section").forEach((sec, index) => {
+        const key = sec.id || "sec_" + String(index);
+        const shouldCollapse = legacyData.sections?.[key];
+        if (shouldCollapse === void 0)
+          return;
+        const body = sec.querySelector(".sb");
+        const sh = sec.querySelector(".sh");
+        if (!body)
+          return;
+        body.classList.toggle("collapsed", shouldCollapse);
+        if (sh) {
+          sh.setAttribute("aria-expanded", shouldCollapse ? "false" : "true");
+          const toggler = sh.querySelector(".stog");
+          if (toggler)
+            toggler.innerHTML = shouldCollapse ? "&#9650;" : "&#9660;";
+        }
+      });
+    }
+    syncLinkedFields();
   }
 
   // src/features/tasks.ts

@@ -1,6 +1,29 @@
 "use strict";
 (() => {
   // src/core/storage.ts
+  var saveHandlers = /* @__PURE__ */ new Set();
+  function saveState() {
+    let combinedState = {};
+    try {
+      const oldState = saveStateOld();
+      combinedState = { ...combinedState, ...oldState };
+    } catch (e) {
+      console.warn("Failed to collect state from saveStateOld", e);
+    }
+    for (const handler of saveHandlers) {
+      try {
+        const providerState = handler();
+        combinedState = { ...combinedState, ...providerState };
+      } catch (e) {
+        console.warn("Failed to collect state from handler", e);
+      }
+    }
+    try {
+      localStorage.setItem(getStateKey(), JSON.stringify(combinedState));
+    } catch (e) {
+      console.warn("Failed to save state to localStorage", e);
+    }
+  }
   function debounce(func, wait) {
     let timeout;
     return function(...args) {
@@ -16,7 +39,7 @@
     const filename = decodeURIComponent(rawFilename);
     return "d2f_state_" + (docId ? docId + "_" : "") + filename;
   }
-  function saveState() {
+  function saveStateOld() {
     const state = {};
     document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb, index) => {
       const key = cb.id || "cb_" + String(index);
@@ -48,18 +71,13 @@
         sections[key] = body.classList.contains("collapsed");
       }
     });
-    try {
-      const payload = {
-        checks: state,
-        texts: textStates,
-        fields,
-        comments,
-        sections
-      };
-      localStorage.setItem(getStateKey(), JSON.stringify(payload));
-    } catch (e) {
-      console.warn("Failed to save state to localStorage", e);
-    }
+    return {
+      checks: state,
+      texts: textStates,
+      fields,
+      comments,
+      sections
+    };
   }
   var saveStateDebounced = debounce(saveState, 300);
 
