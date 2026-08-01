@@ -1,7 +1,7 @@
 # Doc2Flow Agent Directives
 
 ## 1. Arch & Stack
-- **Spec:** `SPECIFICATION.md`
+- **Spec:** `SPECIFICATION.md` (sync structure on central file changes)
 - **CLI:** `std::env::args()`
 - **MD:** `pulldown-cmark`+GFM
 - **Assets:** Custom Base64/MIME (`src/utils.rs`), WebP/compress (`src/image.rs`)
