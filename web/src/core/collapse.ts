@@ -101,6 +101,9 @@ export function resetSections(): void {
     document.querySelectorAll<HTMLElement>(SECTION_SELECTOR).forEach((sec) => {
         setSectionCollapseState(sec, false);
     });
+    document.querySelectorAll<HTMLElement>('.sb.collapsed').forEach((body) => {
+        body.classList.remove('collapsed');
+    });
 }
 
 registerSaveHandler(saveSections);

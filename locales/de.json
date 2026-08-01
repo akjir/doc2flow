@@ -15,7 +15,7 @@
   "copied": "Kopiert!",
   "progress_template": "{done} von {total} Aufgaben erledigt ({pct}%)",
   "loading": "Lade...",
-  "confirm_reset": "Sind Sie sicher, dass Sie alle Markierungen zurücksetzen möchten?",
+  "confirm_reset": "Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?",
   "save_state": "Stand sichern",
   "callout_note": "Hinweis",
   "callout_tip": "Tipp",

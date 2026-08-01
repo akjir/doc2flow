@@ -1,4 +1,5 @@
 import { registerSaveHandler, registerLoadHandler } from './storage.js';
+import { registerResetHandler } from './core.js';
 
 function isRecord(val: unknown): val is Record<string, unknown> {
     return typeof val === 'object' && val !== null && !Array.isArray(val);
@@ -97,5 +98,27 @@ export function loadFields(state: Record<string, unknown>): boolean {
     return false;
 }
 
+export function resetFields(): void {
+    document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
+        'input, textarea, select'
+    ).forEach((el) => {
+        if (el.id === 'search-input' || el.classList.contains('search-input')) return;
+        if (el instanceof HTMLInputElement) {
+            if (el.type === 'checkbox' || el.type === 'radio') {
+                el.checked = false;
+            } else {
+                el.value = '';
+            }
+        } else if (el instanceof HTMLTextAreaElement) {
+            el.value = '';
+            el.textContent = '';
+        } else if (el instanceof HTMLSelectElement) {
+            el.selectedIndex = 0;
+        }
+    });
+    syncLinkedFields();
+}
+
 registerSaveHandler(saveFields);
 registerLoadHandler(loadFields);
+registerResetHandler(resetFields);

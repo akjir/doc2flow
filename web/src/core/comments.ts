@@ -1,4 +1,5 @@
 import { registerSaveHandler, registerLoadHandler } from './storage.js';
+import { registerResetHandler } from './core.js';
 
 export interface CommentBoxResult {
     readonly box: HTMLElement;
@@ -82,5 +83,12 @@ export function loadComments(state: Record<string, unknown>): boolean {
     return false;
 }
 
+export function resetComments(): void {
+    document.querySelectorAll<HTMLElement>('.item-comment-box').forEach((box) => {
+        box.remove();
+    });
+}
+
 registerSaveHandler(saveComments);
 registerLoadHandler(loadComments);
+registerResetHandler(resetComments);

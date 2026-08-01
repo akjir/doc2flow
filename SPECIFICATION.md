@@ -106,7 +106,7 @@ d2f.exe --version
 * **Interactivity & State Persistence:**
   * Interactive checkboxes and input field values are persisted per document in `localStorage` via `d2f_id`.
   * Section badges dynamically track completed items (e.g. `2/5 completed`).
-  * Reset button clears stored state following modal confirmation.
+  * Reset button clears stored state, unfolds all collapsed sections, and resets search filters following modal confirmation.
 * **Protocol & Sign-off Footer:** Agent signature input, completion date input, signature line, and "Process Completed" sign-off box.
 * **Layout & Print Optimization:** Responsive CSS layout with `@media print` rules that automatically expand collapsed sections, hide control buttons, and preserve print colors.
 
@@ -163,16 +163,17 @@ doc2flow/
 │   ├── src/
 │   │   ├── types.ts          # Shared TypeScript type definitions
 │   │   ├── core/             # Base core infrastructure modules
-│   │   │   ├── actions.ts    # Document action helpers for PDF export, state saving and code copy
 │   │   │   ├── collapse.ts   # Collapsible section toggling and state handlers
 │   │   │   ├── comments.ts   # Inline check-item comment boxes and persistence
 │   │   │   ├── core.ts       # Central core module and reset handler registry
+│   │   │   ├── export.ts     # Document export operations (PDF export and HTML state download)
 │   │   │   ├── fields.ts     # Persistent inputs, date shortcuts and field synchronization
 │   │   │   ├── main.ts       # Main entry point and global event listeners
 │   │   │   ├── search.ts     # Search toolbar and text filtering
 │   │   │   ├── storage.ts    # localStorage persistence manager for save and load handlers
 │   │   │   └── utils.ts      # Utility functions for debouncing
 │   │   └── features/         # Extension feature components
+│   │       ├── code.ts       # Code block copying and feedback notifications
 │   │       ├── images.ts     # Lightbox and image modal handling
 │   │       ├── tasks.ts      # Task checklist progress calculation and state management
 │   │       └── toc.ts        # Table of Contents generation and dynamic scroll tracking

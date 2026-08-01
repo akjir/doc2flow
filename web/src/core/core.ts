@@ -18,7 +18,11 @@ export function registerResetHandler(handler: ResetHandler): void {
 
 export function resetAll(): void {
     const i18n = window.D2F_I18N;
-    const confirmMsg = i18n?.confirm_reset ?? 'Are you sure you want to reset all markings?';
+    const confirmMsg = i18n?.confirm_reset;
+    if (!confirmMsg) {
+        console.error('Missing i18n translation key: confirm_reset');
+        return;
+    }
     if (!confirm(confirmMsg)) return;
 
     for (const handler of resetHandlers) {

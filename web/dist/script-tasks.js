@@ -86,8 +86,14 @@
     }
     return false;
   }
+  function resetComments() {
+    document.querySelectorAll(".item-comment-box").forEach((box) => {
+      box.remove();
+    });
+  }
   registerSaveHandler(saveComments);
   registerLoadHandler(loadComments);
+  registerResetHandler(resetComments);
 
   // src/features/tasks.ts
   function isRecord(val) {

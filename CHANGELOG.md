@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed search filter state and highlights not being reset when triggering resetAll.
 - Fixed ReferenceError when clicking PDF export, save state, reset, or copy code buttons by binding action handlers to the global window object.
 
+### Changed
+- Expanded document reset functionality to unfold all collapsed sections, clear text fields and comments, and update i18n confirmation text.
+
 ### Added
 - Added modular TypeScript architecture and build pipeline for web frontend scripts (#20).
 - Added optional automatic section numbering (`number_sections: true`) for H1 and H2 headings.

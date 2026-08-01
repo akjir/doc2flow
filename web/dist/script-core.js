@@ -63,7 +63,11 @@
   }
   function resetAll() {
     const i18n = window.D2F_I18N;
-    const confirmMsg = i18n?.confirm_reset ?? "Are you sure you want to reset all markings?";
+    const confirmMsg = i18n?.confirm_reset;
+    if (!confirmMsg) {
+      console.error("Missing i18n translation key: confirm_reset");
+      return;
+    }
     if (!confirm(confirmMsg))
       return;
     for (const handler of resetHandlers) {
@@ -166,6 +170,9 @@
   function resetSections() {
     document.querySelectorAll(SECTION_SELECTOR).forEach((sec) => {
       setSectionCollapseState(sec, false);
+    });
+    document.querySelectorAll(".sb.collapsed").forEach((body) => {
+      body.classList.remove("collapsed");
     });
   }
   registerSaveHandler(saveSections);
@@ -468,8 +475,30 @@
     syncLinkedFields();
     return false;
   }
+  function resetFields() {
+    document.querySelectorAll(
+      "input, textarea, select"
+    ).forEach((el) => {
+      if (el.id === "search-input" || el.classList.contains("search-input"))
+        return;
+      if (el instanceof HTMLInputElement) {
+        if (el.type === "checkbox" || el.type === "radio") {
+          el.checked = false;
+        } else {
+          el.value = "";
+        }
+      } else if (el instanceof HTMLTextAreaElement) {
+        el.value = "";
+        el.textContent = "";
+      } else if (el instanceof HTMLSelectElement) {
+        el.selectedIndex = 0;
+      }
+    });
+    syncLinkedFields();
+  }
   registerSaveHandler(saveFields);
   registerLoadHandler(loadFields);
+  registerResetHandler(resetFields);
 
   // src/core/comments.ts
   function autoExpandTextarea(el) {
@@ -541,8 +570,14 @@
     }
     return false;
   }
+  function resetComments() {
+    document.querySelectorAll(".item-comment-box").forEach((box) => {
+      box.remove();
+    });
+  }
   registerSaveHandler(saveComments);
   registerLoadHandler(loadComments);
+  registerResetHandler(resetComments);
 
   // src/features/tasks.ts
   function isRecord3(val) {
@@ -683,7 +718,7 @@
     });
   }
 
-  // src/core/actions.ts
+  // src/core/export.ts
   function exportPDF() {
     const collapsed = Array.from(document.querySelectorAll(".sb.collapsed"));
     collapsed.forEach((el) => el.classList.remove("collapsed"));
@@ -709,6 +744,11 @@
     inputs.forEach((input) => {
       input.setAttribute("value", input.value);
     });
+    const textareas = document.querySelectorAll("textarea.item-comment-input");
+    textareas.forEach((ta) => {
+      ta.textContent = ta.value;
+      ta.setAttribute("value", ta.value);
+    });
     const rawFilename = window.location.pathname.split("/").pop() ?? "index.html";
     const filename = decodeURIComponent(rawFilename || "index.html");
     const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
@@ -722,6 +762,8 @@
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
+
+  // src/features/code.ts
   function showCopiedFeedback(btn) {
     btn.classList.add("copied");
     setTimeout(() => btn.classList.remove("copied"), 2e3);
