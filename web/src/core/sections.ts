@@ -98,9 +98,10 @@ function resetSections(): void {
 }
 
 if (typeof window !== 'undefined') {
+    window.d2f.storage.registerSaveHandler(saveSections);
+    window.d2f.storage.registerLoadHandler(loadSections);
+
     document.addEventListener('DOMContentLoaded', () => {
-        window.d2f.storage.registerSaveHandler(saveSections);
-        window.d2f.storage.registerLoadHandler(loadSections);
         window.d2f.core.registerResetHandler(resetSections);
     });
 

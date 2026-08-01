@@ -29,10 +29,11 @@ function resetItems(): void {
 }
 
 if (typeof window !== 'undefined') {
+    window.d2f.storage.registerSaveHandler(saveItems);
+    window.d2f.storage.registerLoadHandler(loadItems);
+
     document.addEventListener('DOMContentLoaded', () => {
         window.d2f.core.registerResetHandler(resetItems);
-        window.d2f.storage.registerSaveHandler(saveItems);
-        window.d2f.storage.registerLoadHandler(loadItems);
     });
 
     document.addEventListener('click', (e: MouseEvent) => {

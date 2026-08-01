@@ -6,6 +6,11 @@
     if (item) {
       item.classList.toggle("checked", cb.checked);
     }
+    if (cb.checked) {
+      cb.setAttribute("checked", "");
+    } else {
+      cb.removeAttribute("checked");
+    }
   }
   function updateProgress() {
     const i18n = window.D2F_I18N ?? {};
@@ -107,10 +112,10 @@
     updateProgress();
   }
   if (typeof window !== "undefined") {
+    window.d2f.storage.registerSaveHandler(saveTasks);
+    window.d2f.storage.registerLoadHandler(loadTasks);
     document.addEventListener("DOMContentLoaded", () => {
       window.d2f.core.registerResetHandler(resetTasks);
-      window.d2f.storage.registerSaveHandler(saveTasks);
-      window.d2f.storage.registerLoadHandler(loadTasks);
       updateProgress();
     });
     document.addEventListener("click", (e) => {

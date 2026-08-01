@@ -34,8 +34,8 @@ function loadState(): void {
         if (!raw) return;
 
         const parsed: unknown = JSON.parse(raw);
-        if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return;
-        const state = parsed as State;
+        if (!window.d2f.utils.isRecord(parsed)) return;
+        const state = parsed;
 
         for (const handler of loadHandlers) {
             try {
@@ -73,13 +73,17 @@ function saveState(): void {
 
 function getStateKey(): string {
     const docId = window.D2F_DOC_ID ?? '';
-    const rawFilename = window.location.pathname.split('/').pop() ?? 'index.html';
-    const filename = decodeURIComponent(rawFilename);
+    const rawFilename = window.location.pathname.split('/').pop() || 'index.html';
+    const filename = decodeURIComponent(rawFilename || 'index.html');
     return 'd2f_state_' + (docId ? `${docId}_` : '') + filename;
 }
 
 if (typeof window !== 'undefined') {
-    document.addEventListener('DOMContentLoaded', () => {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            loadState();
+        });
+    } else {
         loadState();
-    });
+    }
 }

@@ -22,7 +22,7 @@
       if (!raw)
         return;
       const parsed = JSON.parse(raw);
-      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed))
+      if (!window.d2f.utils.isRecord(parsed))
         return;
       const state = parsed;
       for (const handler of loadHandlers) {
@@ -57,14 +57,18 @@
   }
   function getStateKey() {
     const docId = window.D2F_DOC_ID ?? "";
-    const rawFilename = window.location.pathname.split("/").pop() ?? "index.html";
-    const filename = decodeURIComponent(rawFilename);
+    const rawFilename = window.location.pathname.split("/").pop() || "index.html";
+    const filename = decodeURIComponent(rawFilename || "index.html");
     return "d2f_state_" + (docId ? `${docId}_` : "") + filename;
   }
   if (typeof window !== "undefined") {
-    document.addEventListener("DOMContentLoaded", () => {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => {
+        loadState();
+      });
+    } else {
       loadState();
-    });
+    }
   }
 
   // src/core/utils.ts
@@ -119,7 +123,21 @@
     }
     if (type === ExportType.DOCUMENT) {
       window.d2f.storage.saveState();
-      const rawFilename = window.location.pathname.split("/").pop() ?? "index.html";
+      document.querySelectorAll('input.persistent-field, input[type="text"]').forEach((input) => {
+        input.setAttribute("value", input.value);
+      });
+      document.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+        if (cb.checked) {
+          cb.setAttribute("checked", "");
+        } else {
+          cb.removeAttribute("checked");
+        }
+      });
+      document.querySelectorAll("textarea").forEach((ta) => {
+        ta.textContent = ta.value;
+        ta.setAttribute("value", ta.value);
+      });
+      const rawFilename = window.location.pathname.split("/").pop() || "index.html";
       const filename = decodeURIComponent(rawFilename || "index.html");
       const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
       const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
@@ -214,9 +232,9 @@
     });
   }
   if (typeof window !== "undefined") {
+    window.d2f.storage.registerSaveHandler(saveSections);
+    window.d2f.storage.registerLoadHandler(loadSections);
     document.addEventListener("DOMContentLoaded", () => {
-      window.d2f.storage.registerSaveHandler(saveSections);
-      window.d2f.storage.registerLoadHandler(loadSections);
       window.d2f.core.registerResetHandler(resetSections);
     });
     document.addEventListener("keydown", (e) => {
@@ -318,9 +336,9 @@
     });
   }
   if (typeof window !== "undefined") {
+    window.d2f.storage.registerSaveHandler(saveComments);
+    window.d2f.storage.registerLoadHandler(loadComments);
     document.addEventListener("DOMContentLoaded", () => {
-      window.d2f.storage.registerSaveHandler(saveComments);
-      window.d2f.storage.registerLoadHandler(loadComments);
       window.d2f.core.registerResetHandler(resetComments);
     });
     const saveStateDebounced = window.d2f.utils.debounce(() => window.d2f.storage.saveState(), 300);
@@ -388,10 +406,10 @@
     });
   }
   if (typeof window !== "undefined") {
+    window.d2f.storage.registerSaveHandler(saveItems);
+    window.d2f.storage.registerLoadHandler(loadItems);
     document.addEventListener("DOMContentLoaded", () => {
       window.d2f.core.registerResetHandler(resetItems);
-      window.d2f.storage.registerSaveHandler(saveItems);
-      window.d2f.storage.registerLoadHandler(loadItems);
     });
     document.addEventListener("click", (e) => {
       const target = e.target;
@@ -493,6 +511,7 @@
         const val = fieldsData[key];
         if (typeof val === "string") {
           input.value = val;
+          input.setAttribute("value", val);
         }
       });
     }
@@ -508,12 +527,15 @@
       if (el instanceof HTMLInputElement) {
         if (el.type === "checkbox" || el.type === "radio") {
           el.checked = false;
+          el.removeAttribute("checked");
         } else {
           el.value = "";
+          el.removeAttribute("value");
         }
       } else if (el instanceof HTMLTextAreaElement) {
         el.value = "";
         el.textContent = "";
+        el.removeAttribute("value");
       } else if (el instanceof HTMLSelectElement) {
         el.selectedIndex = 0;
       }
@@ -521,9 +543,9 @@
     syncLinkedFields();
   }
   if (typeof window !== "undefined") {
+    window.d2f.storage.registerSaveHandler(saveFields);
+    window.d2f.storage.registerLoadHandler(loadFields);
     document.addEventListener("DOMContentLoaded", () => {
-      window.d2f.storage.registerSaveHandler(saveFields);
-      window.d2f.storage.registerLoadHandler(loadFields);
       window.d2f.core.registerResetHandler(resetFields);
     });
     const linkedIds = ["f_info_agent", "f_sign_agent", "f_info_date", "f_sign_date"];
@@ -533,6 +555,7 @@
       if (!(target instanceof HTMLInputElement))
         return;
       if (target.classList.contains("persistent-field")) {
+        target.setAttribute("value", target.value);
         saveStateDebounced();
       }
       if (target.id && linkedIds.includes(target.id)) {
@@ -540,9 +563,22 @@
           checkDateShortcut(target);
         }
         syncLinkedFields(target);
+        const el1 = document.getElementById("f_info_agent");
+        const el2 = document.getElementById("f_sign_agent");
+        const el3 = document.getElementById("f_info_date");
+        const el4 = document.getElementById("f_sign_date");
+        if (el1 instanceof HTMLInputElement)
+          el1.setAttribute("value", el1.value);
+        if (el2 instanceof HTMLInputElement)
+          el2.setAttribute("value", el2.value);
+        if (el3 instanceof HTMLInputElement)
+          el3.setAttribute("value", el3.value);
+        if (el4 instanceof HTMLInputElement)
+          el4.setAttribute("value", el4.value);
         saveStateDebounced();
       } else if (target.matches('input[id*="date"], input[name*="date"], input.date-field')) {
         checkDateShortcut(target);
+        target.setAttribute("value", target.value);
         saveStateDebounced();
       }
     };

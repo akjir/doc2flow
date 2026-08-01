@@ -87,9 +87,10 @@ function resetComments(): void {
 }
 
 if (typeof window !== 'undefined') {
+    window.d2f.storage.registerSaveHandler(saveComments);
+    window.d2f.storage.registerLoadHandler(loadComments);
+
     document.addEventListener('DOMContentLoaded', () => {
-        window.d2f.storage.registerSaveHandler(saveComments);
-        window.d2f.storage.registerLoadHandler(loadComments);
         window.d2f.core.registerResetHandler(resetComments);
     });
 

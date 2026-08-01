@@ -48,7 +48,22 @@ function performExport(type: ExportType): void {
     if (type === ExportType.DOCUMENT) {
         window.d2f.storage.saveState();
 
-        const rawFilename = window.location.pathname.split('/').pop() ?? 'index.html';
+        document.querySelectorAll<HTMLInputElement>('input.persistent-field, input[type="text"]').forEach((input) => {
+            input.setAttribute('value', input.value);
+        });
+        document.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach((cb) => {
+            if (cb.checked) {
+                cb.setAttribute('checked', '');
+            } else {
+                cb.removeAttribute('checked');
+            }
+        });
+        document.querySelectorAll<HTMLTextAreaElement>('textarea').forEach((ta) => {
+            ta.textContent = ta.value;
+            ta.setAttribute('value', ta.value);
+        });
+
+        const rawFilename = window.location.pathname.split('/').pop() || 'index.html';
         const filename = decodeURIComponent(rawFilename || 'index.html');
 
         const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;

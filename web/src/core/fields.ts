@@ -95,6 +95,7 @@ function loadFields(state: Record<string, unknown>): boolean {
             const val = fieldsData[key];
             if (typeof val === 'string') {
                 input.value = val;
+                input.setAttribute('value', val);
             }
         });
     }
@@ -110,12 +111,15 @@ function resetFields(): void {
         if (el instanceof HTMLInputElement) {
             if (el.type === 'checkbox' || el.type === 'radio') {
                 el.checked = false;
+                el.removeAttribute('checked');
             } else {
                 el.value = '';
+                el.removeAttribute('value');
             }
         } else if (el instanceof HTMLTextAreaElement) {
             el.value = '';
             el.textContent = '';
+            el.removeAttribute('value');
         } else if (el instanceof HTMLSelectElement) {
             el.selectedIndex = 0;
         }
@@ -124,9 +128,10 @@ function resetFields(): void {
 }
 
 if (typeof window !== 'undefined') {
+    window.d2f.storage.registerSaveHandler(saveFields);
+    window.d2f.storage.registerLoadHandler(loadFields);
+
     document.addEventListener('DOMContentLoaded', () => {
-        window.d2f.storage.registerSaveHandler(saveFields);
-        window.d2f.storage.registerLoadHandler(loadFields);
         window.d2f.core.registerResetHandler(resetFields);
     });
 
@@ -138,6 +143,7 @@ if (typeof window !== 'undefined') {
         if (!(target instanceof HTMLInputElement)) return;
 
         if (target.classList.contains('persistent-field')) {
+            target.setAttribute('value', target.value);
             saveStateDebounced();
         }
 
@@ -146,9 +152,18 @@ if (typeof window !== 'undefined') {
                 checkDateShortcut(target);
             }
             syncLinkedFields(target);
+            const el1 = document.getElementById('f_info_agent');
+            const el2 = document.getElementById('f_sign_agent');
+            const el3 = document.getElementById('f_info_date');
+            const el4 = document.getElementById('f_sign_date');
+            if (el1 instanceof HTMLInputElement) el1.setAttribute('value', el1.value);
+            if (el2 instanceof HTMLInputElement) el2.setAttribute('value', el2.value);
+            if (el3 instanceof HTMLInputElement) el3.setAttribute('value', el3.value);
+            if (el4 instanceof HTMLInputElement) el4.setAttribute('value', el4.value);
             saveStateDebounced();
         } else if (target.matches('input[id*="date"], input[name*="date"], input.date-field')) {
             checkDateShortcut(target);
+            target.setAttribute('value', target.value);
             saveStateDebounced();
         }
     };

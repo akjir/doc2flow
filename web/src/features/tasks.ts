@@ -3,6 +3,11 @@ function styleItem(cb: HTMLInputElement): void {
     if (item) {
         item.classList.toggle('checked', cb.checked);
     }
+    if (cb.checked) {
+        cb.setAttribute('checked', '');
+    } else {
+        cb.removeAttribute('checked');
+    }
 }
 
 function updateProgress(): void {
@@ -112,10 +117,11 @@ function resetTasks(): void {
 }
 
 if (typeof window !== 'undefined') {
+    window.d2f.storage.registerSaveHandler(saveTasks);
+    window.d2f.storage.registerLoadHandler(loadTasks);
+
     document.addEventListener('DOMContentLoaded', () => {
         window.d2f.core.registerResetHandler(resetTasks);
-        window.d2f.storage.registerSaveHandler(saveTasks);
-        window.d2f.storage.registerLoadHandler(loadTasks);
         updateProgress();
     });
 
