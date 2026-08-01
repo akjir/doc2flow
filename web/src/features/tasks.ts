@@ -1,4 +1,8 @@
-import { saveState } from '../core/storage.js';
+import { registerSaveHandler, registerLoadHandler } from '../core/storage.js';
+
+function isRecord(val: unknown): val is Record<string, unknown> {
+    return typeof val === 'object' && val !== null && !Array.isArray(val);
+}
 
 export function styleItem(cb: HTMLInputElement): void {
     const item = cb.closest<HTMLElement>('.check-item');
@@ -7,60 +11,11 @@ export function styleItem(cb: HTMLInputElement): void {
     }
 }
 
-export function autoExpandTextarea(el: HTMLTextAreaElement | null): void {
-    if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = String(el.scrollHeight) + 'px';
-}
-
-export interface CommentBoxResult {
-    readonly box: HTMLElement;
-    readonly input: HTMLTextAreaElement;
-}
-
-export function getOrCreateCommentBox(checkItem: HTMLElement | null, initialValue?: string): CommentBoxResult | null {
-    if (!checkItem) return null;
-    let box = checkItem.querySelector<HTMLElement>('.item-comment-box');
-    let input: HTMLTextAreaElement | null = null;
-
-    if (!box) {
-        box = document.createElement('div');
-        box.className = 'item-comment-box';
-
-        input = document.createElement('textarea');
-        input.rows = 1;
-        input.className = 'item-comment-input';
-        const i18n = window.D2F_I18N ?? {};
-        const commentLabel = i18n.comment_placeholder ?? 'Add a comment...';
-        input.placeholder = commentLabel;
-        input.setAttribute('aria-label', commentLabel);
-
-        const delBtn = document.createElement('button');
-        delBtn.type = 'button';
-        delBtn.className = 'item-comment-del';
-        delBtn.title = 'Delete comment';
-        delBtn.setAttribute('aria-label', 'Delete comment');
-        delBtn.innerHTML = '&#10006;';
-
-        box.appendChild(input);
-        box.appendChild(delBtn);
-        checkItem.appendChild(box);
-    } else {
-        const rawInput = box.querySelector('.item-comment-input');
-        input = rawInput instanceof HTMLTextAreaElement ? rawInput : null;
-    }
-
-    if (!input) return null;
-
-    if (typeof initialValue === 'string') {
-        input.value = initialValue;
-        input.textContent = initialValue;
-        input.setAttribute('value', initialValue);
-    }
-
-    autoExpandTextarea(input);
-    return { box, input };
-}
+export {
+    autoExpandTextarea,
+    getOrCreateCommentBox,
+    type CommentBoxResult
+} from '../core/comments.js';
 
 export function updateProgress(): void {
     const i18n = window.D2F_I18N ?? {};
@@ -132,6 +87,56 @@ export function updateProgress(): void {
         }
     }
 }
+
+export function saveTasks(): Record<string, unknown> {
+    const checks: Record<string, boolean> = {};
+    document.querySelectorAll<HTMLInputElement>('.check-item input[type="checkbox"]').forEach((cb, index) => {
+        const key = cb.id || ('cb_' + String(index));
+        checks[key] = cb.checked;
+    });
+
+    const texts: Record<string, boolean> = {};
+    document.querySelectorAll<HTMLElement>('.check-item.text-item, .check-item.simple-item').forEach((item, index) => {
+        const key = item.id || ('txt_' + String(index));
+        texts[key] = item.classList.contains('checked');
+    });
+
+    return {
+        checks,
+        texts
+    };
+}
+
+export function loadTasks(state: Record<string, unknown>): boolean {
+    const checksData = state['checks'];
+    if (isRecord(checksData)) {
+        document.querySelectorAll<HTMLInputElement>('.check-item input[type="checkbox"]').forEach((cb, index) => {
+            const key = cb.id || ('cb_' + String(index));
+            const val = checksData[key];
+            if (typeof val === 'boolean') {
+                cb.checked = val;
+                styleItem(cb);
+            }
+        });
+    }
+
+    const textsData = state['texts'];
+    if (isRecord(textsData)) {
+        document.querySelectorAll<HTMLElement>('.check-item.text-item, .check-item.simple-item').forEach((item, index) => {
+            const key = item.id || ('txt_' + String(index));
+            const val = textsData[key];
+            if (typeof val === 'boolean') {
+                item.classList.toggle('checked', val);
+            }
+        });
+    }
+
+    updateProgress();
+    return false;
+}
+
+registerSaveHandler(saveTasks);
+registerLoadHandler(loadTasks);
 
 if (typeof window !== 'undefined') {
     document.addEventListener('DOMContentLoaded', () => {

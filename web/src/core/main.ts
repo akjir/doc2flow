@@ -1,14 +1,11 @@
 import { updateEmptySections, toggleSection } from './collapse.js';
 import { performSearchAndFilter, toggleSearchToolbar } from './search.js';
-import {
-    saveState,
-    saveStateDebounced,
-    loadState,
-    syncLinkedFields,
-    checkDateShortcut
-} from './storage.js';
-import { styleItem, updateProgress, getOrCreateCommentBox } from '../features/tasks.js';
+import { saveState, loadState } from './storage.js';
+import { syncLinkedFields, checkDateShortcut } from './fields.js';
+import { styleItem, updateProgress } from '../features/tasks.js';
+import { getOrCreateCommentBox } from './comments.js';
 import { exportPDF, saveDocumentState, resetAll, copyCode } from './actions.js';
+import { debounce } from './utils.js';
 
 window.exportPDF = exportPDF;
 window.saveDocumentState = saveDocumentState;
@@ -17,6 +14,8 @@ window.copyCode = copyCode;
 
 (() => {
     'use strict';
+
+    const saveStateDebounced = debounce(saveState, 300);
 
     document.addEventListener('DOMContentLoaded', () => {
         // Keyboard navigation delegation for section toggles
@@ -157,7 +156,7 @@ window.copyCode = copyCode;
 
         // Initialize Application
         updateEmptySections();
-        loadState(styleItem, getOrCreateCommentBox);
+        loadState();
         syncLinkedFields();
         updateProgress();
         performSearchAndFilter();

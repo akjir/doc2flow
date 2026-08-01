@@ -2,92 +2,15 @@
 (() => {
   // src/core/storage.ts
   var saveHandlers = /* @__PURE__ */ new Set();
-  function saveState() {
-    let combinedState = {};
-    try {
-      const oldState = saveStateOld();
-      combinedState = { ...combinedState, ...oldState };
-    } catch (e) {
-      console.warn("Failed to collect state from saveStateOld", e);
-    }
-    for (const handler of saveHandlers) {
-      try {
-        const providerState = handler();
-        combinedState = { ...combinedState, ...providerState };
-      } catch (e) {
-        console.warn("Failed to collect state from handler", e);
-      }
-    }
-    try {
-      localStorage.setItem(getStateKey(), JSON.stringify(combinedState));
-    } catch (e) {
-      console.warn("Failed to save state to localStorage", e);
-    }
+  var loadHandlers = /* @__PURE__ */ new Set();
+  function registerSaveHandler(handler) {
+    saveHandlers.add(handler);
   }
-  function debounce(func, wait) {
-    let timeout;
-    return function(...args) {
-      if (timeout !== void 0) {
-        clearTimeout(timeout);
-      }
-      timeout = setTimeout(() => func(...args), wait);
-    };
+  function registerLoadHandler(handler) {
+    loadHandlers.add(handler);
   }
-  function getStateKey() {
-    const docId = window.D2F_DOC_ID ?? "";
-    const rawFilename = window.location.pathname.split("/").pop() ?? "index.html";
-    const filename = decodeURIComponent(rawFilename);
-    return "d2f_state_" + (docId ? docId + "_" : "") + filename;
-  }
-  function saveStateOld() {
-    const state = {};
-    document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb, index) => {
-      const key = cb.id || "cb_" + String(index);
-      state[key] = cb.checked;
-    });
-    const textStates = {};
-    document.querySelectorAll(".check-item.text-item, .check-item.simple-item").forEach((item, index) => {
-      const key = item.id || "txt_" + String(index);
-      textStates[key] = item.classList.contains("checked");
-    });
-    const fields = {};
-    document.querySelectorAll("input.persistent-field").forEach((input, index) => {
-      const key = input.id || "f_" + String(index);
-      fields[key] = input.value;
-    });
-    const comments = {};
-    document.querySelectorAll(".check-item").forEach((item, index) => {
-      const input = item.querySelector(".item-comment-input");
-      if (input && input.value.trim() !== "") {
-        const key = item.id || "item_" + String(index);
-        comments[key] = input.value;
-      }
-    });
-    const sections = {};
-    document.querySelectorAll(".d2f-section, .section").forEach((sec, index) => {
-      const body = sec.querySelector(".sb");
-      if (body) {
-        const key = sec.id || "sec_" + String(index);
-        sections[key] = body.classList.contains("collapsed");
-      }
-    });
-    return {
-      checks: state,
-      texts: textStates,
-      fields,
-      comments,
-      sections
-    };
-  }
-  var saveStateDebounced = debounce(saveState, 300);
 
-  // src/features/tasks.ts
-  function styleItem(cb) {
-    const item = cb.closest(".check-item");
-    if (item) {
-      item.classList.toggle("checked", cb.checked);
-    }
-  }
+  // src/core/comments.ts
   function autoExpandTextarea(el) {
     if (!el)
       return;
@@ -131,6 +54,44 @@
     }
     autoExpandTextarea(input);
     return { box, input };
+  }
+  function saveComments() {
+    const comments = {};
+    document.querySelectorAll(".check-item").forEach((item, index) => {
+      const input = item.querySelector(".item-comment-input");
+      if (input && input.value.trim() !== "") {
+        const key = item.id || "item_" + String(index);
+        comments[key] = input.value;
+      }
+    });
+    return { comments };
+  }
+  function loadComments(state) {
+    const comments = state["comments"];
+    if (typeof comments === "object" && comments !== null && !Array.isArray(comments)) {
+      const commentsRecord = comments;
+      document.querySelectorAll(".check-item").forEach((item, index) => {
+        const key = item.id || "item_" + String(index);
+        const val = commentsRecord[key];
+        if (val !== void 0 && typeof val === "string") {
+          getOrCreateCommentBox(item, val);
+        }
+      });
+    }
+    return false;
+  }
+  registerSaveHandler(saveComments);
+  registerLoadHandler(loadComments);
+
+  // src/features/tasks.ts
+  function isRecord(val) {
+    return typeof val === "object" && val !== null && !Array.isArray(val);
+  }
+  function styleItem(cb) {
+    const item = cb.closest(".check-item");
+    if (item) {
+      item.classList.toggle("checked", cb.checked);
+    }
   }
   function updateProgress() {
     const i18n = window.D2F_I18N ?? {};
@@ -201,6 +162,49 @@
       }
     }
   }
+  function saveTasks() {
+    const checks = {};
+    document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb, index) => {
+      const key = cb.id || "cb_" + String(index);
+      checks[key] = cb.checked;
+    });
+    const texts = {};
+    document.querySelectorAll(".check-item.text-item, .check-item.simple-item").forEach((item, index) => {
+      const key = item.id || "txt_" + String(index);
+      texts[key] = item.classList.contains("checked");
+    });
+    return {
+      checks,
+      texts
+    };
+  }
+  function loadTasks(state) {
+    const checksData = state["checks"];
+    if (isRecord(checksData)) {
+      document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb, index) => {
+        const key = cb.id || "cb_" + String(index);
+        const val = checksData[key];
+        if (typeof val === "boolean") {
+          cb.checked = val;
+          styleItem(cb);
+        }
+      });
+    }
+    const textsData = state["texts"];
+    if (isRecord(textsData)) {
+      document.querySelectorAll(".check-item.text-item, .check-item.simple-item").forEach((item, index) => {
+        const key = item.id || "txt_" + String(index);
+        const val = textsData[key];
+        if (typeof val === "boolean") {
+          item.classList.toggle("checked", val);
+        }
+      });
+    }
+    updateProgress();
+    return false;
+  }
+  registerSaveHandler(saveTasks);
+  registerLoadHandler(loadTasks);
   if (typeof window !== "undefined") {
     document.addEventListener("DOMContentLoaded", () => {
       updateProgress();

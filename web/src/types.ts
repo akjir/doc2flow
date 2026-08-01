@@ -8,14 +8,6 @@ export interface D2FI18nDict {
     readonly [key: string]: string | undefined;
 }
 
-export interface D2FState {
-    readonly checks: Record<string, boolean>;
-    readonly texts: Record<string, boolean>;
-    readonly fields: Record<string, string>;
-    readonly comments: Record<string, string>;
-    readonly sections: Record<string, boolean>;
-}
-
 declare global {
     interface Window {
         D2F_DOC_ID?: string;

@@ -1,6 +1,27 @@
+import { registerSaveHandler, registerLoadHandler } from './storage.js';
+
+const SECTION_SELECTOR = '.d2f-section, .section';
+
+function isRecord(val: unknown): val is Record<string, unknown> {
+    return typeof val === 'object' && val !== null && !Array.isArray(val);
+}
+
+function setSectionCollapseState(sec: HTMLElement, isCollapsed: boolean): void {
+    const body = sec.querySelector<HTMLElement>('.sb');
+    const sh = sec.querySelector<HTMLElement>('.sh');
+    if (!body) return;
+    body.classList.toggle('collapsed', isCollapsed);
+    if (sh) {
+        sh.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+        const toggler = sh.querySelector<HTMLElement>('.stog');
+        if (toggler) {
+            toggler.innerHTML = isCollapsed ? '&#9650;' : '&#9660;';
+        }
+    }
+}
+
 export function updateEmptySections(): void {
-    const sections = document.querySelectorAll<HTMLElement>('.d2f-section, .section');
-    sections.forEach((sec) => {
+    document.querySelectorAll<HTMLElement>(SECTION_SELECTOR).forEach((sec) => {
         const sh = sec.querySelector<HTMLElement>('.sh');
         const body = sec.querySelector<HTMLElement>('.sb');
         if (sh && body && body.children.length === 0 && body.innerHTML.trim() === '') {
@@ -32,14 +53,48 @@ export function toggleSection(target: HTMLElement | string | null, onSave?: () =
     const body = section ? section.querySelector<HTMLElement>('.sb') : null;
 
     if (body && (body.children.length > 0 || body.innerHTML.trim() !== '')) {
-        const isCollapsed = body.classList.toggle('collapsed');
-        headerElement.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
-        const toggler = headerElement.querySelector<HTMLElement>('.stog');
-        if (toggler) {
-            toggler.innerHTML = isCollapsed ? '&#9650;' : '&#9660;';
+        const isCollapsed = !body.classList.contains('collapsed');
+        if (section) {
+            setSectionCollapseState(section, isCollapsed);
+        } else {
+            body.classList.toggle('collapsed', isCollapsed);
+            headerElement.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+            const toggler = headerElement.querySelector<HTMLElement>('.stog');
+            if (toggler) {
+                toggler.innerHTML = isCollapsed ? '&#9650;' : '&#9660;';
+            }
         }
         if (onSave) {
             onSave();
         }
     }
 }
+
+export function saveSections(): Record<string, unknown> {
+    const sections: Record<string, boolean> = {};
+    document.querySelectorAll<HTMLElement>(SECTION_SELECTOR).forEach((sec, index) => {
+        const body = sec.querySelector<HTMLElement>('.sb');
+        if (body) {
+            const key = sec.id || ('sec_' + String(index));
+            sections[key] = body.classList.contains('collapsed');
+        }
+    });
+    return { sections };
+}
+
+export function loadSections(state: Record<string, unknown>): boolean {
+    const sectionsData = state['sections'];
+    if (isRecord(sectionsData)) {
+        document.querySelectorAll<HTMLElement>(SECTION_SELECTOR).forEach((sec, index) => {
+            const key = sec.id || ('sec_' + String(index));
+            const shouldCollapse = sectionsData[key];
+            if (typeof shouldCollapse === 'boolean') {
+                setSectionCollapseState(sec, shouldCollapse);
+            }
+        });
+    }
+    return false;
+}
+
+registerSaveHandler(saveSections);
+registerLoadHandler(loadSections);
