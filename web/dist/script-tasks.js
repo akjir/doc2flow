@@ -71,12 +71,14 @@
     }
   }
   function autoExpandTextarea(el) {
-    if (!el) return;
+    if (!el)
+      return;
     el.style.height = "auto";
     el.style.height = String(el.scrollHeight) + "px";
   }
   function getOrCreateCommentBox(checkItem, initialValue) {
-    if (!checkItem) return null;
+    if (!checkItem)
+      return null;
     let box = checkItem.querySelector(".item-comment-box");
     let input = null;
     if (!box) {
@@ -102,7 +104,8 @@
       const rawInput = box.querySelector(".item-comment-input");
       input = rawInput instanceof HTMLTextAreaElement ? rawInput : null;
     }
-    if (!input) return null;
+    if (!input)
+      return null;
     if (typeof initialValue === "string") {
       input.value = initialValue;
       input.textContent = initialValue;
@@ -126,7 +129,8 @@
       return { badge, count, checkedCount };
     });
     updates.forEach(({ badge, count, checkedCount }) => {
-      if (!badge) return;
+      if (!badge)
+        return;
       if (count === 0) {
         badge.textContent = "";
         badge.style.display = "none";
@@ -158,17 +162,24 @@
       finishBox.classList.remove("completed", "pending", "no-tasks");
       if (total === 0) {
         finishBox.classList.add("no-tasks");
-        if (btnPdf) btnPdf.disabled = false;
+        if (btnPdf)
+          btnPdf.disabled = false;
       } else if (done < total) {
         finishBox.classList.add("pending");
-        if (finishIcon) finishIcon.innerHTML = "&#x29D6;";
-        if (finishTitle) finishTitle.textContent = i18n.setup_in_progress ?? "Setup in Progress";
-        if (btnPdf) btnPdf.disabled = true;
+        if (finishIcon)
+          finishIcon.innerHTML = "&#x29D6;";
+        if (finishTitle)
+          finishTitle.textContent = i18n.setup_in_progress ?? "Setup in Progress";
+        if (btnPdf)
+          btnPdf.disabled = true;
       } else {
         finishBox.classList.add("completed");
-        if (finishIcon) finishIcon.innerHTML = "&#x2714;";
-        if (finishTitle) finishTitle.textContent = i18n.setup_completed ?? "Setup Completed";
-        if (btnPdf) btnPdf.disabled = false;
+        if (finishIcon)
+          finishIcon.innerHTML = "&#x2714;";
+        if (finishTitle)
+          finishTitle.textContent = i18n.setup_completed ?? "Setup Completed";
+        if (btnPdf)
+          btnPdf.disabled = false;
       }
     }
   }

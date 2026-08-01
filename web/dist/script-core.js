@@ -46,7 +46,8 @@
   var preSearchCollapsedState = null;
   var lastMatchedSectionIds = /* @__PURE__ */ new Set();
   function removeHighlights(container) {
-    if (!container) return;
+    if (!container)
+      return;
     const highlights = container.querySelectorAll("mark.d2f-highlight");
     highlights.forEach((mark) => {
       const parent = mark.parentNode;
@@ -58,7 +59,8 @@
     });
   }
   function highlightTextNodes(container, query) {
-    if (!container || !query) return;
+    if (!container || !query)
+      return;
     const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const regex = new RegExp(escaped, "gi");
     const walker = document.createTreeWalker(
@@ -67,7 +69,8 @@
       {
         acceptNode: (node) => {
           const parent = node.parentNode;
-          if (!parent || !(parent instanceof HTMLElement)) return NodeFilter.FILTER_REJECT;
+          if (!parent || !(parent instanceof HTMLElement))
+            return NodeFilter.FILTER_REJECT;
           const tag = parent.nodeName.toLowerCase();
           if (["script", "style", "input", "textarea", "select", "button"].includes(tag) || parent.classList.contains("d2f-highlight")) {
             return NodeFilter.FILTER_REJECT;
@@ -86,7 +89,8 @@
     }
     textNodes.forEach((textNode) => {
       const val = textNode.nodeValue;
-      if (!val || !regex.test(val)) return;
+      if (!val || !regex.test(val))
+        return;
       regex.lastIndex = 0;
       const frag = document.createDocumentFragment();
       let lastIdx = 0;
@@ -101,7 +105,8 @@
         mark.textContent = matchedText;
         frag.appendChild(mark);
         lastIdx = regex.lastIndex;
-        if (matchedText.length === 0) break;
+        if (matchedText.length === 0)
+          break;
         match = regex.exec(val);
       }
       if (lastIdx < val.length) {
@@ -117,7 +122,8 @@
     const searchInput = rawSearchInput instanceof HTMLInputElement ? rawSearchInput : null;
     const searchCounter = document.getElementById("search-counter");
     const sections = document.querySelectorAll(".d2f-section, .section");
-    if (sections.length === 0) return;
+    if (sections.length === 0)
+      return;
     const query = searchInput ? searchInput.value.trim() : "";
     const queryLower = query.toLowerCase();
     let visibleCount = 0;
@@ -139,7 +145,8 @@
         if (passesQuery) {
           sec.style.display = "";
           visibleCount++;
-          if (sec.id) currentMatchedIds.add(sec.id);
+          if (sec.id)
+            currentMatchedIds.add(sec.id);
           const body = sec.querySelector(".sb");
           if (body) {
             highlightTextNodes(body, query);
@@ -149,7 +156,8 @@
               if (sh) {
                 sh.setAttribute("aria-expanded", "true");
                 const toggler = sh.querySelector(".stog");
-                if (toggler) toggler.innerHTML = "&#9660;";
+                if (toggler)
+                  toggler.innerHTML = "&#9660;";
               }
             }
           }
@@ -174,7 +182,8 @@
             if (sh) {
               sh.setAttribute("aria-expanded", "false");
               const toggler = sh.querySelector(".stog");
-              if (toggler) toggler.innerHTML = "&#9650;";
+              if (toggler)
+                toggler.innerHTML = "&#9650;";
             }
           }
         }
@@ -200,19 +209,23 @@
     const toggleBtn = document.getElementById("search-toggle-btn");
     const rawInput = document.getElementById("search-input");
     const input = rawInput instanceof HTMLInputElement ? rawInput : null;
-    if (!toolbar) return;
+    if (!toolbar)
+      return;
     const shouldShow = typeof show === "boolean" ? show : toolbar.classList.contains("hidden");
     if (shouldShow) {
       toolbar.classList.remove("hidden");
-      if (toggleBtn) toggleBtn.classList.add("active");
+      if (toggleBtn)
+        toggleBtn.classList.add("active");
       if (input) {
         input.focus();
         input.select();
       }
     } else {
       toolbar.classList.add("hidden");
-      if (toggleBtn) toggleBtn.classList.remove("active");
-      if (input) input.value = "";
+      if (toggleBtn)
+        toggleBtn.classList.remove("active");
+      if (input)
+        input.value = "";
       performSearchAndFilter();
     }
   }
@@ -284,15 +297,19 @@
     const raw2 = document.getElementById(id2);
     const el1 = raw1 instanceof HTMLInputElement ? raw1 : null;
     const el2 = raw2 instanceof HTMLInputElement ? raw2 : null;
-    if (!el1 || !el2) return;
+    if (!el1 || !el2)
+      return;
     if (sourceInput === el1) {
       el2.value = el1.value;
     } else if (sourceInput === el2) {
       el1.value = el2.value;
     } else {
-      if (el1.value && !el2.value) el2.value = el1.value;
-      else if (el2.value && !el1.value) el1.value = el2.value;
-      else if (el1.value) el2.value = el1.value;
+      if (el1.value && !el2.value)
+        el2.value = el1.value;
+      else if (el2.value && !el1.value)
+        el1.value = el2.value;
+      else if (el1.value)
+        el2.value = el1.value;
     }
   }
   function syncLinkedFields(sourceInput) {
@@ -300,7 +317,8 @@
     syncFieldPair("f_info_date", "f_sign_date", sourceInput);
   }
   function formatDateFromTemplate(now, template) {
-    if (!template || typeof template !== "string") return null;
+    if (!template || typeof template !== "string")
+      return null;
     const tokenMap = {
       "YYYY": String(now.getFullYear()),
       "YY": String(now.getFullYear()).slice(-2),
@@ -322,14 +340,16 @@
     const now = /* @__PURE__ */ new Date();
     try {
       const fromTemplate = formatDateFromTemplate(now, i18n.date_placeholder);
-      if (fromTemplate) return fromTemplate;
+      if (fromTemplate)
+        return fromTemplate;
     } catch (e) {
       console.warn("Failed to format date", e);
     }
     return now.toLocaleDateString(navigator.language || void 0);
   }
   function checkDateShortcut(input) {
-    if (typeof input.value !== "string") return false;
+    if (typeof input.value !== "string")
+      return false;
     if (input.value.trim().toLowerCase() === "today") {
       input.value = getTodayFormatted();
       return true;
@@ -349,16 +369,19 @@
   function loadState(styleItemFn, getOrCreateCommentBoxFn) {
     try {
       const raw = localStorage.getItem(getStateKey());
-      if (!raw) return;
+      if (!raw)
+        return;
       const data = parseStateJson(raw);
-      if (!data) return;
+      if (!data)
+        return;
       if (data.checks) {
         document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb, index) => {
           const key = cb.id || "cb_" + String(index);
           const val = data.checks?.[key];
           if (val !== void 0) {
             cb.checked = val;
-            if (styleItemFn) styleItemFn(cb);
+            if (styleItemFn)
+              styleItemFn(cb);
           }
         });
       }
@@ -393,15 +416,18 @@
         document.querySelectorAll(".d2f-section, .section").forEach((sec, index) => {
           const key = sec.id || "sec_" + String(index);
           const shouldCollapse = data.sections?.[key];
-          if (shouldCollapse === void 0) return;
+          if (shouldCollapse === void 0)
+            return;
           const body = sec.querySelector(".sb");
           const sh = sec.querySelector(".sh");
-          if (!body) return;
+          if (!body)
+            return;
           body.classList.toggle("collapsed", shouldCollapse);
           if (sh) {
             sh.setAttribute("aria-expanded", shouldCollapse ? "false" : "true");
             const toggler = sh.querySelector(".stog");
-            if (toggler) toggler.innerHTML = shouldCollapse ? "&#9650;" : "&#9660;";
+            if (toggler)
+              toggler.innerHTML = shouldCollapse ? "&#9650;" : "&#9660;";
           }
         });
       }
@@ -419,12 +445,14 @@
     }
   }
   function autoExpandTextarea(el) {
-    if (!el) return;
+    if (!el)
+      return;
     el.style.height = "auto";
     el.style.height = String(el.scrollHeight) + "px";
   }
   function getOrCreateCommentBox(checkItem, initialValue) {
-    if (!checkItem) return null;
+    if (!checkItem)
+      return null;
     let box = checkItem.querySelector(".item-comment-box");
     let input = null;
     if (!box) {
@@ -450,7 +478,8 @@
       const rawInput = box.querySelector(".item-comment-input");
       input = rawInput instanceof HTMLTextAreaElement ? rawInput : null;
     }
-    if (!input) return null;
+    if (!input)
+      return null;
     if (typeof initialValue === "string") {
       input.value = initialValue;
       input.textContent = initialValue;
@@ -474,7 +503,8 @@
       return { badge, count, checkedCount };
     });
     updates.forEach(({ badge, count, checkedCount }) => {
-      if (!badge) return;
+      if (!badge)
+        return;
       if (count === 0) {
         badge.textContent = "";
         badge.style.display = "none";
@@ -506,17 +536,24 @@
       finishBox.classList.remove("completed", "pending", "no-tasks");
       if (total === 0) {
         finishBox.classList.add("no-tasks");
-        if (btnPdf) btnPdf.disabled = false;
+        if (btnPdf)
+          btnPdf.disabled = false;
       } else if (done < total) {
         finishBox.classList.add("pending");
-        if (finishIcon) finishIcon.innerHTML = "&#x29D6;";
-        if (finishTitle) finishTitle.textContent = i18n.setup_in_progress ?? "Setup in Progress";
-        if (btnPdf) btnPdf.disabled = true;
+        if (finishIcon)
+          finishIcon.innerHTML = "&#x29D6;";
+        if (finishTitle)
+          finishTitle.textContent = i18n.setup_in_progress ?? "Setup in Progress";
+        if (btnPdf)
+          btnPdf.disabled = true;
       } else {
         finishBox.classList.add("completed");
-        if (finishIcon) finishIcon.innerHTML = "&#x2714;";
-        if (finishTitle) finishTitle.textContent = i18n.setup_completed ?? "Setup Completed";
-        if (btnPdf) btnPdf.disabled = false;
+        if (finishIcon)
+          finishIcon.innerHTML = "&#x2714;";
+        if (finishTitle)
+          finishTitle.textContent = i18n.setup_completed ?? "Setup Completed";
+        if (btnPdf)
+          btnPdf.disabled = false;
       }
     }
   }
@@ -526,7 +563,101 @@
     });
   }
 
+  // src/core/actions.ts
+  function exportPDF() {
+    const collapsed = Array.from(document.querySelectorAll(".sb.collapsed"));
+    collapsed.forEach((el) => el.classList.remove("collapsed"));
+    const restore = () => {
+      collapsed.forEach((el) => el.classList.add("collapsed"));
+      window.removeEventListener("afterprint", restore);
+    };
+    window.addEventListener("afterprint", restore);
+    setTimeout(() => window.print(), 100);
+  }
+  function saveDocumentState() {
+    saveState();
+    const checkboxes = document.querySelectorAll('.check-item input[type="checkbox"]');
+    checkboxes.forEach((cb) => {
+      if (cb.checked) {
+        cb.setAttribute("checked", "checked");
+      } else {
+        cb.removeAttribute("checked");
+      }
+      styleItem(cb);
+    });
+    const inputs = document.querySelectorAll("input.persistent-field, .info-table input");
+    inputs.forEach((input) => {
+      input.setAttribute("value", input.value);
+    });
+    const rawFilename = window.location.pathname.split("/").pop() ?? "index.html";
+    const filename = decodeURIComponent(rawFilename || "index.html");
+    const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+    const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  function resetAll() {
+    const i18n = window.D2F_I18N;
+    const confirmMsg = i18n?.confirm_reset ?? "Are you sure you want to reset all checkboxes?";
+    if (!confirm(confirmMsg))
+      return;
+    const checkboxes = document.querySelectorAll('.check-item input[type="checkbox"]');
+    checkboxes.forEach((cb) => {
+      cb.checked = false;
+      styleItem(cb);
+    });
+    updateProgress();
+    saveState();
+  }
+  function showCopiedFeedback(btn) {
+    btn.classList.add("copied");
+    setTimeout(() => btn.classList.remove("copied"), 2e3);
+  }
+  function fallbackCopyText(text, btn) {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand("copy");
+      showCopiedFeedback(btn);
+    } catch (e) {
+      console.error("Fallback copy failed", e);
+    }
+    document.body.removeChild(ta);
+  }
+  function copyCode(btn) {
+    if (!btn)
+      return;
+    const wrap = btn.closest(".code-block-wrap");
+    if (!wrap)
+      return;
+    const codeEl = wrap.querySelector("code");
+    if (!codeEl)
+      return;
+    const text = codeEl.innerText || codeEl.textContent || "";
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showCopiedFeedback(btn);
+      }).catch(() => fallbackCopyText(text, btn));
+    } else {
+      fallbackCopyText(text, btn);
+    }
+  }
+
   // src/core/main.ts
+  window.exportPDF = exportPDF;
+  window.saveDocumentState = saveDocumentState;
+  window.resetAll = resetAll;
+  window.copyCode = copyCode;
   (() => {
     "use strict";
     document.addEventListener("DOMContentLoaded", () => {
@@ -544,7 +675,8 @@
       });
       document.addEventListener("click", (e) => {
         const target = e.target;
-        if (!(target instanceof Element)) return;
+        if (!(target instanceof Element))
+          return;
         const sh = target.closest(".sh");
         if (sh && !sh.classList.contains("no-toggle")) {
           toggleSection(sh, saveState);
@@ -592,7 +724,8 @@
       const linkedIds = ["f_info_agent", "f_sign_agent", "f_info_date", "f_sign_date"];
       const handleInputOrChange = (e) => {
         const target = e.target;
-        if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) return;
+        if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement))
+          return;
         if (target.classList.contains("persistent-field")) {
           saveStateDebounced();
         }

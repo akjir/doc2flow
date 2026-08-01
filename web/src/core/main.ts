@@ -8,6 +8,12 @@ import {
     checkDateShortcut
 } from './storage.js';
 import { styleItem, updateProgress, getOrCreateCommentBox } from '../features/tasks.js';
+import { exportPDF, saveDocumentState, resetAll, copyCode } from './actions.js';
+
+window.exportPDF = exportPDF;
+window.saveDocumentState = saveDocumentState;
+window.resetAll = resetAll;
+window.copyCode = copyCode;
 
 (() => {
     'use strict';

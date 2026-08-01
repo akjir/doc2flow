@@ -20,5 +20,9 @@ declare global {
     interface Window {
         D2F_DOC_ID?: string;
         D2F_I18N?: D2FI18nDict;
+        exportPDF?: () => void;
+        saveDocumentState?: () => void;
+        resetAll?: () => void;
+        copyCode?: (btn: HTMLElement | null) => void;
     }
 }

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fixed ReferenceError when clicking PDF export, save state, reset, or copy code buttons by binding action handlers to the global window object.
+
 ### Added
 - Added optional automatic section numbering (`number_sections: true`) for H1 and H2 headings.
 - Added live-in-browser search bar and quick-filter toolbar with keyboard shortcut (Ctrl+K), toggle button next to progress bar, clear button (✖), term highlighting, and printable CSS compatibility.

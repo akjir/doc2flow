@@ -197,8 +197,7 @@ doc2flow/
 │   └── utils.rs           # Zero-dependency Base64, MIME & CLI parser
 ├── templates/
 │   ├── base.html          # Embedded HTML output skeleton
-│   ├── style.css          # Embedded stylesheet & print rules
-│   └── script.js          # Embedded interactivity & localStorage logic
+│   └── template.md        # Starter template file
 ├── locales/
 │   ├── en.json            # English translations
 │   └── de.json            # German translations
