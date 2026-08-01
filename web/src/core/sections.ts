@@ -1,9 +1,3 @@
-const SECTION_SELECTOR = '.section';
-
-function isRecord(val: unknown): val is Record<string, unknown> {
-    return typeof val === 'object' && val !== null && !Array.isArray(val);
-}
-
 function setSectionCollapseState(sec: HTMLElement, isCollapsed: boolean): void {
     const body = sec.querySelector<HTMLElement>('.sb');
     const sh = sec.querySelector<HTMLElement>('.sh');
@@ -19,7 +13,7 @@ function setSectionCollapseState(sec: HTMLElement, isCollapsed: boolean): void {
 }
 
 function updateEmptySections(): void {
-    document.querySelectorAll<HTMLElement>(SECTION_SELECTOR).forEach((sec) => {
+    document.querySelectorAll<HTMLElement>('.section').forEach((sec) => {
         const sh = sec.querySelector<HTMLElement>('.sh');
         const body = sec.querySelector<HTMLElement>('.sb');
         if (sh && body && body.children.length === 0 && body.innerHTML.trim() === '') {
@@ -70,7 +64,7 @@ function toggleSection(target: HTMLElement | string | null, onSave?: () => void)
 
 function saveSections(): Record<string, unknown> {
     const sections: Record<string, boolean> = {};
-    document.querySelectorAll<HTMLElement>(SECTION_SELECTOR).forEach((sec, index) => {
+    document.querySelectorAll<HTMLElement>('.section').forEach((sec, index) => {
         const body = sec.querySelector<HTMLElement>('.sb');
         if (body) {
             const key = sec.id || ('sec_' + String(index));
@@ -82,8 +76,8 @@ function saveSections(): Record<string, unknown> {
 
 function loadSections(state: Record<string, unknown>): boolean {
     const sectionsData = state['sections'];
-    if (isRecord(sectionsData)) {
-        document.querySelectorAll<HTMLElement>(SECTION_SELECTOR).forEach((sec, index) => {
+    if (window.d2f.utils.isRecord(sectionsData)) {
+        document.querySelectorAll<HTMLElement>('.section').forEach((sec, index) => {
             const key = sec.id || ('sec_' + String(index));
             const shouldCollapse = sectionsData[key];
             if (typeof shouldCollapse === 'boolean') {
@@ -95,7 +89,7 @@ function loadSections(state: Record<string, unknown>): boolean {
 }
 
 function resetSections(): void {
-    document.querySelectorAll<HTMLElement>(SECTION_SELECTOR).forEach((sec) => {
+    document.querySelectorAll<HTMLElement>('.section').forEach((sec) => {
         setSectionCollapseState(sec, false);
     });
     document.querySelectorAll<HTMLElement>('.sb.collapsed').forEach((body) => {

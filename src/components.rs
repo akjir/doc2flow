@@ -187,6 +187,36 @@ pub fn render_lightbox(out: &mut impl Write, has_images: bool) {
     }
 }
 
+/// Renders the top process progress bar component if the tasks feature is enabled.
+#[inline]
+pub fn render_progress_bar(out: &mut impl Write, has_tasks: bool, loading_label: &str) {
+    if has_tasks {
+        let _ = write!(
+            out,
+            "<div class=\"pb-col\">\n  <div class=\"pb-wrap\" role=\"progressbar\" aria-valuenow=\"0\" aria-valuemin=\"0\" aria-valuemax=\"100\"><div class=\"pb\" id=\"pb\"></div></div>\n  <div class=\"pt\" id=\"pt\">{loading_label}</div>\n</div>"
+        );
+    }
+}
+
+/// Renders the bottom finish box component if the tasks feature is enabled.
+#[inline]
+pub fn render_finish_box(
+    out: &mut impl Write,
+    has_tasks: bool,
+    setup_completed_label: &str,
+    name_placeholder: &str,
+    agent_label: &str,
+    date_placeholder: &str,
+    signature_date_label: &str,
+) {
+    if has_tasks {
+        let _ = write!(
+            out,
+            "<div class=\"finish\" id=\"finish-box\">\n  <div class=\"big\" id=\"finish-icon\">&#x2714;</div>\n  <h2 id=\"finish-title\">{setup_completed_label}</h2>\n  <div class=\"sigs\">\n    <div><input type=\"text\" class=\"sf persistent-field\" id=\"f_sign_agent\" placeholder=\"{name_placeholder}\" aria-label=\"{agent_label}\"><div style=\"margin-top:4px\">{agent_label}</div></div>\n    <div><input type=\"text\" class=\"sf persistent-field\" id=\"f_sign_date\" placeholder=\"{date_placeholder}\" aria-label=\"{signature_date_label}\"><div style=\"margin-top:4px\">{signature_date_label}</div></div>\n  </div>\n</div>"
+        );
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -274,6 +304,46 @@ mod tests {
 
         let mut buf_false = String::new();
         render_lightbox(&mut buf_false, false);
+        assert_eq!(buf_false, "");
+    }
+
+    #[test]
+    fn test_render_progress_bar() {
+        let mut buf_true = String::new();
+        render_progress_bar(&mut buf_true, true, "Loading...");
+        assert!(buf_true.contains("<div class=\"pb-col\">"));
+        assert!(buf_true.contains("<div class=\"pt\" id=\"pt\">Loading...</div>"));
+
+        let mut buf_false = String::new();
+        render_progress_bar(&mut buf_false, false, "Loading...");
+        assert_eq!(buf_false, "");
+    }
+
+    #[test]
+    fn test_render_finish_box() {
+        let mut buf_true = String::new();
+        render_finish_box(
+            &mut buf_true,
+            true,
+            "Completed",
+            "Name",
+            "Agent",
+            "MM/DD/YYYY",
+            "Date",
+        );
+        assert!(buf_true.contains("<div class=\"finish\" id=\"finish-box\">"));
+        assert!(buf_true.contains("<h2 id=\"finish-title\">Completed</h2>"));
+
+        let mut buf_false = String::new();
+        render_finish_box(
+            &mut buf_false,
+            false,
+            "Completed",
+            "Name",
+            "Agent",
+            "MM/DD/YYYY",
+            "Date",
+        );
         assert_eq!(buf_false, "");
     }
 }

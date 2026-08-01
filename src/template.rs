@@ -93,6 +93,33 @@ pub fn render_lightbox(out: &mut impl Write, features: &DocumentFeatures) {
     components::render_lightbox(out, features.has_images);
 }
 
+/// Renders the top process progress bar component if the document contains tasks.
+#[inline]
+pub fn render_progress_bar(out: &mut impl Write, features: &DocumentFeatures, locale: &Locale) {
+    let loading = locale.get_ignore_ascii_case("LOADING").unwrap_or("");
+    components::render_progress_bar(out, features.has_tasks, loading);
+}
+
+/// Renders the bottom finish box component if the document contains tasks.
+#[inline]
+pub fn render_finish_box(out: &mut impl Write, features: &DocumentFeatures, locale: &Locale) {
+    let setup_completed = locale.get_ignore_ascii_case("SETUP_COMPLETED").unwrap_or("");
+    let name_placeholder = locale.get_ignore_ascii_case("NAME_PLACEHOLDER").unwrap_or("");
+    let agent = locale.get_ignore_ascii_case("AGENT").unwrap_or("");
+    let date_placeholder = locale.get_ignore_ascii_case("DATE_PLACEHOLDER").unwrap_or("");
+    let signature_date = locale.get_ignore_ascii_case("SIGNATURE_DATE").unwrap_or("");
+
+    components::render_finish_box(
+        out,
+        features.has_tasks,
+        setup_completed,
+        name_placeholder,
+        agent,
+        date_placeholder,
+        signature_date,
+    );
+}
+
 
 /// Default embedded SVG header logo.
 pub const DEFAULT_LOGO_SVG: &str = components::DEFAULT_LOGO_SVG;
@@ -347,6 +374,12 @@ pub fn render(
     let mut lightbox_html = String::with_capacity(256);
     render_lightbox(&mut lightbox_html, features);
 
+    let mut progress_bar_html = String::with_capacity(256);
+    render_progress_bar(&mut progress_bar_html, features, locale);
+
+    let mut finish_box_html = String::with_capacity(512);
+    render_finish_box(&mut finish_box_html, features, locale);
+
     validate_locale_coverage(base_html, locale);
 
     let i18n_json =
@@ -359,7 +392,7 @@ pub fn render(
     let app_version_raw = APP_VERSION.strip_prefix('v').unwrap_or(APP_VERSION);
     let created_at = format_iso8601_utc(std::time::SystemTime::now());
 
-    let mut vars = HashMap::with_capacity(21);
+    let mut vars = HashMap::with_capacity(23);
     vars.insert("APP_VERSION", APP_VERSION);
     vars.insert("APP_VERSION_RAW", app_version_raw);
     vars.insert("REPOSITORY_URL", REPOSITORY_URL);
@@ -377,6 +410,8 @@ pub fn render(
     vars.insert("CSS", style_css.as_str());
     vars.insert("JS", script_js.as_str());
     vars.insert("LIGHTBOX_HTML", lightbox_html.as_str());
+    vars.insert("PROGRESS_BAR_HTML", progress_bar_html.as_str());
+    vars.insert("FINISH_BOX_HTML", finish_box_html.as_str());
     vars.insert("CONTENT", html_content);
     vars.insert("DOC_ID", doc_id);
     vars.insert("LOGO", logo);
@@ -541,11 +576,12 @@ mod tests {
         let fm = Frontmatter::new("Test Corp");
         let locale = Locale::from_lang_code("en");
 
-        // Case 1: No images feature & no code feature
-        let mut features_no_img = DocumentFeatures::default();
-        features_no_img.has_images = false;
-        features_no_img.has_code = false;
-        let html_no_img = render(&fm, &locale, "<p>No images</p>", "doc_no_img", None, &features_no_img)
+        // Case 1: No images, code, or tasks feature
+        let mut features_none = DocumentFeatures::default();
+        features_none.has_images = false;
+        features_none.has_code = false;
+        features_none.has_tasks = false;
+        let html_no_img = render(&fm, &locale, "<p>No images</p>", "doc_no_img", None, &features_none)
             .expect("Render failed");
 
         assert!(!html_no_img.contains("<div class=\"lightbox\""));
@@ -554,12 +590,15 @@ mod tests {
         assert!(!html_no_img.contains("closeLightbox"));
         assert!(!html_no_img.contains(".code-block-wrap"));
         assert!(!html_no_img.contains("copyCode"));
+        assert!(!html_no_img.contains("id=\"finish-box\""));
+        assert!(!html_no_img.contains("<div class=\"pb-col\">"));
 
-        // Case 2: Images & Code feature active
-        let mut features_img = DocumentFeatures::default();
-        features_img.has_images = true;
-        features_img.has_code = true;
-        let html_img = render(&fm, &locale, "<p>Has image</p>", "doc_img", None, &features_img)
+        // Case 2: Images, Code & Tasks feature active
+        let mut features_all = DocumentFeatures::default();
+        features_all.has_images = true;
+        features_all.has_code = true;
+        features_all.has_tasks = true;
+        let html_img = render(&fm, &locale, "<p>Has image</p>", "doc_img", None, &features_all)
             .expect("Render failed");
 
         assert!(html_img.contains("<div class=\"lightbox\" id=\"lightbox\">"));
@@ -568,6 +607,8 @@ mod tests {
         assert!(html_img.contains("closeLightbox"));
         assert!(html_img.contains(".code-block-wrap"));
         assert!(html_img.contains("copyCode"));
+        assert!(html_img.contains("id=\"finish-box\""));
+        assert!(html_img.contains("<div class=\"pb-col\">"));
     }
 
     #[test]

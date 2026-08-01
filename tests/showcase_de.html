@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Doc2Flow v0.9.2+95.b75fe40.dev">
-<meta name="version" content="0.9.2+95.b75fe40.dev">
+<meta name="generator" content="Doc2Flow v0.9.2+96.fe5674d.dev">
+<meta name="version" content="0.9.2+96.fe5674d.dev">
 <meta name="repository" content="https://github.com/akjir/doc2flow">
 <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-<meta name="dcterms.created" content="2026-08-01T17:04:43Z">
+<meta name="dcterms.created" content="2026-08-01T17:15:47Z">
 <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
 <title>Doc2Flow Deutscher Showcase</title>
 <style>
@@ -141,13 +141,6 @@ hr {
   align-items: flex-start;
   gap: 8px;
   margin-top: 10px;
-}
-
-.pb-col {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
 }
 
 .search-toggle-btn {
@@ -731,6 +724,13 @@ mark.d2f-highlight {
    ========================================================================== */
 
 /* Progress Bar & Badges */
+.pb-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .pb-wrap {
   width: 100%;
   margin-top: 0;
@@ -1184,9 +1184,9 @@ mark.d2f-highlight {
       <svg width="13" height="13" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true"><path d="M281.1 0C153.782 0 50.2 103.582 50.2 230.9c0 45.12 13.019 87.25 35.483 122.853l-70.654 70.654c-20.039 20.039-20.039 52.527 0 72.564 20.039 20.039 52.527 20.039 72.564 0l70.654-70.654c35.605 22.464 77.735 35.483 122.853 35.483C408.418 461.8 512 358.218 512 230.9S408.42 0 281.1 0zm0 410.489c-99.025 0-179.589-80.564-179.589-179.589S182.074 51.311 281.1 51.311 460.689 131.875 460.689 230.9 380.127 410.489 281.1 410.489z"/></svg>
     </button>
     <div class="pb-col">
-      <div class="pb-wrap" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><div class="pb" id="pb"></div></div>
-      <div class="pt" id="pt">Lade...</div>
-    </div>
+  <div class="pb-wrap" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><div class="pb" id="pb"></div></div>
+  <div class="pt" id="pt">Lade...</div>
+</div>
   </div>
   <div class="search-toolbar hidden" id="search-toolbar">
     <div class="search-input-wrap">
@@ -1480,7 +1480,7 @@ mark.d2f-highlight {
 
 <script>
 window.D2F_DOC_ID = 'd2f_id_468e65bc2ccf89b4';
-window.D2F_I18N = {"date_placeholder":"TT.MM.JJJJ","lang_code":"de","company":"Firma","copied":"Kopiert!","signature_date":"Datum","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","save_state":"Stand sichern","setup_in_progress":"Vorgang in Bearbeitung","agent":"Bearbeiter","callout_tip":"Tipp","callout_important":"Wichtig","callout_warning":"Warnung","search_placeholder":"Suchen... (Ctrl+K)","name_placeholder":"Name","comment_placeholder":"Kommentar hinzufügen...","setup_completed":"Vorgang abgeschlossen","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","contact":"Ansprechpartner","date":"Datum","reset_all":"Zurücksetzen","callout_caution":"Achtung","sections_visible":"{visible} / {total} Abschnitte sichtbar","callout_note":"Hinweis","export_pdf":"Als PDF exportieren","copy_code":"Code kopieren","loading":"Lade..."};
+window.D2F_I18N = {"confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","search_placeholder":"Suchen... (Ctrl+K)","signature_date":"Datum","callout_tip":"Tipp","comment_placeholder":"Kommentar hinzufügen...","sections_visible":"{visible} / {total} Abschnitte sichtbar","contact":"Ansprechpartner","name_placeholder":"Name","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","date":"Datum","callout_warning":"Warnung","callout_important":"Wichtig","lang_code":"de","loading":"Lade...","agent":"Bearbeiter","export_pdf":"Als PDF exportieren","copy_code":"Code kopieren","reset_all":"Zurücksetzen","callout_note":"Hinweis","setup_completed":"Vorgang abgeschlossen","date_placeholder":"TT.MM.JJJJ","save_state":"Stand sichern","callout_caution":"Achtung","copied":"Kopiert!","setup_in_progress":"Vorgang in Bearbeitung","company":"Firma"};
 window.d2f = window.d2f || {};
 "use strict";
 (() => {

@@ -13,7 +13,7 @@ language: "en"
 
 Stellar evolution is the process by which a star changes over the course of time. Depending on the mass of the star, its lifetime can range from a few million years for the most massive to trillions of years for the least massive.
 
-## 1. Stellar Formation
+## Stellar Formation
 
 Stars are born inside giant, dense clouds of interstellar gas and dust.
 
@@ -33,7 +33,7 @@ As a collapsing core gains mass, it becomes a protostar surrounded by an accreti
 - Core contraction reaches central temperatures of roughly $10^7 \text{ K}$.
 - Ignition of hydrogen fusion marks the transition to a zero-age main sequence star.
 
-## 2. Main Sequence Stage
+## Main Sequence Stage
 
 The main sequence is the longest stage of a star's life cycle, where hydrogen fuses into helium in its core.
 
@@ -52,7 +52,7 @@ A main sequence star remains stable due to a continuous balance between inwards 
 
 >! Important: Any disruption to this equilibrium leads to structural expansion or core contraction.
 
-## 3. Stellar Remnants
+## Stellar Remnants
 
 When core hydrogen fuel is exhausted, stars evolve off the main sequence into final remnant stages.
 

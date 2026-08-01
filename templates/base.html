@@ -36,10 +36,7 @@
     <button type="button" class="search-toggle-btn" id="search-toggle-btn" title="{{L_SEARCH_PLACEHOLDER}}" aria-label="{{L_SEARCH_PLACEHOLDER}}">
       <svg width="13" height="13" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true"><path d="M281.1 0C153.782 0 50.2 103.582 50.2 230.9c0 45.12 13.019 87.25 35.483 122.853l-70.654 70.654c-20.039 20.039-20.039 52.527 0 72.564 20.039 20.039 52.527 20.039 72.564 0l70.654-70.654c35.605 22.464 77.735 35.483 122.853 35.483C408.418 461.8 512 358.218 512 230.9S408.42 0 281.1 0zm0 410.489c-99.025 0-179.589-80.564-179.589-179.589S182.074 51.311 281.1 51.311 460.689 131.875 460.689 230.9 380.127 410.489 281.1 410.489z"/></svg>
     </button>
-    <div class="pb-col">
-      <div class="pb-wrap" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><div class="pb" id="pb"></div></div>
-      <div class="pt" id="pt">{{L_LOADING}}</div>
-    </div>
+    {{PROGRESS_BAR_HTML}}
   </div>
   <div class="search-toolbar hidden" id="search-toolbar">
     <div class="search-input-wrap">
@@ -67,14 +64,7 @@
 {{CONTENT}}
 <!-- END GENERATED CONTENT -->
 
-<div class="finish" id="finish-box">
-  <div class="big" id="finish-icon">&#x2714;</div>
-  <h2 id="finish-title">{{L_SETUP_COMPLETED}}</h2>
-  <div class="sigs">
-    <div><input type="text" class="sf persistent-field" id="f_sign_agent" placeholder="{{L_NAME_PLACEHOLDER}}" aria-label="{{L_AGENT}}"><div style="margin-top:4px">{{L_AGENT}}</div></div>
-    <div><input type="text" class="sf persistent-field" id="f_sign_date" placeholder="{{L_DATE_PLACEHOLDER}}" aria-label="{{L_SIGNATURE_DATE}}"><div style="margin-top:4px">{{L_SIGNATURE_DATE}}</div></div>
-  </div>
-</div>
+{{FINISH_BOX_HTML}}
 <div class="btnrow">
   <button class="btn-pdf" id="btn-pdf" onclick="exportPDF()">{{L_EXPORT_PDF}}</button>
   <button class="btn-save" id="btn-save" onclick="saveDocumentState()">{{L_SAVE_STATE}}</button>

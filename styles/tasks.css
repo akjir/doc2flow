@@ -3,6 +3,13 @@
    ========================================================================== */
 
 /* Progress Bar & Badges */
+.pb-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .pb-wrap {
   width: 100%;
   margin-top: 0;

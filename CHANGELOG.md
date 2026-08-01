@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed ReferenceError when clicking PDF export, save state, reset, or copy code buttons by binding action handlers to the global window object.
 
 ### Changed
+- Render progress bar display and bottom finish box conditionally only when tasks feature is active.
 - Decoupled code block styles (`code.css`) and script bundle (`script-code.js`) into conditional feature modules included only when code blocks exist.
 - Expanded document reset functionality to unfold all collapsed sections, clear text fields and comments, and update i18n confirmation text.
 
