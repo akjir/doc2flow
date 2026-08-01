@@ -577,6 +577,10 @@ mark.d2f-highlight {
   opacity: 1;
 }
 
+.doc-item:has(.item-comment-box) .item-comment-icon {
+  display: none;
+}
+
 .item-comment-icon:hover {
   color: var(--bd);
   background: rgba(0, 0, 0, 0.06);

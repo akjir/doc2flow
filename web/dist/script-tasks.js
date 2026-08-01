@@ -124,7 +124,7 @@
         return;
       const checkItem = target.closest(".check-item");
       if (checkItem) {
-        if (target.tagName === "A" || target.tagName === "IMG" || target.closest(".item-comment-box")) {
+        if (target.tagName === "A" || target.tagName === "IMG" || target.closest(".item-comment-box") || target.closest(".item-comment-icon") || target.closest(".item-comment-del")) {
           return;
         }
         const cb = checkItem.querySelector('input[type="checkbox"]');

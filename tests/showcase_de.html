@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Doc2Flow v0.9.3+99.f330ae6.dev">
-<meta name="version" content="0.9.3+99.f330ae6.dev">
+<meta name="generator" content="Doc2Flow v0.9.3+100.ba75aa0.dev">
+<meta name="version" content="0.9.3+100.ba75aa0.dev">
 <meta name="repository" content="https://github.com/akjir/doc2flow">
 <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-<meta name="dcterms.created" content="2026-08-01T18:12:20Z">
+<meta name="dcterms.created" content="2026-08-01T18:51:49Z">
 <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
 <title>Doc2Flow Deutscher Showcase</title>
 <style>
@@ -588,6 +588,10 @@ mark.d2f-highlight {
 
 .doc-item:hover .item-comment-icon {
   opacity: 1;
+}
+
+.doc-item:has(.item-comment-box) .item-comment-icon {
+  display: none;
 }
 
 .item-comment-icon:hover {
@@ -1481,7 +1485,7 @@ mark.d2f-highlight {
 
 <script>
 window.D2F_DOC_ID = 'd2f_id_468e65bc2ccf89b4';
-window.D2F_I18N = {"progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","search_placeholder":"Suchen... (Ctrl+K)","sections_visible":"{visible} / {total} Abschnitte sichtbar","copied":"Kopiert!","contact":"Ansprechpartner","agent":"Bearbeiter","signature_date":"Datum","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","reset_all":"Zurücksetzen","save_state":"Stand sichern","callout_tip":"Tipp","setup_completed":"Vorgang abgeschlossen","date_placeholder":"TT.MM.JJJJ","loading":"Lade...","callout_note":"Hinweis","callout_caution":"Achtung","comment_placeholder":"Kommentar hinzufügen...","date":"Datum","callout_warning":"Warnung","setup_in_progress":"Vorgang in Bearbeitung","copy_code":"Code kopieren","lang_code":"de","name_placeholder":"Name","export_pdf":"Als PDF exportieren","callout_important":"Wichtig","company":"Firma"};
+window.D2F_I18N = {"company":"Firma","date":"Datum","agent":"Bearbeiter","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","copied":"Kopiert!","copy_code":"Code kopieren","callout_note":"Hinweis","callout_tip":"Tipp","signature_date":"Datum","comment_placeholder":"Kommentar hinzufügen...","loading":"Lade...","name_placeholder":"Name","callout_caution":"Achtung","setup_in_progress":"Vorgang in Bearbeitung","lang_code":"de","save_state":"Stand sichern","search_placeholder":"Suchen... (Ctrl+K)","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","sections_visible":"{visible} / {total} Abschnitte sichtbar","callout_warning":"Warnung","export_pdf":"Als PDF exportieren","reset_all":"Zurücksetzen","callout_important":"Wichtig","date_placeholder":"TT.MM.JJJJ","setup_completed":"Vorgang abgeschlossen","contact":"Ansprechpartner"};
 window.d2f = window.d2f || {};
 "use strict";
 (() => {
@@ -2533,7 +2537,7 @@ window.d2f = window.d2f || {};
         return;
       const checkItem = target.closest(".check-item");
       if (checkItem) {
-        if (target.tagName === "A" || target.tagName === "IMG" || target.closest(".item-comment-box")) {
+        if (target.tagName === "A" || target.tagName === "IMG" || target.closest(".item-comment-box") || target.closest(".item-comment-icon") || target.closest(".item-comment-del")) {
           return;
         }
         const cb = checkItem.querySelector('input[type="checkbox"]');

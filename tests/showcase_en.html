@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Doc2Flow v0.9.3+99.f330ae6.dev">
-<meta name="version" content="0.9.3+99.f330ae6.dev">
+<meta name="generator" content="Doc2Flow v0.9.3+100.ba75aa0.dev">
+<meta name="version" content="0.9.3+100.ba75aa0.dev">
 <meta name="repository" content="https://github.com/akjir/doc2flow">
 <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-<meta name="dcterms.created" content="2026-08-01T18:12:20Z">
+<meta name="dcterms.created" content="2026-08-01T18:51:49Z">
 <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
 <title>Doc2Flow English Showcase</title>
 <style>
@@ -588,6 +588,10 @@ mark.d2f-highlight {
 
 .doc-item:hover .item-comment-icon {
   opacity: 1;
+}
+
+.doc-item:has(.item-comment-box) .item-comment-icon {
+  display: none;
 }
 
 .item-comment-icon:hover {
@@ -1481,7 +1485,7 @@ mark.d2f-highlight {
 
 <script>
 window.D2F_DOC_ID = 'd2f_id_c9c539743b5bb460';
-window.D2F_I18N = {"callout_important":"Important","date":"Date","search_placeholder":"Search... (Ctrl+K)","signature_date":"Date","comment_placeholder":"Add a comment...","copy_code":"Copy code","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","save_state":"Save State","copied":"Copied!","callout_tip":"Tip","export_pdf":"Export as PDF","sections_visible":"{visible} / {total} sections visible","contact":"Contact","setup_completed":"Process Completed","callout_caution":"Caution","date_placeholder":"MM/DD/YYYY","callout_warning":"Warning","name_placeholder":"Name","reset_all":"Reset","lang_code":"en","progress_template":"{done} of {total} tasks completed ({pct}%)","company":"Company","agent":"Agent","setup_in_progress":"Process in Progress","loading":"Loading...","callout_note":"Note"};
+window.D2F_I18N = {"lang_code":"en","sections_visible":"{visible} / {total} sections visible","contact":"Contact","copy_code":"Copy code","date_placeholder":"MM/DD/YYYY","export_pdf":"Export as PDF","callout_note":"Note","agent":"Agent","callout_tip":"Tip","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","signature_date":"Date","setup_in_progress":"Process in Progress","company":"Company","loading":"Loading...","callout_caution":"Caution","callout_warning":"Warning","setup_completed":"Process Completed","copied":"Copied!","name_placeholder":"Name","date":"Date","callout_important":"Important","comment_placeholder":"Add a comment...","reset_all":"Reset","progress_template":"{done} of {total} tasks completed ({pct}%)","save_state":"Save State","search_placeholder":"Search... (Ctrl+K)"};
 window.d2f = window.d2f || {};
 "use strict";
 (() => {
@@ -2533,7 +2537,7 @@ window.d2f = window.d2f || {};
         return;
       const checkItem = target.closest(".check-item");
       if (checkItem) {
-        if (target.tagName === "A" || target.tagName === "IMG" || target.closest(".item-comment-box")) {
+        if (target.tagName === "A" || target.tagName === "IMG" || target.closest(".item-comment-box") || target.closest(".item-comment-icon") || target.closest(".item-comment-del")) {
           return;
         }
         const cb = checkItem.querySelector('input[type="checkbox"]');
