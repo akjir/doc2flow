@@ -44,5 +44,6 @@
 - **Rule:** User-facing/bugfixes ONLY under `[Unreleased]`. 1-line bullets.
 - **BANNED:** Internal refactors/tests. No empty `[Unreleased]`.
 
-## 6. Meta / AGENTS.md
-- **Self-Editing:** When updating `AGENTS.md`, maintain aggressive token compression.
+## 6. Meta / Docs
+- **Text Edits:** Token-optimize for human readers (balanced). Reserve aggressive compression ONLY for `AGENTS.md`.
+- **Self-Editing:** Maintain aggressive token compression when updating `AGENTS.md`.
