@@ -3,587 +3,1700 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Doc2Flow v0.9.2+76.9e128bc.dev">
+<meta name="version" content="0.9.2+76.9e128bc.dev">
+<meta name="repository" content="https://github.com/akjir/doc2flow">
+<meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
+<meta name="dcterms.created" content="2026-08-01T07:54:45Z">
+<meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
 <title>Onboarding Guide</title>
 <style>
+/* ==========================================================================
+   1. Base
+   ========================================================================== */
+
 :root {
-  --bd: #1F4E79; --bm: #2E75B6; --bl: #D6E4F0; --bbg: #EBF3FB;
-  --obg: #FFF2CC; --oc: #7F6000; --gc: #375623; --gbg: #E2EFDA;
-  --gray: #444; --done: #f0f9f0;
+  /* Fonts */
+  --font-sans: Arial, sans-serif;
+  --font-mono: 'Courier New', monospace;
+
+  /* Primary & Brand Colors */
+  --bd: #163A5C;
+  --bm: #2E75B6;
+  --bl: #D6E4F0;
+  --bbg: #EBF3FB;
+  --bh2: #317AB9;
+  --callout-accent: var(--bm);
+  --header-sub-color: #BDD7EE;
+
+  /* Status & Callout Colors */
+  --gc: #375623;
+  --gbg: #E2EFDA;
+  --oc: #7F6000;
+  --obg: #FFF2CC;
+  --done: #f0f9f0;
+  --progress-green: #70AD47;
+
+  /* Neutral & Text Colors */
+  --gray: #444444;
+  --gray-muted: #8c959f;
+  --gray-light: #f8fafc;
+  --border-color: #d0d7de;
+  --border-light: #bdd7ee;
+
+  /* Alert Variants */
+  --callout-important-bg: #F3E8FA;
+  --callout-important-border: #8E44AD;
+  --callout-important-text: #512E5F;
+  --callout-warning-border: #F4C430;
+  --callout-warning-accent: #D4A017;
+  --callout-caution-bg: #FCE4D6;
+  --callout-caution-border: #C00000;
+  --callout-caution-text: #800000;
+
+  /* Backgrounds */
+  --bg-body: #eef2f7;
+  --bg-surface: #ffffff;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-pill: 12px;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: Arial, sans-serif; font-size: 14px; color: var(--gray); background: #eef2f7; }
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--gray);
+  background: var(--bg-body);
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--bl);
+  margin: 14px 20px;
+}
+
+/* ==========================================================================
+   2. Layout
+   ========================================================================== */
+
 .doc-header {
-  background: var(--bd); color: white; padding: 16px 28px 12px;
-  position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.3);
+  background: var(--bd);
+  color: white;
+  padding: 16px 28px 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
-.doc-header h1 { font-size: 20px; font-weight: bold; }
-.doc-header .sub { font-size: 12px; color: #BDD7EE; margin-top: 2px; }
-.pb-wrap { margin-top: 10px; background: rgba(255,255,255,.2); border-radius: 8px; height: 9px; overflow: hidden; }
-.pb { height: 100%; background: #70AD47; border-radius: 8px; transition: width .3s; width: 0%; }
-.pt { font-size: 11px; color: #BDD7EE; margin-top: 3px; text-align: right; }
-.doc-body { max-width: 840px; margin: 20px auto; padding: 0 14px 60px; }
-.info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; background: white;
-  border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
-.info-table th { background: var(--bl); color: var(--bd); font-weight: bold; padding: 8px 14px;
-  border: 1px solid #BDD7EE; font-size: 12px; }
-.info-table td { padding: 8px 14px; border: 1px solid #ddd; font-size: 12px; }
-.info-table td input { width: 100%; border: none; outline: none; font-size: 12px; font-family: Arial; background: transparent; }
-.section { background: white; border-radius: 10px; margin-bottom: 14px;
-  box-shadow: 0 1px 4px rgba(0,0,0,.08); overflow: hidden; }
-.sh { background: var(--bd); color: white; padding: 11px 18px;
-  font-size: 15px; font-weight: bold; display: flex; align-items: center;
-  justify-content: space-between; cursor: pointer; user-select: none; }
-.sh:hover { background: #174070; }
-.sbadge { font-size: 11px; font-weight: normal; background: rgba(255,255,255,.2);
-  padding: 2px 7px; border-radius: 12px; white-space: nowrap; }
-.sbadge.done { background: #70AD47; }
-.stog { font-size: 16px; margin-left: 10px; transition: transform .2s; }
-.sb { padding: 14px 18px; }
-.sb.collapsed { display: none; }
-.subh { font-size: 12.5px; font-weight: bold; color: var(--bm); margin: 14px 0 7px;
-  padding-bottom: 4px; border-bottom: 1px solid var(--bl); }
-.check-item { display: flex; align-items: flex-start; gap: 9px; padding: 3px 9px;
-  border-radius: 6px; margin-bottom: 2px; cursor: pointer; transition: background .15s; }
-.check-item:first-child, *:not(.check-item) + .check-item { margin-top: 3px; }
-.check-item:last-child, .check-item:not(:has(+ .check-item)) { margin-bottom: 6px; }
-.check-item.simple-item { cursor: default; }
-.check-item:hover { background: #f5f9ff; }
-.check-item.checked { background: var(--done); }
-.check-item.checked .check-label { text-decoration: line-through; color: #bbb; }
-.check-item input[type=checkbox] { width: 15px; height: 15px; min-width: 15px;
-  margin-top: 2px; cursor: pointer; accent-color: var(--bm); }
-.list-bullet { display: inline-flex; align-items: center; justify-content: center;
-  width: 15px; min-width: 15px; height: 15px; margin-top: 2px; color: var(--bm);
-  font-size: 14px; line-height: 1; user-select: none; }
-.check-label { font-size: 13px; line-height: 1.5; }
-.check-label a { color: var(--bm); }
-.bw-block { background: var(--bbg); border-left: 3px solid var(--bm);
-  border-radius: 0 6px 6px 0; padding: 7px 11px; margin: 2px 0 8px 24px; font-size: 12px; }
-.bw-block .bwl { font-weight: bold; color: var(--bd); margin-bottom: 3px; }
-.bw-block .bwn { font-family: 'Courier New', monospace; color: var(--bd); background: white;
-  padding: 2px 6px; border-radius: 3px; border: 1px solid #BDD7EE; display: inline-block;
-  margin: 2px 0; font-size: 11.5px; word-break: break-all; }
-.bw-block .bwd { color: #555; margin-top: 3px; }
-.note { position: relative; background: var(--bbg); border-left: 3px solid var(--bm); border-radius: 0 6px 6px 0;
-  padding: 7px 75px 7px 11px; margin: 5px 0 9px; font-size: 12px; color: var(--bd); font-style: italic;
-  --callout-accent: var(--bm); }
-.note::after { content: attr(data-label); position: absolute; top: 7px; right: 11px; font-size: 10px;
-  font-weight: bold; font-style: normal; text-transform: uppercase; letter-spacing: 0.5px;
-  color: var(--callout-accent); opacity: 0; pointer-events: none; transition: opacity .2s ease-in-out; }
-.note:hover::after { opacity: 1; }
-.note.note-tip { background: var(--gbg); border-left-color: #70AD47; color: var(--gc); --callout-accent: #70AD47; }
-.note.note-important { background: #F3E8FA; border-left-color: #8E44AD; color: #512E5F; --callout-accent: #8E44AD; }
-.note.note-warning { background: var(--obg); border-left-color: #F4C430; color: var(--oc); --callout-accent: #D4A017; }
-.note.note-caution { background: #FCE4D6; border-left-color: #C00000; color: #800000; --callout-accent: #C00000; }
-.code-block-wrap { position: relative; margin: 8px 0 12px; }
-.code-block-wrap .code-block { margin: 0; }
-.code-header { position: absolute; top: 6px; right: 10px; display: flex; align-items: center; gap: 8px; z-index: 2; }
-.code-lang { font-size: 10px; font-weight: bold; font-family: Arial, sans-serif; color: #8c959f; user-select: none; }
-.copy-btn { background: transparent; border: none; cursor: pointer; color: #8c959f; padding: 2px 4px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: color .15s, background .15s; }
-.copy-btn:hover { color: var(--bd); background: rgba(0,0,0,.06); }
-.copy-btn.copied { color: #2da44e; }
-.code-block { background: #f0f2f5; color: #24292f; border: 1px solid #d0d7de; font-family: 'Courier New', monospace;
-  font-size: 11.5px; padding: 12px 16px; border-radius: 10px; margin: 8px 0 12px;
-  white-space: pre; overflow-x: auto; line-height: 1.6; }
-.code-block .c { color: #6A9955; } .code-block .s { color: #CE9178; }
-.screenshot-wrap, .ss-wrap { margin: 8px 0 3px 24px; border: 1px solid #ddd; border-radius: 6px;
-  overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.1); display: inline-block;
-  max-width: 100%; cursor: zoom-in; }
-.screenshot-wrap img, .ss-wrap img { display: block; max-width: 100%; height: auto; }
-.screenshot-caption, .ss-cap { font-size: 11px; color: #888; font-style: italic; margin: 2px 0 9px 24px; }
-.lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.88);
-  z-index: 999; align-items: center; justify-content: center; cursor: zoom-out; }
-.lightbox.active { display: flex; }
-.lightbox img { max-width: 94vw; max-height: 94vh; border-radius: 4px; box-shadow: 0 4px 32px rgba(0,0,0,.5); }
-.lb-x { position: fixed; top: 14px; right: 18px; color: white; font-size: 32px;
-  cursor: pointer; line-height: 1; font-weight: bold; }
-.finish { background: var(--gbg); border: 2px solid #70AD47; border-radius: 10px;
-  padding: 18px 22px; text-align: center; margin-top: 20px; }
-.finish .big { font-size: 34px; color: var(--gc); }
-.finish h2 { color: var(--gc); font-size: 17px; margin: 5px 0; }
-.finish .sigs { margin-top: 14px; font-size: 12px; color: #555; border-top: 1px solid #aaa;
-  padding-top: 12px; display: flex; justify-content: space-around; gap: 16px; }
-.finish .sf { border: none; border-bottom: 1px solid #555; min-width: 160px; padding-bottom: 3px;
-  background: transparent; font-family: Arial; font-size: 13px; text-align: center; color: var(--gc);
-  outline: none; }
-.finish .sf::placeholder { color: #9bbf86; }
-.btnrow { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
-.btn-pdf { padding: 7px 18px; background: var(--bd); border: 1px solid var(--bd); border-radius: 6px;
-  color: white; font-size: 12px; cursor: pointer; font-family: Arial; }
-.btn-pdf:hover { background: #174070; }
-.rst { padding: 5px 16px; background: transparent;
-  border: 1px solid #aaa; border-radius: 6px; color: #666; font-size: 12px; cursor: pointer; }
-.rst:hover { background: #f0f0f0; }
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.header-titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.doc-header h1 {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.doc-header .sub {
+  font-size: 12px;
+  color: var(--header-sub-color);
+  margin-top: 2px;
+}
+
+.logo-wrap {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  max-height: 48px;
+}
+
+.logo-wrap svg,
+.logo-wrap img {
+  max-height: 48px;
+  max-width: 160px;
+  width: auto;
+  height: auto;
+  display: block;
+}
+
+.header-pb-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.pb-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pb-wrap {
+  width: 100%;
+  margin-top: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-lg);
+  height: 9px;
+  overflow: hidden;
+}
+
+.search-toggle-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  margin-top: -6px;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.search-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.search-toggle-btn.active {
+  background: white;
+  color: var(--bd);
+  border-color: white;
+}
+
+.search-toggle-btn svg {
+  width: 13px;
+  height: 13px;
+  fill: currentColor;
+}
+
+.pb {
+  height: 100%;
+  background: var(--progress-green);
+  border-radius: var(--radius-lg);
+  transition: width 0.3s;
+  width: 0%;
+}
+
+.pt {
+  font-size: 11px;
+  color: var(--header-sub-color);
+  margin-top: 3px;
+  text-align: right;
+}
+
+/* Search & Quick-Filter Toolbar */
+.search-toolbar {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.search-toolbar.hidden {
+  display: none !important;
+}
+
+.search-input-wrap {
+  position: relative;
+  flex: 1 1 240px;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  width: 100%;
+  padding: 6px 12px;
+  padding-right: 190px;
+  font-size: 13px;
+  font-family: var(--font-sans);
+  color: var(--gray);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-input:focus {
+  border-color: var(--bm);
+  box-shadow: 0 0 0 2px rgba(46, 117, 182, 0.25);
+}
+
+.search-input-badges {
+  position: absolute;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.search-clear-btn {
+  pointer-events: auto;
+  font-size: 11px;
+  font-family: var(--font-sans);
+  color: var(--gray-muted);
+  background: var(--bg-body);
+  border: 1px solid var(--border-color);
+  padding: 2px 6px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  line-height: 1;
+}
+
+.search-clear-btn:hover {
+  color: var(--gray);
+  border-color: var(--bm);
+  background: var(--bg-surface);
+}
+
+.search-clear-btn.hidden {
+  display: none !important;
+}
+
+.search-counter {
+  font-size: 11px;
+  font-family: var(--font-sans);
+  color: var(--gray-muted);
+  background: var(--bg-body);
+  border: 1px solid var(--border-color);
+  padding: 2px 6px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+/* Highlighted Search Results */
+mark.d2f-highlight {
+  background: #ffe066;
+  color: #111111;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+.doc-body {
+  max-width: 840px;
+  margin: 20px auto;
+  padding: 0 14px 60px;
+}
+
+/* ==========================================================================
+   3. Components
+   ========================================================================== */
+
+/* Info Table */
+.info-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  table-layout: fixed;
+}
+
+.info-table th {
+  background: var(--bl);
+  color: var(--bd);
+  font-weight: bold;
+  padding: 8px 10px;
+  border: 1px solid var(--border-light);
+  font-size: 12px;
+}
+
+.info-table th:nth-child(1), .info-table td:nth-child(1) { width: 35%; }
+.info-table th:nth-child(2), .info-table td:nth-child(2) { width: 25%; }
+.info-table th:nth-child(3), .info-table td:nth-child(3) { width: 25%; }
+.info-table th:nth-child(4), .info-table td:nth-child(4) { width: 15%; }
+
+.info-table td {
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  font-size: 12px;
+}
+
+.info-table td input {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 12px;
+  font-family: var(--font-sans);
+  background: transparent;
+}
+
+/* Collapsible Sections */
+.section {
+  background: var(--bg-surface);
+  border-radius: var(--radius-xl);
+  margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.sh {
+  background: var(--bh2);
+  color: white;
+  padding: 11px 18px;
+  font-size: 15px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  margin: 0;
+}
+
+.sh:hover {
+  background: #25649B;
+}
+
+.sh[role="button"]:focus-visible {
+  outline: 2px solid white;
+  outline-offset: -3px;
+}
+
+.sh.sh-h1 {
+  background: var(--bd);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.sh.sh-h1:hover {
+  background: #102B45;
+}
+
+.sh.no-toggle {
+  cursor: default;
+}
+
+.sh.no-toggle:hover {
+  background: var(--bh2);
+}
+
+.sh.sh-h1.no-toggle:hover {
+  background: var(--bd);
+}
+
+.sh.no-toggle .stog {
+  display: none !important;
+}
+
+.sbadge {
+  font-size: 11px;
+  font-weight: normal;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+.sbadge:empty {
+  display: none;
+}
+
+.sbadge.done {
+  background: var(--progress-green);
+}
+
+.stog {
+  font-size: 16px;
+  margin-left: 10px;
+  transition: transform 0.2s;
+}
+
+.sb {
+  padding: 14px 18px;
+}
+
+.sb:empty, .sb:not(:has(*)) {
+  display: none;
+}
+
+.sb.collapsed {
+  display: none;
+}
+
+.subh {
+  font-size: 12.5px;
+  font-weight: bold;
+  color: var(--bm);
+  margin: 14px 0 7px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--bl);
+}
+
+/* Checklist Items */
+.check-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 3px 9px;
+  border-radius: var(--radius-md);
+  margin-bottom: 2px;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-left: calc(var(--indent, 0) * 18px);
+  position: relative;
+}
+
+.check-item[style*="--indent"]::before {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  background-color: var(--bl);
+  border-radius: 1px;
+  opacity: 0.7;
+}
+
+.check-item:first-child, *:not(.check-item) + .check-item {
+  margin-top: 3px;
+}
+
+.check-item:last-child, .check-item:not(:has(+ .check-item)) {
+  margin-bottom: 6px;
+}
+
+.check-item.simple-item {
+  cursor: pointer;
+}
+
+.check-item:hover {
+  background: #f5f9ff;
+}
+
+.check-item.checked {
+  background: var(--done);
+}
+
+.check-item.checked .check-label {
+  text-decoration: line-through;
+  color: #bbb;
+}
+
+.check-item.text-item.checked .text-content,
+.check-item.text-item.checked .check-label,
+.check-item.simple-item.checked .check-label {
+  text-decoration: none;
+  color: var(--gray);
+}
+
+.check-item input[type=checkbox] {
+  width: 15px;
+  height: 15px;
+  min-width: 15px;
+  margin-top: 2px;
+  cursor: pointer;
+  accent-color: var(--bm);
+}
+
+.list-bullet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 15px;
+  width: auto;
+  height: 15px;
+  margin-top: 2px;
+  color: var(--bm);
+  font-size: 13px;
+  font-weight: bold;
+  line-height: 1;
+  user-select: none;
+}
+
+.check-label, .text-content {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.check-label a, .text-content a {
+  color: var(--bm);
+}
+
+/* Item Comments */
+.item-comment-icon {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-muted);
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+  align-self: flex-start;
+  margin-top: 1px;
+}
+
+.check-item:hover .item-comment-icon {
+  opacity: 1;
+}
+
+.item-comment-icon:hover {
+  color: var(--bd);
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.item-comment-box {
+  flex-basis: 100%;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 4px;
+  background: var(--gray-light);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 4px 8px;
+  box-sizing: border-box;
+  margin-left: 24px;
+}
+
+.item-comment-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--gray);
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding: 0;
+  margin: 0;
+  line-height: 1.4;
+  min-height: 20px;
+}
+
+.item-comment-input::placeholder {
+  color: #94a3b8;
+}
+
+.item-comment-del {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--gray-muted);
+  font-size: 14px;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+}
+
+.item-comment-del:hover {
+  color: #c00000;
+  background: rgba(192, 0, 0, 0.08);
+}
+
+/* Callouts & Notes */
+.bw-block {
+  background: var(--bbg);
+  border-left: 3px solid var(--bm);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: 7px 11px;
+  margin: 2px 0 8px 24px;
+  font-size: 12px;
+}
+
+.bw-block .bwl {
+  font-weight: bold;
+  color: var(--bd);
+  margin-bottom: 3px;
+}
+
+.bw-block .bwn {
+  font-family: var(--font-mono);
+  color: var(--bd);
+  background: white;
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid var(--border-light);
+  display: inline-block;
+  margin: 2px 0;
+  font-size: 11.5px;
+  word-break: break-all;
+}
+
+.bw-block .bwd {
+  color: #555;
+  margin-top: 3px;
+}
+
+.note {
+  position: relative;
+  background: var(--bbg);
+  border-left: 3px solid var(--bm);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: 7px 75px 7px 11px;
+  margin: 5px 0 9px;
+  font-size: 12px;
+  color: var(--bd);
+  font-style: italic;
+  --callout-accent: var(--bm);
+}
+
+.note::after {
+  content: attr(data-label);
+  position: absolute;
+  top: 7px;
+  right: 11px;
+  font-size: 10px;
+  font-weight: bold;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--callout-accent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.note:hover::after {
+  opacity: 1;
+}
+
+.note.note-tip {
+  background: var(--gbg);
+  border-left-color: var(--progress-green);
+  color: var(--gc);
+  --callout-accent: var(--progress-green);
+}
+
+.note.note-important {
+  background: var(--callout-important-bg);
+  border-left-color: var(--callout-important-border);
+  color: var(--callout-important-text);
+  --callout-accent: var(--callout-important-border);
+}
+
+.note.note-warning {
+  background: var(--obg);
+  border-left-color: var(--callout-warning-border);
+  color: var(--oc);
+  --callout-accent: var(--callout-warning-accent);
+}
+
+.note.note-caution {
+  background: var(--callout-caution-bg);
+  border-left-color: var(--callout-caution-border);
+  color: var(--callout-caution-text);
+  --callout-accent: var(--callout-caution-border);
+}
+
+/* Code Blocks */
+.code-block-wrap {
+  position: relative;
+  margin: 8px 0 12px;
+}
+
+.code-block-wrap .code-block {
+  margin: 0;
+}
+
+.code-header {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 2;
+}
+
+.code-lang {
+  font-size: 10px;
+  font-weight: bold;
+  font-family: var(--font-sans);
+  color: var(--gray-muted);
+  user-select: none;
+}
+
+.copy-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--gray-muted);
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+}
+
+.copy-btn:hover {
+  color: var(--bd);
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.copy-btn.copied {
+  color: #2da44e;
+}
+
+.code-block {
+  background: #f0f2f5;
+  color: #24292f;
+  border: 1px solid var(--border-color);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  padding: 12px 16px;
+  border-radius: var(--radius-xl);
+  margin: 8px 0 12px;
+  white-space: pre;
+  overflow-x: auto;
+  line-height: 1.6;
+}
+
+.code-block .c { color: #6A9955; }
+.code-block .s { color: #CE9178; }
+
+/* Images & Lightbox */
+.img-item {
+  margin: 12px 0;
+  padding: 0 10px;
+  background: transparent;
+  border: none;
+}
+
+.doc-body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+}
+
+.lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  z-index: 999;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+}
+
+.lightbox.active {
+  display: flex;
+}
+
+.lightbox img {
+  max-width: 94vw;
+  max-height: 94vh;
+  border-radius: var(--radius-lg);
+  border: none;
+  margin: 0;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.5);
+}
+
+.lb-x {
+  position: fixed;
+  top: 14px;
+  right: 18px;
+  color: white;
+  font-size: 32px;
+  cursor: pointer;
+  line-height: 1;
+  font-weight: bold;
+}
+
+/* Finish & Signatures */
+.finish {
+  background: var(--gbg);
+  border: 2px solid var(--progress-green);
+  border-radius: var(--radius-xl);
+  padding: 18px 22px;
+  text-align: center;
+  margin-top: 20px;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.finish .big {
+  font-size: 34px;
+  color: var(--gc);
+}
+
+.finish h2 {
+  color: var(--gc);
+  font-size: 17px;
+  margin: 5px 0;
+}
+
+.finish .sigs {
+  margin-top: 14px;
+  font-size: 12px;
+  color: #555;
+  border-top: 1px solid #aaa;
+  padding-top: 12px;
+  display: flex;
+  justify-content: space-around;
+  gap: 16px;
+}
+
+.finish .sf {
+  border: none;
+  border-bottom: 1px solid #555;
+  min-width: 160px;
+  padding-bottom: 3px;
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  text-align: center;
+  color: var(--gc);
+  outline: none;
+}
+
+.finish .sf::placeholder {
+  color: #9bbf86;
+}
+
+.finish.completed {
+  background: var(--gbg);
+  border: 2px solid var(--progress-green);
+}
+
+.finish.completed .big, .finish.completed h2, .finish.completed .sf {
+  color: var(--gc);
+}
+
+.finish.completed .sf::placeholder {
+  color: #9bbf86;
+}
+
+.finish.pending {
+  background: #f0f4f8;
+  border: 2px solid #b0bec5;
+}
+
+.finish.pending .big, .finish.pending h2, .finish.pending .sf {
+  color: var(--bd);
+}
+
+.finish.pending .sf::placeholder {
+  color: #90a4ae;
+}
+
+.finish.no-tasks {
+  background: var(--bg-surface);
+  border: 1px solid var(--bl);
+}
+
+.finish.no-tasks .big, .finish.no-tasks h2 {
+  display: none;
+}
+
+.finish.no-tasks .sf {
+  color: var(--bd);
+}
+
+.finish.no-tasks .sf::placeholder {
+  color: #90a4ae;
+}
+
+/* Action Buttons */
+.btnrow {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.btn-pdf {
+  padding: 7px 18px;
+  background: var(--bd);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-md);
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+
+.btn-pdf:hover {
+  background: #174070;
+}
+
+.btn-pdf:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: #88a4c2;
+  border-color: #88a4c2;
+}
+
+.btn-save {
+  padding: 7px 18px;
+  background: var(--bm);
+  border: 1px solid var(--bm);
+  border-radius: var(--radius-md);
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+
+.btn-save:hover {
+  background: var(--bd);
+}
+
+.btn-reset, .rst {
+  padding: 5px 16px;
+  background: transparent;
+  border: 1px solid #aaa;
+  border-radius: var(--radius-md);
+  color: #666;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+
+.btn-reset:hover, .rst:hover {
+  background: #f0f0f0;
+}
+
+/* ==========================================================================
+   4. Print
+   ========================================================================== */
 
 @media print {
-  body { background: white; }
-  .doc-header { position: static; box-shadow: none; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .doc-body { max-width: 100%; margin: 0; padding: 0; }
-  .btnrow, .stog, .copy-btn { display: none !important; }
-  .sb.collapsed { display: block !important; }
-  .section { box-shadow: none; border: 1px solid #ccc; }
-  .sh { -webkit-print-color-adjust: exact; print-color-adjust: exact; cursor: default; }
-  .sbadge, .pb, .pb-wrap, .note, .bw-block, .check-item.checked, .finish, .code-block {
-    -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .note::after { opacity: 1 !important; }
-  .screenshot-wrap, .ss-wrap { break-inside: avoid; cursor: default; }
-  .screenshot-wrap img, .ss-wrap img { max-height: 8cm; width: auto; }
-  .check-item { break-inside: avoid; }
-  .subh { break-after: avoid; }
-  a { color: #2E75B6 !important; text-decoration: none; }
-  .info-table input, .finish .sf { border: none; }
+  body {
+    background: white;
+  }
+
+  .doc-header {
+    position: static;
+    box-shadow: none;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .doc-body {
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .btnrow, .copy-btn, .stog, .item-comment-icon, .item-comment-del, .sbadge, .pb-wrap, .pb, .pt, .search-toolbar, .search-toggle-btn {
+    display: none !important;
+  }
+
+  .item-comment-box {
+    border: 1px solid var(--border-color);
+    background: transparent;
+  }
+
+  .item-comment-input {
+    color: #333;
+    overflow: hidden !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    resize: none !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+  }
+
+  .sb.collapsed {
+    display: block !important;
+  }
+
+  .section, .d2f-section {
+    display: block !important;
+    box-shadow: none;
+    border: 1px solid #ccc;
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+
+  .sh {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    cursor: default;
+  }
+
+  .note, .bw-block, .finish, .code-block, hr, .doc-body img {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .check-item.checked {
+    background: transparent !important;
+  }
+
+  .check-item.checked .check-label {
+    text-decoration: none !important;
+    color: var(--gray) !important;
+  }
+
+  .note::after {
+    opacity: 1 !important;
+  }
+
+  .doc-body img {
+    cursor: default;
+    max-height: 8cm;
+    width: auto;
+    margin: 10px auto;
+  }
+
+  a {
+    color: var(--bm) !important;
+    text-decoration: none;
+  }
+
+  .info-table input, .finish .sf {
+    border: none;
+  }
+}
+
+/* ==========================================================================
+   5. Responsive
+   ========================================================================== */
+
+@media (max-width: 600px) {
+  .doc-body {
+    padding: 0 10px 40px;
+  }
+
+  .header-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .logo-wrap {
+    align-self: flex-start;
+    margin-top: 8px;
+  }
+
+  .info-table th, .info-table td {
+    padding: 6px 6px;
+    font-size: 11px;
+  }
+
+  .finish .sigs {
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 </style>
 </head>
 <body>
-<div class="doc-header">
-  <h1>Onboarding Guide</h1>
-  <div class="sub">Preparation Notebook & M365-User | Customer: NyriSys</div>
-  <div class="pb-wrap"><div class="pb" id="pb"></div></div>
-  <div class="pt" id="pt">Loading...</div>
-</div>
-<div class="doc-body">
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="icon-comment" viewBox="0 0 32 32">
+    <g fill="currentColor" transform="translate(-204, -255)">
+      <path d="M228,267 C226.896,267 226,267.896 226,269 C226,270.104 226.896,271 228,271 C229.104,271 230,270.104 230,269 C230,267.896 229.104,267 228,267 L228,267 Z M220,281 C218.832,281 217.704,280.864 216.62,280.633 L211.912,283.463 L211.975,278.824 C208.366,276.654 206,273.066 206,269 C206,262.373 212.268,257 220,257 C227.732,257 234,262.373 234,269 C234,275.628 227.732,281 220,281 L220,281 Z M220,255 C211.164,255 204,261.269 204,269 C204,273.419 206.345,277.354 210,279.919 L210,287 L217.009,282.747 C217.979,282.907 218.977,283 220,283 C228.836,283 236,276.732 236,269 C236,261.269 228.836,255 220,255 L220,255 Z M212,267 C210.896,267 210,267.896 210,269 C210,270.104 210.896,271 212,271 C213.104,271 214,270.104 214,269 C214,267.896 213.104,267 212,267 L212,267 Z M220,267 C218.896,267 218,267.896 218,269 C218,270.104 218.896,271 220,271 C221.104,271 222,270.104 222,269 C222,267.896 221.104,267 220,267 L220,267 Z"/>
+    </g>
+  </symbol>
+</svg>
+<header class="doc-header">
+  <div class="header-top">
+    <div class="header-titles">
+      <h1>Onboarding Guide</h1>
+      <div class="sub">Preparation Notebook & M365-User | Customer: NyriSys</div>
+    </div>
+    <div class="logo-wrap">
+      <svg width="350" height="200" viewBox="0 0 175 100" xmlns="http://www.w3.org/2000/svg"><g><path d="m 12.583907,11.394126 c 34.71497,0 34.71497,0 38.44674,0.80841 0.17169,0.0328 0.34343,0.0655 0.5152,0.0979 2.84247,0.5638 5.62719,1.68059 8.21677,3.00099 0.0959,0.0484 0.19185,0.0968 0.29069,0.14664 1.72332,0.87779 3.3298,1.93059 4.7921,3.22171 -0.29793,0.65449 -0.62909,1.265498 -1.0019,1.877858 -2.33367,3.89412 -3.82773,8.23163 -4.21122,12.80816 -0.086,0 -0.17203,0 -0.26066,0 -0.17846,-0.20965 -0.3479,-0.42751 -0.51316,-0.64841 -2.00504,-2.57863 -4.39528,-4.23928 -7.30651,-5.54937 -0.1003,-0.0481 -0.20059,-0.0962 -0.30393,-0.14578 -7.09338,-3.22352 -17.99816,-1.68937 -24.32805,-1.74049 0,16.27318 0,32.54636 0,49.31267 17.17956,0.90605 17.17956,0.90605 31.50884,-6.78302 2.63629,-2.86777 4.46262,-6.88046 5.24363,-10.73241 0.0331,-0.15093 0.0662,-0.30186 0.1003,-0.45736 0.78641,-3.76062 0.79496,-7.73126 0.29069,-11.53397 -0.60163,-4.54816 -0.45704,-9.33987 0.57292,-13.80525 0.067,-0.2909 0.12991,-0.58224 0.19123,-0.87445 0.93054,-4.06684 3.000929,-7.88213 5.826449,-10.857008 0.17787,-0.18841 0.3518,-0.38076 0.52551,-0.57328 2.55197,-2.76578 5.86992,-4.63239 9.305208,-5.95672 0.1827,-0.0722 0.1827,-0.0722 0.36909,-0.14579 7.150878,-2.65458 15.994888,-2.02099 22.849726,1.22758 2.46858,1.21104 4.63926,2.7719 6.62626,4.71178 0.104,0.0988 0.20799,0.19764 0.31514,0.29946 3.22955,3.179498 5.24142,7.617088 6.07094,12.096068 0.0418,0.21233 0.0418,0.21233 0.0845,0.42894 1.26537,6.68289 -0.40546,13.62008 -3.99434,19.24223 -2.02673,3.03139 -4.57519,5.97594 -7.26578,8.39035 -0.56862,0.51101 -1.11575,1.04334 -1.66168,1.57997 -0.62585,0.61519 -1.25757,1.21887 -1.91006,1.80378 -0.33932,0.30668 -0.66808,0.62385 -0.99789,0.94143 -0.48921,0.46799 -0.986428,0.91625 -1.506908,1.34734 -0.74616,0.62068 -1.43971,1.29252 -2.13769,1.96943 -0.39714,0.38485 -0.80295,0.7577 -1.21469,1.12577 -1.02441,0.91987 -2.0186,1.87562 -3.01333,2.82948 -0.15908,0.15252 -0.31826,0.30492 -0.47752,0.45722 -1.76242,1.48491 -1.76242,1.48491 -3.14315,3.26843 9.50481,0 19.009628,0 28.802468,0 -0.0412,-7.61831 -0.0412,-7.61831 -0.0939,-15.23653 -0.005,-1.47839 -0.005,-1.47839 -0.006,-2.172 -9.9e-4,-0.48118 -0.005,-0.96224 -0.0106,-1.44339 -0.007,-0.6162 -0.009,-1.23221 -0.008,-1.84844 -2.6e-4,-0.22462 -0.002,-0.44924 -0.006,-0.67381 -0.0289,-1.67634 0.36513,-2.78029 1.16693,-4.22531 0.19691,-0.44079 0.37471,-0.88681 0.54575,-1.33891 0.0429,-0.1127 0.0859,-0.2254 0.1302,-0.34151 1.38989,-3.71606 1.95949,-7.59257 1.96319,-11.56561 1.3e-4,-0.0991 2.6e-4,-0.19817 3.9e-4,-0.30026 -0.002,-2.61842 -0.23026,-5.22085 -0.94527,-7.74169 -0.0506,-0.17875 -0.0506,-0.17875 -0.1022,-0.36111 -1.89118,-6.52919 -5.72747,-12.082558 -11.38243,-15.639608 -0.0808,-0.0552 -0.16162,-0.11046 -0.24488,-0.16736 0,-0.0445 0,-0.0889 0,-0.13474 18.27849,0 36.55698,0 55.38935,0 0,4.57961 0,9.159218 0,13.877608 -10.58002,0 -21.16003,0 -32.06066,0 0,6.18025 0,12.3605 0,18.72803 9.24677,0 18.49354,0 28.0205,0 0,4.57962 0,9.15923 0,13.87761 -9.24676,0 -18.49352,0 -28.0205,0 0,10.09293 0,20.18586 0,30.58463 -21.16004,0 -42.320068,0 -64.121323,0 0,-10.82828 0,-10.82828 3.90984,-15.49441 0.0863,-0.10317 0.172709,-0.20634 0.261669,-0.31263 0.215711,-0.25618 0.432741,-0.51105 0.65063,-0.76524 0.08,-0.0936 0.159931,-0.18723 0.24232,-0.28368 0.307701,-0.35696 0.61844,-0.71092 0.93063,-1.06366 0.0946,-0.10721 0.0946,-0.10721 0.191101,-0.21658 1.28864,-1.45392 2.632029,-2.85112 3.979388,-4.24649 0.0886,-0.0919 0.177179,-0.18387 0.26846,-0.27859 1.69222,-1.75468 1.69222,-1.75468 2.512717,-2.47445 0.37426,-0.33604 0.71751,-0.70344 1.06349,-1.07004 0.52186,-0.55295 1.05907,-1.07371 1.62452,-1.57891 0.43554,-0.3941 0.85473,-0.80579 1.27528,-1.21682 1.18934,-1.15738 2.39158,-2.29862 3.60744,-3.42625 0.37985,-0.3545 0.75665,-0.71231 1.13324,-1.0705 0.41622,-0.39585 0.83396,-0.78894 1.26255,-1.1705 0.59814,-0.53609 1.17287,-1.09806 1.75007,-1.65796 0.49259,-0.47756 0.98969,-0.94882 1.49183,-1.41567 1.626,-1.53936 3.29066,-3.12856 4.60221,-4.96831 0.0519,-0.0718 0.10382,-0.14351 0.15731,-0.21743 1.022828,-1.418 1.915848,-2.85006 2.555138,-4.49826 0.0378,-0.0958 0.0757,-0.19166 0.11464,-0.29039 1.05829,-2.85254 0.84506,-6.33571 -0.32314,-9.10945 -0.42613,-0.96007 -0.91015,-1.79908 -1.59166,-2.5915 -0.066,-0.0888 -0.13204,-0.1775 -0.200068,-0.26894 -1.30305,-1.69795 -3.40978,-2.72329 -5.40403,-3.23414 -0.12465,-0.0375 -0.24931,-0.075 -0.37774,-0.11368 -3.44064,-0.89546 -7.35679,-0.4086 -10.46391,1.35155 -2.36899,1.51737 -4.190897,3.8182 -5.058347,6.57671 -0.0419,0.12351 -0.0419,0.12351 -0.0846,0.24953 -1.047818,3.17517 -0.714918,6.66176 -0.0834,9.88973 0.39172,2.06218 0.47001,4.04694 0.46264,6.145 -0.001,0.47147 -1e-5,0.94286 0.002,1.41432 0.001,1.71123 -0.0677,3.37681 -0.29629,5.07147 -0.0285,0.24092 -0.0285,0.24092 -0.0577,0.4867 -0.0516,0.43099 -0.10993,0.86037 -0.17042,1.2901 -0.0257,0.21272 -0.0257,0.21272 -0.0519,0.42973 -0.13278,0.92423 -0.35068,1.47478 -1.023278,2.10496 -0.0884,0.086 -0.17674,0.17194 -0.26778,0.26052 -0.0783,0.0669 -0.15658,0.13373 -0.23724,0.20263 -0.3701,0.32515 -0.71847,0.66076 -1.05892,1.01892 -0.31786,0.33369 -0.63957,0.64947 -0.9856,0.95156 -1.15962,1.03232 -2.25837,2.1847 -3.24547,3.39309 -0.22954,0.27112 -0.47308,0.52245 -0.72139,0.77525 -0.40631,0.41525 -0.78969,0.84141 -1.16124,1.28997 -0.21304,0.25565 -0.4286,0.5078 -0.64655,0.75894 -2.22283,2.57849 -4.89412,5.95256 -5.22991,9.53822 0.0164,0.28912 0.0405,0.57785 0.0708,0.86577 0.23473,2.32833 0.23473,2.32833 -0.28573,3.08428 -0.62117,0.573 -1.35718,0.91732 -2.11617,1.25537 -0.40267,0.18255 -0.78739,0.38527 -1.1755,0.59867 -2.50577,1.35338 -5.21321,2.28773 -7.96222,2.95362 -0.15131,0.0371 -0.15131,0.0371 -0.30568,0.075 -1.22809,0.29527 -2.45992,0.52158 -3.71005,0.69127 -0.17698,0.0241 -0.17698,0.0241 -0.35754,0.0487 -11.70218,1.50638 -23.58419,0.26289 -35.37674,0.26289 0,-25.4324 0,-50.8648 0,-77.067878 z" fill="#fdfdfd" id="path5" style="fill:#ffffff;fill-opacity:1;stroke-width:0.132513"/></g></svg>
+
+    </div>
+  </div>
+  <div class="header-pb-row">
+    <button type="button" class="search-toggle-btn" id="search-toggle-btn" title="Search... (Ctrl+K)" aria-label="Search... (Ctrl+K)">
+      <svg width="13" height="13" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true"><path d="M281.1 0C153.782 0 50.2 103.582 50.2 230.9c0 45.12 13.019 87.25 35.483 122.853l-70.654 70.654c-20.039 20.039-20.039 52.527 0 72.564 20.039 20.039 52.527 20.039 72.564 0l70.654-70.654c35.605 22.464 77.735 35.483 122.853 35.483C408.418 461.8 512 358.218 512 230.9S408.42 0 281.1 0zm0 410.489c-99.025 0-179.589-80.564-179.589-179.589S182.074 51.311 281.1 51.311 460.689 131.875 460.689 230.9 380.127 410.489 281.1 410.489z"/></svg>
+    </button>
+    <div class="pb-col">
+      <div class="pb-wrap" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><div class="pb" id="pb"></div></div>
+      <div class="pt" id="pt">Loading...</div>
+    </div>
+  </div>
+  <div class="search-toolbar hidden" id="search-toolbar">
+    <div class="search-input-wrap">
+      <input type="text" class="search-input" id="search-input" placeholder="Search... (Ctrl+K)" aria-label="Search... (Ctrl+K)">
+      <div class="search-input-badges">
+        <button type="button" class="search-clear-btn hidden" id="search-clear-btn" title="Clear search" aria-label="Clear search">&#10006;</button>
+        <span class="search-counter" id="search-counter"></span>
+      </div>
+    </div>
+  </div>
+</header>
+<main class="doc-body">
 
 <table class="info-table">
-  <tr><th>Customer</th><th>Employee</th><th>Technician</th><th>Date</th></tr>
+  <tr><th>Company</th><th>Contact</th><th>Agent</th><th>Date</th></tr>
   <tr>
     <td>NyriSys Inc</td>
-    <td></td>
-    <td></td>
-    <td></td>
+    <td><input type="text" class="sf persistent-field" id="f_info_contact" value="" placeholder="Name" aria-label="Contact"></td>
+    <td><input type="text" class="sf persistent-field" id="f_info_agent" value="" placeholder="Name" aria-label="Agent"></td>
+    <td><input type="text" class="sf persistent-field" id="f_info_date" value="2026-08-01" placeholder="MM/DD/YYYY" aria-label="Date"></td>
   </tr>
 </table>
 
 <!-- START GENERATED CONTENT -->
 <!-- S1 -->
-<div class="section" id="s1">
-<div class="sh" onclick="toggleSection('s1')"><span>1 | Goods Receipt &amp; Visual Inspection</span>
-<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s1"></span><span class="stog" id="tog-s1">&#9660;</span></div></div>
+<section class="section d2f-section" id="s1" data-has-checklist="true" data-callout-type="note">
+<h2 class="sh" role="button" tabindex="0" aria-expanded="true"><span>0.1 1 | Goods Receipt &amp; Visual Inspection</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s1"></span><span class="stog" id="tog-s1">&#9660;</span></div></h2>
 <div class="sb" id="body-s1">
 <div class="note" data-label="Note">New devices are ordered by the customer or Mr. Mueller directly to ATS in Falkenhain.</div>
 <div class="check-item" id="wrap-cb_s1_1">
   <input type="checkbox" id="cb_s1_1">
   <label class="check-label" for="cb_s1_1">Unpack notebook</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s1_2">
   <input type="checkbox" id="cb_s1_2">
   <label class="check-label" for="cb_s1_2">Visual inspection: check housing, screen, ports for damage</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s1_3">
   <input type="checkbox" id="cb_s1_3">
   <label class="check-label" for="cb_s1_3">Set up device in ATS lab</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s1_4">
   <input type="checkbox" id="cb_s1_4">
   <label class="check-label" for="cb_s1_4">Connect to power and network</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s1_5">
   <input type="checkbox" id="cb_s1_5">
   <label class="check-label" for="cb_s1_5">Test basic functions: image &amp; sound output</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s1_6">
   <input type="checkbox" id="cb_s1_6">
   <label class="check-label" for="cb_s1_6">Test basic functions: charging function</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s1_7">
   <input type="checkbox" id="cb_s1_7">
   <label class="check-label" for="cb_s1_7">Test basic functions: keyboard &amp; touchpad</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s1_8">
   <input type="checkbox" id="cb_s1_8">
   <label class="check-label" for="cb_s1_8">Test camera &amp; microphone (only possible after Windows login)</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="subh">Document hardware in ATS documentation</div>
+<h3 class="subh">Document hardware in ATS documentation</h3>
 <div class="check-item" id="wrap-cb_s1_9">
   <input type="checkbox" id="cb_s1_9">
   <label class="check-label" for="cb_s1_9">Device name</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s1_10">
   <input type="checkbox" id="cb_s1_10">
   <label class="check-label" for="cb_s1_10">Serial number</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s1_11">
   <input type="checkbox" id="cb_s1_11">
   <label class="check-label" for="cb_s1_11">Product number</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s1_12">
   <input type="checkbox" id="cb_s1_12">
   <label class="check-label" for="cb_s1_12">Device location (if known)</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s1_13">
   <input type="checkbox" id="cb_s1_13">
   <label class="check-label" for="cb_s1_13">Take and insert a product photo of the device</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-</div></div>
+</div></section>
 
 <!-- S2 -->
-<div class="section" id="s2">
-<div class="sh" onclick="toggleSection('s2')"><span>2 | Windows Installation</span>
-<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s2"></span><span class="stog" id="tog-s2">&#9660;</span></div></div>
+<section class="section d2f-section" id="s2" data-has-checklist="true" data-callout-type="note">
+<h2 class="sh" role="button" tabindex="0" aria-expanded="true"><span>0.2 2 | Windows Installation</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s2"></span><span class="stog" id="tog-s2">&#9660;</span></div></h2>
 <div class="sb" id="body-s2">
 <div class="check-item" id="wrap-cb_s2_14">
   <input type="checkbox" id="cb_s2_14">
   <label class="check-label" for="cb_s2_14">Follow Windows installation wizard</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="subh">Assign device name</div>
+<h3 class="subh">Assign device name</h3>
 <div class="note" data-label="Note">Schema: Last name (without umlauts) + year of purchase | Example: SCHNEIDER2026</div>
 <div class="check-item" id="wrap-cb_s2_15">
   <input type="checkbox" id="cb_s2_15">
   <label class="check-label" for="cb_s2_15">Enter device name according to schema</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="subh">Create local user</div>
+<h3 class="subh">Create local user</h3>
 <div class="check-item" id="wrap-cb_s2_16">
   <input type="checkbox" id="cb_s2_16">
   <label class="check-label" for="cb_s2_16">"How would you like to set up the device?" -&gt; For work or school -&gt; Next</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s2_17">
   <input type="checkbox" id="cb_s2_17">
   <label class="check-label" for="cb_s2_17">Sign-in options -&gt; "Join a domain instead"</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s2_18">
   <input type="checkbox" id="cb_s2_18">
   <label class="check-label" for="cb_s2_18">Username: ATSadmin</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s2_19">
   <input type="checkbox" id="cb_s2_19">
   <label class="check-label" for="cb_s2_19">Password: leave empty (will be assigned later)</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="subh">Adjust power plan</div>
+<h3 class="subh">Adjust power plan</h3>
 <div class="check-item" id="wrap-cb_s2_20">
   <input type="checkbox" id="cb_s2_20">
   <label class="check-label" for="cb_s2_20">Power plan -&gt; High performance / Ultimate performance</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-</div></div>
+</div></section>
 
 <!-- S3 -->
-<div class="section" id="s3">
-<div class="sh" onclick="toggleSection('s3')"><span>3 | Create admin users &amp; document in Bitwarden</span>
-<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s3"></span><span class="stog" id="tog-s3">&#9660;</span></div></div>
+<section class="section d2f-section" id="s3" data-has-checklist="true" data-callout-type="note">
+<h2 class="sh" role="button" tabindex="0" aria-expanded="true"><span>0.3 3 | Create admin users &amp; document in Bitwarden</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s3"></span><span class="stog" id="tog-s3">&#9660;</span></div></h2>
 <div class="sb" id="body-s3">
 <div class="note" data-label="Note">Each device receives 2 local admin users: ATSadmin and DeviceAdmin.</div>
-<div class="subh">ATSadmin</div>
+<h3 class="subh">ATSadmin</h3>
 <div class="check-item" id="wrap-cb_s3_21">
   <input type="checkbox" id="cb_s3_21">
   <label class="check-label" for="cb_s3_21">Create ATSadmin user</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s3_22">
   <input type="checkbox" id="cb_s3_22">
   <label class="check-label" for="cb_s3_22">Set password</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s3_23">
   <input type="checkbox" id="cb_s3_23">
   <label class="check-label" for="cb_s3_23"><strong>Create Bitwarden entry</strong>
 Entry name: <code>NyriSys - Clients - Laptop - "Device Name" - ATSadmin</code>
 Description: Local admin on notebook "Device Name" for ATS</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="subh">DeviceAdmin</div>
+<h3 class="subh">DeviceAdmin</h3>
 <div class="check-item" id="wrap-cb_s3_24">
   <input type="checkbox" id="cb_s3_24">
   <label class="check-label" for="cb_s3_24">Create DeviceAdmin user</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s3_25">
   <input type="checkbox" id="cb_s3_25">
   <label class="check-label" for="cb_s3_25">Set password</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s3_26">
   <input type="checkbox" id="cb_s3_26">
   <label class="check-label" for="cb_s3_26"><strong>Create Bitwarden entry</strong>
 Entry name: <code>NyriSys - Clients - Laptop - "Device Name" - DeviceAdmin</code>
 Description: Local admin on notebook "Device Name" for ATS</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-</div></div>
+</div></section>
 
 <!-- S4 -->
-<div class="section" id="s4">
-<div class="sh" onclick="toggleSection('s4')"><span>4 | Remote Access (TeamViewer)</span>
-<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s4"></span><span class="stog" id="tog-s4">&#9660;</span></div></div>
+<section class="section d2f-section" id="s4" data-has-checklist="true">
+<h2 class="sh" role="button" tabindex="0" aria-expanded="true"><span>0.4 4 | Remote Access (TeamViewer)</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s4"></span><span class="stog" id="tog-s4">&#9660;</span></div></h2>
 <div class="sb" id="body-s4">
 <div class="check-item" id="wrap-cb_s4_27">
   <input type="checkbox" id="cb_s4_27">
   <label class="check-label" for="cb_s4_27">Install TeamViewer</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s4_28">
   <input type="checkbox" id="cb_s4_28">
   <label class="check-label" for="cb_s4_28">Set personal password</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s4_29">
   <input type="checkbox" id="cb_s4_29">
   <label class="check-label" for="cb_s4_29">Note TeamViewer ID</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s4_30">
   <input type="checkbox" id="cb_s4_30">
   <label class="check-label" for="cb_s4_30"><strong>Create Bitwarden entry</strong>
 Entry name: <code>NyriSys - Clients - Laptop - "Device Name" - TeamViewer - "ID"</code>
 Description: TeamViewer access for notebook "Device Name"</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-</div></div>
+</div></section>
 
 <!-- S5 -->
-<div class="section" id="s5">
-<div class="sh" onclick="toggleSection('s5')"><span>5 | Software Uninstallation</span>
-<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s5"></span><span class="stog" id="tog-s5">&#9660;</span></div></div>
+<section class="section d2f-section" id="s5" data-has-checklist="true" data-callout-type="note">
+<h2 class="sh" role="button" tabindex="0" aria-expanded="true"><span>0.5 5 | Software Uninstallation</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s5"></span><span class="stog" id="tog-s5">&#9660;</span></div></h2>
 <div class="sb" id="body-s5">
 <div class="note" data-label="Note">Remove all unnecessary pre-installed applications.</div>
 <div class="check-item" id="wrap-cb_s5_31">
   <input type="checkbox" id="cb_s5_31">
   <label class="check-label" for="cb_s5_31">Identify pre-installed bloatware</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s5_32">
   <input type="checkbox" id="cb_s5_32">
   <label class="check-label" for="cb_s5_32">Completely uninstall unnecessary applications</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s5_33">
   <input type="checkbox" id="cb_s5_33">
   <label class="check-label" for="cb_s5_33">Check program overview according to guidelines (see screenshot):</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<p><img src="./images/image1.png" alt="" />Fig. 1 - Target state program overview after uninstallation</p>
-</div></div>
+<div class="img-item">
+  <img src="./images/image1.png" alt="Fig. 1 - Target state program overview after uninstallation" />
+</div>
+</div></section>
 
 <!-- S6 -->
-<div class="section" id="s6">
-<div class="sh" onclick="toggleSection('s6')"><span>6 | Software Installation</span>
-<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s6"></span><span class="stog" id="tog-s6">&#9660;</span></div></div>
+<section class="section d2f-section" id="s6" data-has-checklist="true" data-callout-type="note">
+<h2 class="sh" role="button" tabindex="0" aria-expanded="true"><span>0.6 6 | Software Installation</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s6"></span><span class="stog" id="tog-s6">&#9660;</span></div></h2>
 <div class="sb" id="body-s6">
-<div class="subh">Create installation folder</div>
+<h3 class="subh">Create installation folder</h3>
 <div class="check-item" id="wrap-cb_s6_34">
   <input type="checkbox" id="cb_s6_34">
   <label class="check-label" for="cb_s6_34">Create folder: C:\INSTALL or C:\ATS\INSTALL</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s6_35">
   <input type="checkbox" id="cb_s6_35">
   <label class="check-label" for="cb_s6_35">Place all installers in the folder</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="note" data-label="Note">DO NOT delete installers after installation - NyriSys guideline!</div>
-<div class="subh">Install the following applications</div>
+<h3 class="subh">Install the following applications</h3>
 <div class="check-item" id="wrap-cb_s6_36">
   <input type="checkbox" id="cb_s6_36">
   <label class="check-label" for="cb_s6_36">7-Zip</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s6_37">
   <input type="checkbox" id="cb_s6_37">
   <label class="check-label" for="cb_s6_37">Adobe Acrobat Reader (Free)</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s6_38">
   <input type="checkbox" id="cb_s6_38">
   <label class="check-label" for="cb_s6_38">Google Chrome</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s6_39">
   <input type="checkbox" id="cb_s6_39">
   <label class="check-label" for="cb_s6_39">Greenshot</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s6_40">
   <input type="checkbox" id="cb_s6_40">
   <label class="check-label" for="cb_s6_40">Notepad++</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s6_41">
   <input type="checkbox" id="cb_s6_41">
   <label class="check-label" for="cb_s6_41">Paint.NET</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s6_42">
   <input type="checkbox" id="cb_s6_42">
   <label class="check-label" for="cb_s6_42">PDF24</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s6_43">
   <input type="checkbox" id="cb_s6_43">
   <label class="check-label" for="cb_s6_43">Trellix Endpoint Security</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s6_44">
   <input type="checkbox" id="cb_s6_44">
   <label class="check-label" for="cb_s6_44">Canon Printer Driver (Neustadt)</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-</div></div>
+</div></section>
 
 <!-- S7 -->
-<div class="section" id="s7">
-<div class="sh" onclick="toggleSection('s7')"><span>7 | Entra Integration &amp; BitLocker</span>
-<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s7"></span><span class="stog" id="tog-s7">&#9660;</span></div></div>
+<section class="section d2f-section" id="s7" data-has-checklist="true">
+<h2 class="sh" role="button" tabindex="0" aria-expanded="true"><span>0.7 7 | Entra Integration &amp; BitLocker</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s7"></span><span class="stog" id="tog-s7">&#9660;</span></div></h2>
 <div class="sb" id="body-s7">
 <div class="check-item" id="wrap-cb_s7_45">
   <input type="checkbox" id="cb_s7_45">
   <label class="check-label" for="cb_s7_45">Join device to Entra with: ATSadmin@nyrisys.onmicrosoft.com</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s7_46">
   <input type="checkbox" id="cb_s7_46">
   <label class="check-label" for="cb_s7_46">Restart device</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s7_47">
   <input type="checkbox" id="cb_s7_47">
   <label class="check-label" for="cb_s7_47">Log in with ATSadmin@nyrisys.onmicrosoft.com</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s7_48">
   <input type="checkbox" id="cb_s7_48">
   <label class="check-label" for="cb_s7_48">Set Windows Hello PIN</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s7_49">
   <input type="checkbox" id="cb_s7_49">
   <label class="check-label" for="cb_s7_49"><strong>Create Bitwarden entry</strong>
 Entry name: <code>NyriSys - Clients - Laptop - "Device Name" - Windows Hello PIN - ATSadmin@nyrisys</code>
 Description: Windows Hello PIN login for ATSadmin@nyrisys.onmicrosoft.com on notebook</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s7_50">
   <input type="checkbox" id="cb_s7_50">
   <label class="check-label" for="cb_s7_50">Print BitLocker key to PDF -&gt; save externally (e.g., at ATS)</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s7_51">
   <input type="checkbox" id="cb_s7_51">
   <label class="check-label" for="cb_s7_51">Log out ATS user</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-</div></div>
+</div></section>
 
 <!-- S8 -->
-<div class="section" id="s8">
-<div class="sh" onclick="toggleSection('s8')"><span>8 | Create M365 User</span>
-<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s8"></span><span class="stog" id="tog-s8">&#9660;</span></div></div>
+<section class="section d2f-section" id="s8" data-has-checklist="true" data-callout-type="note">
+<h2 class="sh" role="button" tabindex="0" aria-expanded="true"><span>0.8 8 | Create M365 User</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s8"></span><span class="stog" id="tog-s8">&#9660;</span></div></h2>
 <div class="sb" id="body-s8">
 <div class="note" data-label="Note">NyriSys will provide: First name, Last name, Position, Email, Mobile number.</div>
-<div class="subh">Required Information</div>
+<h3 class="subh">Required Information</h3>
 <div class="check-item" id="wrap-cb_s8_52">
   <input type="checkbox" id="cb_s8_52">
   <label class="check-label" for="cb_s8_52">First name</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s8_53">
   <input type="checkbox" id="cb_s8_53">
   <label class="check-label" for="cb_s8_53">Last name</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s8_54">
   <input type="checkbox" id="cb_s8_54">
   <label class="check-label" for="cb_s8_54">Position</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s8_55">
   <input type="checkbox" id="cb_s8_55">
   <label class="check-label" for="cb_s8_55">Email address</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s8_56">
   <input type="checkbox" id="cb_s8_56">
   <label class="check-label" for="cb_s8_56">Mobile number (SIM card comes with device)</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="subh">Generate password</div>
+<h3 class="subh">Generate password</h3>
 <div class="note" data-label="Note">NyriSys guideline: Generate a memorable password.</div>
 <div class="check-item" id="wrap-cb_s8_57">
   <input type="checkbox" id="cb_s8_57">
   <label class="check-label" for="cb_s8_57">Open password generator: <a href="https://www.codepalm.de/tools/passwort-generator/">codepalm.de/tools/passwort-generator</a></label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s8_58">
   <input type="checkbox" id="cb_s8_58">
   <label class="check-label" for="cb_s8_58">Generate password and store securely in Bitwarden</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s8_59">
   <input type="checkbox" id="cb_s8_59">
   <label class="check-label" for="cb_s8_59"><strong>Create Bitwarden entry</strong>
 Entry name: <code>NyriSys - M365 - User - "firstname.lastname@nyrisys.de"</code>
 Description: M365 login for employee FIRSTNAME Lastname</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="note" data-label="Note">Configure settings as shown in the screenshot.</div>
-<p><img src="./images/image2.png" alt="" />Fig. 2 - Password generator settings (Codepalm)</p>
-<div class="subh">License assignment</div>
+<div class="img-item">
+  <img src="./images/image2.png" alt="Fig. 2 - Password generator settings (Codepalm)" />
+</div>
+<h3 class="subh">License assignment</h3>
 <div class="note" data-label="Note">Assign standard license (unless otherwise specified).</div>
 <div class="check-item" id="wrap-cb_s8_60">
   <input type="checkbox" id="cb_s8_60">
   <label class="check-label" for="cb_s8_60">License assigned in M365 portal</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="subh">Teams Groups - add all new users to:</div>
+<h3 class="subh">Teams Groups - add all new users to:</h3>
 <div class="check-item" id="wrap-cb_s8_61">
   <input type="checkbox" id="cb_s8_61">
   <label class="check-label" for="cb_s8_61">NyriSys</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s8_62">
   <input type="checkbox" id="cb_s8_62">
   <label class="check-label" for="cb_s8_62">RISK MANAGEMENT</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s8_63">
   <input type="checkbox" id="cb_s8_63">
   <label class="check-label" for="cb_s8_63">PROCESS MANAGEMENT</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s8_64">
   <input type="checkbox" id="cb_s8_64">
   <label class="check-label" for="cb_s8_64">HR PORTAL</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s8_65">
   <input type="checkbox" id="cb_s8_65">
   <label class="check-label" for="cb_s8_65">CUSTOMERS</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s8_66">
   <input type="checkbox" id="cb_s8_66">
   <label class="check-label" for="cb_s8_66">Strategy and Business Models</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s8_67">
   <input type="checkbox" id="cb_s8_67">
   <label class="check-label" for="cb_s8_67">IT Management</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="note" data-label="Note">Only add to additional groups after consulting with NyriSys.</div>
-</div></div>
+</div></section>
 
 <!-- S9 -->
-<div class="section" id="s9">
-<div class="sh" onclick="toggleSection('s9')"><span>9 | End-User Setup (with M365 Login)</span>
-<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s9"></span><span class="stog" id="tog-s9">&#9660;</span></div></div>
+<section class="section d2f-section" id="s9" data-has-checklist="true" data-callout-type="note">
+<h2 class="sh" role="button" tabindex="0" aria-expanded="true"><span>0.9 9 | End-User Setup (with M365 Login)</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s9"></span><span class="stog" id="tog-s9">&#9660;</span></div></h2>
 <div class="sb" id="body-s9">
 <div class="check-item" id="wrap-cb_s9_68">
   <input type="checkbox" id="cb_s9_68">
   <label class="check-label" for="cb_s9_68">Run Windows setup wizard</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s9_69">
   <input type="checkbox" id="cb_s9_69">
   <label class="check-label" for="cb_s9_69">Skip biometric setup (user's responsibility)</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s9_70">
   <input type="checkbox" id="cb_s9_70">
   <label class="check-label" for="cb_s9_70">Set Windows Hello PIN</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s9_71">
   <input type="checkbox" id="cb_s9_71">
   <label class="check-label" for="cb_s9_71"><strong>Create Bitwarden entry (User)</strong>
 Entry name: <code>NyriSys - Clients - Laptop - "Device Name" - Windows Hello PIN - firstname.lastname@nyrisys.de</code>
 Description: Windows Hello PIN login for firstname.lastname@nyrisys.de on notebook "Device Name"</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="note" data-label="Note">If the smartphone is not yet available: create a TOTP entry for the user in Bitwarden!</div>
-<div class="subh">Set Greenshot to German</div>
+<h3 class="subh">Set Greenshot to German</h3>
 <div class="check-item" id="wrap-cb_s9_72">
   <input type="checkbox" id="cb_s9_72">
   <label class="check-label" for="cb_s9_72">Change language in Greenshot to German (see screenshot):</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<p><img src="./images/image3.png" alt="" />Fig. 3 - Greenshot language setting</p>
-<div class="subh">Display scaling</div>
+<div class="img-item">
+  <img src="./images/image3.png" alt="Fig. 3 - Greenshot language setting" />
+</div>
+<h3 class="subh">Display scaling</h3>
 <div class="check-item" id="wrap-cb_s9_73">
   <input type="checkbox" id="cb_s9_73">
   <label class="check-label" for="cb_s9_73">Start -&gt; Settings -&gt; System -&gt; Display -&gt; Scaling = 125%</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<p><img src="./images/image4.png" alt="" />Fig. 4 - Scaling 125%</p>
-<div class="subh">Uninstall applications (new Windows user apps)</div>
+<div class="img-item">
+  <img src="./images/image4.png" alt="Fig. 4 - Scaling 125%" />
+</div>
+<h3 class="subh">Uninstall applications (new Windows user apps)</h3>
 <div class="check-item" id="wrap-cb_s9_74">
   <input type="checkbox" id="cb_s9_74">
   <label class="check-label" for="cb_s9_74">Provider notification</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s9_75">
   <input type="checkbox" id="cb_s9_75">
   <label class="check-label" for="cb_s9_75">Audio recorder</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s9_76">
   <input type="checkbox" id="cb_s9_76">
   <label class="check-label" for="cb_s9_76">Family</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s9_77">
   <input type="checkbox" id="cb_s9_77">
   <label class="check-label" for="cb_s9_77">Journal</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s9_78">
   <input type="checkbox" id="cb_s9_78">
   <label class="check-label" for="cb_s9_78">Solitaire &amp; Casual Games</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s9_79">
   <input type="checkbox" id="cb_s9_79">
   <label class="check-label" for="cb_s9_79">Start Experiences app</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s9_80">
   <input type="checkbox" id="cb_s9_80">
   <label class="check-label" for="cb_s9_80">Xbox</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="subh">Registry Entries: Disable Outlook New</div>
+<h3 class="subh">Registry Entries: Disable Outlook New</h3>
 <div class="note" data-label="Note">Import REG file to prevent automatic migration to Outlook New.</div>
 <div class="check-item" id="wrap-cb_s9_81">
   <input type="checkbox" id="cb_s9_81">
   <label class="check-label" for="cb_s9_81">Import REG value</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="code-block-wrap"><div class="code-header"><span class="code-lang">ini</span><button class="copy-btn" onclick="copyCode(this)" title="Copy code" aria-label="Copy code"><svg aria-hidden="true" class="svg-icon iconCopy" width="14" height="15" viewBox="0 0 17 18"><path fill="currentColor" d="M5 6c0-1.09.91-2 2-2h4.5L15 7.5V15c0 1.09-.91 2-2 2H7c-1.09 0-2-.91-2-2zm6-1.25V8h3.25z"/><path fill="currentColor" d="M10 1a2 2 0 0 1 2 2H6a2 2 0 0 0-2 2v9a2 2 0 0 1-2-2V4a3 3 0 0 1 3-3z" opacity=".4"/></svg></button></div><pre class="code-block language-ini"><code>; Disable automatic migration to Microsoft Outlook new
 [HKEY_CURRENT_USER\Software\Microsoft\office\16.0\Outlook\Preferences]
@@ -595,136 +1708,177 @@ Description: Windows Hello PIN login for firstname.lastname@nyrisys.de on notebo
 &quot;NewOutlookAutoMigrationRetryIntervals&quot;=dword:00000000
 &quot;HideNewOutlookToggle&quot;=dword:00000001
 </code></pre></div>
-<div class="subh">Configure &amp; sign in to applications</div>
+<h3 class="subh">Configure &amp; sign in to applications</h3>
 <div class="check-item" id="wrap-cb_s9_82">
   <input type="checkbox" id="cb_s9_82">
   <label class="check-label" for="cb_s9_82">Edge -&gt; Sign in M365 user</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s9_83">
   <input type="checkbox" id="cb_s9_83">
   <label class="check-label" for="cb_s9_83">Teams -&gt; Sign in M365 user</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s9_84">
   <input type="checkbox" id="cb_s9_84">
   <label class="check-label" for="cb_s9_84">Outlook Classic -&gt; Sign in M365 user</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s9_85">
   <input type="checkbox" id="cb_s9_85">
   <label class="check-label" for="cb_s9_85">Disable Focused Inbox</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s9_86">
   <input type="checkbox" id="cb_s9_86">
   <label class="check-label" for="cb_s9_86">Test email send &amp; receive</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s9_87">
   <input type="checkbox" id="cb_s9_87">
   <label class="check-label" for="cb_s9_87">Install Zoom</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s9_88">
   <input type="checkbox" id="cb_s9_88">
   <label class="check-label" for="cb_s9_88">Install Webex</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s9_89">
   <input type="checkbox" id="cb_s9_89">
   <label class="check-label" for="cb_s9_89">Remove Webex from startup</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s9_90">
   <input type="checkbox" id="cb_s9_90">
   <label class="check-label" for="cb_s9_90">Remove Microsoft Edge from taskbar</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s9_91">
   <input type="checkbox" id="cb_s9_91">
   <label class="check-label" for="cb_s9_91">Pin Google Chrome to taskbar</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s9_92">
   <input type="checkbox" id="cb_s9_92">
   <label class="check-label" for="cb_s9_92">Set Google Chrome as default application</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="subh">Configure desktop icons</div>
+<h3 class="subh">Configure desktop icons</h3>
 <div class="check-item" id="wrap-cb_s9_93">
   <input type="checkbox" id="cb_s9_93">
   <label class="check-label" for="cb_s9_93">Start -&gt; Settings -&gt; Personalization -&gt; Themes -&gt; Desktop icon settings (see screenshot):</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<p><img src="./images/image5.png" alt="" />Fig. 5 - Desktop icon settings</p>
+<div class="img-item">
+  <img src="./images/image5.png" alt="Fig. 5 - Desktop icon settings" />
+</div>
 <div class="check-item" id="wrap-cb_s9_94">
   <input type="checkbox" id="cb_s9_94">
   <label class="check-label" for="cb_s9_94">Only show the following icons on the desktop (see screenshot):</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<p><img src="./images/image6.png" alt="" />Fig. 6 - Desktop icons</p>
-<div class="subh">Start menu power button &amp; folders</div>
+<div class="img-item">
+  <img src="./images/image6.png" alt="Fig. 6 - Desktop icons" />
+</div>
+<h3 class="subh">Start menu power button &amp; folders</h3>
 <div class="check-item" id="wrap-cb_s9_95">
   <input type="checkbox" id="cb_s9_95">
   <label class="check-label" for="cb_s9_95">Start menu -&gt; Settings -&gt; Personalization -&gt; Start -&gt; Folders</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s9_96">
   <input type="checkbox" id="cb_s9_96">
   <label class="check-label" for="cb_s9_96">Enable all except Music and Video (see screenshot):</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<p><img src="./images/image7.png" alt="" />Fig. 7 - Start menu folder settings</p>
+<div class="img-item">
+  <img src="./images/image7.png" alt="Fig. 7 - Start menu folder settings" />
+</div>
 <div class="check-item" id="wrap-cb_s9_97">
   <input type="checkbox" id="cb_s9_97">
   <label class="check-label" for="cb_s9_97">Enable power button icons - Start menu should look like this afterwards:</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<p><img src="./images/image8.png" alt="" />Fig. 8 - Start menu power button</p>
-<div class="subh">Pinned programs in Start menu</div>
+<div class="img-item">
+  <img src="./images/image8.png" alt="Fig. 8 - Start menu power button" />
+</div>
+<h3 class="subh">Pinned programs in Start menu</h3>
 <div class="check-item" id="wrap-cb_s9_98">
   <input type="checkbox" id="cb_s9_98">
   <label class="check-label" for="cb_s9_98">Arrange pinned programs exactly according to guidelines (see screenshot):</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<p><img src="./images/image9.png" alt="" />Fig. 9 - Start menu pinned programs</p>
-<div class="subh">Configure taskbar</div>
+<div class="img-item">
+  <img src="./images/image9.png" alt="Fig. 9 - Start menu pinned programs" />
+</div>
+<h3 class="subh">Configure taskbar</h3>
 <div class="check-item" id="wrap-cb_s9_99">
   <input type="checkbox" id="cb_s9_99">
   <label class="check-label" for="cb_s9_99">Configure taskbar according to guidelines (see screenshot):</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<p><img src="./images/image10.png" alt="" />Fig. 10 - Taskbar settings</p>
-</div></div>
+<div class="img-item">
+  <img src="./images/image10.png" alt="Fig. 10 - Taskbar settings" />
+</div>
+</div></section>
 
 <!-- S10 -->
-<div class="section" id="s10">
-<div class="sh" onclick="toggleSection('s10')"><span>10 | Handover &amp; Warranty Check</span>
-<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s10"></span><span class="stog" id="tog-s10">&#9660;</span></div></div>
+<section class="section d2f-section" id="s10" data-has-checklist="true">
+<h2 class="sh" role="button" tabindex="0" aria-expanded="true"><span>0.10 10 | Handover &amp; Warranty Check</span>
+<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s10"></span><span class="stog" id="tog-s10">&#9660;</span></div></h2>
 <div class="sb" id="body-s10">
 <div class="check-item" id="wrap-cb_s10_100">
   <input type="checkbox" id="cb_s10_100">
   <label class="check-label" for="cb_s10_100">Open warranty check: <a href="https://pcsupport.lenovo.com/us/en/warranty-lookup">pcsupport.lenovo.com</a></label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s10_101">
   <input type="checkbox" id="cb_s10_101">
   <label class="check-label" for="cb_s10_101">Enter serial number and read warranty data</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 <div class="check-item" id="wrap-cb_s10_102">
   <input type="checkbox" id="cb_s10_102">
   <label class="check-label" for="cb_s10_102">Enter values into handover document (similar to figure, see screenshot):</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<p><img src="./images/image11.png" alt="" />Fig. 11 - Lenovo warranty overview</p>
+<div class="img-item">
+  <img src="./images/image11.png" alt="Fig. 11 - Lenovo warranty overview" />
+</div>
 <div class="check-item" id="wrap-cb_s10_103">
   <input type="checkbox" id="cb_s10_103">
   <label class="check-label" for="cb_s10_103">Completely fill out handover document (2026-MM-DD_Protocol_Lastname,Firstname_(Notebook).docx)</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<p><img src="./images/image12.png" alt="" />Fig. 12 - Example notebook protocol</p>
+<div class="img-item">
+  <img src="./images/image12.png" alt="Fig. 12 - Example notebook protocol" />
+</div>
 <div class="check-item" id="wrap-cb_s10_104">
   <input type="checkbox" id="cb_s10_104">
   <label class="check-label" for="cb_s10_104">Print handover document and include with notebook</label>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-</div></div>
+</div></section>
+
 
 <!-- END GENERATED CONTENT -->
 
-<div class="finish">
-  <div class="big">&#x2714;</div>
-  <h2>Setup Completed</h2>
+<div class="finish" id="finish-box">
+  <div class="big" id="finish-icon">&#x2714;</div>
+  <h2 id="finish-title">Process Completed</h2>
   <div class="sigs">
-    <div><input type="text" class="sf persistent-field" id="f_sign_tech" placeholder="Name"><div style="margin-top:4px">Technician</div></div>
-    <div><input type="text" class="sf persistent-field" id="f_sign_date" placeholder="DD.MM.YYYY"><div style="margin-top:4px">Date</div></div>
+    <div><input type="text" class="sf persistent-field" id="f_sign_agent" placeholder="Name" aria-label="Agent"><div style="margin-top:4px">Agent</div></div>
+    <div><input type="text" class="sf persistent-field" id="f_sign_date" placeholder="MM/DD/YYYY" aria-label="Date"><div style="margin-top:4px">Date</div></div>
   </div>
 </div>
 <div class="btnrow">
-  <button class="btn-pdf" onclick="exportPDF()">📄 Export as PDF</button>
-  <button class="rst" onclick="resetAll()">↺ Reset all checkboxes</button>
+  <button class="btn-pdf" id="btn-pdf" onclick="exportPDF()">Export as PDF</button>
+  <button class="btn-save" id="btn-save" onclick="saveDocumentState()">Save State</button>
+  <button class="rst" onclick="resetAll()">Reset</button>
 </div>
 
-</div><!-- /doc-body -->
+</main><!-- /doc-body -->
 
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
   <span class="lb-x" onclick="closeLightbox()">&times;</span>
@@ -732,244 +1886,960 @@ Description: Windows Hello PIN login for firstname.lastname@nyrisys.de on notebo
 </div>
 
 <script>
-window.D2F_DOC_ID = 'doc_poc_12345';
-window.D2F_I18N = {"lang_code":"en","customer":"Customer","employee":"Employee","technician":"Technician","date":"Date","setup_completed":"Setup Completed","name_placeholder":"Name","signature_technician":"Technician","date_placeholder":"DD.MM.YYYY","signature_date":"Date","export_pdf":"📄 Export as PDF","reset_all":"↺ Reset all checkboxes","copy_code":"Copy code","copied":"Copied!","progress_template":"{done} of {total} tasks completed ({pct}%)","loading":"Loading...","confirm_reset":"Are you sure you want to reset all checkboxes?","callout_note":"Note","callout_tip":"Tip","callout_important":"Important","callout_warning":"Warning","callout_caution":"Caution"};
-// Doc2Flow Generic Checklist Logic
-
-// Use a unique ID injected by the generator, fallback to pathname
-const DOC_ID = window.D2F_DOC_ID || window.location.pathname.replace(/[^a-zA-Z0-9]/g, '_');
-const STATE_KEY = 'd2f_state_' + DOC_ID;
-
-function openLightbox(imgSrc) {
-    const lbImg = document.getElementById('lb-img');
-    const lightbox = document.getElementById('lightbox');
-    if (lbImg && lightbox) {
-        lbImg.src = imgSrc;
-        lightbox.classList.add('active');
+window.D2F_DOC_ID = 'd2f_id_f1901135177943a4';
+window.D2F_I18N = {"company":"Company","export_pdf":"Export as PDF","agent":"Agent","signature_date":"Date","sections_visible":"{visible} / {total} sections visible","progress_template":"{done} of {total} tasks completed ({pct}%)","callout_warning":"Warning","confirm_reset":"Are you sure you want to reset all markings?","setup_completed":"Process Completed","save_state":"Save State","callout_important":"Important","copy_code":"Copy code","contact":"Contact","date":"Date","setup_in_progress":"Process in Progress","name_placeholder":"Name","lang_code":"en","date_placeholder":"MM/DD/YYYY","copied":"Copied!","callout_note":"Note","reset_all":"Reset","callout_tip":"Tip","loading":"Loading...","callout_caution":"Caution","comment_placeholder":"Add a comment...","search_placeholder":"Search... (Ctrl+K)"};
+"use strict";
+(() => {
+  // src/core/collapse.ts
+  function updateEmptySections() {
+    const sections = document.querySelectorAll(".d2f-section, .section");
+    sections.forEach((sec) => {
+      const sh = sec.querySelector(".sh");
+      const body = sec.querySelector(".sb");
+      if (sh && body && body.children.length === 0 && body.innerHTML.trim() === "") {
+        sh.classList.add("no-toggle");
+        sh.removeAttribute("role");
+        sh.removeAttribute("tabindex");
+        sh.removeAttribute("aria-expanded");
+      }
+    });
+  }
+  function toggleSection(target, onSave) {
+    let headerElement = null;
+    if (typeof target === "string") {
+      const sec = document.getElementById(target);
+      if (sec) {
+        headerElement = sec.querySelector(".sh");
+      }
+    } else if (target instanceof HTMLElement) {
+      headerElement = target.closest(".sh");
     }
-}
-
-function closeLightbox() {
-    const lightbox = document.getElementById('lightbox');
-    if (lightbox) lightbox.classList.remove('active');
-}
-
-document.addEventListener('keydown', e => { 
-    if(e.key === 'Escape') closeLightbox(); 
-});
-
-function toggleSection(headerElement) {
-    // Expect the next sibling to be the section body (.sb)
-    let body = headerElement.nextElementSibling;
-    while (body && !body.classList.contains('sb')) {
-        body = body.nextElementSibling;
+    if (!headerElement || headerElement.classList.contains("no-toggle")) {
+      return;
     }
-    
-    if (body) {
-        const isCollapsed = body.classList.toggle('collapsed');
-        const toggler = headerElement.querySelector('.stog');
-        if (toggler) {
-            toggler.innerHTML = isCollapsed ? '&#9650;' : '&#9660;';
+    const section = headerElement.closest(".section");
+    const body = section ? section.querySelector(".sb") : null;
+    if (body && (body.children.length > 0 || body.innerHTML.trim() !== "")) {
+      const isCollapsed = body.classList.toggle("collapsed");
+      headerElement.setAttribute("aria-expanded", isCollapsed ? "false" : "true");
+      const toggler = headerElement.querySelector(".stog");
+      if (toggler) {
+        toggler.innerHTML = isCollapsed ? "&#9650;" : "&#9660;";
+      }
+      if (onSave) {
+        onSave();
+      }
+    }
+  }
+
+  // src/core/search.ts
+  var preSearchCollapsedState = null;
+  var lastMatchedSectionIds = /* @__PURE__ */ new Set();
+  function removeHighlights(container) {
+    if (!container) return;
+    const highlights = container.querySelectorAll("mark.d2f-highlight");
+    highlights.forEach((mark) => {
+      const parent = mark.parentNode;
+      if (parent) {
+        const textContent = mark.textContent ?? "";
+        parent.replaceChild(document.createTextNode(textContent), mark);
+        parent.normalize();
+      }
+    });
+  }
+  function highlightTextNodes(container, query) {
+    if (!container || !query) return;
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(escaped, "gi");
+    const walker = document.createTreeWalker(
+      container,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode: (node) => {
+          const parent = node.parentNode;
+          if (!parent || !(parent instanceof HTMLElement)) return NodeFilter.FILTER_REJECT;
+          const tag = parent.nodeName.toLowerCase();
+          if (["script", "style", "input", "textarea", "select", "button"].includes(tag) || parent.classList.contains("d2f-highlight")) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          return NodeFilter.FILTER_ACCEPT;
         }
+      }
+    );
+    const textNodes = [];
+    let currentNode = walker.nextNode();
+    while (currentNode) {
+      if (currentNode instanceof Text) {
+        textNodes.push(currentNode);
+      }
+      currentNode = walker.nextNode();
     }
-}
+    textNodes.forEach((textNode) => {
+      const val = textNode.nodeValue;
+      if (!val || !regex.test(val)) return;
+      regex.lastIndex = 0;
+      const frag = document.createDocumentFragment();
+      let lastIdx = 0;
+      let match = regex.exec(val);
+      while (match !== null) {
+        if (match.index > lastIdx) {
+          frag.appendChild(document.createTextNode(val.slice(lastIdx, match.index)));
+        }
+        const mark = document.createElement("mark");
+        mark.className = "d2f-highlight";
+        const matchedText = match[0] ?? "";
+        mark.textContent = matchedText;
+        frag.appendChild(mark);
+        lastIdx = regex.lastIndex;
+        if (matchedText.length === 0) break;
+        match = regex.exec(val);
+      }
+      if (lastIdx < val.length) {
+        frag.appendChild(document.createTextNode(val.slice(lastIdx)));
+      }
+      if (textNode.parentNode) {
+        textNode.parentNode.replaceChild(frag, textNode);
+      }
+    });
+  }
+  function performSearchAndFilter(onSaveState) {
+    const rawSearchInput = document.getElementById("search-input");
+    const searchInput = rawSearchInput instanceof HTMLInputElement ? rawSearchInput : null;
+    const searchCounter = document.getElementById("search-counter");
+    const sections = document.querySelectorAll(".d2f-section, .section");
+    if (sections.length === 0) return;
+    const query = searchInput ? searchInput.value.trim() : "";
+    const queryLower = query.toLowerCase();
+    let visibleCount = 0;
+    const totalCount = sections.length;
+    if (queryLower.length > 0) {
+      if (preSearchCollapsedState === null) {
+        preSearchCollapsedState = /* @__PURE__ */ new Map();
+        sections.forEach((sec) => {
+          const body = sec.querySelector(".sb");
+          if (body && sec.id) {
+            preSearchCollapsedState?.set(sec.id, body.classList.contains("collapsed"));
+          }
+        });
+      }
+      const currentMatchedIds = /* @__PURE__ */ new Set();
+      sections.forEach((sec) => {
+        removeHighlights(sec);
+        const passesQuery = (sec.textContent ?? "").toLowerCase().includes(queryLower);
+        if (passesQuery) {
+          sec.style.display = "";
+          visibleCount++;
+          if (sec.id) currentMatchedIds.add(sec.id);
+          const body = sec.querySelector(".sb");
+          if (body) {
+            highlightTextNodes(body, query);
+            if (body.classList.contains("collapsed")) {
+              body.classList.remove("collapsed");
+              const sh = sec.querySelector(".sh");
+              if (sh) {
+                sh.setAttribute("aria-expanded", "true");
+                const toggler = sh.querySelector(".stog");
+                if (toggler) toggler.innerHTML = "&#9660;";
+              }
+            }
+          }
+        } else {
+          sec.style.display = "none";
+        }
+      });
+      lastMatchedSectionIds = currentMatchedIds;
+    } else {
+      sections.forEach((sec) => {
+        removeHighlights(sec);
+        sec.style.display = "";
+        visibleCount++;
+        const secId = sec.id;
+        const body = sec.querySelector(".sb");
+        const sh = sec.querySelector(".sh");
+        if (body && secId && preSearchCollapsedState !== null) {
+          const wasMatched = lastMatchedSectionIds.has(secId);
+          const wasCollapsedBeforeSearch = preSearchCollapsedState.get(secId);
+          if (!wasMatched && wasCollapsedBeforeSearch === true) {
+            body.classList.add("collapsed");
+            if (sh) {
+              sh.setAttribute("aria-expanded", "false");
+              const toggler = sh.querySelector(".stog");
+              if (toggler) toggler.innerHTML = "&#9650;";
+            }
+          }
+        }
+      });
+      preSearchCollapsedState = null;
+      lastMatchedSectionIds.clear();
+      if (onSaveState) {
+        onSaveState();
+      }
+    }
+    const searchClearBtn = document.getElementById("search-clear-btn");
+    if (searchClearBtn) {
+      searchClearBtn.classList.toggle("hidden", query.length === 0);
+    }
+    if (searchCounter) {
+      const i18n = window.D2F_I18N ?? {};
+      const template = i18n.sections_visible ?? "{visible} / {total} sections visible";
+      searchCounter.textContent = template.replace("{visible}", String(visibleCount)).replace("{total}", String(totalCount));
+    }
+  }
+  function toggleSearchToolbar(show) {
+    const toolbar = document.getElementById("search-toolbar");
+    const toggleBtn = document.getElementById("search-toggle-btn");
+    const rawInput = document.getElementById("search-input");
+    const input = rawInput instanceof HTMLInputElement ? rawInput : null;
+    if (!toolbar) return;
+    const shouldShow = typeof show === "boolean" ? show : toolbar.classList.contains("hidden");
+    if (shouldShow) {
+      toolbar.classList.remove("hidden");
+      if (toggleBtn) toggleBtn.classList.add("active");
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    } else {
+      toolbar.classList.add("hidden");
+      if (toggleBtn) toggleBtn.classList.remove("active");
+      if (input) input.value = "";
+      performSearchAndFilter();
+    }
+  }
 
-function saveState() {
+  // src/core/storage.ts
+  function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+      if (timeout !== void 0) {
+        clearTimeout(timeout);
+      }
+      timeout = setTimeout(() => func(...args), wait);
+    };
+  }
+  function getStateKey() {
+    const docId = window.D2F_DOC_ID ?? "";
+    const rawFilename = window.location.pathname.split("/").pop() ?? "index.html";
+    const filename = decodeURIComponent(rawFilename);
+    return "d2f_state_" + (docId ? docId + "_" : "") + filename;
+  }
+  function saveState() {
     const state = {};
     document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb, index) => {
-        // Use an index or an ID if available. d2f generator will try to assign unique IDs to checkboxes
-        const key = cb.id || ('cb_' + index);
-        state[key] = cb.checked;
+      const key = cb.id || "cb_" + String(index);
+      state[key] = cb.checked;
     });
-    
-    // Save any persistent inputs (e.g. signature fields)
+    const textStates = {};
+    document.querySelectorAll(".check-item.text-item, .check-item.simple-item").forEach((item, index) => {
+      const key = item.id || "txt_" + String(index);
+      textStates[key] = item.classList.contains("checked");
+    });
     const fields = {};
-    document.querySelectorAll('input.persistent-field').forEach((input, index) => {
-        const key = input.id || ('f_' + index);
-        fields[key] = input.value;
+    document.querySelectorAll("input.persistent-field").forEach((input, index) => {
+      const key = input.id || "f_" + String(index);
+      fields[key] = input.value;
     });
-
-    try { 
-        localStorage.setItem(STATE_KEY, JSON.stringify({ checks: state, fields: fields })); 
-    } catch(e) {
-        console.warn('Failed to save state to localStorage', e);
-    }
-}
-
-function loadState() {
+    const comments = {};
+    document.querySelectorAll(".check-item").forEach((item, index) => {
+      const input = item.querySelector(".item-comment-input");
+      if (input && input.value.trim() !== "") {
+        const key = item.id || "item_" + String(index);
+        comments[key] = input.value;
+      }
+    });
+    const sections = {};
+    document.querySelectorAll(".d2f-section, .section").forEach((sec, index) => {
+      const body = sec.querySelector(".sb");
+      if (body) {
+        const key = sec.id || "sec_" + String(index);
+        sections[key] = body.classList.contains("collapsed");
+      }
+    });
     try {
-        const raw = localStorage.getItem(STATE_KEY);
-        if (!raw) return;
-        
-        const data = JSON.parse(raw);
-        if (data.checks) {
-            document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb, index) => {
-                const key = cb.id || ('cb_' + index);
-                if (data.checks[key] !== undefined) { 
-                    cb.checked = data.checks[key]; 
-                    styleItem(cb); 
-                }
-            });
-        }
-        if (data.fields) {
-            document.querySelectorAll('input.persistent-field').forEach((input, index) => {
-                const key = input.id || ('f_' + index);
-                if (data.fields[key] !== undefined) {
-                    input.value = data.fields[key];
-                }
-            });
-        }
-    } catch(e) {
-        console.warn('Failed to load state from localStorage', e);
-    }
-}
-
-function styleItem(cb) {
-    const item = cb.closest('.check-item');
-    if (item) {
-        item.classList.toggle('checked', cb.checked);
-    }
-}
-
-function updateProgress() {
-    const sections = document.querySelectorAll('.section');
-    let total = 0, done = 0;
-    
-    sections.forEach(sec => {
-        const cbs = sec.querySelectorAll('input[type="checkbox"]');
-        if (cbs.length === 0) return;
-        
-        const checkedCount = [...cbs].filter(c => c.checked).length;
-        total += cbs.length;
-        done += checkedCount;
-        
-        const badge = sec.querySelector('.sbadge');
-        if (badge) { 
-            badge.textContent = checkedCount + ' / ' + cbs.length; 
-            badge.className = 'sbadge' + (checkedCount === cbs.length ? ' done' : ''); 
-        }
-    });
-    
-    const pct = total ? Math.round(done / total * 100) : 0;
-    const pb = document.getElementById('pb');
-    if (pb) pb.style.width = pct + '%';
-    
-    const pt = document.getElementById('pt');
-    if (pt) {
-        const i18n = window.D2F_I18N || {};
-        const tmpl = i18n.progress_template || '{done} of {total} tasks completed ({pct}%)';
-        pt.textContent = tmpl.replace('{done}', done).replace('{total}', total).replace('{pct}', pct);
-    }
-}
-
-function resetAll() {
-    const i18n = window.D2F_I18N || {};
-    const msg = i18n.confirm_reset || 'Are you sure you want to reset all checkboxes?';
-    if (!confirm(msg)) return;
-    document.querySelectorAll('.check-item input[type="checkbox"]').forEach(c => { 
-        c.checked = false; 
-        styleItem(c); 
-    });
-    updateProgress(); 
-    saveState();
-}
-
-// Export the current state as PDF via the browser's "Save as PDF" print option.
-// Collapsed sections are temporarily expanded so nothing is hidden in the PDF.
-function exportPDF() {
-    const collapsed = [...document.querySelectorAll('.sb.collapsed')];
-    collapsed.forEach(el => el.classList.remove('collapsed'));
-    
-    const restore = () => {
-        collapsed.forEach(el => el.classList.add('collapsed'));
-        window.removeEventListener('afterprint', restore);
-    };
-    
-    window.addEventListener('afterprint', restore);
-    setTimeout(() => window.print(), 100);
-}
-
-// Setup Event Listeners
-document.addEventListener('DOMContentLoaded', () => {
-    // Bind checkbox clicks
-    document.querySelectorAll('.check-item').forEach(item => {
-        item.addEventListener('click', function(e) {
-            // Ignore if clicked on a link
-            if (e.target.tagName === 'A') return;
-            
-            const cb = this.querySelector('input[type="checkbox"]');
-            if (cb) {
-                // If clicked on the wrapper but not the checkbox directly, toggle it manually
-                if (e.target !== cb) cb.checked = !cb.checked;
-                styleItem(cb);
-                updateProgress();
-                saveState();
-            }
-        });
-    });
-
-    // Bind section header clicks
-    document.querySelectorAll('.sh').forEach(sh => {
-        sh.addEventListener('click', function() {
-            toggleSection(this);
-        });
-    });
-
-    // Bind image lightbox clicks
-    document.querySelectorAll('.screenshot-wrap img, .ss-wrap img, img.lightbox-trigger').forEach(img => {
-        img.style.cursor = 'zoom-in';
-        img.addEventListener('click', function(e) {
-            e.stopPropagation();
-            openLightbox(this.src);
-        });
-    });
-
-    // Bind persistent fields
-    document.querySelectorAll('input.persistent-field').forEach(input => {
-        input.addEventListener('input', saveState);
-    });
-
-    // Initialize state
-    loadState();
-    updateProgress();
-});
-
-function copyCode(btn) {
-    const wrap = btn.closest('.code-block-wrap');
-    if (!wrap) return;
-    const codeEl = wrap.querySelector('code');
-    if (!codeEl) return;
-
-    const text = codeEl.innerText || codeEl.textContent;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(() => {
-            showCopiedFeedback(btn);
-        }).catch(() => fallbackCopyText(text, btn));
-    } else {
-        fallbackCopyText(text, btn);
-    }
-}
-
-function fallbackCopyText(text, btn) {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.select();
-    try {
-        document.execCommand('copy');
-        showCopiedFeedback(btn);
+      const payload = {
+        checks: state,
+        texts: textStates,
+        fields,
+        comments,
+        sections
+      };
+      localStorage.setItem(getStateKey(), JSON.stringify(payload));
     } catch (e) {
-        console.error('Fallback copy failed', e);
+      console.warn("Failed to save state to localStorage", e);
     }
-    document.body.removeChild(ta);
-}
+  }
+  var saveStateDebounced = debounce(saveState, 300);
+  function syncFieldPair(id1, id2, sourceInput) {
+    const raw1 = document.getElementById(id1);
+    const raw2 = document.getElementById(id2);
+    const el1 = raw1 instanceof HTMLInputElement ? raw1 : null;
+    const el2 = raw2 instanceof HTMLInputElement ? raw2 : null;
+    if (!el1 || !el2) return;
+    if (sourceInput === el1) {
+      el2.value = el1.value;
+    } else if (sourceInput === el2) {
+      el1.value = el2.value;
+    } else {
+      if (el1.value && !el2.value) el2.value = el1.value;
+      else if (el2.value && !el1.value) el1.value = el2.value;
+      else if (el1.value) el2.value = el1.value;
+    }
+  }
+  function syncLinkedFields(sourceInput) {
+    syncFieldPair("f_info_agent", "f_sign_agent", sourceInput);
+    syncFieldPair("f_info_date", "f_sign_date", sourceInput);
+  }
+  function formatDateFromTemplate(now, template) {
+    if (!template || typeof template !== "string") return null;
+    const tokenMap = {
+      "YYYY": String(now.getFullYear()),
+      "YY": String(now.getFullYear()).slice(-2),
+      "MM": String(now.getMonth() + 1).padStart(2, "0"),
+      "DD": String(now.getDate()).padStart(2, "0"),
+      "M": String(now.getMonth() + 1),
+      "D": String(now.getDate())
+    };
+    const regex = /YYYY|YY|MM|DD|M|D/gi;
+    let hasMatches = false;
+    const formatted = template.replace(regex, (match) => {
+      hasMatches = true;
+      return tokenMap[match.toUpperCase()] ?? match;
+    });
+    return hasMatches && !/[A-Za-z]/.test(formatted) ? formatted : null;
+  }
+  function getTodayFormatted() {
+    const i18n = window.D2F_I18N ?? {};
+    const now = /* @__PURE__ */ new Date();
+    try {
+      const fromTemplate = formatDateFromTemplate(now, i18n.date_placeholder);
+      if (fromTemplate) return fromTemplate;
+    } catch (e) {
+      console.warn("Failed to format date", e);
+    }
+    return now.toLocaleDateString(navigator.language || void 0);
+  }
+  function checkDateShortcut(input) {
+    if (typeof input.value !== "string") return false;
+    if (input.value.trim().toLowerCase() === "today") {
+      input.value = getTodayFormatted();
+      return true;
+    }
+    return false;
+  }
+  function parseStateJson(json) {
+    try {
+      const parsed = JSON.parse(json);
+      if (typeof parsed === "object" && parsed !== null) {
+        return parsed;
+      }
+    } catch {
+    }
+    return null;
+  }
+  function loadState(styleItemFn, getOrCreateCommentBoxFn) {
+    try {
+      const raw = localStorage.getItem(getStateKey());
+      if (!raw) return;
+      const data = parseStateJson(raw);
+      if (!data) return;
+      if (data.checks) {
+        document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb, index) => {
+          const key = cb.id || "cb_" + String(index);
+          const val = data.checks?.[key];
+          if (val !== void 0) {
+            cb.checked = val;
+            if (styleItemFn) styleItemFn(cb);
+          }
+        });
+      }
+      if (data.texts) {
+        document.querySelectorAll(".check-item.text-item, .check-item.simple-item").forEach((item, index) => {
+          const key = item.id || "txt_" + String(index);
+          const val = data.texts?.[key];
+          if (val !== void 0) {
+            item.classList.toggle("checked", val);
+          }
+        });
+      }
+      if (data.fields) {
+        document.querySelectorAll("input.persistent-field").forEach((input, index) => {
+          const key = input.id || "f_" + String(index);
+          const val = data.fields?.[key];
+          if (val !== void 0) {
+            input.value = val;
+          }
+        });
+      }
+      if (data.comments && getOrCreateCommentBoxFn) {
+        document.querySelectorAll(".check-item").forEach((item, index) => {
+          const key = item.id || "item_" + String(index);
+          const val = data.comments?.[key];
+          if (val !== void 0) {
+            getOrCreateCommentBoxFn(item, val);
+          }
+        });
+      }
+      if (data.sections) {
+        document.querySelectorAll(".d2f-section, .section").forEach((sec, index) => {
+          const key = sec.id || "sec_" + String(index);
+          const shouldCollapse = data.sections?.[key];
+          if (shouldCollapse === void 0) return;
+          const body = sec.querySelector(".sb");
+          const sh = sec.querySelector(".sh");
+          if (!body) return;
+          body.classList.toggle("collapsed", shouldCollapse);
+          if (sh) {
+            sh.setAttribute("aria-expanded", shouldCollapse ? "false" : "true");
+            const toggler = sh.querySelector(".stog");
+            if (toggler) toggler.innerHTML = shouldCollapse ? "&#9650;" : "&#9660;";
+          }
+        });
+      }
+      syncLinkedFields();
+    } catch (e) {
+      console.warn("Failed to load state from localStorage", e);
+    }
+  }
 
-function showCopiedFeedback(btn) {
-    btn.classList.add('copied');
-    setTimeout(() => btn.classList.remove('copied'), 2000);
-}
+  // src/features/tasks.ts
+  function styleItem(cb) {
+    const item = cb.closest(".check-item");
+    if (item) {
+      item.classList.toggle("checked", cb.checked);
+    }
+  }
+  function autoExpandTextarea(el) {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = String(el.scrollHeight) + "px";
+  }
+  function getOrCreateCommentBox(checkItem, initialValue) {
+    if (!checkItem) return null;
+    let box = checkItem.querySelector(".item-comment-box");
+    let input = null;
+    if (!box) {
+      box = document.createElement("div");
+      box.className = "item-comment-box";
+      input = document.createElement("textarea");
+      input.rows = 1;
+      input.className = "item-comment-input";
+      const i18n = window.D2F_I18N ?? {};
+      const commentLabel = i18n.comment_placeholder ?? "Add a comment...";
+      input.placeholder = commentLabel;
+      input.setAttribute("aria-label", commentLabel);
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "item-comment-del";
+      delBtn.title = "Delete comment";
+      delBtn.setAttribute("aria-label", "Delete comment");
+      delBtn.innerHTML = "&#10006;";
+      box.appendChild(input);
+      box.appendChild(delBtn);
+      checkItem.appendChild(box);
+    } else {
+      const rawInput = box.querySelector(".item-comment-input");
+      input = rawInput instanceof HTMLTextAreaElement ? rawInput : null;
+    }
+    if (!input) return null;
+    if (typeof initialValue === "string") {
+      input.value = initialValue;
+      input.textContent = initialValue;
+      input.setAttribute("value", initialValue);
+    }
+    autoExpandTextarea(input);
+    return { box, input };
+  }
+  function updateProgress() {
+    const i18n = window.D2F_I18N ?? {};
+    const sections = document.querySelectorAll(".section");
+    let total = 0;
+    let done = 0;
+    const updates = Array.from(sections).map((sec) => {
+      const cbs = Array.from(sec.querySelectorAll('input[type="checkbox"]'));
+      const badge = sec.querySelector(".sbadge");
+      const count = cbs.length;
+      const checkedCount = cbs.filter((c) => c.checked).length;
+      total += count;
+      done += checkedCount;
+      return { badge, count, checkedCount };
+    });
+    updates.forEach(({ badge, count, checkedCount }) => {
+      if (!badge) return;
+      if (count === 0) {
+        badge.textContent = "";
+        badge.style.display = "none";
+      } else {
+        badge.style.display = "";
+        badge.textContent = String(checkedCount) + " / " + String(count);
+        badge.className = "sbadge" + (checkedCount === count ? " done" : "");
+      }
+    });
+    const pct = total ? Math.round(done / total * 100) : 0;
+    const pb = document.getElementById("pb");
+    if (pb) {
+      pb.style.width = String(pct) + "%";
+      if (pb.parentElement) {
+        pb.parentElement.setAttribute("aria-valuenow", String(pct));
+      }
+    }
+    const pt = document.getElementById("pt");
+    if (pt) {
+      const tmpl = i18n.progress_template ?? "{done} of {total} tasks completed ({pct}%)";
+      pt.textContent = tmpl.replace("{done}", String(done)).replace("{total}", String(total)).replace("{pct}", String(pct));
+    }
+    const finishBox = document.getElementById("finish-box");
+    const finishIcon = document.getElementById("finish-icon");
+    const finishTitle = document.getElementById("finish-title");
+    const rawPdf = document.getElementById("btn-pdf");
+    const btnPdf = rawPdf instanceof HTMLButtonElement ? rawPdf : null;
+    if (finishBox) {
+      finishBox.classList.remove("completed", "pending", "no-tasks");
+      if (total === 0) {
+        finishBox.classList.add("no-tasks");
+        if (btnPdf) btnPdf.disabled = false;
+      } else if (done < total) {
+        finishBox.classList.add("pending");
+        if (finishIcon) finishIcon.innerHTML = "&#x29D6;";
+        if (finishTitle) finishTitle.textContent = i18n.setup_in_progress ?? "Setup in Progress";
+        if (btnPdf) btnPdf.disabled = true;
+      } else {
+        finishBox.classList.add("completed");
+        if (finishIcon) finishIcon.innerHTML = "&#x2714;";
+        if (finishTitle) finishTitle.textContent = i18n.setup_completed ?? "Setup Completed";
+        if (btnPdf) btnPdf.disabled = false;
+      }
+    }
+  }
+  if (typeof window !== "undefined") {
+    document.addEventListener("DOMContentLoaded", () => {
+      updateProgress();
+    });
+  }
+
+  // src/features/images.ts
+  function handleLightboxKeydown(e) {
+    if (e.key === "Escape") {
+      closeLightbox();
+    }
+  }
+  function openLightbox(imgSrc) {
+    const rawLbImg = document.getElementById("lb-img");
+    const lbImg = rawLbImg instanceof HTMLImageElement ? rawLbImg : null;
+    const lightbox = document.getElementById("lightbox");
+    if (lbImg && lightbox) {
+      lbImg.src = imgSrc;
+      lightbox.classList.add("active");
+      document.addEventListener("keydown", handleLightboxKeydown);
+    }
+  }
+  function closeLightbox() {
+    const lightbox = document.getElementById("lightbox");
+    if (lightbox) {
+      lightbox.classList.remove("active");
+    }
+    document.removeEventListener("keydown", handleLightboxKeydown);
+  }
+  if (typeof window !== "undefined") {
+    document.addEventListener("DOMContentLoaded", () => {
+      document.addEventListener("click", (e) => {
+        const target = e.target;
+        if (target instanceof Element) {
+          const img = target.closest(".doc-body img");
+          if (img) {
+            e.stopPropagation();
+            openLightbox(img.src);
+          }
+        }
+      });
+    });
+  }
+
+  // src/core/main.ts
+  (() => {
+    "use strict";
+    document.addEventListener("DOMContentLoaded", () => {
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          const target = e.target;
+          if (target instanceof Element) {
+            const sh = target.closest(".sh");
+            if (sh && !sh.classList.contains("no-toggle")) {
+              e.preventDefault();
+              toggleSection(sh, saveState);
+            }
+          }
+        }
+      });
+      document.addEventListener("click", (e) => {
+        const target = e.target;
+        if (!(target instanceof Element)) return;
+        const img = target.closest(".doc-body img");
+        if (img) {
+          e.stopPropagation();
+          openLightbox(img.src);
+          return;
+        }
+        const sh = target.closest(".sh");
+        if (sh && !sh.classList.contains("no-toggle")) {
+          toggleSection(sh, saveState);
+          return;
+        }
+        const commentBtn = target.closest(".item-comment-icon");
+        if (commentBtn) {
+          const checkItem2 = commentBtn.closest(".check-item");
+          if (checkItem2) {
+            const res = getOrCreateCommentBox(checkItem2);
+            if (res?.input) {
+              res.input.focus();
+            }
+          }
+          return;
+        }
+        const commentDelBtn = target.closest(".item-comment-del");
+        if (commentDelBtn) {
+          const box = commentDelBtn.closest(".item-comment-box");
+          if (box) {
+            box.remove();
+            saveState();
+          }
+          return;
+        }
+        const checkItem = target.closest(".check-item");
+        if (checkItem) {
+          if (target.tagName === "A" || target.tagName === "IMG" || target.closest(".item-comment-box")) {
+            return;
+          }
+          const cb = checkItem.querySelector('input[type="checkbox"]');
+          if (cb) {
+            if (target !== cb && !target.closest("label")) {
+              cb.checked = !cb.checked;
+            }
+            styleItem(cb);
+            updateProgress();
+            saveState();
+          } else if (checkItem.classList.contains("text-item") || checkItem.classList.contains("simple-item")) {
+            checkItem.classList.toggle("checked");
+            saveState();
+          }
+        }
+      });
+      const linkedIds = ["f_info_agent", "f_sign_agent", "f_info_date", "f_sign_date"];
+      const handleInputOrChange = (e) => {
+        const target = e.target;
+        if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) return;
+        if (target.classList.contains("persistent-field")) {
+          saveStateDebounced();
+        }
+        if (target instanceof HTMLTextAreaElement && target.classList.contains("item-comment-input")) {
+          target.textContent = target.value;
+          target.setAttribute("value", target.value);
+          saveStateDebounced();
+        }
+        if (target instanceof HTMLInputElement) {
+          if (target.id && linkedIds.includes(target.id)) {
+            if (target.id.toLowerCase().includes("date")) {
+              checkDateShortcut(target);
+            }
+            syncLinkedFields(target);
+            saveStateDebounced();
+          } else if (target.matches('input[id*="date"], input[name*="date"], input.date-field')) {
+            checkDateShortcut(target);
+            saveStateDebounced();
+          }
+        }
+      };
+      document.addEventListener("input", handleInputOrChange);
+      document.addEventListener("change", handleInputOrChange);
+      const searchToggleBtn = document.getElementById("search-toggle-btn");
+      if (searchToggleBtn) {
+        searchToggleBtn.addEventListener("click", () => toggleSearchToolbar());
+      }
+      const rawSearchInput = document.getElementById("search-input");
+      const searchInput = rawSearchInput instanceof HTMLInputElement ? rawSearchInput : null;
+      if (searchInput) {
+        searchInput.addEventListener("input", () => performSearchAndFilter());
+      }
+      const searchClearBtn = document.getElementById("search-clear-btn");
+      if (searchClearBtn) {
+        searchClearBtn.addEventListener("click", () => {
+          if (searchInput) {
+            searchInput.value = "";
+            searchInput.focus();
+          }
+          performSearchAndFilter(saveState);
+        });
+      }
+      document.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "K")) {
+          e.preventDefault();
+          toggleSearchToolbar(true);
+        } else if (e.key === "Escape") {
+          const toolbar = document.getElementById("search-toolbar");
+          if (toolbar && !toolbar.classList.contains("hidden")) {
+            e.preventDefault();
+            toggleSearchToolbar(false);
+          }
+        }
+      });
+      updateEmptySections();
+      loadState(styleItem, getOrCreateCommentBox);
+      syncLinkedFields();
+      updateProgress();
+      performSearchAndFilter();
+    });
+  })();
+})();
+
+"use strict";
+(() => {
+  // src/core/storage.ts
+  function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+      if (timeout !== void 0) {
+        clearTimeout(timeout);
+      }
+      timeout = setTimeout(() => func(...args), wait);
+    };
+  }
+  function getStateKey() {
+    const docId = window.D2F_DOC_ID ?? "";
+    const rawFilename = window.location.pathname.split("/").pop() ?? "index.html";
+    const filename = decodeURIComponent(rawFilename);
+    return "d2f_state_" + (docId ? docId + "_" : "") + filename;
+  }
+  function saveState() {
+    const state = {};
+    document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb, index) => {
+      const key = cb.id || "cb_" + String(index);
+      state[key] = cb.checked;
+    });
+    const textStates = {};
+    document.querySelectorAll(".check-item.text-item, .check-item.simple-item").forEach((item, index) => {
+      const key = item.id || "txt_" + String(index);
+      textStates[key] = item.classList.contains("checked");
+    });
+    const fields = {};
+    document.querySelectorAll("input.persistent-field").forEach((input, index) => {
+      const key = input.id || "f_" + String(index);
+      fields[key] = input.value;
+    });
+    const comments = {};
+    document.querySelectorAll(".check-item").forEach((item, index) => {
+      const input = item.querySelector(".item-comment-input");
+      if (input && input.value.trim() !== "") {
+        const key = item.id || "item_" + String(index);
+        comments[key] = input.value;
+      }
+    });
+    const sections = {};
+    document.querySelectorAll(".d2f-section, .section").forEach((sec, index) => {
+      const body = sec.querySelector(".sb");
+      if (body) {
+        const key = sec.id || "sec_" + String(index);
+        sections[key] = body.classList.contains("collapsed");
+      }
+    });
+    try {
+      const payload = {
+        checks: state,
+        texts: textStates,
+        fields,
+        comments,
+        sections
+      };
+      localStorage.setItem(getStateKey(), JSON.stringify(payload));
+    } catch (e) {
+      console.warn("Failed to save state to localStorage", e);
+    }
+  }
+  var saveStateDebounced = debounce(saveState, 300);
+
+  // src/features/tasks.ts
+  function styleItem(cb) {
+    const item = cb.closest(".check-item");
+    if (item) {
+      item.classList.toggle("checked", cb.checked);
+    }
+  }
+  function autoExpandTextarea(el) {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = String(el.scrollHeight) + "px";
+  }
+  function getOrCreateCommentBox(checkItem, initialValue) {
+    if (!checkItem) return null;
+    let box = checkItem.querySelector(".item-comment-box");
+    let input = null;
+    if (!box) {
+      box = document.createElement("div");
+      box.className = "item-comment-box";
+      input = document.createElement("textarea");
+      input.rows = 1;
+      input.className = "item-comment-input";
+      const i18n = window.D2F_I18N ?? {};
+      const commentLabel = i18n.comment_placeholder ?? "Add a comment...";
+      input.placeholder = commentLabel;
+      input.setAttribute("aria-label", commentLabel);
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "item-comment-del";
+      delBtn.title = "Delete comment";
+      delBtn.setAttribute("aria-label", "Delete comment");
+      delBtn.innerHTML = "&#10006;";
+      box.appendChild(input);
+      box.appendChild(delBtn);
+      checkItem.appendChild(box);
+    } else {
+      const rawInput = box.querySelector(".item-comment-input");
+      input = rawInput instanceof HTMLTextAreaElement ? rawInput : null;
+    }
+    if (!input) return null;
+    if (typeof initialValue === "string") {
+      input.value = initialValue;
+      input.textContent = initialValue;
+      input.setAttribute("value", initialValue);
+    }
+    autoExpandTextarea(input);
+    return { box, input };
+  }
+  function updateProgress() {
+    const i18n = window.D2F_I18N ?? {};
+    const sections = document.querySelectorAll(".section");
+    let total = 0;
+    let done = 0;
+    const updates = Array.from(sections).map((sec) => {
+      const cbs = Array.from(sec.querySelectorAll('input[type="checkbox"]'));
+      const badge = sec.querySelector(".sbadge");
+      const count = cbs.length;
+      const checkedCount = cbs.filter((c) => c.checked).length;
+      total += count;
+      done += checkedCount;
+      return { badge, count, checkedCount };
+    });
+    updates.forEach(({ badge, count, checkedCount }) => {
+      if (!badge) return;
+      if (count === 0) {
+        badge.textContent = "";
+        badge.style.display = "none";
+      } else {
+        badge.style.display = "";
+        badge.textContent = String(checkedCount) + " / " + String(count);
+        badge.className = "sbadge" + (checkedCount === count ? " done" : "");
+      }
+    });
+    const pct = total ? Math.round(done / total * 100) : 0;
+    const pb = document.getElementById("pb");
+    if (pb) {
+      pb.style.width = String(pct) + "%";
+      if (pb.parentElement) {
+        pb.parentElement.setAttribute("aria-valuenow", String(pct));
+      }
+    }
+    const pt = document.getElementById("pt");
+    if (pt) {
+      const tmpl = i18n.progress_template ?? "{done} of {total} tasks completed ({pct}%)";
+      pt.textContent = tmpl.replace("{done}", String(done)).replace("{total}", String(total)).replace("{pct}", String(pct));
+    }
+    const finishBox = document.getElementById("finish-box");
+    const finishIcon = document.getElementById("finish-icon");
+    const finishTitle = document.getElementById("finish-title");
+    const rawPdf = document.getElementById("btn-pdf");
+    const btnPdf = rawPdf instanceof HTMLButtonElement ? rawPdf : null;
+    if (finishBox) {
+      finishBox.classList.remove("completed", "pending", "no-tasks");
+      if (total === 0) {
+        finishBox.classList.add("no-tasks");
+        if (btnPdf) btnPdf.disabled = false;
+      } else if (done < total) {
+        finishBox.classList.add("pending");
+        if (finishIcon) finishIcon.innerHTML = "&#x29D6;";
+        if (finishTitle) finishTitle.textContent = i18n.setup_in_progress ?? "Setup in Progress";
+        if (btnPdf) btnPdf.disabled = true;
+      } else {
+        finishBox.classList.add("completed");
+        if (finishIcon) finishIcon.innerHTML = "&#x2714;";
+        if (finishTitle) finishTitle.textContent = i18n.setup_completed ?? "Setup Completed";
+        if (btnPdf) btnPdf.disabled = false;
+      }
+    }
+  }
+  if (typeof window !== "undefined") {
+    document.addEventListener("DOMContentLoaded", () => {
+      updateProgress();
+    });
+  }
+})();
+
+"use strict";
+(() => {
+  // src/features/images.ts
+  function handleLightboxKeydown(e) {
+    if (e.key === "Escape") {
+      closeLightbox();
+    }
+  }
+  function openLightbox(imgSrc) {
+    const rawLbImg = document.getElementById("lb-img");
+    const lbImg = rawLbImg instanceof HTMLImageElement ? rawLbImg : null;
+    const lightbox = document.getElementById("lightbox");
+    if (lbImg && lightbox) {
+      lbImg.src = imgSrc;
+      lightbox.classList.add("active");
+      document.addEventListener("keydown", handleLightboxKeydown);
+    }
+  }
+  function closeLightbox() {
+    const lightbox = document.getElementById("lightbox");
+    if (lightbox) {
+      lightbox.classList.remove("active");
+    }
+    document.removeEventListener("keydown", handleLightboxKeydown);
+  }
+  if (typeof window !== "undefined") {
+    document.addEventListener("DOMContentLoaded", () => {
+      document.addEventListener("click", (e) => {
+        const target = e.target;
+        if (target instanceof Element) {
+          const img = target.closest(".doc-body img");
+          if (img) {
+            e.stopPropagation();
+            openLightbox(img.src);
+          }
+        }
+      });
+    });
+  }
+})();
+
+"use strict";
+(() => {
+  // src/features/toc.ts
+  function generateTocItems() {
+    const headings = document.querySelectorAll(".sh");
+    const items = [];
+    headings.forEach((sh, index) => {
+      const section = sh.closest(".section");
+      const id = section?.id || "section_" + String(index + 1);
+      const text = sh.textContent?.trim() ?? "Section " + String(index + 1);
+      const isH1 = sh.classList.contains("sh-h1");
+      items.push({
+        id,
+        text,
+        level: isH1 ? 1 : 2
+      });
+    });
+    return items;
+  }
+  function highlightActiveTocItem(activeId) {
+    const tocLinks = document.querySelectorAll(".toc-link");
+    tocLinks.forEach((link) => {
+      const isMatch = link.getAttribute("href") === "#" + activeId;
+      link.classList.toggle("active", isMatch);
+    });
+  }
+})();
+
 
 </script>
 </body>

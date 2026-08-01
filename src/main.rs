@@ -47,7 +47,7 @@ fn main() -> Result<()> {
     let language_code = frontmatter.language.as_deref().unwrap_or("en");
     let locale = Locale::from_lang_code(language_code);
 
-    let html_content = converter::convert_markdown_to_html_with_options(
+    let (html_content, features) = converter::convert_markdown_to_html_with_options(
         markdown_body,
         &locale,
         frontmatter.number_sections,
@@ -63,7 +63,7 @@ fn main() -> Result<()> {
 
     let d2f_id = doc2flow::id::generate_d2f_id(&frontmatter)?;
     let rendered_html =
-        template::render(&frontmatter, &locale, &html_content, &d2f_id, Some(&logo_html))?;
+        template::render(&frontmatter, &locale, &html_content, &d2f_id, Some(&logo_html), &features)?;
 
     let final_html = doc2flow::image::embed_images_as_base64_with_source(
         &rendered_html,

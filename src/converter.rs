@@ -128,6 +128,14 @@ pub struct Frontmatter {
     pub number_sections: bool,
 }
 
+/// Detected interactive features present in a Markdown document.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct DocumentFeatures {
+    pub has_tasks: bool,
+    pub has_images: bool,
+    pub has_toc: bool,
+}
+
 impl Frontmatter {
     /// Creates a new `Frontmatter` instance with the required `company` field and default optional values.
     pub fn new(company: impl Into<String>) -> Self {
@@ -427,7 +435,7 @@ fn strip_paragraph_tags(input: &str) -> &str {
 }
 
 /// Converts Markdown body into interactive HTML following doc2flow structure using default English locale.
-pub fn convert_markdown_to_html(markdown_body: &str) -> Result<String> {
+pub fn convert_markdown_to_html(markdown_body: &str) -> Result<(String, DocumentFeatures)> {
     convert_markdown_to_html_with_locale(markdown_body, &Locale::default())
 }
 
@@ -435,7 +443,7 @@ pub fn convert_markdown_to_html(markdown_body: &str) -> Result<String> {
 pub fn convert_markdown_to_html_with_locale(
     markdown_body: &str,
     locale: &Locale,
-) -> Result<String> {
+) -> Result<(String, DocumentFeatures)> {
     convert_markdown_to_html_with_options(markdown_body, locale, false)
 }
 
@@ -444,7 +452,7 @@ pub fn convert_markdown_to_html_with_options(
     markdown_body: &str,
     locale: &Locale,
     number_sections: bool,
-) -> Result<String> {
+) -> Result<(String, DocumentFeatures)> {
     let mut options = Options::empty();
     options.insert(Options::ENABLE_TASKLISTS);
     options.insert(Options::ENABLE_STRIKETHROUGH);
@@ -454,6 +462,7 @@ pub fn convert_markdown_to_html_with_options(
     let events: Vec<Event> = CommentFilter::new(parser).collect();
 
     let mut out = String::with_capacity(markdown_body.len() * 2);
+    let mut features = DocumentFeatures::default();
     let mut section_count = 0usize;
     let mut h1_counter = 0u32;
     let mut h2_counter = 0u32;
@@ -471,6 +480,7 @@ pub fn convert_markdown_to_html_with_options(
                 level: level @ (HeadingLevel::H1 | HeadingLevel::H2),
                 ..
             }) => {
+                features.has_toc = true;
                 let target_level = *level;
                 if in_section {
                     template::render_section_close(&mut out);
@@ -666,6 +676,7 @@ pub fn convert_markdown_to_html_with_options(
                 let sec_num = if section_count == 0 { 1 } else { section_count };
 
                 if is_task {
+                    features.has_tasks = true;
                     global_cb_count += 1;
                     template::render_task_item(
                         &mut out,
@@ -728,6 +739,7 @@ pub fn convert_markdown_to_html_with_options(
                 if !clean_content.is_empty() {
                     let is_image_block = clean_content.starts_with("<img");
                     if is_image_block {
+                        features.has_images = true;
                         template::render_image_item(&mut out, clean_content);
                     } else {
                         global_txt_count += 1;
@@ -769,7 +781,7 @@ pub fn convert_markdown_to_html_with_options(
         template::render_section_close(&mut out);
     }
 
-    Ok(out)
+    Ok((out, features))
 }
 
 fn is_section_empty(events: &[Event]) -> bool {
@@ -902,7 +914,7 @@ mod tests {
     #[test]
     fn test_text_paragraph_conversion() {
         let input = "## Section 1\n\nThis is a standard text paragraph.\n";
-        let html = convert_markdown_to_html(input).expect("conversion failed");
+        let (html, _features) = convert_markdown_to_html(input).expect("conversion failed");
         assert!(html.contains("<div class=\"check-item text-item\" id=\"txt_s1_1\">"));
         assert!(
             html.contains("<span class=\"text-content\">This is a standard text paragraph.</span>")
@@ -913,14 +925,14 @@ mod tests {
     #[test]
     fn test_item_comment_icon_presence() {
         let input = "## Section 1\n\n- [ ] Task item\n- Simple list item\n\nParagraph text\n";
-        let html = convert_markdown_to_html(input).expect("conversion failed");
+        let (html, _features) = convert_markdown_to_html(input).expect("conversion failed");
         assert_eq!(html.matches("class=\"item-comment-icon\"").count(), 3);
     }
 
     #[test]
     fn test_ordered_list_conversion() {
         let input = "## Section 1\n\n1. First step\n2. Second step\n3. Third step\n";
-        let html = convert_markdown_to_html(input).expect("conversion failed");
+        let (html, _features) = convert_markdown_to_html(input).expect("conversion failed");
 
         assert!(html.contains("<div class=\"check-item simple-item\" id=\"item_s1_1\">"));
         assert!(html.contains("<span class=\"list-bullet\">1.</span>"));
@@ -934,14 +946,14 @@ mod tests {
     #[test]
     fn test_horizontal_rule_conversion() {
         let input = "## Section 1\n\nText before divider\n\n---\n\nText after divider\n";
-        let html = convert_markdown_to_html(input).expect("conversion failed");
+        let (html, _features) = convert_markdown_to_html(input).expect("conversion failed");
         assert!(html.contains("<hr />") || html.contains("<hr>"));
     }
 
     #[test]
     fn test_html_comments_ignored() {
         let input = "## Section 1\n\n<!-- Secret internal comment -->\n\nThis is visible content.\n<!-- Another hidden comment -->\n";
-        let html = convert_markdown_to_html(input).expect("conversion failed");
+        let (html, _features) = convert_markdown_to_html(input).expect("conversion failed");
         assert!(!html.contains("Secret internal comment"));
         assert!(!html.contains("Another hidden comment"));
         assert!(html.contains("This is visible content."));
@@ -969,7 +981,7 @@ mod tests {
      - Deep detail X
      - Deep detail Y
 "#;
-        let html = convert_markdown_to_html(input).expect("conversion failed");
+        let (html, _features) = convert_markdown_to_html(input).expect("conversion failed");
 
         assert!(html.contains(r#"<div class="check-item simple-item" id="item_s1_1">"#));
         assert!(html.contains(r#"<span class="list-bullet">&bull;</span>"#));
@@ -995,7 +1007,7 @@ mod tests {
     #[test]
     fn test_multiline_html_comments_ignored() {
         let input = "## Section 1\n\n<!--\nMultline comment block\nLine 2\n-->\n\nThis is visible content.\n";
-        let html = convert_markdown_to_html(input).expect("conversion failed");
+        let (html, _features) = convert_markdown_to_html(input).expect("conversion failed");
         assert!(!html.contains("Multline comment block"));
         assert!(!html.contains("Line 2"));
         assert!(html.contains("This is visible content."));
@@ -1060,7 +1072,7 @@ mod tests {
     #[test]
     fn test_level_1_heading_conversion() {
         let input = "# Top Level Header\n\n- [ ] Task in H1\n\n## Sub Section\n\n- [x] Task in H2";
-        let html = convert_markdown_to_html(input).expect("conversion failed");
+        let (html, _features) = convert_markdown_to_html(input).expect("conversion failed");
 
         assert!(html.contains(r#"<!-- S1 -->"#));
         assert!(html.contains(r#"<section class="section d2f-section" id="s1" data-has-checklist="true">"#));
@@ -1077,7 +1089,7 @@ mod tests {
     #[test]
     fn test_section_metadata_attributes() {
         let input = "# Checklist Sec\n\n- [ ] Item 1\n\n## Callout Sec\n\n>! Important note";
-        let html = convert_markdown_to_html(input).expect("conversion failed");
+        let (html, _features) = convert_markdown_to_html(input).expect("conversion failed");
 
         assert!(html.contains(r#"<section class="section d2f-section" id="s1" data-has-checklist="true">"#));
         assert!(html.contains(r#"<section class="section d2f-section" id="s2" data-callout-type="important">"#));
@@ -1086,7 +1098,7 @@ mod tests {
     #[test]
     fn test_empty_heading_conversion() {
         let input = "# Empty H1 Header\n\n## Empty H2 Header\n\n## Non Empty H2\n\nSome paragraph content";
-        let html = convert_markdown_to_html(input).expect("conversion failed");
+        let (html, _features) = convert_markdown_to_html(input).expect("conversion failed");
 
         assert!(html.contains(r#"<h2 class="sh sh-h1 no-toggle"><span>Empty H1 Header</span>"#));
         assert!(html.contains(r#"<h2 class="sh no-toggle"><span>Empty H2 Header</span>"#));
@@ -1096,7 +1108,7 @@ mod tests {
     #[test]
     fn test_no_inline_onclick_on_section_headers() {
         let input = "# H1 Heading\n\nSome content\n\n## H2 Heading\n\nMore content";
-        let html = convert_markdown_to_html(input).expect("conversion failed");
+        let (html, _features) = convert_markdown_to_html(input).expect("conversion failed");
 
         assert!(!html.contains("onclick="));
     }
@@ -1104,7 +1116,7 @@ mod tests {
     #[test]
     fn test_h4_to_h6_treated_as_subheading() {
         let input = "## Section 1\n\n### Sub 3\n\n#### Sub 4\n\n##### Sub 5\n\n###### Sub 6";
-        let html = convert_markdown_to_html(input).expect("conversion failed");
+        let (html, _features) = convert_markdown_to_html(input).expect("conversion failed");
 
         assert!(html.contains(r#"<h3 class="subh">Sub 3</h3>"#));
         assert!(html.contains(r#"<h3 class="subh">Sub 4</h3>"#));
@@ -1198,7 +1210,7 @@ mod tests {
       1. Level 3 Item 1
          1. Level 4 Item 1
 "#;
-        let html = convert_markdown_to_html(input).expect("conversion failed");
+        let (html, _features) = convert_markdown_to_html(input).expect("conversion failed");
 
         assert!(html.contains(r#"<span class="list-bullet">1.</span>"#));
         assert!(html.contains(r#"<span class="list-bullet">a.</span>"#));
@@ -1209,7 +1221,7 @@ mod tests {
     #[test]
     fn test_html_escaping_in_code_and_headings() {
         let input = "## Header `<script>alert(1)</script>` & More\n\n```html\n<div id=\"app\">&amp;</div>\n```";
-        let html = convert_markdown_to_html(input).expect("conversion failed");
+        let (html, _features) = convert_markdown_to_html(input).expect("conversion failed");
 
         assert!(html.contains("&lt;script&gt;alert(1)&lt;/script&gt;"));
         assert!(html.contains("&amp; More"));
@@ -1219,7 +1231,7 @@ mod tests {
     #[test]
     fn test_loose_task_list_conversion() {
         let input = "## Section 1\n\n- [ ] Task 1\n\n- [x] Task 2\n\n- [ ] Task 3\n";
-        let html = convert_markdown_to_html(input).expect("conversion failed");
+        let (html, _features) = convert_markdown_to_html(input).expect("conversion failed");
 
         assert!(html.contains(r#"<div class="check-item" id="wrap-cb_s1_1">"#));
         assert!(html.contains(r#"<input type="checkbox" id="cb_s1_1">"#));
@@ -1275,7 +1287,7 @@ mod tests {
 - [ ] Task 2.1.1
 "#;
         let locale = Locale::default();
-        let html_enabled = convert_markdown_to_html_with_options(input, &locale, true)
+        let (html_enabled, _features) = convert_markdown_to_html_with_options(input, &locale, true)
             .expect("conversion failed");
 
         assert!(html_enabled.contains("<span>1. First H1</span>"));
@@ -1284,7 +1296,7 @@ mod tests {
         assert!(html_enabled.contains("<span>2. Second H1</span>"));
         assert!(html_enabled.contains("<span>2.1 Third Sub H2</span>"));
 
-        let html_disabled = convert_markdown_to_html_with_options(input, &locale, false)
+        let (html_disabled, _features) = convert_markdown_to_html_with_options(input, &locale, false)
             .expect("conversion failed");
 
         assert!(html_disabled.contains("<span>First H1</span>"));

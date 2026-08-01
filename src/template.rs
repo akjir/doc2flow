@@ -1,9 +1,42 @@
 use crate::components;
-use crate::converter::Frontmatter;
+use crate::converter::{DocumentFeatures, Frontmatter};
 use crate::error::{Doc2FlowError, Result};
 use crate::i18n::{Locale, validate_locale_coverage};
 use std::collections::HashMap;
 use std::fmt::Write;
+
+/// Embedded core JavaScript bundle.
+pub static SCRIPT_CORE: &str = include_str!("../web/dist/script-core.js");
+
+/// Embedded task list and checklist JavaScript feature bundle.
+pub static SCRIPT_TASKS: &str = include_str!("../web/dist/script-tasks.js");
+
+/// Embedded image lightbox JavaScript feature bundle.
+pub static SCRIPT_IMAGES: &str = include_str!("../web/dist/script-images.js");
+
+/// Embedded Table of Contents JavaScript feature bundle.
+pub static SCRIPT_TOC: &str = include_str!("../web/dist/script-toc.js");
+
+/// Assembles active JavaScript feature bundles into the provided output string based on detected document features.
+pub fn render_scripts(out: &mut String, features: &DocumentFeatures) {
+    out.push_str(SCRIPT_CORE);
+    out.push_str("\n");
+
+    if features.has_tasks {
+        out.push_str(SCRIPT_TASKS);
+        out.push_str("\n");
+    }
+
+    if features.has_images {
+        out.push_str(SCRIPT_IMAGES);
+        out.push_str("\n");
+    }
+
+    if features.has_toc {
+        out.push_str(SCRIPT_TOC);
+        out.push_str("\n");
+    }
+}
 
 /// Default embedded SVG header logo.
 pub const DEFAULT_LOGO_SVG: &str = components::DEFAULT_LOGO_SVG;
@@ -245,10 +278,13 @@ pub fn render(
     html_content: &str,
     doc_id: &str,
     logo_html: Option<&str>,
+    features: &DocumentFeatures,
 ) -> Result<String> {
     let base_html = include_str!("../templates/base.html");
     let style_css = include_str!("../templates/style.css");
-    let script_js = include_str!("../templates/script.js");
+
+    let mut script_js = String::with_capacity(32768);
+    render_scripts(&mut script_js, features);
 
     validate_locale_coverage(base_html, locale);
 
@@ -278,7 +314,7 @@ pub fn render(
     vars.insert("DATE", frontmatter.date.as_deref().unwrap_or(""));
     vars.insert("I18N_JSON", i18n_json.as_str());
     vars.insert("CSS", style_css);
-    vars.insert("JS", script_js);
+    vars.insert("JS", script_js.as_str());
     vars.insert("CONTENT", html_content);
     vars.insert("DOC_ID", doc_id);
     vars.insert("LOGO", logo);
@@ -354,8 +390,9 @@ mod tests {
         let locale = Locale::from_lang_code("de");
         let body = "<p>Body Content</p>";
         let doc_id = "test_id_99";
+        let features = DocumentFeatures::default();
 
-        let html = render(&fm, &locale, body, doc_id, None).expect("Render failed");
+        let html = render(&fm, &locale, body, doc_id, None, &features).expect("Render failed");
         assert!(html.contains("lang=\"de\""));
         assert!(html.contains("Doc Title"));
         assert!(html.contains("<p>Body Content</p>"));
@@ -374,8 +411,9 @@ mod tests {
         fm.title = Some("Doc Title".into());
         let locale = Locale::from_lang_code("en");
         let custom_logo = "<img src=\"data:image/png;base64,1234\" alt=\"Logo\">";
+        let features = DocumentFeatures::default();
 
-        let html = render(&fm, &locale, "<p>Content</p>", "doc_1", Some(custom_logo))
+        let html = render(&fm, &locale, "<p>Content</p>", "doc_1", Some(custom_logo), &features)
             .expect("Render failed");
 
         assert!(html.contains("<img src=\"data:image/png;base64,1234\" alt=\"Logo\">"));
@@ -421,7 +459,23 @@ mod tests {
     fn test_render_metadata_injection() {
         let fm = Frontmatter::new("Test Corp");
         let locale = Locale::from_lang_code("en");
-        let html = render(&fm, &locale, "<p>Content</p>", "doc_meta", None).expect("Render failed");
+        let features = DocumentFeatures::default();
+        let html = render(&fm, &locale, "<p>Content</p>", "doc_meta", None, &features).expect("Render failed");
+
+    #[test]
+    fn test_render_feature_assembly() {
+        let mut features = DocumentFeatures::default();
+        features.has_tasks = true;
+        features.has_images = false;
+        features.has_toc = true;
+
+        let mut script_out = String::new();
+        render_scripts(&mut script_out, &features);
+
+        assert!(script_out.contains("d2f_state_")); // core script indicator
+        assert!(script_out.contains("updateProgress")); // tasks feature indicator
+        assert!(!script_out.contains("openLightbox")); // images feature excluded
+    }
 
         let app_version_raw = APP_VERSION.strip_prefix('v').unwrap_or(APP_VERSION);
 

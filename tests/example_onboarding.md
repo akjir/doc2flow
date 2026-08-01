@@ -4,7 +4,8 @@ subtitle: "Preparation Notebook & M365-User | Customer: NyriSys"
 company: "NyriSys Inc"
 contact: ""
 agent: ""
-date: ""
+date: "2026-08-01"
+version: "1.0.0"
 ---
 
 ## 1 | Goods Receipt & Visual Inspection
