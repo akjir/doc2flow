@@ -118,6 +118,29 @@ async function copyCode(btn: HTMLElement | null): Promise<void> {
     fallbackCopyText(text, btn);
 }
 
+const printRawCodeMap = new Map<HTMLElement, string>();
+
+function preparePrintVariables(): void {
+    const codeElements = document.querySelectorAll<HTMLElement>('.code-block code');
+    codeElements.forEach((codeEl) => {
+        const rawText = codeEl.textContent ?? '';
+        printRawCodeMap.set(codeEl, rawText);
+        const replacedText = replaceCodeVariables(rawText);
+        if (replacedText !== rawText) {
+            codeEl.textContent = replacedText;
+        }
+    });
+}
+
+function restorePrintVariables(): void {
+    printRawCodeMap.forEach((rawText, codeEl) => {
+        codeEl.textContent = rawText;
+    });
+    printRawCodeMap.clear();
+}
+
 if (typeof window !== 'undefined') {
     window.copyCode = copyCode;
+    window.addEventListener('beforeprint', preparePrintVariables);
+    window.addEventListener('afterprint', restorePrintVariables);
 }

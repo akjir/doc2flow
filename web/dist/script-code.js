@@ -98,7 +98,27 @@
     }
     fallbackCopyText(text, btn);
   }
+  var printRawCodeMap = /* @__PURE__ */ new Map();
+  function preparePrintVariables() {
+    const codeElements = document.querySelectorAll(".code-block code");
+    codeElements.forEach((codeEl) => {
+      const rawText = codeEl.textContent ?? "";
+      printRawCodeMap.set(codeEl, rawText);
+      const replacedText = replaceCodeVariables(rawText);
+      if (replacedText !== rawText) {
+        codeEl.textContent = replacedText;
+      }
+    });
+  }
+  function restorePrintVariables() {
+    printRawCodeMap.forEach((rawText, codeEl) => {
+      codeEl.textContent = rawText;
+    });
+    printRawCodeMap.clear();
+  }
   if (typeof window !== "undefined") {
     window.copyCode = copyCode;
+    window.addEventListener("beforeprint", preparePrintVariables);
+    window.addEventListener("afterprint", restorePrintVariables);
   }
 })();
