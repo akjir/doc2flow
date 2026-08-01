@@ -24,5 +24,8 @@
   "callout_caution": "Achtung",
   "comment_placeholder": "Kommentar hinzufügen...",
   "search_placeholder": "Suchen... (Ctrl+K)",
-  "sections_visible": "{visible} / {total} Abschnitte sichtbar"
+  "sections_visible": "{visible} / {total} Abschnitte sichtbar",
+  "var_table_title": "Variablen",
+  "var_table_variable": "Variable",
+  "var_table_value": "Wert"
 }

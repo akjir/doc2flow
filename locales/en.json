@@ -24,5 +24,8 @@
   "callout_caution": "Caution",
   "comment_placeholder": "Add a comment...",
   "search_placeholder": "Search... (Ctrl+K)",
-  "sections_visible": "{visible} / {total} sections visible"
+  "sections_visible": "{visible} / {total} sections visible",
+  "var_table_title": "Variables",
+  "var_table_variable": "Variable",
+  "var_table_value": "Value"
 }

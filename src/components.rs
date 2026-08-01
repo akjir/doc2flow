@@ -217,15 +217,33 @@ pub fn render_finish_box(
     }
 }
 
-/// Renders hidden variable dictionary data payload for code variable substitution.
+/// Renders an annotated `[Variables]` key-value table component into the output buffer.
 #[inline]
-pub fn render_variable_data(out: &mut impl Write, json_payload: &str) {
+pub fn render_variable_table(
+    out: &mut impl Write,
+    title: &str,
+    col_variable: &str,
+    col_value: &str,
+    rows: &[(String, String)],
+    json_payload: &str,
+) {
     let escaped_json = crate::converter::html_escape(json_payload);
+    let escaped_title = crate::converter::html_escape(title);
+    let escaped_col_var = crate::converter::html_escape(col_variable);
+    let escaped_col_val = crate::converter::html_escape(col_value);
+
     let _ = writeln!(
         out,
-        "<div class=\"item-table-var\" data-variables=\"{escaped_json}\" style=\"display:none;\"></div>"
+        "<div class=\"item-table-var-wrap\"><div class=\"item-table-var-header\">{escaped_title}</div><table class=\"item-table-var\" data-variables=\"{escaped_json}\"><thead><tr><th>{escaped_col_var}</th><th>{escaped_col_val}</th></tr></thead><tbody>"
     );
+    for (k, v) in rows {
+        let escaped_k = crate::converter::html_escape(k);
+        let escaped_v = crate::converter::html_escape(v);
+        let _ = writeln!(out, "<tr><td>{escaped_k}</td><td>{escaped_v}</td></tr>");
+    }
+    let _ = out.write_str("</tbody></table></div>\n");
 }
+
 
 #[cfg(test)]
 mod tests {
@@ -368,12 +386,15 @@ mod tests {
     }
 
     #[test]
-    fn test_render_variable_data() {
+    fn test_render_variable_table() {
         let mut buf = String::new();
+        let rows = vec![("BLOCK".to_string(), "prod-server".to_string())];
         let json = "{\"BLOCK\":\"prod-server\"}";
-        render_variable_data(&mut buf, json);
-        assert!(buf.contains("class=\"item-table-var\""));
-        assert!(buf.contains("data-variables=\"{&quot;BLOCK&quot;:&quot;prod-server&quot;}\""));
-        assert!(buf.contains("style=\"display:none;\""));
+        render_variable_table(&mut buf, "Variables", "Variable", "Value", &rows, json);
+        assert!(buf.contains("<div class=\"item-table-var-wrap\">"));
+        assert!(buf.contains("<div class=\"item-table-var-header\">Variables</div>"));
+        assert!(buf.contains("<th>Variable</th><th>Value</th>"));
+        assert!(buf.contains("<td>BLOCK</td><td>prod-server</td>"));
     }
 }
+

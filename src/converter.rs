@@ -468,8 +468,150 @@ pub fn convert_markdown_to_html_with_options(
     let parser = MarkdownParser::new_ext(markdown_body, options);
     let events: Vec<Event> = CommentFilter::new(parser).collect();
 
-    let mut out = String::with_capacity(markdown_body.len() * 2);
     let mut features = DocumentFeatures::default();
+    let mut var_table_html = String::new();
+    let mut var_event_ranges: Vec<(usize, usize)> = Vec::new();
+
+    let mut scan_i = 0;
+    while scan_i < events.len() {
+        if let Event::Start(Tag::Paragraph) = &events[scan_i] {
+            let p_start = scan_i;
+            let mut p_end = p_start;
+            let mut p_depth = 1;
+            scan_i += 1;
+            while scan_i < events.len() {
+                match &events[scan_i] {
+                    Event::Start(Tag::Paragraph) => p_depth += 1,
+                    Event::End(TagEnd::Paragraph) => {
+                        p_depth -= 1;
+                        if p_depth == 0 {
+                            p_end = scan_i;
+                            break;
+                        }
+                    }
+                    _ => {}
+                }
+                scan_i += 1;
+            }
+
+            let mut p_html = String::new();
+            html::push_html(&mut p_html, events[p_start + 1..p_end].iter().cloned());
+            let clean_p = strip_paragraph_tags(p_html.trim()).trim();
+
+            if clean_p.eq_ignore_ascii_case("[Variables]") {
+                let mut next_t = p_end + 1;
+                while next_t < events.len() {
+                    match &events[next_t] {
+                        Event::Text(t) if t.trim().is_empty() => next_t += 1,
+                        Event::Html(_) | Event::InlineHtml(_) => next_t += 1,
+                        _ => break,
+                    }
+                }
+
+                if next_t < events.len() && matches!(&events[next_t], Event::Start(Tag::Table(_))) {
+                    let table_start = next_t;
+                    let mut table_end = table_start;
+                    let mut table_depth = 1;
+                    next_t += 1;
+                    while next_t < events.len() {
+                        match &events[next_t] {
+                            Event::Start(Tag::Table(_)) => table_depth += 1,
+                            Event::End(TagEnd::Table) => {
+                                table_depth -= 1;
+                                if table_depth == 0 {
+                                    table_end = next_t;
+                                    break;
+                                }
+                            }
+                            _ => {}
+                        }
+                        next_t += 1;
+                    }
+
+                    var_event_ranges.push((p_start, table_end));
+
+                    let mut table_rows: Vec<(String, String)> = Vec::new();
+                    let mut current_row: Vec<String> = Vec::new();
+                    let mut current_cell = String::new();
+                    let mut in_cell = false;
+
+                    for ev in &events[table_start..=table_end] {
+                        match ev {
+                            Event::Start(Tag::TableHead) => {}
+                            Event::End(TagEnd::TableHead) => {
+                                current_row.clear();
+                            }
+                            Event::Start(Tag::TableRow) => {
+                                current_row.clear();
+                            }
+                            Event::End(TagEnd::TableRow) => {
+                                if current_row.len() >= 2 {
+                                    table_rows.push((current_row[0].clone(), current_row[1].clone()));
+                                } else if current_row.len() == 1 {
+                                    table_rows.push((current_row[0].clone(), String::new()));
+                                }
+                                current_row.clear();
+                            }
+                            Event::Start(Tag::TableCell) => {
+                                in_cell = true;
+                                current_cell.clear();
+                            }
+                            Event::End(TagEnd::TableCell) => {
+                                in_cell = false;
+                                current_row.push(current_cell.trim().to_string());
+                                current_cell.clear();
+                            }
+                            Event::Text(t) if in_cell => {
+                                current_cell.push_str(t);
+                            }
+                            Event::Code(c) if in_cell => {
+                                current_cell.push_str(c);
+                            }
+                            _ => {}
+                        }
+                    }
+
+                    let mut map = std::collections::BTreeMap::new();
+                    for (k, v) in &table_rows {
+                        if !k.is_empty() {
+                            map.insert(k.as_str(), v.as_str());
+                        }
+                    }
+
+                    let json_payload =
+                        serde_json::to_string(&map).unwrap_or_else(|_| "{}".to_string());
+
+                    let title_term =
+                        locale.get_ignore_ascii_case("var_table_title").unwrap_or("Variables");
+                    let var_term = locale
+                        .get_ignore_ascii_case("var_table_variable")
+                        .unwrap_or("Variable");
+                    let val_term =
+                        locale.get_ignore_ascii_case("var_table_value").unwrap_or("Value");
+
+                    components::render_variable_table(
+                        &mut var_table_html,
+                        title_term,
+                        var_term,
+                        val_term,
+                        &table_rows,
+                        &json_payload,
+                    );
+
+                    scan_i = table_end + 1;
+                    continue;
+                }
+            }
+        }
+        scan_i += 1;
+    }
+
+    if !var_table_html.is_empty() {
+        features.has_code = true;
+    }
+
+    let mut var_table_emitted = false;
+    let mut out = String::with_capacity(markdown_body.len() * 2);
     let mut section_count = 0usize;
     let mut h1_counter = 0u32;
     let mut h2_counter = 0u32;
@@ -481,6 +623,11 @@ pub fn convert_markdown_to_html_with_options(
 
     let mut idx = 0;
     while idx < events.len() {
+        if let Some(&(_, end_idx)) = var_event_ranges.iter().find(|(s, e)| idx >= *s && idx <= *e) {
+            idx = end_idx + 1;
+            continue;
+        }
+
         match &events[idx] {
             // Level 1 (# Section) and Level 2 (## Section) Headings
             Event::Start(Tag::Heading {
@@ -493,6 +640,11 @@ pub fn convert_markdown_to_html_with_options(
                 }
                 section_count += 1;
                 in_section = true;
+
+                if !var_table_emitted && !var_table_html.is_empty() {
+                    out.push_str(&var_table_html);
+                    var_table_emitted = true;
+                }
 
                 let start_idx = idx + 1;
                 idx += 1;
@@ -742,100 +894,7 @@ pub fn convert_markdown_to_html_with_options(
                 let trimmed = para_html.trim();
                 let clean_content = strip_paragraph_tags(trimmed).trim();
 
-                // Look ahead for an annotated [Variables] table
-                let is_var_tag = clean_content.eq_ignore_ascii_case("[Variables]");
-                let mut next_i = idx + 1;
-                while next_i < events.len() {
-                    match &events[next_i] {
-                        Event::Text(t) if t.trim().is_empty() => next_i += 1,
-                        Event::Html(_) | Event::InlineHtml(_) => next_i += 1,
-                        _ => break,
-                    }
-                }
-
-                let is_var_table = is_var_tag
-                    && next_i < events.len()
-                    && matches!(&events[next_i], Event::Start(Tag::Table(_)));
-
-                if is_var_table {
-                    features.has_code = true;
-                    let table_start = next_i;
-                    let mut table_end = table_start;
-                    let mut table_depth = 1;
-                    next_i += 1;
-                    while next_i < events.len() {
-                        match &events[next_i] {
-                            Event::Start(Tag::Table(_)) => table_depth += 1,
-                            Event::End(TagEnd::Table) => {
-                                table_depth -= 1;
-                                if table_depth == 0 {
-                                    table_end = next_i;
-                                    break;
-                                }
-                            }
-                            _ => {}
-                        }
-                        next_i += 1;
-                    }
-
-                    let mut table_rows: Vec<(String, String)> = Vec::new();
-                    let mut current_row: Vec<String> = Vec::new();
-                    let mut current_cell = String::new();
-                    let mut in_cell = false;
-
-                    for ev in &events[table_start..=table_end] {
-                        match ev {
-                            Event::Start(Tag::TableHead) => {}
-                            Event::End(TagEnd::TableHead) => {
-                                current_row.clear();
-                            }
-                            Event::Start(Tag::TableRow) => {
-                                current_row.clear();
-                            }
-                            Event::End(TagEnd::TableRow) => {
-                                if current_row.len() >= 2 {
-                                    table_rows.push((
-                                        current_row[0].clone(),
-                                        current_row[1].clone(),
-                                    ));
-                                } else if current_row.len() == 1 {
-                                    table_rows.push((current_row[0].clone(), String::new()));
-                                }
-                                current_row.clear();
-                            }
-                            Event::Start(Tag::TableCell) => {
-                                in_cell = true;
-                                current_cell.clear();
-                            }
-                            Event::End(TagEnd::TableCell) => {
-                                in_cell = false;
-                                current_row.push(current_cell.trim().to_string());
-                                current_cell.clear();
-                            }
-                            Event::Text(t) if in_cell => {
-                                current_cell.push_str(t);
-                            }
-                            Event::Code(c) if in_cell => {
-                                current_cell.push_str(c);
-                            }
-                            _ => {}
-                        }
-                    }
-
-                    let mut map = std::collections::BTreeMap::new();
-                    for (k, v) in &table_rows {
-                        if !k.is_empty() {
-                            map.insert(k.as_str(), v.as_str());
-                        }
-                    }
-
-                    let json_payload =
-                        serde_json::to_string(&map).unwrap_or_else(|_| "{}".to_string());
-
-                    components::render_variable_data(&mut out, &json_payload);
-
-                    idx = table_end;
-                } else if !clean_content.is_empty() {
+                if !clean_content.is_empty() {
                     let is_image_block = clean_content.starts_with("<img");
                     if is_image_block {
                         features.has_images = true;
@@ -879,6 +938,10 @@ pub fn convert_markdown_to_html_with_options(
 
     if in_section {
         template::render_section_close(&mut out);
+    }
+
+    if !var_table_emitted && !var_table_html.is_empty() {
+        out.insert_str(0, &var_table_html);
     }
 
     Ok((out, features))
@@ -1423,7 +1486,7 @@ mod tests {
 
     #[test]
     fn test_code_variables_table_conversion() {
-        let input = r#"## System Setup
+        let input = r#"# System Setup
 
 [Variables]
 | Variable | Value |
@@ -1438,11 +1501,14 @@ curl https://{{BLOCK}}.local:{{PORT}}/api
         let (html, features) = convert_markdown_to_html(input).expect("conversion failed");
 
         assert!(features.has_code);
-        assert!(html.contains(r#"class="item-table-var""#));
-        assert!(html.contains(r#"style="display:none;""#));
+        assert!(html.contains(r#"<div class="item-table-var-wrap">"#));
+        assert!(html.contains(r#"<div class="item-table-var-header">Variables</div>"#));
+        assert!(html.contains(r#"<th>Variable</th><th>Value</th>"#));
         assert!(html.contains(r#"data-variables="{&quot;BLOCK&quot;:&quot;prod-server&quot;,&quot;PORT&quot;:&quot;8080&quot;}""#));
-        assert!(!html.contains("<td>BLOCK</td>"));
+        assert!(html.contains("<td>BLOCK</td><td>prod-server</td>"));
+        assert!(html.find("<div class=\"item-table-var-wrap\">").unwrap() < html.find("<!-- S1 -->").unwrap());
         assert!(html.contains("curl https://{{BLOCK}}.local:{{PORT}}/api"));
     }
 }
+
 
