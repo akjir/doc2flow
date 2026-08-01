@@ -55,7 +55,7 @@ function getOrCreateCommentBox(checkItem: HTMLElement | null, initialValue?: str
 
 function saveComments(): Record<string, unknown> {
     const comments: Record<string, string> = {};
-    document.querySelectorAll<HTMLElement>('.check-item').forEach((item, index) => {
+    document.querySelectorAll<HTMLElement>('.doc-item').forEach((item, index) => {
         const input = item.querySelector<HTMLTextAreaElement>('.item-comment-input');
         if (input && input.value.trim() !== '') {
             const key = item.id || ('item_' + String(index));
@@ -69,7 +69,7 @@ function loadComments(state: Record<string, unknown>): boolean {
     const comments = state['comments'];
     if (typeof comments === 'object' && comments !== null && !Array.isArray(comments)) {
         const commentsRecord = comments as Record<string, string>;
-        document.querySelectorAll<HTMLElement>('.check-item').forEach((item, index) => {
+        document.querySelectorAll<HTMLElement>('.doc-item').forEach((item, index) => {
             const key = item.id || ('item_' + String(index));
             const val = commentsRecord[key];
             if (val !== undefined && typeof val === 'string') {
@@ -101,9 +101,9 @@ if (typeof window !== 'undefined') {
 
         const commentBtn = target.closest<HTMLElement>('.item-comment-icon');
         if (commentBtn) {
-            const checkItem = commentBtn.closest<HTMLElement>('.check-item');
-            if (checkItem) {
-                const res = getOrCreateCommentBox(checkItem);
+            const docItem = commentBtn.closest<HTMLElement>('.doc-item');
+            if (docItem) {
+                const res = getOrCreateCommentBox(docItem);
                 if (res?.input) {
                     res.input.focus();
                 }

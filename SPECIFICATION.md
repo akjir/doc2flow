@@ -87,8 +87,9 @@ d2f.exe --version
   * **Level 2 Headings (`##`):** Collapsible section blocks (`.section`, `.sh`, `.sb`) with completion badges (`.sbadge`) and toggle indicators (`.stog`).
   * **Level 3–6 Headings (`###`–`######`):** Styled subheadings inside section bodies (`.subh`).
 * **Checklists & List Items:**
-  * **Task Items (`- [ ]`, `- [x]`):** Interactive checkboxes (`.check-item`) with dynamic completion tracking.
-  * **Bullet & Ordered Items (`-`, `1.`):** Formatted list entries (`.simple-item`) with nested list support.
+  * **Task Items (`- [ ]`, `- [x]`):** Interactive checkboxes (`.doc-item.check-item`) with dynamic completion tracking.
+  * **Bullet & Ordered Items (`-`, `1.`):** Formatted list entries (`.doc-item.simple-item`) with nested list support.
+  * **Text Paragraph Items:** Standalone text paragraph blocks (`.doc-item.text-item`).
 * **Code Blocks:** Fenced code blocks (` ```lang `) with language tags and 1-click **Copy Code** button.
 * **Image & Link Handling:**
   * Relative local images converted to embedded Base64 `data:image/...;base64,...` URIs.
@@ -152,7 +153,7 @@ doc2flow/
 │   └── en.json               # English static UI translations
 ├── styles/                   # Modular CSS stylesheets
 │   ├── code.css              # Code block and syntax highlight styles
-│   ├── core.css              # Core layout, typography, base styles, print and responsive
+│   ├── core.css              # Core layout, typography, base styles, document items, print and responsive
 │   ├── images.css            # Image and Lightbox feature styles
 │   ├── tasks.css             # Tasks, checklists, progress bar and finish box styles
 │   └── toc.css               # Table of Contents feature styles
@@ -169,6 +170,7 @@ doc2flow/
 │   │   │   ├── core.ts       # Central core module, bundle entry point, and reset handler registry
 │   │   │   ├── export.ts     # Document export operations (PDF export and HTML state download)
 │   │   │   ├── fields.ts     # Persistent inputs, date shortcuts and field synchronization
+│   │   │   ├── items.ts      # Interactive document text and list item click handlers and persistence
 │   │   │   ├── search.ts     # Search toolbar and text filtering
 │   │   │   ├── sections.ts   # Collapsible section toggling and state handlers
 │   │   │   ├── storage.ts    # localStorage persistence manager for save and load handlers

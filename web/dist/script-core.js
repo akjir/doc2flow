@@ -135,10 +135,6 @@
   }
 
   // src/core/sections.ts
-  var SECTION_SELECTOR = ".section";
-  function isRecord2(val) {
-    return typeof val === "object" && val !== null && !Array.isArray(val);
-  }
   function setSectionCollapseState(sec, isCollapsed) {
     const body = sec.querySelector(".sb");
     const sh = sec.querySelector(".sh");
@@ -187,7 +183,7 @@
   }
   function saveSections() {
     const sections = {};
-    document.querySelectorAll(SECTION_SELECTOR).forEach((sec, index) => {
+    document.querySelectorAll(".section").forEach((sec, index) => {
       const body = sec.querySelector(".sb");
       if (body) {
         const key = sec.id || "sec_" + String(index);
@@ -198,8 +194,8 @@
   }
   function loadSections(state) {
     const sectionsData = state["sections"];
-    if (isRecord2(sectionsData)) {
-      document.querySelectorAll(SECTION_SELECTOR).forEach((sec, index) => {
+    if (window.d2f.utils.isRecord(sectionsData)) {
+      document.querySelectorAll(".section").forEach((sec, index) => {
         const key = sec.id || "sec_" + String(index);
         const shouldCollapse = sectionsData[key];
         if (typeof shouldCollapse === "boolean") {
@@ -210,7 +206,7 @@
     return false;
   }
   function resetSections() {
-    document.querySelectorAll(SECTION_SELECTOR).forEach((sec) => {
+    document.querySelectorAll(".section").forEach((sec) => {
       setSectionCollapseState(sec, false);
     });
     document.querySelectorAll(".sb.collapsed").forEach((body) => {
@@ -293,7 +289,7 @@
   }
   function saveComments() {
     const comments = {};
-    document.querySelectorAll(".check-item").forEach((item, index) => {
+    document.querySelectorAll(".doc-item").forEach((item, index) => {
       const input = item.querySelector(".item-comment-input");
       if (input && input.value.trim() !== "") {
         const key = item.id || "item_" + String(index);
@@ -306,7 +302,7 @@
     const comments = state["comments"];
     if (typeof comments === "object" && comments !== null && !Array.isArray(comments)) {
       const commentsRecord = comments;
-      document.querySelectorAll(".check-item").forEach((item, index) => {
+      document.querySelectorAll(".doc-item").forEach((item, index) => {
         const key = item.id || "item_" + String(index);
         const val = commentsRecord[key];
         if (val !== void 0 && typeof val === "string") {
@@ -334,9 +330,9 @@
         return;
       const commentBtn = target.closest(".item-comment-icon");
       if (commentBtn) {
-        const checkItem = commentBtn.closest(".check-item");
-        if (checkItem) {
-          const res = getOrCreateCommentBox(checkItem);
+        const docItem = commentBtn.closest(".doc-item");
+        if (docItem) {
+          const res = getOrCreateCommentBox(docItem);
           if (res?.input) {
             res.input.focus();
           }
@@ -362,6 +358,56 @@
     };
     document.addEventListener("input", handleCommentInput);
     document.addEventListener("change", handleCommentInput);
+  }
+
+  // src/core/items.ts
+  function saveItems() {
+    const texts = {};
+    document.querySelectorAll(".doc-item.text-item, .doc-item.simple-item").forEach((item, index) => {
+      const key = item.id || "txt_" + String(index);
+      texts[key] = item.classList.contains("checked");
+    });
+    return { texts };
+  }
+  function loadItems(state) {
+    const textsData = state["texts"];
+    if (window.d2f.utils.isRecord(textsData)) {
+      document.querySelectorAll(".doc-item.text-item, .doc-item.simple-item").forEach((item, index) => {
+        const key = item.id || "txt_" + String(index);
+        const val = textsData[key];
+        if (typeof val === "boolean") {
+          item.classList.toggle("checked", val);
+        }
+      });
+    }
+    return false;
+  }
+  function resetItems() {
+    document.querySelectorAll(".doc-item.text-item, .doc-item.simple-item").forEach((item) => {
+      item.classList.remove("checked");
+    });
+  }
+  if (typeof window !== "undefined") {
+    document.addEventListener("DOMContentLoaded", () => {
+      window.d2f.core.registerResetHandler(resetItems);
+      window.d2f.storage.registerSaveHandler(saveItems);
+      window.d2f.storage.registerLoadHandler(loadItems);
+    });
+    document.addEventListener("click", (e) => {
+      const target = e.target;
+      if (!(target instanceof Element))
+        return;
+      const docItem = target.closest(".doc-item");
+      if (docItem) {
+        if (target.tagName === "A" || target.tagName === "IMG" || target.tagName === "INPUT" || target.closest(".item-comment-box") || target.closest(".item-comment-icon") || target.closest(".item-comment-del")) {
+          return;
+        }
+        if (docItem.classList.contains("text-item") || docItem.classList.contains("simple-item")) {
+          docItem.classList.toggle("checked");
+          window.d2f.storage.saveState();
+        }
+      }
+    });
   }
 
   // src/core/fields.ts

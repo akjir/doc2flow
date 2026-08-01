@@ -921,7 +921,7 @@ mod tests {
     fn test_text_paragraph_conversion() {
         let input = "## Section 1\n\nThis is a standard text paragraph.\n";
         let (html, _features) = convert_markdown_to_html(input).expect("conversion failed");
-        assert!(html.contains("<div class=\"check-item text-item\" id=\"txt_s1_1\">"));
+        assert!(html.contains("<div class=\"doc-item text-item\" id=\"txt_s1_1\">"));
         assert!(
             html.contains("<span class=\"text-content\">This is a standard text paragraph.</span>")
         );
@@ -940,7 +940,7 @@ mod tests {
         let input = "## Section 1\n\n1. First step\n2. Second step\n3. Third step\n";
         let (html, _features) = convert_markdown_to_html(input).expect("conversion failed");
 
-        assert!(html.contains("<div class=\"check-item simple-item\" id=\"item_s1_1\">"));
+        assert!(html.contains("<div class=\"doc-item simple-item\" id=\"item_s1_1\">"));
         assert!(html.contains("<span class=\"list-bullet\">1.</span>"));
         assert!(html.contains("<span class=\"check-label\">First step</span>"));
         assert!(html.contains("<span class=\"list-bullet\">2.</span>"));
@@ -963,7 +963,7 @@ mod tests {
         assert!(!html.contains("Secret internal comment"));
         assert!(!html.contains("Another hidden comment"));
         assert!(html.contains("This is visible content."));
-        assert_eq!(html.matches("class=\"check-item text-item\"").count(), 1);
+        assert_eq!(html.matches("class=\"doc-item text-item\"").count(), 1);
     }
 
     #[test]
@@ -989,23 +989,23 @@ mod tests {
 "#;
         let (html, _features) = convert_markdown_to_html(input).expect("conversion failed");
 
-        assert!(html.contains(r#"<div class="check-item simple-item" id="item_s1_1">"#));
+        assert!(html.contains(r#"<div class="doc-item simple-item" id="item_s1_1">"#));
         assert!(html.contains(r#"<span class="list-bullet">&bull;</span>"#));
         assert!(html.contains(r#"<span class="check-label">Top Task</span>"#));
 
-        assert!(html.contains(r#"<div class="check-item simple-item" id="item_s1_2" style="--indent: 1;">"#));
+        assert!(html.contains(r#"<div class="doc-item simple-item" id="item_s1_2" style="--indent: 1;">"#));
         assert!(html.contains(r#"<span class="list-bullet">a.</span>"#));
         assert!(html.contains(r#"<span class="check-label">Sub step A</span>"#));
 
-        assert!(html.contains(r#"<div class="check-item simple-item" id="item_s1_3" style="--indent: 1;">"#));
+        assert!(html.contains(r#"<div class="doc-item simple-item" id="item_s1_3" style="--indent: 1;">"#));
         assert!(html.contains(r#"<span class="list-bullet">b.</span>"#));
         assert!(html.contains(r#"<span class="check-label">Sub step B</span>"#));
 
-        assert!(html.contains(r#"<div class="check-item" id="wrap-cb_s1_1" style="--indent: 1;">"#));
+        assert!(html.contains(r#"<div class="doc-item check-item" id="wrap-cb_s1_1" style="--indent: 1;">"#));
         assert!(html.contains(r#"<input type="checkbox" id="cb_s1_1">"#));
         assert!(html.contains(r#"<label class="check-label" for="cb_s1_1">Sub-task 1</label>"#));
 
-        assert!(html.contains(r#"<div class="check-item simple-item" id="item_s1_5" style="--indent: 2;">"#));
+        assert!(html.contains(r#"<div class="doc-item simple-item" id="item_s1_5" style="--indent: 2;">"#));
         assert!(html.contains(r#"<span class="list-bullet">&bull;</span>"#));
         assert!(html.contains(r#"<span class="check-label">Deep detail X</span>"#));
     }
@@ -1017,7 +1017,7 @@ mod tests {
         assert!(!html.contains("Multline comment block"));
         assert!(!html.contains("Line 2"));
         assert!(html.contains("This is visible content."));
-        assert_eq!(html.matches("class=\"check-item text-item\"").count(), 1);
+        assert_eq!(html.matches("class=\"doc-item text-item\"").count(), 1);
     }
 
     #[test]
@@ -1239,15 +1239,15 @@ mod tests {
         let input = "## Section 1\n\n- [ ] Task 1\n\n- [x] Task 2\n\n- [ ] Task 3\n";
         let (html, _features) = convert_markdown_to_html(input).expect("conversion failed");
 
-        assert!(html.contains(r#"<div class="check-item" id="wrap-cb_s1_1">"#));
+        assert!(html.contains(r#"<div class="doc-item check-item" id="wrap-cb_s1_1">"#));
         assert!(html.contains(r#"<input type="checkbox" id="cb_s1_1">"#));
         assert!(html.contains(r#"<label class="check-label" for="cb_s1_1">Task 1</label>"#));
 
-        assert!(html.contains(r#"<div class="check-item checked" id="wrap-cb_s1_2">"#));
+        assert!(html.contains(r#"<div class="doc-item check-item checked" id="wrap-cb_s1_2">"#));
         assert!(html.contains(r#"<input type="checkbox" id="cb_s1_2" checked=""#) || html.contains(r#"<input type="checkbox" id="cb_s1_2" checked>"#));
         assert!(html.contains(r#"<label class="check-label" for="cb_s1_2">Task 2</label>"#));
 
-        assert!(html.contains(r#"<div class="check-item" id="wrap-cb_s1_3">"#));
+        assert!(html.contains(r#"<div class="doc-item check-item" id="wrap-cb_s1_3">"#));
         assert!(html.contains(r#"<input type="checkbox" id="cb_s1_3">"#));
         assert!(html.contains(r#"<label class="check-label" for="cb_s1_3">Task 3</label>"#));
 

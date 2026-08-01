@@ -149,7 +149,7 @@ pub fn embed_images_as_base64_with_source(
 
                 if let Some(next_cursor) = strip_img_item_wrapper(&mut out, html, img_end) {
                     let comment_icon = crate::template::COMMENT_ICON_SVG;
-                    let _ = out.write_str("<div class=\"check-item text-item\">\n  <span class=\"text-content\"><a href=\"");
+                    let _ = out.write_str("<div class=\"doc-item text-item\">\n  <span class=\"text-content\"><a href=\"");
                     let _ = out.write_str(src_val);
                     let _ = out.write_str("\" target=\"_blank\" rel=\"noopener noreferrer\">");
                     let _ = out.write_str(alt_text);
@@ -680,7 +680,7 @@ mod tests {
     fn test_non_image_source_in_img_item_wrapper_converted_to_text_item() {
         let html = "<div class=\"img-item\">\n  <img src=\"https://example.com/dateien/spezifikation.pdf\" alt=\"Systemspezifikation PDF herunterladen\">\n</div>";
         let processed = embed_images_as_base64(html, None).unwrap();
-        assert!(processed.contains("<div class=\"check-item text-item\">"));
+        assert!(processed.contains("<div class=\"doc-item text-item\">"));
         assert!(processed.contains("<span class=\"text-content\"><a href=\"https://example.com/dateien/spezifikation.pdf\" target=\"_blank\" rel=\"noopener noreferrer\">Systemspezifikation PDF herunterladen</a></span>"));
         assert!(!processed.contains("class=\"img-item\""));
         assert!(!processed.contains("<img"));

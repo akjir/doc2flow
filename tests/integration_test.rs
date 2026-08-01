@@ -77,7 +77,7 @@ fn test_simple_and_mixed_list_items_conversion() {
     let (html, _features) = convert_markdown_to_html(body).expect("conversion failed");
 
     // Simple list items check
-    assert!(html.contains("<div class=\"check-item simple-item\" id=\"item_s1_1\">"));
+    assert!(html.contains("<div class=\"doc-item simple-item\" id=\"item_s1_1\">"));
     assert!(html.contains("<span class=\"list-bullet\">&bull;</span>"));
     assert!(html.contains("<span class=\"check-label\">Simple item 1</span>"));
 
@@ -221,7 +221,7 @@ fn test_showcase_en_fixture_conversion() {
     assert!(html.contains("Doc2Flow English Showcase"));
     assert!(html.contains("<h2 class=\"sh sh-h1\" role=\"button\" tabindex=\"0\" aria-expanded=\"true\"><span>1. Part 1: System Setup &amp; Preparation</span>"));
     assert!(html.contains("no-toggle"));
-    assert!(html.contains("<div class=\"check-item text-item\" id=\"txt_s1_1\">"));
+    assert!(html.contains("<div class=\"doc-item text-item\" id=\"txt_s1_1\">"));
     assert!(html.contains("<input type=\"checkbox\" id=\"cb_s1_1\" checked>"));
     assert!(html.contains("data:image/jpeg;base64,"));
     assert!(html.contains("<div class=\"note\" data-label=\"Note\">"));
@@ -255,7 +255,7 @@ fn test_showcase_de_fixture_conversion() {
     assert!(html.contains("Doc2Flow Deutscher Showcase"));
     assert!(html.contains("<h2 class=\"sh sh-h1\" role=\"button\" tabindex=\"0\" aria-expanded=\"true\"><span>1. Teil 1: Systemeinrichtung &amp; Vorbereitung</span>"));
     assert!(html.contains("no-toggle"));
-    assert!(html.contains("<div class=\"check-item text-item\" id=\"txt_s1_1\">"));
+    assert!(html.contains("<div class=\"doc-item text-item\" id=\"txt_s1_1\">"));
     assert!(html.contains("<input type=\"checkbox\" id=\"cb_s1_1\" checked>"));
     assert!(html.contains("data:image/jpeg;base64,"));
     assert!(html.contains("<div class=\"note\" data-label=\"Hinweis\">"));
@@ -484,7 +484,7 @@ date: "2026-07-26"
     let rendered = doc2flow::template::render(&fm, &locale, &html_body, &d2f_id, None, &features).unwrap();
     let html = doc2flow::image::embed_images_as_base64(&rendered, None).unwrap();
 
-    assert!(html.contains("<div class=\"check-item text-item\">"));
+    assert!(html.contains("<div class=\"doc-item text-item\">"));
     assert!(html.contains("<a href=\"files/spec.pdf\" target=\"_blank\" rel=\"noopener noreferrer\">Specification PDF</a>"));
     assert!(!html.contains("src=\"files/spec.pdf\""));
 }
@@ -682,15 +682,15 @@ date: "2026-07-28"
     let (html_body, _features) =
         doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
 
-    assert!(html_body.contains(r#"<div class="check-item" id="wrap-cb_s1_1">"#));
+    assert!(html_body.contains(r#"<div class="doc-item check-item" id="wrap-cb_s1_1">"#));
     assert!(html_body.contains(r#"<input type="checkbox" id="cb_s1_1">"#));
     assert!(html_body.contains(r#"<label class="check-label" for="cb_s1_1">Item 1</label>"#));
 
-    assert!(html_body.contains(r#"<div class="check-item checked" id="wrap-cb_s1_2">"#));
+    assert!(html_body.contains(r#"<div class="doc-item check-item checked" id="wrap-cb_s1_2">"#));
     assert!(html_body.contains(r#"<input type="checkbox" id="cb_s1_2" checked=""#) || html_body.contains(r#"<input type="checkbox" id="cb_s1_2" checked>"#));
     assert!(html_body.contains(r#"<label class="check-label" for="cb_s1_2">Item 2</label>"#));
 
-    assert!(html_body.contains(r#"<div class="check-item" id="wrap-cb_s1_3">"#));
+    assert!(html_body.contains(r#"<div class="doc-item check-item" id="wrap-cb_s1_3">"#));
     assert!(html_body.contains(r#"<input type="checkbox" id="cb_s1_3">"#));
     assert!(html_body.contains(r#"<label class="check-label" for="cb_s1_3">Item 3</label>"#));
 

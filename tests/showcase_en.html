@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Doc2Flow v0.9.2+96.fe5674d.dev">
-<meta name="version" content="0.9.2+96.fe5674d.dev">
+<meta name="generator" content="Doc2Flow v0.9.2+97.e4e808d.dev">
+<meta name="version" content="0.9.2+97.e4e808d.dev">
 <meta name="repository" content="https://github.com/akjir/doc2flow">
 <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-<meta name="dcterms.created" content="2026-08-01T17:14:27Z">
+<meta name="dcterms.created" content="2026-08-01T17:46:05Z">
 <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
 <title>Doc2Flow English Showcase</title>
 <style>
@@ -497,6 +497,162 @@ mark.d2f-highlight {
   --callout-accent: var(--callout-caution-border);
 }
 
+/* Document List & Text Items */
+.doc-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 3px 9px;
+  border-radius: var(--radius-md);
+  margin-bottom: 2px;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-left: calc(var(--indent, 0) * 18px);
+  position: relative;
+}
+
+.doc-item[style*="--indent"]::before {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  background-color: var(--bl);
+  border-radius: 1px;
+  opacity: 0.7;
+}
+
+.doc-item:first-child, *:not(.doc-item) + .doc-item {
+  margin-top: 3px;
+}
+
+.doc-item:last-child, .doc-item:not(:has(+ .doc-item)) {
+  margin-bottom: 6px;
+}
+
+.doc-item.simple-item {
+  cursor: pointer;
+}
+
+.doc-item:hover {
+  background: #f5f9ff;
+}
+
+.doc-item.checked {
+  background: var(--done);
+}
+
+.list-bullet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 15px;
+  width: auto;
+  height: 15px;
+  margin-top: 2px;
+  color: var(--bm);
+  font-size: 13px;
+  font-weight: bold;
+  line-height: 1;
+  user-select: none;
+}
+
+.check-label, .text-content {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.check-label a, .text-content a {
+  color: var(--bm);
+}
+
+/* Item Comments */
+.item-comment-icon {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-muted);
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+  align-self: flex-start;
+  margin-top: 1px;
+}
+
+.doc-item:hover .item-comment-icon {
+  opacity: 1;
+}
+
+.item-comment-icon:hover {
+  color: var(--bd);
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.item-comment-box {
+  flex-basis: 100%;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 4px;
+  background: var(--gray-light);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 4px 8px;
+  box-sizing: border-box;
+  margin-left: 24px;
+}
+
+.item-comment-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--gray);
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding: 0;
+  margin: 0;
+  line-height: 1.4;
+  min-height: 20px;
+}
+
+.item-comment-input::placeholder {
+  color: #94a3b8;
+}
+
+.item-comment-del {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--gray-muted);
+  font-size: 14px;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+}
+
+.item-comment-del:hover {
+  color: #c00000;
+  background: rgba(192, 0, 0, 0.08);
+}
+
 /* Action Buttons */
 .btnrow {
   display: flex;
@@ -578,8 +734,23 @@ mark.d2f-highlight {
     padding: 0;
   }
 
-  .btnrow, .copy-btn, .stog, .search-toolbar, .search-toggle-btn {
+  .btnrow, .copy-btn, .stog, .search-toolbar, .search-toggle-btn, .item-comment-icon, .item-comment-del {
     display: none !important;
+  }
+
+  .item-comment-box {
+    border: 1px solid var(--border-color);
+    background: transparent;
+  }
+
+  .item-comment-input {
+    color: #333;
+    overflow: hidden !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    resize: none !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
   }
 
   .sb.collapsed {
@@ -772,61 +943,15 @@ mark.d2f-highlight {
   background: var(--progress-green);
 }
 
-/* Checklist Items */
-.check-item {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 9px;
-  padding: 3px 9px;
-  border-radius: var(--radius-md);
-  margin-bottom: 2px;
-  cursor: pointer;
-  transition: background 0.15s;
-  margin-left: calc(var(--indent, 0) * 18px);
-  position: relative;
-}
-
-.check-item[style*="--indent"]::before {
-  content: "";
-  position: absolute;
-  left: -3px;
-  top: 4px;
-  bottom: 4px;
-  width: 2px;
-  background-color: var(--bl);
-  border-radius: 1px;
-  opacity: 0.7;
-}
-
-.check-item:first-child, *:not(.check-item) + .check-item {
-  margin-top: 3px;
-}
-
-.check-item:last-child, .check-item:not(:has(+ .check-item)) {
-  margin-bottom: 6px;
-}
-
-.check-item.simple-item {
-  cursor: pointer;
-}
-
-.check-item:hover {
-  background: #f5f9ff;
-}
-
-.check-item.checked {
-  background: var(--done);
-}
-
+/* Checklist Task Specific Styles */
 .check-item.checked .check-label {
   text-decoration: line-through;
   color: #bbb;
 }
 
-.check-item.text-item.checked .text-content,
-.check-item.text-item.checked .check-label,
-.check-item.simple-item.checked .check-label {
+.doc-item.text-item.checked .text-content,
+.doc-item.text-item.checked .check-label,
+.doc-item.simple-item.checked .check-label {
   text-decoration: none;
   color: var(--gray);
 }
@@ -838,115 +963,6 @@ mark.d2f-highlight {
   margin-top: 2px;
   cursor: pointer;
   accent-color: var(--bm);
-}
-
-.list-bullet {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 15px;
-  width: auto;
-  height: 15px;
-  margin-top: 2px;
-  color: var(--bm);
-  font-size: 13px;
-  font-weight: bold;
-  line-height: 1;
-  user-select: none;
-}
-
-.check-label, .text-content {
-  flex: 1;
-  min-width: 0;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.check-label a, .text-content a {
-  color: var(--bm);
-}
-
-/* Item Comments */
-.item-comment-icon {
-  margin-left: auto;
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--gray-muted);
-  padding: 2px 4px;
-  border-radius: var(--radius-sm);
-  opacity: 0;
-  transition: opacity 0.15s, color 0.15s, background 0.15s;
-  align-self: flex-start;
-  margin-top: 1px;
-}
-
-.check-item:hover .item-comment-icon {
-  opacity: 1;
-}
-
-.item-comment-icon:hover {
-  color: var(--bd);
-  background: rgba(0, 0, 0, 0.06);
-}
-
-.item-comment-box {
-  flex-basis: 100%;
-  width: 100%;
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  margin-top: 4px;
-  background: var(--gray-light);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 4px 8px;
-  box-sizing: border-box;
-  margin-left: 24px;
-}
-
-.item-comment-input {
-  flex: 1;
-  min-width: 0;
-  border: none;
-  background: transparent;
-  outline: none;
-  font-family: var(--font-sans);
-  font-size: 12px;
-  color: var(--gray);
-  resize: none;
-  overflow: hidden;
-  white-space: pre-wrap;
-  word-break: break-word;
-  padding: 0;
-  margin: 0;
-  line-height: 1.4;
-  min-height: 20px;
-}
-
-.item-comment-input::placeholder {
-  color: #94a3b8;
-}
-
-.item-comment-del {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: var(--gray-muted);
-  font-size: 14px;
-  line-height: 1;
-  padding: 2px 5px;
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.15s, background 0.15s;
-}
-
-.item-comment-del:hover {
-  color: #c00000;
-  background: rgba(192, 0, 0, 0.08);
 }
 
 /* Finish & Signatures */
@@ -1044,23 +1060,8 @@ mark.d2f-highlight {
 
 /* Print Rules for Tasks */
 @media print {
-  .item-comment-icon, .item-comment-del, .sbadge, .pb-wrap, .pb, .pt {
+  .sbadge, .pb-wrap, .pb, .pt {
     display: none !important;
-  }
-
-  .item-comment-box {
-    border: 1px solid var(--border-color);
-    background: transparent;
-  }
-
-  .item-comment-input {
-    color: #333;
-    overflow: hidden !important;
-    white-space: pre-wrap !important;
-    word-break: break-word !important;
-    resize: none !important;
-    appearance: none !important;
-    -webkit-appearance: none !important;
   }
 
   .finish {
@@ -1216,11 +1217,11 @@ mark.d2f-highlight {
 <h2 class="sh sh-h1" role="button" tabindex="0" aria-expanded="true"><span>1. Part 1: System Setup &amp; Preparation</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s1"></span><span class="stog" id="tog-s1">&#9660;</span></div></h2>
 <div class="sb" id="body-s1">
-<div class="check-item text-item" id="txt_s1_1">
+<div class="doc-item text-item" id="txt_s1_1">
   <span class="text-content">This top-level section describes the basic system configuration. Tasks within H1 sections do not display an individual badge indicator, but contribute fully to the overall progress tracking.</span>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item checked" id="wrap-cb_s1_1">
+<div class="doc-item check-item checked" id="wrap-cb_s1_1">
   <input type="checkbox" id="cb_s1_1" checked>
   <label class="check-label" for="cb_s1_1">General safety briefing for technicians completed</label>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
@@ -1232,7 +1233,7 @@ mark.d2f-highlight {
 <h2 class="sh" role="button" tabindex="0" aria-expanded="true"><span>1.1 Section 1: Overview &amp; Guidelines</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s2"></span><span class="stog" id="tog-s2">&#9660;</span></div></h2>
 <div class="sb" id="body-s2">
-<div class="check-item text-item" id="txt_s2_2">
+<div class="doc-item text-item" id="txt_s2_2">
   <span class="text-content">This is an arbitrary text paragraph in the section body. It provides general instructions and information for the operator to review before starting the procedure.</span>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
@@ -1256,66 +1257,66 @@ mark.d2f-highlight {
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s3"></span><span class="stog" id="tog-s3">&#9660;</span></div></h2>
 <div class="sb" id="body-s3">
 <h3 class="subh">Setup &amp; Preparation</h3>
-<div class="check-item text-item" id="txt_s3_3">
+<div class="doc-item text-item" id="txt_s3_3">
   <span class="text-content">This arbitrary text paragraph describes the preliminary setup steps that must be fulfilled before marking individual items as completed.</span>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item" id="wrap-cb_s3_2">
+<div class="doc-item check-item" id="wrap-cb_s3_2">
   <input type="checkbox" id="cb_s3_2">
   <label class="check-label" for="cb_s3_2">Unpack hardware and verify components</label>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item" id="wrap-cb_s3_3" style="--indent: 1;">
+<div class="doc-item check-item" id="wrap-cb_s3_3" style="--indent: 1;">
   <input type="checkbox" id="cb_s3_3">
   <label class="check-label" for="cb_s3_3">Inspect accessory completeness</label>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item checked" id="wrap-cb_s3_4" style="--indent: 1;">
+<div class="doc-item check-item checked" id="wrap-cb_s3_4" style="--indent: 1;">
   <input type="checkbox" id="cb_s3_4" checked>
   <label class="check-label" for="cb_s3_4">Check casing for transport damage</label>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item" id="wrap-cb_s3_5">
+<div class="doc-item check-item" id="wrap-cb_s3_5">
   <input type="checkbox" id="cb_s3_5">
   <label class="check-label" for="cb_s3_5">Connect network and power supply</label>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item simple-item" id="item_s3_1" style="--indent: 1;">
+<div class="doc-item simple-item" id="item_s3_1" style="--indent: 1;">
   <span class="list-bullet">a.</span>
   <span class="check-label">Plug primary network cable into Port 1</span>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item simple-item" id="item_s3_2" style="--indent: 1;">
+<div class="doc-item simple-item" id="item_s3_2" style="--indent: 1;">
   <span class="list-bullet">b.</span>
   <span class="check-label">Plug redundant network cable into Port 2</span>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item checked" id="wrap-cb_s3_6">
+<div class="doc-item check-item checked" id="wrap-cb_s3_6">
   <input type="checkbox" id="cb_s3_6" checked>
   <label class="check-label" for="cb_s3_6">Initial power-on check completed</label>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item text-item" id="txt_s3_4">
+<div class="doc-item text-item" id="txt_s3_4">
   <span class="text-content"><a href="https://example.com/docs">External System Documentation</a></span>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item text-item">
+<div class="doc-item text-item">
   <span class="text-content"><a href="https://example.com/files/specification.pdf" target="_blank" rel="noopener noreferrer">Download System Specification PDF</a></span>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
 
 <h3 class="subh">Software Configuration</h3>
-<div class="check-item" id="wrap-cb_s3_7">
+<div class="doc-item check-item" id="wrap-cb_s3_7">
   <input type="checkbox" id="cb_s3_7">
   <label class="check-label" for="cb_s3_7">Install latest system updates</label>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item" id="wrap-cb_s3_8">
+<div class="doc-item check-item" id="wrap-cb_s3_8">
   <input type="checkbox" id="cb_s3_8">
   <label class="check-label" for="cb_s3_8">Configure firewall rules according to company policy</label>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item checked" id="wrap-cb_s3_9">
+<div class="doc-item check-item checked" id="wrap-cb_s3_9">
   <input type="checkbox" id="cb_s3_9" checked>
   <label class="check-label" for="cb_s3_9">Verify remote access service</label>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
@@ -1338,7 +1339,7 @@ mark.d2f-highlight {
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s5"></span><span class="stog" id="tog-s5">&#9660;</span></div></h2>
 <div class="sb" id="body-s5">
 <h3 class="subh">System Registry Settings</h3>
-<div class="check-item text-item" id="txt_s5_5">
+<div class="doc-item text-item" id="txt_s5_5">
   <span class="text-content">The following configuration snippet must be applied to disable automatic updates:</span>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
@@ -1355,77 +1356,77 @@ mark.d2f-highlight {
 <h2 class="sh" role="button" tabindex="0" aria-expanded="true"><span>2.2 Section 4: Informational Lists</span>
 <div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s6"></span><span class="stog" id="tog-s6">&#9660;</span></div></h2>
 <div class="sb" id="body-s6">
-<div class="check-item simple-item" id="item_s6_3">
+<div class="doc-item simple-item" id="item_s6_3">
   <span class="list-bullet">&bull;</span>
   <span class="check-label">Main task &amp; system monitoring</span>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item simple-item" id="item_s6_4" style="--indent: 1;">
+<div class="doc-item simple-item" id="item_s6_4" style="--indent: 1;">
   <span class="list-bullet">a.</span>
   <span class="check-label">Sub-item A 1: Query service status</span>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item simple-item" id="item_s6_5" style="--indent: 1;">
+<div class="doc-item simple-item" id="item_s6_5" style="--indent: 1;">
   <span class="list-bullet">b.</span>
   <span class="check-label">Sub-item A 2: Analyze error log</span>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item simple-item" id="item_s6_6">
+<div class="doc-item simple-item" id="item_s6_6">
   <span class="list-bullet">&bull;</span>
   <span class="check-label">Procedure for maintenance tasks</span>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item" id="wrap-cb_s6_10" style="--indent: 1;">
+<div class="doc-item check-item" id="wrap-cb_s6_10" style="--indent: 1;">
   <input type="checkbox" id="cb_s6_10">
   <label class="check-label" for="cb_s6_10">Prepare test run</label>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item simple-item" id="item_s6_7" style="--indent: 2;">
+<div class="doc-item simple-item" id="item_s6_7" style="--indent: 2;">
   <span class="list-bullet">&bull;</span>
   <span class="check-label">Detailed parameter check X</span>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item simple-item" id="item_s6_8" style="--indent: 2;">
+<div class="doc-item simple-item" id="item_s6_8" style="--indent: 2;">
   <span class="list-bullet">&bull;</span>
   <span class="check-label">Detailed parameter check Y</span>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item checked" id="wrap-cb_s6_11" style="--indent: 1;">
+<div class="doc-item check-item checked" id="wrap-cb_s6_11" style="--indent: 1;">
   <input type="checkbox" id="cb_s6_11" checked>
   <label class="check-label" for="cb_s6_11">Approval by system administrator</label>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item simple-item" id="item_s6_9">
+<div class="doc-item simple-item" id="item_s6_9">
   <span class="list-bullet">1.</span>
   <span class="check-label">Sequential main step 1</span>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item simple-item" id="item_s6_10" style="--indent: 1;">
+<div class="doc-item simple-item" id="item_s6_10" style="--indent: 1;">
   <span class="list-bullet">&bull;</span>
   <span class="check-label">Subordinate verification step 1.1</span>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item simple-item" id="item_s6_11" style="--indent: 1;">
+<div class="doc-item simple-item" id="item_s6_11" style="--indent: 1;">
   <span class="list-bullet">&bull;</span>
   <span class="check-label">Subordinate verification step 1.2</span>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item simple-item" id="item_s6_12">
+<div class="doc-item simple-item" id="item_s6_12">
   <span class="list-bullet">2.</span>
   <span class="check-label">Sequential main step 2</span>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item simple-item" id="item_s6_13" style="--indent: 1;">
+<div class="doc-item simple-item" id="item_s6_13" style="--indent: 1;">
   <span class="list-bullet">a.</span>
   <span class="check-label">Detailed sub-procedure 2.a</span>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item simple-item" id="item_s6_14" style="--indent: 1;">
+<div class="doc-item simple-item" id="item_s6_14" style="--indent: 1;">
   <span class="list-bullet">b.</span>
   <span class="check-label">Detailed sub-procedure 2.b</span>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="check-item simple-item" id="item_s6_15">
+<div class="doc-item simple-item" id="item_s6_15">
   <span class="list-bullet">3.</span>
   <span class="check-label">Sequential main step 3</span>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
@@ -1480,7 +1481,7 @@ mark.d2f-highlight {
 
 <script>
 window.D2F_DOC_ID = 'd2f_id_c9c539743b5bb460';
-window.D2F_I18N = {"save_state":"Save State","search_placeholder":"Search... (Ctrl+K)","setup_completed":"Process Completed","callout_caution":"Caution","comment_placeholder":"Add a comment...","signature_date":"Date","export_pdf":"Export as PDF","company":"Company","date":"Date","setup_in_progress":"Process in Progress","contact":"Contact","name_placeholder":"Name","copied":"Copied!","callout_note":"Note","agent":"Agent","reset_all":"Reset","progress_template":"{done} of {total} tasks completed ({pct}%)","loading":"Loading...","callout_tip":"Tip","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","callout_warning":"Warning","date_placeholder":"MM/DD/YYYY","sections_visible":"{visible} / {total} sections visible","lang_code":"en","callout_important":"Important","copy_code":"Copy code"};
+window.D2F_I18N = {"progress_template":"{done} of {total} tasks completed ({pct}%)","search_placeholder":"Search... (Ctrl+K)","reset_all":"Reset","callout_note":"Note","callout_important":"Important","callout_warning":"Warning","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","agent":"Agent","signature_date":"Date","setup_in_progress":"Process in Progress","lang_code":"en","callout_tip":"Tip","save_state":"Save State","callout_caution":"Caution","export_pdf":"Export as PDF","comment_placeholder":"Add a comment...","sections_visible":"{visible} / {total} sections visible","copy_code":"Copy code","copied":"Copied!","company":"Company","loading":"Loading...","date_placeholder":"MM/DD/YYYY","setup_completed":"Process Completed","name_placeholder":"Name","contact":"Contact","date":"Date"};
 window.d2f = window.d2f || {};
 "use strict";
 (() => {
@@ -1619,10 +1620,6 @@ window.d2f = window.d2f || {};
   }
 
   // src/core/sections.ts
-  var SECTION_SELECTOR = ".section";
-  function isRecord2(val) {
-    return typeof val === "object" && val !== null && !Array.isArray(val);
-  }
   function setSectionCollapseState(sec, isCollapsed) {
     const body = sec.querySelector(".sb");
     const sh = sec.querySelector(".sh");
@@ -1671,7 +1668,7 @@ window.d2f = window.d2f || {};
   }
   function saveSections() {
     const sections = {};
-    document.querySelectorAll(SECTION_SELECTOR).forEach((sec, index) => {
+    document.querySelectorAll(".section").forEach((sec, index) => {
       const body = sec.querySelector(".sb");
       if (body) {
         const key = sec.id || "sec_" + String(index);
@@ -1682,8 +1679,8 @@ window.d2f = window.d2f || {};
   }
   function loadSections(state) {
     const sectionsData = state["sections"];
-    if (isRecord2(sectionsData)) {
-      document.querySelectorAll(SECTION_SELECTOR).forEach((sec, index) => {
+    if (window.d2f.utils.isRecord(sectionsData)) {
+      document.querySelectorAll(".section").forEach((sec, index) => {
         const key = sec.id || "sec_" + String(index);
         const shouldCollapse = sectionsData[key];
         if (typeof shouldCollapse === "boolean") {
@@ -1694,7 +1691,7 @@ window.d2f = window.d2f || {};
     return false;
   }
   function resetSections() {
-    document.querySelectorAll(SECTION_SELECTOR).forEach((sec) => {
+    document.querySelectorAll(".section").forEach((sec) => {
       setSectionCollapseState(sec, false);
     });
     document.querySelectorAll(".sb.collapsed").forEach((body) => {
@@ -1777,7 +1774,7 @@ window.d2f = window.d2f || {};
   }
   function saveComments() {
     const comments = {};
-    document.querySelectorAll(".check-item").forEach((item, index) => {
+    document.querySelectorAll(".doc-item").forEach((item, index) => {
       const input = item.querySelector(".item-comment-input");
       if (input && input.value.trim() !== "") {
         const key = item.id || "item_" + String(index);
@@ -1790,7 +1787,7 @@ window.d2f = window.d2f || {};
     const comments = state["comments"];
     if (typeof comments === "object" && comments !== null && !Array.isArray(comments)) {
       const commentsRecord = comments;
-      document.querySelectorAll(".check-item").forEach((item, index) => {
+      document.querySelectorAll(".doc-item").forEach((item, index) => {
         const key = item.id || "item_" + String(index);
         const val = commentsRecord[key];
         if (val !== void 0 && typeof val === "string") {
@@ -1818,9 +1815,9 @@ window.d2f = window.d2f || {};
         return;
       const commentBtn = target.closest(".item-comment-icon");
       if (commentBtn) {
-        const checkItem = commentBtn.closest(".check-item");
-        if (checkItem) {
-          const res = getOrCreateCommentBox(checkItem);
+        const docItem = commentBtn.closest(".doc-item");
+        if (docItem) {
+          const res = getOrCreateCommentBox(docItem);
           if (res?.input) {
             res.input.focus();
           }
@@ -1846,6 +1843,56 @@ window.d2f = window.d2f || {};
     };
     document.addEventListener("input", handleCommentInput);
     document.addEventListener("change", handleCommentInput);
+  }
+
+  // src/core/items.ts
+  function saveItems() {
+    const texts = {};
+    document.querySelectorAll(".doc-item.text-item, .doc-item.simple-item").forEach((item, index) => {
+      const key = item.id || "txt_" + String(index);
+      texts[key] = item.classList.contains("checked");
+    });
+    return { texts };
+  }
+  function loadItems(state) {
+    const textsData = state["texts"];
+    if (window.d2f.utils.isRecord(textsData)) {
+      document.querySelectorAll(".doc-item.text-item, .doc-item.simple-item").forEach((item, index) => {
+        const key = item.id || "txt_" + String(index);
+        const val = textsData[key];
+        if (typeof val === "boolean") {
+          item.classList.toggle("checked", val);
+        }
+      });
+    }
+    return false;
+  }
+  function resetItems() {
+    document.querySelectorAll(".doc-item.text-item, .doc-item.simple-item").forEach((item) => {
+      item.classList.remove("checked");
+    });
+  }
+  if (typeof window !== "undefined") {
+    document.addEventListener("DOMContentLoaded", () => {
+      window.d2f.core.registerResetHandler(resetItems);
+      window.d2f.storage.registerSaveHandler(saveItems);
+      window.d2f.storage.registerLoadHandler(loadItems);
+    });
+    document.addEventListener("click", (e) => {
+      const target = e.target;
+      if (!(target instanceof Element))
+        return;
+      const docItem = target.closest(".doc-item");
+      if (docItem) {
+        if (target.tagName === "A" || target.tagName === "IMG" || target.tagName === "INPUT" || target.closest(".item-comment-box") || target.closest(".item-comment-icon") || target.closest(".item-comment-del")) {
+          return;
+        }
+        if (docItem.classList.contains("text-item") || docItem.classList.contains("simple-item")) {
+          docItem.classList.toggle("checked");
+          window.d2f.storage.saveState();
+        }
+      }
+    });
   }
 
   // src/core/fields.ts
@@ -2408,15 +2455,7 @@ window.d2f = window.d2f || {};
       const key = cb.id || "cb_" + String(index);
       checks[key] = cb.checked;
     });
-    const texts = {};
-    document.querySelectorAll(".check-item.text-item, .check-item.simple-item").forEach((item, index) => {
-      const key = item.id || "txt_" + String(index);
-      texts[key] = item.classList.contains("checked");
-    });
-    return {
-      checks,
-      texts
-    };
+    return { checks };
   }
   function loadTasks(state) {
     const checksData = state["checks"];
@@ -2430,16 +2469,6 @@ window.d2f = window.d2f || {};
         }
       });
     }
-    const textsData = state["texts"];
-    if (window.d2f.utils.isRecord(textsData)) {
-      document.querySelectorAll(".check-item.text-item, .check-item.simple-item").forEach((item, index) => {
-        const key = item.id || "txt_" + String(index);
-        const val = textsData[key];
-        if (typeof val === "boolean") {
-          item.classList.toggle("checked", val);
-        }
-      });
-    }
     updateProgress();
     return false;
   }
@@ -2447,9 +2476,6 @@ window.d2f = window.d2f || {};
     document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb) => {
       cb.checked = false;
       styleItem(cb);
-    });
-    document.querySelectorAll(".check-item.text-item, .check-item.simple-item").forEach((item) => {
-      item.classList.remove("checked");
     });
     updateProgress();
   }
@@ -2476,9 +2502,6 @@ window.d2f = window.d2f || {};
           }
           styleItem(cb);
           updateProgress();
-          window.d2f.storage.saveState();
-        } else if (checkItem.classList.contains("text-item") || checkItem.classList.contains("simple-item")) {
-          checkItem.classList.toggle("checked");
           window.d2f.storage.saveState();
         }
       }

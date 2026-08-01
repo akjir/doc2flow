@@ -114,12 +114,12 @@ pub fn render_task_item(
     if indent_depth > 0 {
         let _ = write!(
             out,
-            "<div class=\"check-item{checked_cls}\" id=\"wrap-cb_s{sec_num}_{cb_count}\" style=\"--indent: {indent_depth};\">\n  <input type=\"checkbox\" id=\"cb_s{sec_num}_{cb_count}\"{checked_attr}>\n  <label class=\"check-label\" for=\"cb_s{sec_num}_{cb_count}\">{label_text}</label>\n  {COMMENT_ICON_SVG}\n</div>\n"
+            "<div class=\"doc-item check-item{checked_cls}\" id=\"wrap-cb_s{sec_num}_{cb_count}\" style=\"--indent: {indent_depth};\">\n  <input type=\"checkbox\" id=\"cb_s{sec_num}_{cb_count}\"{checked_attr}>\n  <label class=\"check-label\" for=\"cb_s{sec_num}_{cb_count}\">{label_text}</label>\n  {COMMENT_ICON_SVG}\n</div>\n"
         );
     } else {
         let _ = write!(
             out,
-            "<div class=\"check-item{checked_cls}\" id=\"wrap-cb_s{sec_num}_{cb_count}\">\n  <input type=\"checkbox\" id=\"cb_s{sec_num}_{cb_count}\"{checked_attr}>\n  <label class=\"check-label\" for=\"cb_s{sec_num}_{cb_count}\">{label_text}</label>\n  {COMMENT_ICON_SVG}\n</div>\n"
+            "<div class=\"doc-item check-item{checked_cls}\" id=\"wrap-cb_s{sec_num}_{cb_count}\">\n  <input type=\"checkbox\" id=\"cb_s{sec_num}_{cb_count}\"{checked_attr}>\n  <label class=\"check-label\" for=\"cb_s{sec_num}_{cb_count}\">{label_text}</label>\n  {COMMENT_ICON_SVG}\n</div>\n"
         );
     }
 }
@@ -139,12 +139,12 @@ pub fn render_list_item(
     if indent_depth > 0 {
         let _ = write!(
             out,
-            "<div class=\"check-item simple-item\" id=\"item_s{sec_num}_{item_count}\" style=\"--indent: {indent_depth};\">\n  <span class=\"list-bullet\">{bullet}</span>\n  <span class=\"check-label\">{label_text}</span>\n  {COMMENT_ICON_SVG}\n</div>\n"
+            "<div class=\"doc-item simple-item\" id=\"item_s{sec_num}_{item_count}\" style=\"--indent: {indent_depth};\">\n  <span class=\"list-bullet\">{bullet}</span>\n  <span class=\"check-label\">{label_text}</span>\n  {COMMENT_ICON_SVG}\n</div>\n"
         );
     } else {
         let _ = write!(
             out,
-            "<div class=\"check-item simple-item\" id=\"item_s{sec_num}_{item_count}\">\n  <span class=\"list-bullet\">{bullet}</span>\n  <span class=\"check-label\">{label_text}</span>\n  {COMMENT_ICON_SVG}\n</div>\n"
+            "<div class=\"doc-item simple-item\" id=\"item_s{sec_num}_{item_count}\">\n  <span class=\"list-bullet\">{bullet}</span>\n  <span class=\"check-label\">{label_text}</span>\n  {COMMENT_ICON_SVG}\n</div>\n"
         );
     }
 }
@@ -161,12 +161,12 @@ pub fn render_text_item(
     if indent_depth > 0 {
         let _ = write!(
             out,
-            "<div class=\"check-item text-item\" id=\"txt_s{sec_num}_{txt_count}\" style=\"--indent: {indent_depth};\">\n  <span class=\"text-content\">{content_html}</span>\n  {COMMENT_ICON_SVG}\n</div>\n"
+            "<div class=\"doc-item text-item\" id=\"txt_s{sec_num}_{txt_count}\" style=\"--indent: {indent_depth};\">\n  <span class=\"text-content\">{content_html}</span>\n  {COMMENT_ICON_SVG}\n</div>\n"
         );
     } else {
         let _ = write!(
             out,
-            "<div class=\"check-item text-item\" id=\"txt_s{sec_num}_{txt_count}\">\n  <span class=\"text-content\">{content_html}</span>\n  {COMMENT_ICON_SVG}\n</div>\n"
+            "<div class=\"doc-item text-item\" id=\"txt_s{sec_num}_{txt_count}\">\n  <span class=\"text-content\">{content_html}</span>\n  {COMMENT_ICON_SVG}\n</div>\n"
         );
     }
 }
@@ -268,7 +268,7 @@ mod tests {
     fn test_render_task_item() {
         let mut buf = String::new();
         render_task_item(&mut buf, 1, 2, true, "Check task", 0);
-        assert!(buf.contains("<div class=\"check-item checked\" id=\"wrap-cb_s1_2\">"));
+        assert!(buf.contains("<div class=\"doc-item check-item checked\" id=\"wrap-cb_s1_2\">"));
         assert!(buf.contains("<input type=\"checkbox\" id=\"cb_s1_2\" checked>"));
         assert!(buf.contains("<label class=\"check-label\" for=\"cb_s1_2\">Check task</label>"));
     }

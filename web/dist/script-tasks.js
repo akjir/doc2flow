@@ -82,15 +82,7 @@
       const key = cb.id || "cb_" + String(index);
       checks[key] = cb.checked;
     });
-    const texts = {};
-    document.querySelectorAll(".check-item.text-item, .check-item.simple-item").forEach((item, index) => {
-      const key = item.id || "txt_" + String(index);
-      texts[key] = item.classList.contains("checked");
-    });
-    return {
-      checks,
-      texts
-    };
+    return { checks };
   }
   function loadTasks(state) {
     const checksData = state["checks"];
@@ -104,16 +96,6 @@
         }
       });
     }
-    const textsData = state["texts"];
-    if (window.d2f.utils.isRecord(textsData)) {
-      document.querySelectorAll(".check-item.text-item, .check-item.simple-item").forEach((item, index) => {
-        const key = item.id || "txt_" + String(index);
-        const val = textsData[key];
-        if (typeof val === "boolean") {
-          item.classList.toggle("checked", val);
-        }
-      });
-    }
     updateProgress();
     return false;
   }
@@ -121,9 +103,6 @@
     document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb) => {
       cb.checked = false;
       styleItem(cb);
-    });
-    document.querySelectorAll(".check-item.text-item, .check-item.simple-item").forEach((item) => {
-      item.classList.remove("checked");
     });
     updateProgress();
   }
@@ -150,9 +129,6 @@
           }
           styleItem(cb);
           updateProgress();
-          window.d2f.storage.saveState();
-        } else if (checkItem.classList.contains("text-item") || checkItem.classList.contains("simple-item")) {
-          checkItem.classList.toggle("checked");
           window.d2f.storage.saveState();
         }
       }

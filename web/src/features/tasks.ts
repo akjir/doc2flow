@@ -83,16 +83,7 @@ function saveTasks(): Record<string, unknown> {
         checks[key] = cb.checked;
     });
 
-    const texts: Record<string, boolean> = {};
-    document.querySelectorAll<HTMLElement>('.check-item.text-item, .check-item.simple-item').forEach((item, index) => {
-        const key = item.id || ('txt_' + String(index));
-        texts[key] = item.classList.contains('checked');
-    });
-
-    return {
-        checks,
-        texts
-    };
+    return { checks };
 }
 
 function loadTasks(state: Record<string, unknown>): boolean {
@@ -108,17 +99,6 @@ function loadTasks(state: Record<string, unknown>): boolean {
         });
     }
 
-    const textsData = state['texts'];
-    if (window.d2f.utils.isRecord(textsData)) {
-        document.querySelectorAll<HTMLElement>('.check-item.text-item, .check-item.simple-item').forEach((item, index) => {
-            const key = item.id || ('txt_' + String(index));
-            const val = textsData[key];
-            if (typeof val === 'boolean') {
-                item.classList.toggle('checked', val);
-            }
-        });
-    }
-
     updateProgress();
     return false;
 }
@@ -127,9 +107,6 @@ function resetTasks(): void {
     document.querySelectorAll<HTMLInputElement>('.check-item input[type="checkbox"]').forEach((cb) => {
         cb.checked = false;
         styleItem(cb);
-    });
-    document.querySelectorAll<HTMLElement>('.check-item.text-item, .check-item.simple-item').forEach((item) => {
-        item.classList.remove('checked');
     });
     updateProgress();
 }
@@ -159,9 +136,6 @@ if (typeof window !== 'undefined') {
                 }
                 styleItem(cb);
                 updateProgress();
-                window.d2f.storage.saveState();
-            } else if (checkItem.classList.contains('text-item') || checkItem.classList.contains('simple-item')) {
-                checkItem.classList.toggle('checked');
                 window.d2f.storage.saveState();
             }
         }

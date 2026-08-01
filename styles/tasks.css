@@ -51,61 +51,15 @@
   background: var(--progress-green);
 }
 
-/* Checklist Items */
-.check-item {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 9px;
-  padding: 3px 9px;
-  border-radius: var(--radius-md);
-  margin-bottom: 2px;
-  cursor: pointer;
-  transition: background 0.15s;
-  margin-left: calc(var(--indent, 0) * 18px);
-  position: relative;
-}
-
-.check-item[style*="--indent"]::before {
-  content: "";
-  position: absolute;
-  left: -3px;
-  top: 4px;
-  bottom: 4px;
-  width: 2px;
-  background-color: var(--bl);
-  border-radius: 1px;
-  opacity: 0.7;
-}
-
-.check-item:first-child, *:not(.check-item) + .check-item {
-  margin-top: 3px;
-}
-
-.check-item:last-child, .check-item:not(:has(+ .check-item)) {
-  margin-bottom: 6px;
-}
-
-.check-item.simple-item {
-  cursor: pointer;
-}
-
-.check-item:hover {
-  background: #f5f9ff;
-}
-
-.check-item.checked {
-  background: var(--done);
-}
-
+/* Checklist Task Specific Styles */
 .check-item.checked .check-label {
   text-decoration: line-through;
   color: #bbb;
 }
 
-.check-item.text-item.checked .text-content,
-.check-item.text-item.checked .check-label,
-.check-item.simple-item.checked .check-label {
+.doc-item.text-item.checked .text-content,
+.doc-item.text-item.checked .check-label,
+.doc-item.simple-item.checked .check-label {
   text-decoration: none;
   color: var(--gray);
 }
@@ -117,115 +71,6 @@
   margin-top: 2px;
   cursor: pointer;
   accent-color: var(--bm);
-}
-
-.list-bullet {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 15px;
-  width: auto;
-  height: 15px;
-  margin-top: 2px;
-  color: var(--bm);
-  font-size: 13px;
-  font-weight: bold;
-  line-height: 1;
-  user-select: none;
-}
-
-.check-label, .text-content {
-  flex: 1;
-  min-width: 0;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.check-label a, .text-content a {
-  color: var(--bm);
-}
-
-/* Item Comments */
-.item-comment-icon {
-  margin-left: auto;
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--gray-muted);
-  padding: 2px 4px;
-  border-radius: var(--radius-sm);
-  opacity: 0;
-  transition: opacity 0.15s, color 0.15s, background 0.15s;
-  align-self: flex-start;
-  margin-top: 1px;
-}
-
-.check-item:hover .item-comment-icon {
-  opacity: 1;
-}
-
-.item-comment-icon:hover {
-  color: var(--bd);
-  background: rgba(0, 0, 0, 0.06);
-}
-
-.item-comment-box {
-  flex-basis: 100%;
-  width: 100%;
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  margin-top: 4px;
-  background: var(--gray-light);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 4px 8px;
-  box-sizing: border-box;
-  margin-left: 24px;
-}
-
-.item-comment-input {
-  flex: 1;
-  min-width: 0;
-  border: none;
-  background: transparent;
-  outline: none;
-  font-family: var(--font-sans);
-  font-size: 12px;
-  color: var(--gray);
-  resize: none;
-  overflow: hidden;
-  white-space: pre-wrap;
-  word-break: break-word;
-  padding: 0;
-  margin: 0;
-  line-height: 1.4;
-  min-height: 20px;
-}
-
-.item-comment-input::placeholder {
-  color: #94a3b8;
-}
-
-.item-comment-del {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: var(--gray-muted);
-  font-size: 14px;
-  line-height: 1;
-  padding: 2px 5px;
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.15s, background 0.15s;
-}
-
-.item-comment-del:hover {
-  color: #c00000;
-  background: rgba(192, 0, 0, 0.08);
 }
 
 /* Finish & Signatures */
@@ -323,23 +168,8 @@
 
 /* Print Rules for Tasks */
 @media print {
-  .item-comment-icon, .item-comment-del, .sbadge, .pb-wrap, .pb, .pt {
+  .sbadge, .pb-wrap, .pb, .pt {
     display: none !important;
-  }
-
-  .item-comment-box {
-    border: 1px solid var(--border-color);
-    background: transparent;
-  }
-
-  .item-comment-input {
-    color: #333;
-    overflow: hidden !important;
-    white-space: pre-wrap !important;
-    word-break: break-word !important;
-    resize: none !important;
-    appearance: none !important;
-    -webkit-appearance: none !important;
   }
 
   .finish {
