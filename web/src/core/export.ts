@@ -1,64 +1,67 @@
+export const ExportType = {
+    PDF: "PDF",
+    DOCUMENT: "DOCUMENT",
+} as const;
+
+export type ExportType = typeof ExportType[keyof typeof ExportType];
+export type ExportHandler = (type: ExportType) => void;
+
 export interface Export {
-    exportPDF(): void;
-    saveDocumentState(): void;
+    export(type: ExportType): void;
+    registerExportHandler(handler: ExportHandler): void;
 }
+
+const exportHandlers = new Set<ExportHandler>();
 
 window.d2f.export = {
-    exportPDF,
-    saveDocumentState,
+    export: performExport,
+    registerExportHandler,
 };
 
-
-function exportPDF(): void {
-    const collapsed = Array.from(document.querySelectorAll<HTMLElement>('.sb.collapsed'));
-    collapsed.forEach((el) => el.classList.remove('collapsed'));
-
-    const restore = (): void => {
-        collapsed.forEach((el) => el.classList.add('collapsed'));
-        window.removeEventListener('afterprint', restore);
-    };
-
-    window.addEventListener('afterprint', restore);
-    setTimeout(() => window.print(), 100);
+function registerExportHandler(handler: ExportHandler): void {
+    exportHandlers.add(handler);
 }
 
-function saveDocumentState(): void {
-    window.d2f.storage.saveState();
-
-    const checkboxes = document.querySelectorAll<HTMLInputElement>('.check-item input[type="checkbox"]');
-    checkboxes.forEach((cb) => {
-        if (cb.checked) {
-            cb.setAttribute('checked', 'checked');
-        } else {
-            cb.removeAttribute('checked');
+function performExport(type: ExportType): void {
+    for (const handler of exportHandlers) {
+        try {
+            handler(type);
+        } catch (e) {
+            console.warn('Failed to execute export handler', e);
         }
-        window.d2f.tasks?.styleItem(cb);
-    });
+    }
 
-    const inputs = document.querySelectorAll<HTMLInputElement>('input.persistent-field, .info-table input');
-    inputs.forEach((input) => {
-        input.setAttribute('value', input.value);
-    });
+    if (type === ExportType.PDF) {
+        const collapsed = Array.from(document.querySelectorAll<HTMLElement>('.sb.collapsed'));
+        collapsed.forEach((el) => el.classList.remove('collapsed'));
 
-    const textareas = document.querySelectorAll<HTMLTextAreaElement>('textarea.item-comment-input');
-    textareas.forEach((ta) => {
-        ta.textContent = ta.value;
-        ta.setAttribute('value', ta.value);
-    });
+        const restore = (): void => {
+            collapsed.forEach((el) => el.classList.add('collapsed'));
+            window.removeEventListener('afterprint', restore);
+        };
 
-    const rawFilename = window.location.pathname.split('/').pop() ?? 'index.html';
-    const filename = decodeURIComponent(rawFilename || 'index.html');
+        window.addEventListener('afterprint', restore);
+        setTimeout(() => window.print(), 100);
+        return;
+    }
 
-    const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    if (type === ExportType.DOCUMENT) {
+        window.d2f.storage.saveState();
+
+        const rawFilename = window.location.pathname.split('/').pop() ?? 'index.html';
+        const filename = decodeURIComponent(rawFilename || 'index.html');
+
+        const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
 }
 
 

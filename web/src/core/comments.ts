@@ -3,14 +3,6 @@ export interface CommentBoxResult {
     readonly input: HTMLTextAreaElement;
 }
 
-export interface Comments {
-    autoExpandTextarea(el: HTMLTextAreaElement | null): void;
-    getOrCreateCommentBox(checkItem: HTMLElement | null, initialValue?: string): CommentBoxResult | null;
-    saveComments(): Record<string, unknown>;
-    loadComments(state: Record<string, unknown>): boolean;
-    resetComments(): void;
-}
-
 function autoExpandTextarea(el: HTMLTextAreaElement | null): void {
     if (!el) return;
     el.style.height = 'auto';
@@ -93,14 +85,6 @@ function resetComments(): void {
         box.remove();
     });
 }
-
-window.d2f.comments = {
-    autoExpandTextarea,
-    getOrCreateCommentBox,
-    saveComments,
-    loadComments,
-    resetComments,
-};
 
 window.d2f.storage.registerSaveHandler(saveComments);
 window.d2f.storage.registerLoadHandler(loadComments);

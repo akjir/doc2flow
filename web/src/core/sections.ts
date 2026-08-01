@@ -1,13 +1,5 @@
 const SECTION_SELECTOR = '.d2f-section, .section';
 
-export interface Collapse {
-    updateEmptySections(): void;
-    toggleSection(target: HTMLElement | string | null, onSave?: () => void): void;
-    saveSections(): Record<string, unknown>;
-    loadSections(state: Record<string, unknown>): boolean;
-    resetSections(): void;
-}
-
 function isRecord(val: unknown): val is Record<string, unknown> {
     return typeof val === 'object' && val !== null && !Array.isArray(val);
 }
@@ -110,14 +102,6 @@ function resetSections(): void {
         body.classList.remove('collapsed');
     });
 }
-
-window.d2f.collapse = {
-    updateEmptySections,
-    toggleSection,
-    saveSections,
-    loadSections,
-    resetSections,
-};
 
 window.d2f.storage.registerSaveHandler(saveSections);
 window.d2f.storage.registerLoadHandler(loadSections);

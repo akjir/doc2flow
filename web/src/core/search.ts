@@ -77,7 +77,7 @@ function highlightTextNodes(container: HTMLElement | null, query: string): void 
     });
 }
 
-function performSearchAndFilter(onSaveState?: () => void): void {
+function performSearchAndFilter(): void {
     const rawSearchInput = document.getElementById('search-input');
     const searchInput = rawSearchInput instanceof HTMLInputElement ? rawSearchInput : null;
     const searchCounter = document.getElementById('search-counter');
@@ -157,9 +157,7 @@ function performSearchAndFilter(onSaveState?: () => void): void {
 
         preSearchCollapsedState = null;
         lastMatchedSectionIds.clear();
-        if (onSaveState) {
-            onSaveState();
-        }
+        window.d2f.storage.saveState();
     }
 
     const searchClearBtn = document.getElementById('search-clear-btn');
