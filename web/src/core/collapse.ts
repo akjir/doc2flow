@@ -1,4 +1,5 @@
 import { registerSaveHandler, registerLoadHandler } from './storage.js';
+import { registerResetHandler } from './core.js';
 
 const SECTION_SELECTOR = '.d2f-section, .section';
 
@@ -96,5 +97,12 @@ export function loadSections(state: Record<string, unknown>): boolean {
     return false;
 }
 
+export function resetSections(): void {
+    document.querySelectorAll<HTMLElement>(SECTION_SELECTOR).forEach((sec) => {
+        setSectionCollapseState(sec, false);
+    });
+}
+
 registerSaveHandler(saveSections);
 registerLoadHandler(loadSections);
+registerResetHandler(resetSections);

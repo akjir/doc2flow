@@ -56,6 +56,26 @@
     return "d2f_state_" + (docId ? `${docId}_` : "") + filename;
   }
 
+  // src/core/core.ts
+  var resetHandlers = /* @__PURE__ */ new Set();
+  function registerResetHandler(handler) {
+    resetHandlers.add(handler);
+  }
+  function resetAll() {
+    const i18n = window.D2F_I18N;
+    const confirmMsg = i18n?.confirm_reset ?? "Are you sure you want to reset all markings?";
+    if (!confirm(confirmMsg))
+      return;
+    for (const handler of resetHandlers) {
+      try {
+        handler();
+      } catch (e) {
+        console.warn("Failed to execute reset handler", e);
+      }
+    }
+    saveState();
+  }
+
   // src/core/collapse.ts
   var SECTION_SELECTOR = ".d2f-section, .section";
   function isRecord(val) {
@@ -143,8 +163,14 @@
     }
     return false;
   }
+  function resetSections() {
+    document.querySelectorAll(SECTION_SELECTOR).forEach((sec) => {
+      setSectionCollapseState(sec, false);
+    });
+  }
   registerSaveHandler(saveSections);
   registerLoadHandler(loadSections);
+  registerResetHandler(resetSections);
 
   // src/core/search.ts
   var preSearchCollapsedState = null;
@@ -622,8 +648,19 @@
     updateProgress();
     return false;
   }
+  function resetTasks() {
+    document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb) => {
+      cb.checked = false;
+      styleItem(cb);
+    });
+    document.querySelectorAll(".check-item.text-item, .check-item.simple-item").forEach((item) => {
+      item.classList.remove("checked");
+    });
+    updateProgress();
+  }
   registerSaveHandler(saveTasks);
   registerLoadHandler(loadTasks);
+  registerResetHandler(resetTasks);
   if (typeof window !== "undefined") {
     document.addEventListener("DOMContentLoaded", () => {
       updateProgress();
@@ -668,19 +705,6 @@
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }
-  function resetAll() {
-    const i18n = window.D2F_I18N;
-    const confirmMsg = i18n?.confirm_reset ?? "Are you sure you want to reset all checkboxes?";
-    if (!confirm(confirmMsg))
-      return;
-    const checkboxes = document.querySelectorAll('.check-item input[type="checkbox"]');
-    checkboxes.forEach((cb) => {
-      cb.checked = false;
-      styleItem(cb);
-    });
-    updateProgress();
-    saveState();
   }
   function showCopiedFeedback(btn) {
     btn.classList.add("copied");

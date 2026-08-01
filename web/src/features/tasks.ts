@@ -1,4 +1,5 @@
 import { registerSaveHandler, registerLoadHandler } from '../core/storage.js';
+import { registerResetHandler } from '../core/core.js';
 
 function isRecord(val: unknown): val is Record<string, unknown> {
     return typeof val === 'object' && val !== null && !Array.isArray(val);
@@ -135,8 +136,20 @@ export function loadTasks(state: Record<string, unknown>): boolean {
     return false;
 }
 
+export function resetTasks(): void {
+    document.querySelectorAll<HTMLInputElement>('.check-item input[type="checkbox"]').forEach((cb) => {
+        cb.checked = false;
+        styleItem(cb);
+    });
+    document.querySelectorAll<HTMLElement>('.check-item.text-item, .check-item.simple-item').forEach((item) => {
+        item.classList.remove('checked');
+    });
+    updateProgress();
+}
+
 registerSaveHandler(saveTasks);
 registerLoadHandler(loadTasks);
+registerResetHandler(resetTasks);
 
 if (typeof window !== 'undefined') {
     document.addEventListener('DOMContentLoaded', () => {

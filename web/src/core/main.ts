@@ -4,7 +4,8 @@ import { saveState, loadState } from './storage.js';
 import { syncLinkedFields, checkDateShortcut } from './fields.js';
 import { styleItem, updateProgress } from '../features/tasks.js';
 import { getOrCreateCommentBox } from './comments.js';
-import { exportPDF, saveDocumentState, resetAll, copyCode } from './actions.js';
+import { exportPDF, saveDocumentState, copyCode } from './actions.js';
+import { resetAll } from './core.js';
 import { debounce } from './utils.js';
 
 window.exportPDF = exportPDF;

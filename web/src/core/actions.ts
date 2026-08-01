@@ -1,5 +1,5 @@
 import { saveState } from './storage.js';
-import { styleItem, updateProgress } from '../features/tasks.js';
+import { styleItem } from '../features/tasks.js';
 
 export function exportPDF(): void {
     const collapsed = Array.from(document.querySelectorAll<HTMLElement>('.sb.collapsed'));
@@ -47,19 +47,7 @@ export function saveDocumentState(): void {
     URL.revokeObjectURL(url);
 }
 
-export function resetAll(): void {
-    const i18n = window.D2F_I18N;
-    const confirmMsg = i18n?.confirm_reset ?? 'Are you sure you want to reset all checkboxes?';
-    if (!confirm(confirmMsg)) return;
-
-    const checkboxes = document.querySelectorAll<HTMLInputElement>('.check-item input[type="checkbox"]');
-    checkboxes.forEach((cb) => {
-        cb.checked = false;
-        styleItem(cb);
-    });
-    updateProgress();
-    saveState();
-}
+export { resetAll } from './core.js';
 
 export function showCopiedFeedback(btn: HTMLElement): void {
     btn.classList.add('copied');

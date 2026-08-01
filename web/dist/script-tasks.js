@@ -10,6 +10,12 @@
     loadHandlers.add(handler);
   }
 
+  // src/core/core.ts
+  var resetHandlers = /* @__PURE__ */ new Set();
+  function registerResetHandler(handler) {
+    resetHandlers.add(handler);
+  }
+
   // src/core/comments.ts
   function autoExpandTextarea(el) {
     if (!el)
@@ -203,8 +209,19 @@
     updateProgress();
     return false;
   }
+  function resetTasks() {
+    document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb) => {
+      cb.checked = false;
+      styleItem(cb);
+    });
+    document.querySelectorAll(".check-item.text-item, .check-item.simple-item").forEach((item) => {
+      item.classList.remove("checked");
+    });
+    updateProgress();
+  }
   registerSaveHandler(saveTasks);
   registerLoadHandler(loadTasks);
+  registerResetHandler(resetTasks);
   if (typeof window !== "undefined") {
     document.addEventListener("DOMContentLoaded", () => {
       updateProgress();
