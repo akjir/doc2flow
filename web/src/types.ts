@@ -1,15 +1,18 @@
-import type { Core } from './core/core.js';
-import type { Storage } from './core/storage.js';
-import type { Collapse } from './core/collapse.js';
-import type { Comments } from './core/comments.js';
-import type { Export } from './core/export.js';
-import type { Fields } from './core/fields.js';
-import type { Search } from './core/search.js';
-import type { Utils } from './core/utils.js';
-import type { Tasks } from './features/tasks.js';
-import type { Code } from './features/code.js';
-import type { Images } from './features/images.js';
-import type { Toc } from './features/toc.js';
+import type { Core } from './core/core.ts';
+import type { Storage } from './core/storage.ts';
+import type { Export } from './core/export.ts';
+import type { Utils } from './core/utils.ts';
+
+declare global {
+    interface Window {
+        d2f: {
+            core: Core;
+            storage: Storage;
+            export: Export,
+            utils: Utils,
+        }
+    }
+}
 
 export interface D2FI18nDict {
     readonly sections_visible?: string;
@@ -21,26 +24,10 @@ export interface D2FI18nDict {
     readonly [key: string]: string | undefined;
 }
 
-export interface D2FNamespace {
-    core: Core;
-    storage: Storage;
-    collapse: Collapse;
-    comments: Comments;
-    export: Export;
-    fields: Fields;
-    search: Search;
-    utils: Utils;
-    tasks?: Tasks;
-    code?: Code;
-    images?: Images;
-    toc?: Toc;
-}
-
 declare global {
     interface Window {
         D2F_DOC_ID?: string;
         D2F_I18N?: D2FI18nDict;
-        d2f: D2FNamespace;
         exportPDF?: () => void;
         saveDocumentState?: () => void;
         resetAll?: () => void;

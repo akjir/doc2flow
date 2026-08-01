@@ -1,11 +1,3 @@
-export interface Search {
-    removeHighlights(container: HTMLElement | null): void;
-    highlightTextNodes(container: HTMLElement | null, query: string): void;
-    performSearchAndFilter(onSaveState?: () => void): void;
-    toggleSearchToolbar(show?: boolean): void;
-    resetSearch(): void;
-}
-
 let preSearchCollapsedState: Map<string, boolean> | null = null;
 let lastMatchedSectionIds: Set<string> = new Set();
 

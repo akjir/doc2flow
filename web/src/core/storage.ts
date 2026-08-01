@@ -71,7 +71,6 @@ function saveState(): void {
     }
 }
 
-
 function getStateKey(): string {
     const docId = window.D2F_DOC_ID ?? '';
     const rawFilename = window.location.pathname.split('/').pop() ?? 'index.html';

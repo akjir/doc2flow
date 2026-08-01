@@ -1,13 +1,3 @@
-import '../types.js';
-import './storage.js';
-import './core.js';
-import './utils.js';
-import './collapse.js';
-import './comments.js';
-import './export.js';
-import './fields.js';
-import './search.js';
-
 window.exportPDF = () => window.d2f.export.exportPDF();
 window.saveDocumentState = () => window.d2f.export.saveDocumentState();
 window.resetAll = () => window.d2f.core.resetAll();

@@ -3,6 +3,12 @@ export interface Export {
     saveDocumentState(): void;
 }
 
+window.d2f.export = {
+    exportPDF,
+    saveDocumentState,
+};
+
+
 function exportPDF(): void {
     const collapsed = Array.from(document.querySelectorAll<HTMLElement>('.sb.collapsed'));
     collapsed.forEach((el) => el.classList.remove('collapsed'));
@@ -55,8 +61,4 @@ function saveDocumentState(): void {
     URL.revokeObjectURL(url);
 }
 
-window.d2f.export = {
-    exportPDF,
-    saveDocumentState,
-};
 
