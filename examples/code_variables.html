@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Doc2Flow v0.9.3+103.efd4b2d.dev">
-<meta name="version" content="0.9.3+103.efd4b2d.dev">
+<meta name="generator" content="Doc2Flow v0.9.3+104.f52c8a2.dev">
+<meta name="version" content="0.9.3+104.f52c8a2.dev">
 <meta name="repository" content="https://github.com/akjir/doc2flow">
 <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-<meta name="dcterms.created" content="2026-08-01T22:34:54Z">
+<meta name="dcterms.created" content="2026-08-01T22:36:44Z">
 <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
 <title>Microservice Deployment & Infrastructure Setup</title>
 <style>
@@ -899,27 +899,15 @@ mark.d2f-highlight {
 }
 
 /* ==========================================================================
-   Code Variables Table Feature Styles (Gray styled, hidden from print)
+   Code Variables Table Feature Styles (Darker Gray theme, hidden from print)
    ========================================================================== */
 
 .item-table-var-wrap {
   margin: 12px 0 16px;
-  border: 1px solid var(--border-color);
+  border: 1px solid #94a3b8;
   border-radius: var(--radius-xl);
   overflow: hidden;
-  background: var(--gray-light, #f8fafc);
-}
-
-.item-table-var-header {
-  background: #eef2f6;
-  padding: 8px 12px;
-  font-weight: 600;
-  font-size: 12px;
-  color: var(--gray-muted, #8c959f);
-  border-bottom: 1px solid var(--border-color);
-  font-family: var(--font-sans);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  background: #e2e8f0;
 }
 
 .item-table-var {
@@ -933,13 +921,13 @@ mark.d2f-highlight {
 .item-table-var td {
   padding: 8px 12px;
   text-align: left;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid #cbd5e1;
 }
 
 .item-table-var th {
-  background: #eef2f6;
-  font-weight: 600;
-  color: var(--gray-muted, #8c959f);
+  background: #cbd5e1;
+  font-weight: 700;
+  color: #1e293b;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -952,14 +940,15 @@ mark.d2f-highlight {
 .item-table-var td:first-child {
   font-family: var(--font-mono);
   font-weight: 600;
-  color: var(--gray, #444444);
+  color: #0f172a;
   width: 35%;
 }
 
 .item-table-var td:nth-child(2) {
   font-family: var(--font-mono);
-  color: var(--gray, #444444);
+  color: #334155;
 }
+
 
 
 
@@ -1015,7 +1004,7 @@ mark.d2f-highlight {
 </table>
 
 <!-- START GENERATED CONTENT -->
-<div class="item-table-var-wrap"><div class="item-table-var-header">Variables</div><table class="item-table-var" data-variables="{&quot;APP_ENV&quot;:&quot;production&quot;,&quot;DB_HOST&quot;:&quot;db.internal.net&quot;,&quot;PORT&quot;:&quot;8080&quot;,&quot;SYSTEM&quot;:&quot;prod-server&quot;,&quot;UNSET_SECRET&quot;:&quot;&quot;}"><thead><tr><th>Variable</th><th>Value</th></tr></thead><tbody>
+<div class="item-table-var-wrap"><table class="item-table-var" data-variables="{&quot;APP_ENV&quot;:&quot;production&quot;,&quot;DB_HOST&quot;:&quot;db.internal.net&quot;,&quot;PORT&quot;:&quot;8080&quot;,&quot;SYSTEM&quot;:&quot;prod-server&quot;,&quot;UNSET_SECRET&quot;:&quot;&quot;}"><thead><tr><th>Variable</th><th>Value</th></tr></thead><tbody>
 <tr><td>SYSTEM</td><td>prod-server</td></tr>
 <tr><td>PORT</td><td>8080</td></tr>
 <tr><td>DB_HOST</td><td>db.internal.net</td></tr>
@@ -1107,7 +1096,7 @@ mark.d2f-highlight {
 
 <script>
 window.D2F_DOC_ID = 'd2f_id_fe4acdd7616c7913';
-window.D2F_I18N = {"lang_code":"en","save_state":"Save State","callout_note":"Note","date_placeholder":"MM/DD/YYYY","export_pdf":"Export as PDF","date":"Date","contact":"Contact","setup_in_progress":"Process in Progress","progress_template":"{done} of {total} tasks completed ({pct}%)","setup_completed":"Process Completed","copied":"Copied!","company":"Company","name_placeholder":"Name","signature_date":"Date","var_table_variable":"Variable","comment_placeholder":"Add a comment...","callout_caution":"Caution","loading":"Loading...","copy_code":"Copy code","search_placeholder":"Search... (Ctrl+K)","sections_visible":"{visible} / {total} sections visible","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","reset_all":"Reset","callout_warning":"Warning","agent":"Agent","callout_tip":"Tip","var_table_value":"Value","var_table_title":"Variables","callout_important":"Important"};
+window.D2F_I18N = {"reset_all":"Reset","name_placeholder":"Name","save_state":"Save State","callout_warning":"Warning","var_table_value":"Value","callout_important":"Important","callout_note":"Note","var_table_title":"Variables","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","callout_caution":"Caution","setup_in_progress":"Process in Progress","date_placeholder":"MM/DD/YYYY","signature_date":"Date","copy_code":"Copy code","progress_template":"{done} of {total} tasks completed ({pct}%)","date":"Date","setup_completed":"Process Completed","lang_code":"en","contact":"Contact","export_pdf":"Export as PDF","loading":"Loading...","callout_tip":"Tip","search_placeholder":"Search... (Ctrl+K)","var_table_variable":"Variable","agent":"Agent","sections_visible":"{visible} / {total} sections visible","copied":"Copied!","company":"Company","comment_placeholder":"Add a comment..."};
 window.d2f = window.d2f || {};
 "use strict";
 (() => {

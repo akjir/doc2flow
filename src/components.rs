@@ -221,20 +221,18 @@ pub fn render_finish_box(
 #[inline]
 pub fn render_variable_table(
     out: &mut impl Write,
-    title: &str,
     col_variable: &str,
     col_value: &str,
     rows: &[(String, String)],
     json_payload: &str,
 ) {
     let escaped_json = crate::converter::html_escape(json_payload);
-    let escaped_title = crate::converter::html_escape(title);
     let escaped_col_var = crate::converter::html_escape(col_variable);
     let escaped_col_val = crate::converter::html_escape(col_value);
 
     let _ = writeln!(
         out,
-        "<div class=\"item-table-var-wrap\"><div class=\"item-table-var-header\">{escaped_title}</div><table class=\"item-table-var\" data-variables=\"{escaped_json}\"><thead><tr><th>{escaped_col_var}</th><th>{escaped_col_val}</th></tr></thead><tbody>"
+        "<div class=\"item-table-var-wrap\"><table class=\"item-table-var\" data-variables=\"{escaped_json}\"><thead><tr><th>{escaped_col_var}</th><th>{escaped_col_val}</th></tr></thead><tbody>"
     );
     for (k, v) in rows {
         let escaped_k = crate::converter::html_escape(k);
@@ -243,6 +241,7 @@ pub fn render_variable_table(
     }
     let _ = out.write_str("</tbody></table></div>\n");
 }
+
 
 
 #[cfg(test)]
@@ -390,11 +389,11 @@ mod tests {
         let mut buf = String::new();
         let rows = vec![("BLOCK".to_string(), "prod-server".to_string())];
         let json = "{\"BLOCK\":\"prod-server\"}";
-        render_variable_table(&mut buf, "Variables", "Variable", "Value", &rows, json);
+        render_variable_table(&mut buf, "Variable", "Value", &rows, json);
         assert!(buf.contains("<div class=\"item-table-var-wrap\">"));
-        assert!(buf.contains("<div class=\"item-table-var-header\">Variables</div>"));
         assert!(buf.contains("<th>Variable</th><th>Value</th>"));
         assert!(buf.contains("<td>BLOCK</td><td>prod-server</td>"));
     }
 }
+
 

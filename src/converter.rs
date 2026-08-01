@@ -581,8 +581,6 @@ pub fn convert_markdown_to_html_with_options(
                     let json_payload =
                         serde_json::to_string(&map).unwrap_or_else(|_| "{}".to_string());
 
-                    let title_term =
-                        locale.get_ignore_ascii_case("var_table_title").unwrap_or("Variables");
                     let var_term = locale
                         .get_ignore_ascii_case("var_table_variable")
                         .unwrap_or("Variable");
@@ -591,7 +589,6 @@ pub fn convert_markdown_to_html_with_options(
 
                     components::render_variable_table(
                         &mut var_table_html,
-                        title_term,
                         var_term,
                         val_term,
                         &table_rows,
@@ -1502,7 +1499,6 @@ curl https://{{BLOCK}}.local:{{PORT}}/api
 
         assert!(features.has_code);
         assert!(html.contains(r#"<div class="item-table-var-wrap">"#));
-        assert!(html.contains(r#"<div class="item-table-var-header">Variables</div>"#));
         assert!(html.contains(r#"<th>Variable</th><th>Value</th>"#));
         assert!(html.contains(r#"data-variables="{&quot;BLOCK&quot;:&quot;prod-server&quot;,&quot;PORT&quot;:&quot;8080&quot;}""#));
         assert!(html.contains("<td>BLOCK</td><td>prod-server</td>"));

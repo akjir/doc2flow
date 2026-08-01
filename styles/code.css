@@ -81,27 +81,15 @@
 }
 
 /* ==========================================================================
-   Code Variables Table Feature Styles (Gray styled, hidden from print)
+   Code Variables Table Feature Styles (Darker Gray theme, hidden from print)
    ========================================================================== */
 
 .item-table-var-wrap {
   margin: 12px 0 16px;
-  border: 1px solid var(--border-color);
+  border: 1px solid #94a3b8;
   border-radius: var(--radius-xl);
   overflow: hidden;
-  background: var(--gray-light, #f8fafc);
-}
-
-.item-table-var-header {
-  background: #eef2f6;
-  padding: 8px 12px;
-  font-weight: 600;
-  font-size: 12px;
-  color: var(--gray-muted, #8c959f);
-  border-bottom: 1px solid var(--border-color);
-  font-family: var(--font-sans);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  background: #e2e8f0;
 }
 
 .item-table-var {
@@ -115,13 +103,13 @@
 .item-table-var td {
   padding: 8px 12px;
   text-align: left;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid #cbd5e1;
 }
 
 .item-table-var th {
-  background: #eef2f6;
-  font-weight: 600;
-  color: var(--gray-muted, #8c959f);
+  background: #cbd5e1;
+  font-weight: 700;
+  color: #1e293b;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -134,14 +122,15 @@
 .item-table-var td:first-child {
   font-family: var(--font-mono);
   font-weight: 600;
-  color: var(--gray, #444444);
+  color: #0f172a;
   width: 35%;
 }
 
 .item-table-var td:nth-child(2) {
   font-family: var(--font-mono);
-  color: var(--gray, #444444);
+  color: #334155;
 }
+
 
 
 
