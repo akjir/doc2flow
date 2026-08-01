@@ -47,11 +47,12 @@ fn main() -> Result<()> {
     let language_code = frontmatter.language.as_deref().unwrap_or("en");
     let locale = Locale::from_lang_code(language_code);
 
-    let (html_content, features) = converter::convert_markdown_to_html_with_options(
+    let (html_content, mut features) = converter::convert_markdown_to_html_with_options(
         markdown_body,
         &locale,
         frontmatter.number_sections,
     )?;
+    features.has_toc = frontmatter.toc;
 
     let base_dir = input_path.parent();
 

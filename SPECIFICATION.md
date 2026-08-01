@@ -74,6 +74,7 @@ d2f.exe --version
   * `language` / `lang`: Locale code (`en`, `de`) for static UI translations.
   * `logo`: Path to custom logo image (overridden by CLI `-l` / `--logo`).
   * `number_sections`: Enables section numbering (`1. `, `1.1 `). Default: `true`.
+  * `toc`: Enables Table of Contents feature script and styles. Default: `false`.
   * **Header Metadata Table:** Renders Company (`{{COMPANY}}`), Contact (`{{CONTACT}}`), Agent (`{{AGENT}}`), and an interactive persistent Date field.
 * **Callout / Note Box Annotations:** Blockquotes converted to alert panels via prefixes:
   * `>` / `> Note`: Standard Note box (`.note`, neutral styling).

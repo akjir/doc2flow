@@ -126,6 +126,7 @@ pub struct Frontmatter {
     pub language: Option<String>,
     pub logo: Option<String>,
     pub number_sections: bool,
+    pub toc: bool,
 }
 
 /// Detected interactive features present in a Markdown document.
@@ -151,6 +152,7 @@ impl Frontmatter {
             language: None,
             logo: None,
             number_sections: true,
+            toc: false,
         }
     }
 }
@@ -269,7 +271,7 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
                 let key = key.trim();
                 let val_trimmed = trim_matching_quotes(val);
 
-                if val_trimmed.is_empty() && key != "number_sections" {
+                if val_trimmed.is_empty() && key != "number_sections" && key != "toc" {
                     continue;
                 }
 
@@ -285,6 +287,9 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
                     "logo" => fm.logo = Some(val_trimmed.to_string()),
                     "number_sections" => {
                         fm.number_sections = val_trimmed.eq_ignore_ascii_case("true");
+                    }
+                    "toc" => {
+                        fm.toc = val_trimmed.eq_ignore_ascii_case("true");
                     }
                     _ => {}
                 }
@@ -481,7 +486,6 @@ pub fn convert_markdown_to_html_with_options(
                 level: level @ (HeadingLevel::H1 | HeadingLevel::H2),
                 ..
             }) => {
-                features.has_toc = true;
                 let target_level = *level;
                 if in_section {
                     template::render_section_close(&mut out);
@@ -1269,6 +1273,21 @@ mod tests {
         let input4 = "---\ntitle: \"Default Test\"\n---";
         let (fm4, _) = parse_frontmatter(input4);
         assert!(fm4.number_sections);
+    }
+
+    #[test]
+    fn test_toc_frontmatter_parsing() {
+        let input1 = "---\ntoc: true\n---";
+        let (fm1, _) = parse_frontmatter(input1);
+        assert!(fm1.toc);
+
+        let input2 = "---\ntoc: false\n---";
+        let (fm2, _) = parse_frontmatter(input2);
+        assert!(!fm2.toc);
+
+        let input3 = "---\ntitle: \"Default Test\"\n---";
+        let (fm3, _) = parse_frontmatter(input3);
+        assert!(!fm3.toc);
     }
 
     #[test]
