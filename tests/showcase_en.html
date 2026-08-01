@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Doc2Flow v0.9.2+84.d162079.dev">
-<meta name="version" content="0.9.2+84.d162079.dev">
+<meta name="generator" content="Doc2Flow v0.9.2+86.36eb496.dev">
+<meta name="version" content="0.9.2+86.36eb496.dev">
 <meta name="repository" content="https://github.com/akjir/doc2flow">
 <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-<meta name="dcterms.created" content="2026-08-01T11:09:52Z">
+<meta name="dcterms.created" content="2026-08-01T12:56:48Z">
 <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
 <title>Doc2Flow English Showcase</title>
 <style>
@@ -1526,7 +1526,7 @@ mark.d2f-highlight {
 
 <script>
 window.D2F_DOC_ID = 'd2f_id_c9c539743b5bb460';
-window.D2F_I18N = {"callout_note":"Note","callout_important":"Important","comment_placeholder":"Add a comment...","company":"Company","date":"Date","setup_completed":"Process Completed","progress_template":"{done} of {total} tasks completed ({pct}%)","name_placeholder":"Name","callout_caution":"Caution","copied":"Copied!","reset_all":"Reset","contact":"Contact","callout_warning":"Warning","sections_visible":"{visible} / {total} sections visible","export_pdf":"Export as PDF","search_placeholder":"Search... (Ctrl+K)","loading":"Loading...","callout_tip":"Tip","agent":"Agent","lang_code":"en","confirm_reset":"Are you sure you want to reset all markings?","date_placeholder":"MM/DD/YYYY","signature_date":"Date","copy_code":"Copy code","save_state":"Save State","setup_in_progress":"Process in Progress"};
+window.D2F_I18N = {"contact":"Contact","date":"Date","name_placeholder":"Name","copy_code":"Copy code","company":"Company","copied":"Copied!","progress_template":"{done} of {total} tasks completed ({pct}%)","export_pdf":"Export as PDF","lang_code":"en","setup_in_progress":"Process in Progress","agent":"Agent","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","save_state":"Save State","callout_important":"Important","callout_warning":"Warning","callout_caution":"Caution","reset_all":"Reset","setup_completed":"Process Completed","comment_placeholder":"Add a comment...","search_placeholder":"Search... (Ctrl+K)","signature_date":"Date","sections_visible":"{visible} / {total} sections visible","loading":"Loading...","callout_tip":"Tip","date_placeholder":"MM/DD/YYYY","callout_note":"Note"};
 "use strict";
 (() => {
   // src/core/storage.ts
@@ -1592,7 +1592,11 @@ window.D2F_I18N = {"callout_note":"Note","callout_important":"Important","commen
   }
   function resetAll() {
     const i18n = window.D2F_I18N;
-    const confirmMsg = i18n?.confirm_reset ?? "Are you sure you want to reset all markings?";
+    const confirmMsg = i18n?.confirm_reset;
+    if (!confirmMsg) {
+      console.error("Missing i18n translation key: confirm_reset");
+      return;
+    }
     if (!confirm(confirmMsg))
       return;
     for (const handler of resetHandlers) {
@@ -1695,6 +1699,9 @@ window.D2F_I18N = {"callout_note":"Note","callout_important":"Important","commen
   function resetSections() {
     document.querySelectorAll(SECTION_SELECTOR).forEach((sec) => {
       setSectionCollapseState(sec, false);
+    });
+    document.querySelectorAll(".sb.collapsed").forEach((body) => {
+      body.classList.remove("collapsed");
     });
   }
   registerSaveHandler(saveSections);
@@ -1997,8 +2004,30 @@ window.D2F_I18N = {"callout_note":"Note","callout_important":"Important","commen
     syncLinkedFields();
     return false;
   }
+  function resetFields() {
+    document.querySelectorAll(
+      "input, textarea, select"
+    ).forEach((el) => {
+      if (el.id === "search-input" || el.classList.contains("search-input"))
+        return;
+      if (el instanceof HTMLInputElement) {
+        if (el.type === "checkbox" || el.type === "radio") {
+          el.checked = false;
+        } else {
+          el.value = "";
+        }
+      } else if (el instanceof HTMLTextAreaElement) {
+        el.value = "";
+        el.textContent = "";
+      } else if (el instanceof HTMLSelectElement) {
+        el.selectedIndex = 0;
+      }
+    });
+    syncLinkedFields();
+  }
   registerSaveHandler(saveFields);
   registerLoadHandler(loadFields);
+  registerResetHandler(resetFields);
 
   // src/core/comments.ts
   function autoExpandTextarea(el) {
@@ -2070,8 +2099,14 @@ window.D2F_I18N = {"callout_note":"Note","callout_important":"Important","commen
     }
     return false;
   }
+  function resetComments() {
+    document.querySelectorAll(".item-comment-box").forEach((box) => {
+      box.remove();
+    });
+  }
   registerSaveHandler(saveComments);
   registerLoadHandler(loadComments);
+  registerResetHandler(resetComments);
 
   // src/features/tasks.ts
   function isRecord3(val) {
@@ -2212,7 +2247,7 @@ window.D2F_I18N = {"callout_note":"Note","callout_important":"Important","commen
     });
   }
 
-  // src/core/actions.ts
+  // src/core/export.ts
   function exportPDF() {
     const collapsed = Array.from(document.querySelectorAll(".sb.collapsed"));
     collapsed.forEach((el) => el.classList.remove("collapsed"));
@@ -2238,6 +2273,11 @@ window.D2F_I18N = {"callout_note":"Note","callout_important":"Important","commen
     inputs.forEach((input) => {
       input.setAttribute("value", input.value);
     });
+    const textareas = document.querySelectorAll("textarea.item-comment-input");
+    textareas.forEach((ta) => {
+      ta.textContent = ta.value;
+      ta.setAttribute("value", ta.value);
+    });
     const rawFilename = window.location.pathname.split("/").pop() ?? "index.html";
     const filename = decodeURIComponent(rawFilename || "index.html");
     const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
@@ -2251,6 +2291,8 @@ window.D2F_I18N = {"callout_note":"Note","callout_important":"Important","commen
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
+
+  // src/features/code.ts
   function showCopiedFeedback(btn) {
     btn.classList.add("copied");
     setTimeout(() => btn.classList.remove("copied"), 2e3);
@@ -2525,8 +2567,14 @@ window.D2F_I18N = {"callout_note":"Note","callout_important":"Important","commen
     }
     return false;
   }
+  function resetComments() {
+    document.querySelectorAll(".item-comment-box").forEach((box) => {
+      box.remove();
+    });
+  }
   registerSaveHandler(saveComments);
   registerLoadHandler(loadComments);
+  registerResetHandler(resetComments);
 
   // src/features/tasks.ts
   function isRecord(val) {
