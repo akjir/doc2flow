@@ -1,3 +1,9 @@
+declare global {
+    interface Window {
+        copyCode?: (btn: HTMLElement | null) => Promise<void>;
+    }
+}
+
 // WeakMap stores the active timer per button to prevent race conditions
 const feedbackTimers = new WeakMap<HTMLElement, number>();
 
@@ -69,4 +75,9 @@ export async function copyCode(btn: HTMLElement | null): Promise<void> {
 
     // Execute fallback if Clipboard API is unavailable or fails
     fallbackCopyText(text, btn);
-} 
+}
+
+if (typeof window !== 'undefined') {
+    window.copyCode = copyCode;
+}
+ 

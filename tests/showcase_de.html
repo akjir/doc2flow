@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Doc2Flow v0.9.2+86.36eb496.dev">
-<meta name="version" content="0.9.2+86.36eb496.dev">
+<meta name="generator" content="Doc2Flow v0.9.2+87.8b61a41.dev">
+<meta name="version" content="0.9.2+87.8b61a41.dev">
 <meta name="repository" content="https://github.com/akjir/doc2flow">
 <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-<meta name="dcterms.created" content="2026-08-01T12:56:48Z">
+<meta name="dcterms.created" content="2026-08-01T13:17:06Z">
 <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
 <title>Doc2Flow Deutscher Showcase</title>
 <style>
@@ -504,73 +504,6 @@ mark.d2f-highlight {
   --callout-accent: var(--callout-caution-border);
 }
 
-/* Code Blocks */
-.code-block-wrap {
-  position: relative;
-  margin: 8px 0 12px;
-}
-
-.code-block-wrap .code-block {
-  margin: 0;
-}
-
-.code-header {
-  position: absolute;
-  top: 6px;
-  right: 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  z-index: 2;
-}
-
-.code-lang {
-  font-size: 10px;
-  font-weight: bold;
-  font-family: var(--font-sans);
-  color: var(--gray-muted);
-  user-select: none;
-}
-
-.copy-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: var(--gray-muted);
-  padding: 2px 4px;
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.15s, background 0.15s;
-}
-
-.copy-btn:hover {
-  color: var(--bd);
-  background: rgba(0, 0, 0, 0.06);
-}
-
-.copy-btn.copied {
-  color: #2da44e;
-}
-
-.code-block {
-  background: #f0f2f5;
-  color: #24292f;
-  border: 1px solid var(--border-color);
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  padding: 12px 16px;
-  border-radius: var(--radius-xl);
-  margin: 8px 0 12px;
-  white-space: pre;
-  overflow-x: auto;
-  line-height: 1.6;
-}
-
-.code-block .c { color: #6A9955; }
-.code-block .s { color: #CE9178; }
-
 /* Action Buttons */
 .btnrow {
   display: flex;
@@ -674,7 +607,7 @@ mark.d2f-highlight {
     cursor: default;
   }
 
-  .note, .bw-block, .code-block, hr {
+  .note, .bw-block, hr {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -712,6 +645,84 @@ mark.d2f-highlight {
   .info-table th, .info-table td {
     padding: 6px 6px;
     font-size: 11px;
+  }
+}
+
+/* ==========================================================================
+   Code Block Feature Styles
+   ========================================================================== */
+
+.code-block-wrap {
+  position: relative;
+  margin: 8px 0 12px;
+}
+
+.code-block-wrap .code-block {
+  margin: 0;
+}
+
+.code-header {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 2;
+}
+
+.code-lang {
+  font-size: 10px;
+  font-weight: bold;
+  font-family: var(--font-sans);
+  color: var(--gray-muted);
+  user-select: none;
+}
+
+.copy-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--gray-muted);
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+}
+
+.copy-btn:hover {
+  color: var(--bd);
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.copy-btn.copied {
+  color: #2da44e;
+}
+
+.code-block {
+  background: #f0f2f5;
+  color: #24292f;
+  border: 1px solid var(--border-color);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  padding: 12px 16px;
+  border-radius: var(--radius-xl);
+  margin: 8px 0 12px;
+  white-space: pre;
+  overflow-x: auto;
+  line-height: 1.6;
+}
+
+.code-block .c { color: #6A9955; }
+.code-block .s { color: #CE9178; }
+
+/* Print Rules for Code Blocks */
+@media print {
+  .code-block {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }
 
@@ -1526,7 +1537,7 @@ mark.d2f-highlight {
 
 <script>
 window.D2F_DOC_ID = 'd2f_id_468e65bc2ccf89b4';
-window.D2F_I18N = {"name_placeholder":"Name","setup_completed":"Vorgang abgeschlossen","copied":"Kopiert!","loading":"Lade...","company":"Firma","copy_code":"Code kopieren","setup_in_progress":"Vorgang in Bearbeitung","date":"Datum","date_placeholder":"TT.MM.JJJJ","callout_note":"Hinweis","lang_code":"de","save_state":"Stand sichern","callout_important":"Wichtig","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","callout_warning":"Warnung","contact":"Ansprechpartner","agent":"Bearbeiter","reset_all":"Zurücksetzen","callout_caution":"Achtung","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","comment_placeholder":"Kommentar hinzufügen...","signature_date":"Datum","export_pdf":"Als PDF exportieren","callout_tip":"Tipp","search_placeholder":"Suchen... (Ctrl+K)","sections_visible":"{visible} / {total} Abschnitte sichtbar"};
+window.D2F_I18N = {"loading":"Lade...","company":"Firma","agent":"Bearbeiter","callout_note":"Hinweis","callout_tip":"Tipp","callout_caution":"Achtung","setup_completed":"Vorgang abgeschlossen","callout_important":"Wichtig","signature_date":"Datum","export_pdf":"Als PDF exportieren","sections_visible":"{visible} / {total} Abschnitte sichtbar","copied":"Kopiert!","date_placeholder":"TT.MM.JJJJ","lang_code":"de","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","save_state":"Stand sichern","comment_placeholder":"Kommentar hinzufügen...","callout_warning":"Warnung","search_placeholder":"Suchen... (Ctrl+K)","setup_in_progress":"Vorgang in Bearbeitung","contact":"Ansprechpartner","reset_all":"Zurücksetzen","date":"Datum","copy_code":"Code kopieren","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","name_placeholder":"Name"};
 "use strict";
 (() => {
   // src/core/storage.ts
@@ -2292,45 +2303,6 @@ window.D2F_I18N = {"name_placeholder":"Name","setup_completed":"Vorgang abgeschl
     URL.revokeObjectURL(url);
   }
 
-  // src/features/code.ts
-  function showCopiedFeedback(btn) {
-    btn.classList.add("copied");
-    setTimeout(() => btn.classList.remove("copied"), 2e3);
-  }
-  function fallbackCopyText(text, btn) {
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    ta.style.position = "fixed";
-    ta.style.opacity = "0";
-    document.body.appendChild(ta);
-    ta.select();
-    try {
-      document.execCommand("copy");
-      showCopiedFeedback(btn);
-    } catch (e) {
-      console.error("Fallback copy failed", e);
-    }
-    document.body.removeChild(ta);
-  }
-  function copyCode(btn) {
-    if (!btn)
-      return;
-    const wrap = btn.closest(".code-block-wrap");
-    if (!wrap)
-      return;
-    const codeEl = wrap.querySelector("code");
-    if (!codeEl)
-      return;
-    const text = codeEl.innerText || codeEl.textContent || "";
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(() => {
-        showCopiedFeedback(btn);
-      }).catch(() => fallbackCopyText(text, btn));
-    } else {
-      fallbackCopyText(text, btn);
-    }
-  }
-
   // src/core/utils.ts
   function debounce(func, wait) {
     let timeout;
@@ -2346,7 +2318,6 @@ window.D2F_I18N = {"name_placeholder":"Name","setup_completed":"Vorgang abgeschl
   window.exportPDF = exportPDF;
   window.saveDocumentState = saveDocumentState;
   window.resetAll = resetAll;
-  window.copyCode = copyCode;
   (() => {
     "use strict";
     const saveStateDebounced = debounce(saveState, 300);
@@ -2477,6 +2448,70 @@ window.D2F_I18N = {"name_placeholder":"Name","setup_completed":"Vorgang abgeschl
       performSearchAndFilter();
     });
   })();
+})();
+
+"use strict";
+(() => {
+  // src/features/code.ts
+  var feedbackTimers = /* @__PURE__ */ new WeakMap();
+  function showCopiedFeedback(btn) {
+    btn.classList.add("copied");
+    if (feedbackTimers.has(btn)) {
+      window.clearTimeout(feedbackTimers.get(btn));
+    }
+    const timer = window.setTimeout(() => {
+      btn.classList.remove("copied");
+      feedbackTimers.delete(btn);
+    }, 2e3);
+    feedbackTimers.set(btn, timer);
+  }
+  function fallbackCopyText(text, btn) {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    ta.style.top = "0";
+    ta.setAttribute("readonly", "");
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    let success = false;
+    try {
+      success = document.execCommand("copy");
+      if (success) {
+        showCopiedFeedback(btn);
+      }
+    } catch (e) {
+      console.error("Fallback copy failed", e);
+    } finally {
+      document.body.removeChild(ta);
+    }
+    return success;
+  }
+  async function copyCode(btn) {
+    if (!btn)
+      return;
+    const wrap = btn.closest(".code-block-wrap");
+    if (!wrap)
+      return;
+    const codeEl = wrap.querySelector("code");
+    if (!codeEl)
+      return;
+    const text = codeEl.textContent ?? "";
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(text);
+        showCopiedFeedback(btn);
+        return;
+      } catch (err) {
+        console.warn("Clipboard API failed, falling back to execCommand:", err);
+      }
+    }
+    fallbackCopyText(text, btn);
+  }
+  if (typeof window !== "undefined") {
+    window.copyCode = copyCode;
+  }
 })();
 
 "use strict";

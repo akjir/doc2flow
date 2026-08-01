@@ -8,6 +8,9 @@ use std::fmt::Write;
 /// Embedded core CSS styles.
 pub static STYLE_CORE: &str = include_str!("../styles/core.css");
 
+/// Embedded code block CSS feature styles.
+pub static STYLE_CODE: &str = include_str!("../styles/code.css");
+
 /// Embedded task list and checklist CSS feature styles.
 pub static STYLE_TASKS: &str = include_str!("../styles/tasks.css");
 
@@ -19,6 +22,9 @@ pub static STYLE_TOC: &str = include_str!("../styles/toc.css");
 
 /// Embedded core JavaScript bundle.
 pub static SCRIPT_CORE: &str = include_str!("../web/dist/script-core.js");
+
+/// Embedded code block JavaScript feature bundle.
+pub static SCRIPT_CODE: &str = include_str!("../web/dist/script-code.js");
 
 /// Embedded task list and checklist JavaScript feature bundle.
 pub static SCRIPT_TASKS: &str = include_str!("../web/dist/script-tasks.js");
@@ -33,6 +39,11 @@ pub static SCRIPT_TOC: &str = include_str!("../web/dist/script-toc.js");
 pub fn render_styles(out: &mut String, features: &DocumentFeatures) {
     out.push_str(STYLE_CORE);
     out.push_str("\n");
+
+    if features.has_code {
+        out.push_str(STYLE_CODE);
+        out.push_str("\n");
+    }
 
     if features.has_tasks {
         out.push_str(STYLE_TASKS);
@@ -54,6 +65,11 @@ pub fn render_styles(out: &mut String, features: &DocumentFeatures) {
 pub fn render_scripts(out: &mut String, features: &DocumentFeatures) {
     out.push_str(SCRIPT_CORE);
     out.push_str("\n");
+
+    if features.has_code {
+        out.push_str(SCRIPT_CODE);
+        out.push_str("\n");
+    }
 
     if features.has_tasks {
         out.push_str(SCRIPT_TASKS);
@@ -525,9 +541,10 @@ mod tests {
         let fm = Frontmatter::new("Test Corp");
         let locale = Locale::from_lang_code("en");
 
-        // Case 1: No images feature
+        // Case 1: No images feature & no code feature
         let mut features_no_img = DocumentFeatures::default();
         features_no_img.has_images = false;
+        features_no_img.has_code = false;
         let html_no_img = render(&fm, &locale, "<p>No images</p>", "doc_no_img", None, &features_no_img)
             .expect("Render failed");
 
@@ -535,10 +552,13 @@ mod tests {
         assert!(!html_no_img.contains(".lb-x"));
         assert!(!html_no_img.contains("openLightbox"));
         assert!(!html_no_img.contains("closeLightbox"));
+        assert!(!html_no_img.contains(".code-block-wrap"));
+        assert!(!html_no_img.contains("copyCode"));
 
-        // Case 2: Images feature active
+        // Case 2: Images & Code feature active
         let mut features_img = DocumentFeatures::default();
         features_img.has_images = true;
+        features_img.has_code = true;
         let html_img = render(&fm, &locale, "<p>Has image</p>", "doc_img", None, &features_img)
             .expect("Render failed");
 
@@ -546,6 +566,8 @@ mod tests {
         assert!(html_img.contains(".lb-x"));
         assert!(html_img.contains("openLightbox"));
         assert!(html_img.contains("closeLightbox"));
+        assert!(html_img.contains(".code-block-wrap"));
+        assert!(html_img.contains("copyCode"));
     }
 
     #[test]

@@ -5,14 +5,12 @@ import { syncLinkedFields, checkDateShortcut } from './fields.js';
 import { styleItem, updateProgress } from '../features/tasks.js';
 import { getOrCreateCommentBox } from './comments.js';
 import { exportPDF, saveDocumentState } from './export.js';
-import { copyCode } from '../features/code.js';
 import { resetAll } from './core.js';
 import { debounce } from './utils.js';
 
 window.exportPDF = exportPDF;
 window.saveDocumentState = saveDocumentState;
 window.resetAll = resetAll;
-window.copyCode = copyCode;
 
 (() => {
     'use strict';

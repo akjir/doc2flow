@@ -131,6 +131,7 @@ pub struct Frontmatter {
 /// Detected interactive features present in a Markdown document.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct DocumentFeatures {
+    pub has_code: bool,
     pub has_tasks: bool,
     pub has_images: bool,
     pub has_toc: bool,
@@ -589,6 +590,7 @@ pub fn convert_markdown_to_html_with_options(
 
             // Code Blocks (e.g. ```ini ... ```)
             Event::Start(Tag::CodeBlock(kind)) => {
+                features.has_code = true;
                 let lang_opt = match kind {
                     CodeBlockKind::Fenced(lang) if !lang.is_empty() => Some(lang.to_string()),
                     _ => None,

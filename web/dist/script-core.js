@@ -763,45 +763,6 @@
     URL.revokeObjectURL(url);
   }
 
-  // src/features/code.ts
-  function showCopiedFeedback(btn) {
-    btn.classList.add("copied");
-    setTimeout(() => btn.classList.remove("copied"), 2e3);
-  }
-  function fallbackCopyText(text, btn) {
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    ta.style.position = "fixed";
-    ta.style.opacity = "0";
-    document.body.appendChild(ta);
-    ta.select();
-    try {
-      document.execCommand("copy");
-      showCopiedFeedback(btn);
-    } catch (e) {
-      console.error("Fallback copy failed", e);
-    }
-    document.body.removeChild(ta);
-  }
-  function copyCode(btn) {
-    if (!btn)
-      return;
-    const wrap = btn.closest(".code-block-wrap");
-    if (!wrap)
-      return;
-    const codeEl = wrap.querySelector("code");
-    if (!codeEl)
-      return;
-    const text = codeEl.innerText || codeEl.textContent || "";
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(() => {
-        showCopiedFeedback(btn);
-      }).catch(() => fallbackCopyText(text, btn));
-    } else {
-      fallbackCopyText(text, btn);
-    }
-  }
-
   // src/core/utils.ts
   function debounce(func, wait) {
     let timeout;
@@ -817,7 +778,6 @@
   window.exportPDF = exportPDF;
   window.saveDocumentState = saveDocumentState;
   window.resetAll = resetAll;
-  window.copyCode = copyCode;
   (() => {
     "use strict";
     const saveStateDebounced = debounce(saveState, 300);
