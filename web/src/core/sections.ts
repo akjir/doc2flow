@@ -107,3 +107,29 @@ window.d2f.storage.registerSaveHandler(saveSections);
 window.d2f.storage.registerLoadHandler(loadSections);
 window.d2f.core.registerResetHandler(resetSections);
 
+if (typeof window !== 'undefined') {
+    document.addEventListener('keydown', (e: KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            const target = e.target;
+            if (target instanceof Element) {
+                const sh = target.closest<HTMLElement>('.sh');
+                if (sh && !sh.classList.contains('no-toggle')) {
+                    e.preventDefault();
+                    toggleSection(sh, () => window.d2f.storage.saveState());
+                }
+            }
+        }
+    });
+
+    document.addEventListener('click', (e: MouseEvent) => {
+        const target = e.target;
+        if (!(target instanceof Element)) return;
+
+        const sh = target.closest<HTMLElement>('.sh');
+        if (sh && !sh.classList.contains('no-toggle')) {
+            toggleSection(sh, () => window.d2f.storage.saveState());
+        }
+    });
+}
+
+

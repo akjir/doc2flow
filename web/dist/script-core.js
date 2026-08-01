@@ -62,34 +62,6 @@
     return "d2f_state_" + (docId ? `${docId}_` : "") + filename;
   }
 
-  // src/core/core.ts
-  var resetHandlers = /* @__PURE__ */ new Set();
-  window.d2f.core = {
-    registerResetHandler,
-    resetAll
-  };
-  function registerResetHandler(handler) {
-    resetHandlers.add(handler);
-  }
-  function resetAll() {
-    const i18n = window.D2F_I18N;
-    const confirmMsg = i18n?.confirm_reset;
-    if (!confirmMsg) {
-      console.error("Missing i18n translation key: confirm_reset");
-      return;
-    }
-    if (!confirm(confirmMsg))
-      return;
-    for (const handler of resetHandlers) {
-      try {
-        handler();
-      } catch (e) {
-        console.warn("Failed to execute reset handler", e);
-      }
-    }
-    window.d2f.storage.saveState();
-  }
-
   // src/core/utils.ts
   function debounce(func, wait) {
     let timeout;
@@ -100,13 +72,17 @@
       timeout = setTimeout(() => func(...args), wait);
     };
   }
+  function isRecord(val) {
+    return typeof val === "object" && val !== null && !Array.isArray(val);
+  }
   window.d2f.utils = {
-    debounce
+    debounce,
+    isRecord
   };
 
-  // src/core/collapse.ts
+  // src/core/sections.ts
   var SECTION_SELECTOR = ".d2f-section, .section";
-  function isRecord(val) {
+  function isRecord2(val) {
     return typeof val === "object" && val !== null && !Array.isArray(val);
   }
   function setSectionCollapseState(sec, isCollapsed) {
@@ -122,18 +98,6 @@
         toggler.innerHTML = isCollapsed ? "&#9650;" : "&#9660;";
       }
     }
-  }
-  function updateEmptySections() {
-    document.querySelectorAll(SECTION_SELECTOR).forEach((sec) => {
-      const sh = sec.querySelector(".sh");
-      const body = sec.querySelector(".sb");
-      if (sh && body && body.children.length === 0 && body.innerHTML.trim() === "") {
-        sh.classList.add("no-toggle");
-        sh.removeAttribute("role");
-        sh.removeAttribute("tabindex");
-        sh.removeAttribute("aria-expanded");
-      }
-    });
   }
   function toggleSection(target, onSave) {
     let headerElement = null;
@@ -180,7 +144,7 @@
   }
   function loadSections(state) {
     const sectionsData = state["sections"];
-    if (isRecord(sectionsData)) {
+    if (isRecord2(sectionsData)) {
       document.querySelectorAll(SECTION_SELECTOR).forEach((sec, index) => {
         const key = sec.id || "sec_" + String(index);
         const shouldCollapse = sectionsData[key];
@@ -199,16 +163,32 @@
       body.classList.remove("collapsed");
     });
   }
-  window.d2f.collapse = {
-    updateEmptySections,
-    toggleSection,
-    saveSections,
-    loadSections,
-    resetSections
-  };
   window.d2f.storage.registerSaveHandler(saveSections);
   window.d2f.storage.registerLoadHandler(loadSections);
   window.d2f.core.registerResetHandler(resetSections);
+  if (typeof window !== "undefined") {
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        const target = e.target;
+        if (target instanceof Element) {
+          const sh = target.closest(".sh");
+          if (sh && !sh.classList.contains("no-toggle")) {
+            e.preventDefault();
+            toggleSection(sh, () => window.d2f.storage.saveState());
+          }
+        }
+      }
+    });
+    document.addEventListener("click", (e) => {
+      const target = e.target;
+      if (!(target instanceof Element))
+        return;
+      const sh = target.closest(".sh");
+      if (sh && !sh.classList.contains("no-toggle")) {
+        toggleSection(sh, () => window.d2f.storage.saveState());
+      }
+    });
+  }
 
   // src/core/comments.ts
   function autoExpandTextarea(el) {
@@ -285,70 +265,97 @@
       box.remove();
     });
   }
-  window.d2f.comments = {
-    autoExpandTextarea,
-    getOrCreateCommentBox,
-    saveComments,
-    loadComments,
-    resetComments
-  };
   window.d2f.storage.registerSaveHandler(saveComments);
   window.d2f.storage.registerLoadHandler(loadComments);
   window.d2f.core.registerResetHandler(resetComments);
+  if (typeof window !== "undefined") {
+    const saveStateDebounced = window.d2f.utils.debounce(() => window.d2f.storage.saveState(), 300);
+    document.addEventListener("click", (e) => {
+      const target = e.target;
+      if (!(target instanceof Element))
+        return;
+      const commentBtn = target.closest(".item-comment-icon");
+      if (commentBtn) {
+        const checkItem = commentBtn.closest(".check-item");
+        if (checkItem) {
+          const res = getOrCreateCommentBox(checkItem);
+          if (res?.input) {
+            res.input.focus();
+          }
+        }
+        return;
+      }
+      const commentDelBtn = target.closest(".item-comment-del");
+      if (commentDelBtn) {
+        const box = commentDelBtn.closest(".item-comment-box");
+        if (box) {
+          box.remove();
+          window.d2f.storage.saveState();
+        }
+      }
+    });
+    const handleCommentInput = (e) => {
+      const target = e.target;
+      if (target instanceof HTMLTextAreaElement && target.classList.contains("item-comment-input")) {
+        target.textContent = target.value;
+        target.setAttribute("value", target.value);
+        saveStateDebounced();
+      }
+    };
+    document.addEventListener("input", handleCommentInput);
+    document.addEventListener("change", handleCommentInput);
+  }
 
   // src/core/export.ts
-  function exportPDF() {
-    const collapsed = Array.from(document.querySelectorAll(".sb.collapsed"));
-    collapsed.forEach((el) => el.classList.remove("collapsed"));
-    const restore = () => {
-      collapsed.forEach((el) => el.classList.add("collapsed"));
-      window.removeEventListener("afterprint", restore);
-    };
-    window.addEventListener("afterprint", restore);
-    setTimeout(() => window.print(), 100);
-  }
-  function saveDocumentState() {
-    window.d2f.storage.saveState();
-    const checkboxes = document.querySelectorAll('.check-item input[type="checkbox"]');
-    checkboxes.forEach((cb) => {
-      if (cb.checked) {
-        cb.setAttribute("checked", "checked");
-      } else {
-        cb.removeAttribute("checked");
-      }
-      window.d2f.tasks?.styleItem(cb);
-    });
-    const inputs = document.querySelectorAll("input.persistent-field, .info-table input");
-    inputs.forEach((input) => {
-      input.setAttribute("value", input.value);
-    });
-    const textareas = document.querySelectorAll("textarea.item-comment-input");
-    textareas.forEach((ta) => {
-      ta.textContent = ta.value;
-      ta.setAttribute("value", ta.value);
-    });
-    const rawFilename = window.location.pathname.split("/").pop() ?? "index.html";
-    const filename = decodeURIComponent(rawFilename || "index.html");
-    const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
-    const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-  window.d2f.export = {
-    exportPDF,
-    saveDocumentState
+  var ExportType = {
+    PDF: "PDF",
+    DOCUMENT: "DOCUMENT"
   };
+  var exportHandlers = /* @__PURE__ */ new Set();
+  window.d2f.export = {
+    export: performExport,
+    registerExportHandler
+  };
+  function registerExportHandler(handler) {
+    exportHandlers.add(handler);
+  }
+  function performExport(type) {
+    for (const handler of exportHandlers) {
+      try {
+        handler(type);
+      } catch (e) {
+        console.warn("Failed to execute export handler", e);
+      }
+    }
+    if (type === ExportType.PDF) {
+      const collapsed = Array.from(document.querySelectorAll(".sb.collapsed"));
+      collapsed.forEach((el) => el.classList.remove("collapsed"));
+      const restore = () => {
+        collapsed.forEach((el) => el.classList.add("collapsed"));
+        window.removeEventListener("afterprint", restore);
+      };
+      window.addEventListener("afterprint", restore);
+      setTimeout(() => window.print(), 100);
+      return;
+    }
+    if (type === ExportType.DOCUMENT) {
+      window.d2f.storage.saveState();
+      const rawFilename = window.location.pathname.split("/").pop() ?? "index.html";
+      const filename = decodeURIComponent(rawFilename || "index.html");
+      const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  }
 
   // src/core/fields.ts
-  function isRecord2(val) {
-    return typeof val === "object" && val !== null && !Array.isArray(val);
-  }
   function syncFieldPair(id1, id2, sourceInput) {
     const raw1 = document.getElementById(id1);
     const raw2 = document.getElementById(id2);
@@ -425,7 +432,7 @@
   }
   function loadFields(state) {
     const fieldsData = state["fields"];
-    if (isRecord2(fieldsData)) {
+    if (window.d2f.utils.isRecord(fieldsData)) {
       document.querySelectorAll("input.persistent-field").forEach((input, index) => {
         const key = input.id || "f_" + String(index);
         const val = fieldsData[key];
@@ -458,19 +465,33 @@
     });
     syncLinkedFields();
   }
-  window.d2f.fields = {
-    syncFieldPair,
-    syncLinkedFields,
-    formatDateFromTemplate,
-    getTodayFormatted,
-    checkDateShortcut,
-    saveFields,
-    loadFields,
-    resetFields
-  };
   window.d2f.storage.registerSaveHandler(saveFields);
   window.d2f.storage.registerLoadHandler(loadFields);
   window.d2f.core.registerResetHandler(resetFields);
+  if (typeof window !== "undefined") {
+    const linkedIds = ["f_info_agent", "f_sign_agent", "f_info_date", "f_sign_date"];
+    const saveStateDebounced = window.d2f.utils.debounce(() => window.d2f.storage.saveState(), 300);
+    const handleInputOrChange = (e) => {
+      const target = e.target;
+      if (!(target instanceof HTMLInputElement))
+        return;
+      if (target.classList.contains("persistent-field")) {
+        saveStateDebounced();
+      }
+      if (target.id && linkedIds.includes(target.id)) {
+        if (target.id.toLowerCase().includes("date")) {
+          checkDateShortcut(target);
+        }
+        syncLinkedFields(target);
+        saveStateDebounced();
+      } else if (target.matches('input[id*="date"], input[name*="date"], input.date-field')) {
+        checkDateShortcut(target);
+        saveStateDebounced();
+      }
+    };
+    document.addEventListener("input", handleInputOrChange);
+    document.addEventListener("change", handleInputOrChange);
+  }
 
   // src/core/search.ts
   var preSearchCollapsedState = null;
@@ -547,7 +568,7 @@
       }
     });
   }
-  function performSearchAndFilter(onSaveState) {
+  function performSearchAndFilter() {
     const rawSearchInput = document.getElementById("search-input");
     const searchInput = rawSearchInput instanceof HTMLInputElement ? rawSearchInput : null;
     const searchCounter = document.getElementById("search-counter");
@@ -620,9 +641,7 @@
       });
       preSearchCollapsedState = null;
       lastMatchedSectionIds.clear();
-      if (onSaveState) {
-        onSaveState();
-      }
+      window.d2f.storage.saveState();
     }
     const searchClearBtn = document.getElementById("search-clear-btn");
     if (searchClearBtn) {
@@ -674,119 +693,17 @@
       performSearchAndFilter();
     }
   }
-  window.d2f.search = {
-    removeHighlights,
-    highlightTextNodes,
-    performSearchAndFilter,
-    toggleSearchToolbar,
-    resetSearch
-  };
   window.d2f.core.registerResetHandler(resetSearch);
-
-  // src/core/main.ts
-  window.exportPDF = () => window.d2f.export.exportPDF();
-  window.saveDocumentState = () => window.d2f.export.saveDocumentState();
-  window.resetAll = () => window.d2f.core.resetAll();
-  (() => {
-    "use strict";
-    const saveStateDebounced = window.d2f.utils.debounce(() => window.d2f.storage.saveState(), 300);
+  if (typeof window !== "undefined") {
     document.addEventListener("DOMContentLoaded", () => {
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          const target = e.target;
-          if (target instanceof Element) {
-            const sh = target.closest(".sh");
-            if (sh && !sh.classList.contains("no-toggle")) {
-              e.preventDefault();
-              window.d2f.collapse.toggleSection(sh, () => window.d2f.storage.saveState());
-            }
-          }
-        }
-      });
-      document.addEventListener("click", (e) => {
-        const target = e.target;
-        if (!(target instanceof Element))
-          return;
-        const sh = target.closest(".sh");
-        if (sh && !sh.classList.contains("no-toggle")) {
-          window.d2f.collapse.toggleSection(sh, () => window.d2f.storage.saveState());
-          return;
-        }
-        const commentBtn = target.closest(".item-comment-icon");
-        if (commentBtn) {
-          const checkItem2 = commentBtn.closest(".check-item");
-          if (checkItem2) {
-            const res = window.d2f.comments.getOrCreateCommentBox(checkItem2);
-            if (res?.input) {
-              res.input.focus();
-            }
-          }
-          return;
-        }
-        const commentDelBtn = target.closest(".item-comment-del");
-        if (commentDelBtn) {
-          const box = commentDelBtn.closest(".item-comment-box");
-          if (box) {
-            box.remove();
-            window.d2f.storage.saveState();
-          }
-          return;
-        }
-        const checkItem = target.closest(".check-item");
-        if (checkItem) {
-          if (target.tagName === "A" || target.tagName === "IMG" || target.closest(".item-comment-box")) {
-            return;
-          }
-          const cb = checkItem.querySelector('input[type="checkbox"]');
-          if (cb) {
-            if (target !== cb && !target.closest("label")) {
-              cb.checked = !cb.checked;
-            }
-            window.d2f.tasks?.styleItem(cb);
-            window.d2f.tasks?.updateProgress();
-            window.d2f.storage.saveState();
-          } else if (checkItem.classList.contains("text-item") || checkItem.classList.contains("simple-item")) {
-            checkItem.classList.toggle("checked");
-            window.d2f.storage.saveState();
-          }
-        }
-      });
-      const linkedIds = ["f_info_agent", "f_sign_agent", "f_info_date", "f_sign_date"];
-      const handleInputOrChange = (e) => {
-        const target = e.target;
-        if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement))
-          return;
-        if (target.classList.contains("persistent-field")) {
-          saveStateDebounced();
-        }
-        if (target instanceof HTMLTextAreaElement && target.classList.contains("item-comment-input")) {
-          target.textContent = target.value;
-          target.setAttribute("value", target.value);
-          saveStateDebounced();
-        }
-        if (target instanceof HTMLInputElement) {
-          if (target.id && linkedIds.includes(target.id)) {
-            if (target.id.toLowerCase().includes("date")) {
-              window.d2f.fields.checkDateShortcut(target);
-            }
-            window.d2f.fields.syncLinkedFields(target);
-            saveStateDebounced();
-          } else if (target.matches('input[id*="date"], input[name*="date"], input.date-field')) {
-            window.d2f.fields.checkDateShortcut(target);
-            saveStateDebounced();
-          }
-        }
-      };
-      document.addEventListener("input", handleInputOrChange);
-      document.addEventListener("change", handleInputOrChange);
       const searchToggleBtn = document.getElementById("search-toggle-btn");
       if (searchToggleBtn) {
-        searchToggleBtn.addEventListener("click", () => window.d2f.search.toggleSearchToolbar());
+        searchToggleBtn.addEventListener("click", () => toggleSearchToolbar());
       }
       const rawSearchInput = document.getElementById("search-input");
       const searchInput = rawSearchInput instanceof HTMLInputElement ? rawSearchInput : null;
       if (searchInput) {
-        searchInput.addEventListener("input", () => window.d2f.search.performSearchAndFilter());
+        searchInput.addEventListener("input", () => performSearchAndFilter());
       }
       const searchClearBtn = document.getElementById("search-clear-btn");
       if (searchClearBtn) {
@@ -795,26 +712,55 @@
             searchInput.value = "";
             searchInput.focus();
           }
-          window.d2f.search.performSearchAndFilter(() => window.d2f.storage.saveState());
+          performSearchAndFilter();
+          window.d2f.storage.saveState();
         });
       }
-      document.addEventListener("keydown", (e) => {
-        if ((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "K")) {
-          e.preventDefault();
-          window.d2f.search.toggleSearchToolbar(true);
-        } else if (e.key === "Escape") {
-          const toolbar = document.getElementById("search-toolbar");
-          if (toolbar && !toolbar.classList.contains("hidden")) {
-            e.preventDefault();
-            window.d2f.search.toggleSearchToolbar(false);
-          }
-        }
-      });
-      window.d2f.collapse.updateEmptySections();
-      window.d2f.storage.loadState();
-      window.d2f.fields.syncLinkedFields();
-      window.d2f.tasks?.updateProgress();
-      window.d2f.search.performSearchAndFilter();
     });
-  })();
+    document.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "K")) {
+        e.preventDefault();
+        toggleSearchToolbar(true);
+      } else if (e.key === "Escape") {
+        const toolbar = document.getElementById("search-toolbar");
+        if (toolbar && !toolbar.classList.contains("hidden")) {
+          e.preventDefault();
+          toggleSearchToolbar(false);
+        }
+      }
+    });
+  }
+
+  // src/core/core.ts
+  var resetHandlers = /* @__PURE__ */ new Set();
+  window.d2f.core = {
+    registerResetHandler,
+    resetAll
+  };
+  function registerResetHandler(handler) {
+    resetHandlers.add(handler);
+  }
+  function resetAll() {
+    const i18n = window.D2F_I18N;
+    const confirmMsg = i18n?.confirm_reset;
+    if (!confirmMsg) {
+      console.error("Missing i18n translation key: confirm_reset");
+      return;
+    }
+    if (!confirm(confirmMsg))
+      return;
+    for (const handler of resetHandlers) {
+      try {
+        handler();
+      } catch (e) {
+        console.warn("Failed to execute reset handler", e);
+      }
+    }
+    window.d2f.storage.saveState();
+  }
+  if (typeof window !== "undefined") {
+    window.exportPDF = () => window.d2f.export.export(ExportType.PDF);
+    window.saveDocumentState = () => window.d2f.export.export(ExportType.DOCUMENT);
+    window.resetAll = () => window.d2f.core.resetAll();
+  }
 })();

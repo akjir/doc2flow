@@ -164,13 +164,12 @@ doc2flow/
 │   ├── src/
 │   │   ├── types.ts          # Shared TypeScript type definitions
 │   │   ├── core/             # Base core infrastructure modules
-│   │   │   ├── collapse.ts   # Collapsible section toggling and state handlers
 │   │   │   ├── comments.ts   # Inline check-item comment boxes and persistence
-│   │   │   ├── core.ts       # Central core module and reset handler registry
+│   │   │   ├── core.ts       # Central core module, bundle entry point, and reset handler registry
 │   │   │   ├── export.ts     # Document export operations (PDF export and HTML state download)
 │   │   │   ├── fields.ts     # Persistent inputs, date shortcuts and field synchronization
-│   │   │   ├── main.ts       # Main entry point and global event listeners
 │   │   │   ├── search.ts     # Search toolbar and text filtering
+│   │   │   ├── sections.ts   # Collapsible section toggling and state handlers
 │   │   │   ├── storage.ts    # localStorage persistence manager for save and load handlers
 │   │   │   └── utils.ts      # Utility functions for debouncing
 │   │   └── features/         # Extension feature components

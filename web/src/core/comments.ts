@@ -90,3 +90,46 @@ window.d2f.storage.registerSaveHandler(saveComments);
 window.d2f.storage.registerLoadHandler(loadComments);
 window.d2f.core.registerResetHandler(resetComments);
 
+if (typeof window !== 'undefined') {
+    const saveStateDebounced = window.d2f.utils.debounce(() => window.d2f.storage.saveState(), 300);
+
+    document.addEventListener('click', (e: MouseEvent) => {
+        const target = e.target;
+        if (!(target instanceof Element)) return;
+
+        const commentBtn = target.closest<HTMLElement>('.item-comment-icon');
+        if (commentBtn) {
+            const checkItem = commentBtn.closest<HTMLElement>('.check-item');
+            if (checkItem) {
+                const res = getOrCreateCommentBox(checkItem);
+                if (res?.input) {
+                    res.input.focus();
+                }
+            }
+            return;
+        }
+
+        const commentDelBtn = target.closest<HTMLElement>('.item-comment-del');
+        if (commentDelBtn) {
+            const box = commentDelBtn.closest<HTMLElement>('.item-comment-box');
+            if (box) {
+                box.remove();
+                window.d2f.storage.saveState();
+            }
+        }
+    });
+
+    const handleCommentInput = (e: Event): void => {
+        const target = e.target;
+        if (target instanceof HTMLTextAreaElement && target.classList.contains('item-comment-input')) {
+            target.textContent = target.value;
+            target.setAttribute('value', target.value);
+            saveStateDebounced();
+        }
+    };
+
+    document.addEventListener('input', handleCommentInput);
+    document.addEventListener('change', handleCommentInput);
+}
+
+

@@ -218,4 +218,45 @@ function resetSearch(): void {
 
 window.d2f.core.registerResetHandler(resetSearch);
 
+if (typeof window !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchToggleBtn = document.getElementById('search-toggle-btn');
+        if (searchToggleBtn) {
+            searchToggleBtn.addEventListener('click', () => toggleSearchToolbar());
+        }
+
+        const rawSearchInput = document.getElementById('search-input');
+        const searchInput = rawSearchInput instanceof HTMLInputElement ? rawSearchInput : null;
+        if (searchInput) {
+            searchInput.addEventListener('input', () => performSearchAndFilter());
+        }
+
+        const searchClearBtn = document.getElementById('search-clear-btn');
+        if (searchClearBtn) {
+            searchClearBtn.addEventListener('click', () => {
+                if (searchInput) {
+                    searchInput.value = '';
+                    searchInput.focus();
+                }
+                performSearchAndFilter();
+                window.d2f.storage.saveState();
+            });
+        }
+    });
+
+    document.addEventListener('keydown', (e: KeyboardEvent) => {
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+            e.preventDefault();
+            toggleSearchToolbar(true);
+        } else if (e.key === 'Escape') {
+            const toolbar = document.getElementById('search-toolbar');
+            if (toolbar && !toolbar.classList.contains('hidden')) {
+                e.preventDefault();
+                toggleSearchToolbar(false);
+            }
+        }
+    });
+}
+
+
 

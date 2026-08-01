@@ -1,3 +1,5 @@
+import { ExportType } from './export.js';
+
 export type ResetHandler = () => void;
 
 export interface Core {
@@ -35,3 +37,10 @@ function resetAll(): void {
 
     window.d2f.storage.saveState();
 }
+
+if (typeof window !== 'undefined') {
+    window.exportPDF = () => window.d2f.export.export(ExportType.PDF);
+    window.saveDocumentState = () => window.d2f.export.export(ExportType.DOCUMENT);
+    window.resetAll = () => window.d2f.core.resetAll();
+}
+

@@ -1,9 +1,6 @@
 "use strict";
 (() => {
   // src/features/tasks.ts
-  function isRecord(val) {
-    return typeof val === "object" && val !== null && !Array.isArray(val);
-  }
   function styleItem(cb) {
     const item = cb.closest(".check-item");
     if (item) {
@@ -97,7 +94,7 @@
   }
   function loadTasks(state) {
     const checksData = state["checks"];
-    if (isRecord(checksData)) {
+    if (window.d2f.utils.isRecord(checksData)) {
       document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb, index) => {
         const key = cb.id || "cb_" + String(index);
         const val = checksData[key];
@@ -108,7 +105,7 @@
       });
     }
     const textsData = state["texts"];
-    if (isRecord(textsData)) {
+    if (window.d2f.utils.isRecord(textsData)) {
       document.querySelectorAll(".check-item.text-item, .check-item.simple-item").forEach((item, index) => {
         const key = item.id || "txt_" + String(index);
         const val = textsData[key];
@@ -130,19 +127,35 @@
     });
     updateProgress();
   }
-  window.d2f.tasks = {
-    styleItem,
-    updateProgress,
-    saveTasks,
-    loadTasks,
-    resetTasks
-  };
   window.d2f.core.registerResetHandler(resetTasks);
   window.d2f.storage.registerSaveHandler(saveTasks);
   window.d2f.storage.registerLoadHandler(loadTasks);
   if (typeof window !== "undefined") {
     document.addEventListener("DOMContentLoaded", () => {
       updateProgress();
+    });
+    document.addEventListener("click", (e) => {
+      const target = e.target;
+      if (!(target instanceof Element))
+        return;
+      const checkItem = target.closest(".check-item");
+      if (checkItem) {
+        if (target.tagName === "A" || target.tagName === "IMG" || target.closest(".item-comment-box")) {
+          return;
+        }
+        const cb = checkItem.querySelector('input[type="checkbox"]');
+        if (cb) {
+          if (target !== cb && !target.closest("label")) {
+            cb.checked = !cb.checked;
+          }
+          styleItem(cb);
+          updateProgress();
+          window.d2f.storage.saveState();
+        } else if (checkItem.classList.contains("text-item") || checkItem.classList.contains("simple-item")) {
+          checkItem.classList.toggle("checked");
+          window.d2f.storage.saveState();
+        }
+      }
     });
   }
 })();

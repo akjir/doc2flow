@@ -142,4 +142,30 @@ if (typeof window !== 'undefined') {
     document.addEventListener('DOMContentLoaded', () => {
         updateProgress();
     });
+
+    document.addEventListener('click', (e: MouseEvent) => {
+        const target = e.target;
+        if (!(target instanceof Element)) return;
+
+        const checkItem = target.closest<HTMLElement>('.check-item');
+        if (checkItem) {
+            if (target.tagName === 'A' || target.tagName === 'IMG' || target.closest('.item-comment-box')) {
+                return;
+            }
+
+            const cb = checkItem.querySelector<HTMLInputElement>('input[type="checkbox"]');
+            if (cb) {
+                if (target !== cb && !target.closest('label')) {
+                    cb.checked = !cb.checked;
+                }
+                styleItem(cb);
+                updateProgress();
+                window.d2f.storage.saveState();
+            } else if (checkItem.classList.contains('text-item') || checkItem.classList.contains('simple-item')) {
+                checkItem.classList.toggle('checked');
+                window.d2f.storage.saveState();
+            }
+        }
+    });
 }
+

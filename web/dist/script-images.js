@@ -23,11 +23,6 @@
     }
     document.removeEventListener("keydown", handleLightboxKeydown);
   }
-  window.d2f.images = {
-    handleLightboxKeydown,
-    openLightbox,
-    closeLightbox
-  };
   if (typeof window !== "undefined") {
     window.openLightbox = openLightbox;
     window.closeLightbox = closeLightbox;

@@ -70,3 +70,7 @@ async function copyCode(btn: HTMLElement | null): Promise<void> {
     // Execute fallback if Clipboard API is unavailable or fails
     fallbackCopyText(text, btn);
 }
+
+if (typeof window !== 'undefined') {
+    window.copyCode = copyCode;
+}

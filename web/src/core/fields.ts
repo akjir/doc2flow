@@ -126,3 +126,31 @@ function resetFields(): void {
 window.d2f.storage.registerSaveHandler(saveFields);
 window.d2f.storage.registerLoadHandler(loadFields);
 window.d2f.core.registerResetHandler(resetFields);
+
+if (typeof window !== 'undefined') {
+    const linkedIds: readonly string[] = ['f_info_agent', 'f_sign_agent', 'f_info_date', 'f_sign_date'];
+    const saveStateDebounced = window.d2f.utils.debounce(() => window.d2f.storage.saveState(), 300);
+
+    const handleInputOrChange = (e: Event): void => {
+        const target = e.target;
+        if (!(target instanceof HTMLInputElement)) return;
+
+        if (target.classList.contains('persistent-field')) {
+            saveStateDebounced();
+        }
+
+        if (target.id && linkedIds.includes(target.id)) {
+            if (target.id.toLowerCase().includes('date')) {
+                checkDateShortcut(target);
+            }
+            syncLinkedFields(target);
+            saveStateDebounced();
+        } else if (target.matches('input[id*="date"], input[name*="date"], input.date-field')) {
+            checkDateShortcut(target);
+            saveStateDebounced();
+        }
+    };
+
+    document.addEventListener('input', handleInputOrChange);
+    document.addEventListener('change', handleInputOrChange);
+}
