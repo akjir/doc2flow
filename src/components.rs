@@ -237,10 +237,14 @@ pub fn render_variable_table(
     for (k, v) in rows {
         let escaped_k = crate::converter::html_escape(k);
         let escaped_v = crate::converter::html_escape(v);
-        let _ = writeln!(out, "<tr><td>{escaped_k}</td><td>{escaped_v}</td></tr>");
+        let _ = write!(
+            out,
+            "<tr><td>{escaped_k}</td><td><input type=\"text\" class=\"item-table-var-input persistent-field\" id=\"f_var_{escaped_k}\" data-var-key=\"{escaped_k}\" data-default-value=\"{escaped_v}\" value=\"{escaped_v}\"></td></tr>\n"
+        );
     }
     let _ = out.write_str("</tbody></table></div>\n");
 }
+
 
 
 
@@ -392,8 +396,12 @@ mod tests {
         render_variable_table(&mut buf, "Variable", "Value", &rows, json);
         assert!(buf.contains("<div class=\"item-table-var-wrap\">"));
         assert!(buf.contains("<th>Variable</th><th>Value</th>"));
-        assert!(buf.contains("<td>BLOCK</td><td>prod-server</td>"));
+        assert!(buf.contains("<td>BLOCK</td>"));
+        assert!(buf.contains("class=\"item-table-var-input persistent-field\""));
+        assert!(buf.contains("data-var-key=\"BLOCK\""));
+        assert!(buf.contains("value=\"prod-server\""));
     }
 }
+
 
 

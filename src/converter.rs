@@ -1501,7 +1501,10 @@ curl https://{{BLOCK}}.local:{{PORT}}/api
         assert!(html.contains(r#"<div class="item-table-var-wrap">"#));
         assert!(html.contains(r#"<th>Variable</th><th>Value</th>"#));
         assert!(html.contains(r#"data-variables="{&quot;BLOCK&quot;:&quot;prod-server&quot;,&quot;PORT&quot;:&quot;8080&quot;}""#));
-        assert!(html.contains("<td>BLOCK</td><td>prod-server</td>"));
+        assert!(html.contains("<td>BLOCK</td>"));
+        assert!(html.contains(r#"class="item-table-var-input persistent-field""#));
+        assert!(html.contains(r#"data-var-key="BLOCK""#));
+        assert!(html.contains(r#"value="prod-server""#));
         assert!(html.find("<div class=\"item-table-var-wrap\">").unwrap() < html.find("<!-- S1 -->").unwrap());
         assert!(html.contains("curl https://{{BLOCK}}.local:{{PORT}}/api"));
     }

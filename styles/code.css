@@ -129,7 +129,28 @@
 .item-table-var td:nth-child(2) {
   font-family: var(--font-mono);
   color: #334155;
+  padding: 4px 8px;
 }
+
+.item-table-var-input {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-sm, 4px);
+  padding: 4px 8px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: #0f172a;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.item-table-var-input:focus {
+  outline: none;
+  border-color: var(--bm, #2E75B6);
+  box-shadow: 0 0 0 2px rgba(46, 117, 182, 0.2);
+}
+
 
 
 

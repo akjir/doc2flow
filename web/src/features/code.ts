@@ -19,8 +19,8 @@ function showCopiedFeedback(btn: HTMLElement): void {
 
 function getVariableMap(): Record<string, string> {
     const map: Record<string, string> = {};
-    const elements = document.querySelectorAll<HTMLElement>('.item-table-var, .var-table, [data-variables]');
 
+    const elements = document.querySelectorAll<HTMLElement>('.item-table-var, .var-table, [data-variables]');
     elements.forEach((el) => {
         const rawJson = el.dataset.variables;
         if (typeof rawJson === 'string' && rawJson.length > 0) {
@@ -45,8 +45,18 @@ function getVariableMap(): Record<string, string> {
         }
     });
 
+    // Live inputs override default values
+    const inputs = document.querySelectorAll<HTMLInputElement>('input.item-table-var-input, input[data-var-key]');
+    inputs.forEach((input) => {
+        const key = input.dataset.varKey || input.getAttribute('data-var-key');
+        if (typeof key === 'string' && key.trim() !== '') {
+            map[key.trim()] = input.value;
+        }
+    });
+
     return map;
 }
+
 
 function replaceCodeVariables(text: string): string {
     const varMap = getVariableMap();

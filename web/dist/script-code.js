@@ -38,6 +38,13 @@
         }
       }
     });
+    const inputs = document.querySelectorAll("input.item-table-var-input, input[data-var-key]");
+    inputs.forEach((input) => {
+      const key = input.dataset.varKey || input.getAttribute("data-var-key");
+      if (typeof key === "string" && key.trim() !== "") {
+        map[key.trim()] = input.value;
+      }
+    });
     return map;
   }
   function replaceCodeVariables(text) {
