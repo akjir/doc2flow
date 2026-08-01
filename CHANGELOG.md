@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added dynamic code variable substitution from `[Variables]` tables for clipboard code copying.
+
 ### Fixed
 - Fixed state persistence and document export by registering storage handlers on script load and synchronizing HTML attributes (`value`, `checked`) for form fields and checkboxes.
 - Fixed clicking the item comment icon or delete button toggling task list check items.

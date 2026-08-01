@@ -1,3 +1,4 @@
+use crate::components;
 use crate::error::{DiagnosticError, Result};
 use crate::i18n::Locale;
 use crate::template;
@@ -7,7 +8,7 @@ use pulldown_cmark::{
 use std::borrow::Cow;
 
 /// Escapes HTML special characters in code strings. Returns Cow::Borrowed if no escaping is needed.
-fn html_escape(input: &str) -> Cow<'_, str> {
+pub(crate) fn html_escape(input: &str) -> Cow<'_, str> {
     let bytes = input.as_bytes();
     let first_pos = match bytes
         .iter()
@@ -717,7 +718,7 @@ pub fn convert_markdown_to_html_with_options(
 
             Event::End(TagEnd::Item) => {}
 
-            // Standalone Text Paragraphs
+            // Standalone Text Paragraphs or Annotated [Variables] Table Header
             Event::Start(Tag::Paragraph) => {
                 let start_idx = idx + 1;
                 idx += 1;
@@ -739,10 +740,102 @@ pub fn convert_markdown_to_html_with_options(
                 let mut para_html = String::new();
                 html::push_html(&mut para_html, events[start_idx..idx].iter().cloned());
                 let trimmed = para_html.trim();
-
                 let clean_content = strip_paragraph_tags(trimmed).trim();
 
-                if !clean_content.is_empty() {
+                // Look ahead for an annotated [Variables] table
+                let is_var_tag = clean_content.eq_ignore_ascii_case("[Variables]");
+                let mut next_i = idx + 1;
+                while next_i < events.len() {
+                    match &events[next_i] {
+                        Event::Text(t) if t.trim().is_empty() => next_i += 1,
+                        Event::Html(_) | Event::InlineHtml(_) => next_i += 1,
+                        _ => break,
+                    }
+                }
+
+                let is_var_table = is_var_tag
+                    && next_i < events.len()
+                    && matches!(&events[next_i], Event::Start(Tag::Table(_)));
+
+                if is_var_table {
+                    features.has_code = true;
+                    let table_start = next_i;
+                    let mut table_end = table_start;
+                    let mut table_depth = 1;
+                    next_i += 1;
+                    while next_i < events.len() {
+                        match &events[next_i] {
+                            Event::Start(Tag::Table(_)) => table_depth += 1,
+                            Event::End(TagEnd::Table) => {
+                                table_depth -= 1;
+                                if table_depth == 0 {
+                                    table_end = next_i;
+                                    break;
+                                }
+                            }
+                            _ => {}
+                        }
+                        next_i += 1;
+                    }
+
+                    let mut table_rows: Vec<(String, String)> = Vec::new();
+                    let mut current_row: Vec<String> = Vec::new();
+                    let mut current_cell = String::new();
+                    let mut in_cell = false;
+
+                    for ev in &events[table_start..=table_end] {
+                        match ev {
+                            Event::Start(Tag::TableHead) => {}
+                            Event::End(TagEnd::TableHead) => {
+                                current_row.clear();
+                            }
+                            Event::Start(Tag::TableRow) => {
+                                current_row.clear();
+                            }
+                            Event::End(TagEnd::TableRow) => {
+                                if current_row.len() >= 2 {
+                                    table_rows.push((
+                                        current_row[0].clone(),
+                                        current_row[1].clone(),
+                                    ));
+                                } else if current_row.len() == 1 {
+                                    table_rows.push((current_row[0].clone(), String::new()));
+                                }
+                                current_row.clear();
+                            }
+                            Event::Start(Tag::TableCell) => {
+                                in_cell = true;
+                                current_cell.clear();
+                            }
+                            Event::End(TagEnd::TableCell) => {
+                                in_cell = false;
+                                current_row.push(current_cell.trim().to_string());
+                                current_cell.clear();
+                            }
+                            Event::Text(t) if in_cell => {
+                                current_cell.push_str(t);
+                            }
+                            Event::Code(c) if in_cell => {
+                                current_cell.push_str(c);
+                            }
+                            _ => {}
+                        }
+                    }
+
+                    let mut map = std::collections::BTreeMap::new();
+                    for (k, v) in &table_rows {
+                        if !k.is_empty() {
+                            map.insert(k.as_str(), v.as_str());
+                        }
+                    }
+
+                    let json_payload =
+                        serde_json::to_string(&map).unwrap_or_else(|_| "{}".to_string());
+
+                    components::render_variable_data(&mut out, &json_payload);
+
+                    idx = table_end;
+                } else if !clean_content.is_empty() {
                     let is_image_block = clean_content.starts_with("<img");
                     if is_image_block {
                         features.has_images = true;
@@ -750,7 +843,8 @@ pub fn convert_markdown_to_html_with_options(
                     } else {
                         global_txt_count += 1;
                         let sec_num = if section_count == 0 { 1 } else { section_count };
-                        let list_depth = if list_stack.is_empty() { 0 } else { list_stack.len() - 1 };
+                        let list_depth =
+                            if list_stack.is_empty() { 0 } else { list_stack.len() - 1 };
                         template::render_text_item(
                             &mut out,
                             sec_num,
@@ -1326,4 +1420,29 @@ mod tests {
         assert!(html_disabled.contains("<span>Second H1</span>"));
         assert!(html_disabled.contains("<span>Third Sub H2</span>"));
     }
+
+    #[test]
+    fn test_code_variables_table_conversion() {
+        let input = r#"## System Setup
+
+[Variables]
+| Variable | Value |
+| --- | --- |
+| BLOCK | prod-server |
+| PORT | 8080 |
+
+```bash
+curl https://{{BLOCK}}.local:{{PORT}}/api
+```
+"#;
+        let (html, features) = convert_markdown_to_html(input).expect("conversion failed");
+
+        assert!(features.has_code);
+        assert!(html.contains(r#"class="item-table-var""#));
+        assert!(html.contains(r#"style="display:none;""#));
+        assert!(html.contains(r#"data-variables="{&quot;BLOCK&quot;:&quot;prod-server&quot;,&quot;PORT&quot;:&quot;8080&quot;}""#));
+        assert!(!html.contains("<td>BLOCK</td>"));
+        assert!(html.contains("curl https://{{BLOCK}}.local:{{PORT}}/api"));
+    }
 }
+

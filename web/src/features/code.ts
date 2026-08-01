@@ -17,6 +17,52 @@ function showCopiedFeedback(btn: HTMLElement): void {
     feedbackTimers.set(btn, timer);
 }
 
+function getVariableMap(): Record<string, string> {
+    const map: Record<string, string> = {};
+    const elements = document.querySelectorAll<HTMLElement>('.item-table-var, .var-table, [data-variables]');
+
+    elements.forEach((el) => {
+        const rawJson = el.dataset.variables;
+        if (typeof rawJson === 'string' && rawJson.length > 0) {
+            try {
+                const parsed: unknown = JSON.parse(rawJson);
+                if (typeof parsed === 'object' && parsed !== null) {
+                    const entries = Object.entries(parsed);
+                    for (const entry of entries) {
+                        const k = entry[0];
+                        const v = entry[1];
+                        if (typeof k === 'string' && typeof v === 'string') {
+                            const trimmedKey = k.trim();
+                            if (trimmedKey !== '') {
+                                map[trimmedKey] = v;
+                            }
+                        }
+                    }
+                }
+            } catch {
+                // Ignore invalid JSON
+            }
+        }
+    });
+
+    return map;
+}
+
+function replaceCodeVariables(text: string): string {
+    const varMap = getVariableMap();
+    if (Object.keys(varMap).length === 0) {
+        return text;
+    }
+
+    return text.replace(/\{\{([A-Za-z0-9_]+)\}\}/g, (match: string, key: string): string => {
+        const val = varMap[key];
+        if (val !== undefined && val.trim() !== '') {
+            return val;
+        }
+        return match;
+    });
+}
+
 function fallbackCopyText(text: string, btn: HTMLElement): boolean {
     const ta = document.createElement('textarea');
     ta.value = text;
@@ -54,7 +100,8 @@ async function copyCode(btn: HTMLElement | null): Promise<void> {
     const codeEl = wrap.querySelector('code');
     if (!codeEl) return;
 
-    const text = codeEl.textContent ?? '';
+    const rawText = codeEl.textContent ?? '';
+    const text = replaceCodeVariables(rawText);
 
     // Use modern Async Clipboard API when available
     if (navigator.clipboard && window.isSecureContext) {

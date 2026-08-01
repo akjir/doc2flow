@@ -217,6 +217,15 @@ pub fn render_finish_box(
     }
 }
 
+/// Renders hidden variable dictionary data payload for code variable substitution.
+#[inline]
+pub fn render_variable_data(out: &mut impl Write, json_payload: &str) {
+    let escaped_json = crate::converter::html_escape(json_payload);
+    let _ = writeln!(
+        out,
+        "<div class=\"item-table-var\" data-variables=\"{escaped_json}\" style=\"display:none;\"></div>"
+    );
+}
 
 #[cfg(test)]
 mod tests {
@@ -225,7 +234,15 @@ mod tests {
     #[test]
     fn test_render_section_header_and_close() {
         let mut buf = String::new();
-        render_section_header(&mut buf, 1, "Section Title", true, false, true, Some("note"));
+        render_section_header(
+            &mut buf,
+            1,
+            "Section Title",
+            true,
+            false,
+            true,
+            Some("note"),
+        );
         assert!(buf.contains("<!-- S1 -->"));
         assert!(buf.contains("<section class=\"section\" id=\"s1\" data-has-checklist=\"true\" data-callout-type=\"note\">"));
         assert!(buf.contains("class=\"sh sh-h1\""));
@@ -293,7 +310,10 @@ mod tests {
     fn test_render_image_item() {
         let mut buf = String::new();
         render_image_item(&mut buf, "<img src=\"foo.png\">");
-        assert_eq!(buf, "<div class=\"img-item\">\n  <img src=\"foo.png\">\n</div>\n");
+        assert_eq!(
+            buf,
+            "<div class=\"img-item\">\n  <img src=\"foo.png\">\n</div>\n"
+        );
     }
 
     #[test]
@@ -346,5 +366,14 @@ mod tests {
         );
         assert_eq!(buf_false, "");
     }
-}
 
+    #[test]
+    fn test_render_variable_data() {
+        let mut buf = String::new();
+        let json = "{\"BLOCK\":\"prod-server\"}";
+        render_variable_data(&mut buf, json);
+        assert!(buf.contains("class=\"item-table-var\""));
+        assert!(buf.contains("data-variables=\"{&quot;BLOCK&quot;:&quot;prod-server&quot;}\""));
+        assert!(buf.contains("style=\"display:none;\""));
+    }
+}
