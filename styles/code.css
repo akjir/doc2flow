@@ -91,10 +91,10 @@
 
 .item-table-var-wrap {
   margin: 12px 0 16px;
-  border: 1px solid var(--border-color);
+  border: 1px solid #94a3b8;
   border-radius: var(--radius-xl);
   overflow: hidden;
-  background: #f0f2f5;
+  background: #e2e8f0;
 }
 
 .item-table-var {
@@ -108,13 +108,13 @@
 .item-table-var td {
   padding: 8px 12px;
   text-align: left;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid #cbd5e1;
 }
 
 .item-table-var th {
-  background: #e4e7eb;
+  background: #cbd5e1;
   font-weight: 700;
-  color: var(--bd, #24292f);
+  color: #1e293b;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -127,29 +127,28 @@
 .item-table-var td:first-child {
   font-family: var(--font-mono);
   font-weight: 600;
-  color: var(--bd, #24292f);
+  color: #0f172a;
   width: 35%;
 }
 
 .item-table-var td:nth-child(2) {
   font-family: var(--font-mono);
-  color: var(--bd, #24292f);
+  color: #334155;
   padding: 4px 8px;
 }
 
 .item-table-var-input {
   width: 100%;
-  background: #ffffff;
-  border: 1px solid var(--border-color);
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
   border-radius: var(--radius-sm, 4px);
   padding: 4px 8px;
   font-family: var(--font-mono);
   font-size: 11.5px;
-  color: var(--bd, #24292f);
+  color: #0f172a;
   box-sizing: border-box;
   transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
 }
-
 
 .item-table-var-input:focus {
   outline: none;

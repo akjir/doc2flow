@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Doc2Flow v0.9.3+113.a813ebf.dev">
-<meta name="version" content="0.9.3+113.a813ebf.dev">
+<meta name="generator" content="Doc2Flow v0.9.3+110.cc9cb58.dev">
+<meta name="version" content="0.9.3+110.cc9cb58.dev">
 <meta name="repository" content="https://github.com/akjir/doc2flow">
 <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-<meta name="dcterms.created" content="2026-08-01T23:09:02Z">
+<meta name="dcterms.created" content="2026-08-01T23:00:10Z">
 <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
 <title>Doc2Flow English Showcase</title>
 <style>
@@ -909,10 +909,10 @@ mark.d2f-highlight {
 
 .item-table-var-wrap {
   margin: 12px 0 16px;
-  border: 1px solid var(--border-color);
+  border: 1px solid #94a3b8;
   border-radius: var(--radius-xl);
   overflow: hidden;
-  background: #f0f2f5;
+  background: #e2e8f0;
 }
 
 .item-table-var {
@@ -926,13 +926,13 @@ mark.d2f-highlight {
 .item-table-var td {
   padding: 8px 12px;
   text-align: left;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid #cbd5e1;
 }
 
 .item-table-var th {
-  background: #e4e7eb;
+  background: #cbd5e1;
   font-weight: 700;
-  color: var(--bd, #24292f);
+  color: #1e293b;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -945,29 +945,28 @@ mark.d2f-highlight {
 .item-table-var td:first-child {
   font-family: var(--font-mono);
   font-weight: 600;
-  color: var(--bd, #24292f);
+  color: #0f172a;
   width: 35%;
 }
 
 .item-table-var td:nth-child(2) {
   font-family: var(--font-mono);
-  color: var(--bd, #24292f);
+  color: #334155;
   padding: 4px 8px;
 }
 
 .item-table-var-input {
   width: 100%;
-  background: #ffffff;
-  border: 1px solid var(--border-color);
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
   border-radius: var(--radius-sm, 4px);
   padding: 4px 8px;
   font-family: var(--font-mono);
   font-size: 11.5px;
-  color: var(--bd, #24292f);
+  color: #0f172a;
   box-sizing: border-box;
   transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
 }
-
 
 .item-table-var-input:focus {
   outline: none;
@@ -1572,7 +1571,7 @@ mark.d2f-highlight {
 
 <script>
 window.D2F_DOC_ID = 'd2f_id_c9c539743b5bb460';
-window.D2F_I18N = {"export_pdf":"Export as PDF","save_state":"Save State","callout_tip":"Tip","company":"Company","contact":"Contact","lang_code":"en","setup_in_progress":"Process in Progress","setup_completed":"Process Completed","reset_all":"Reset","loading":"Loading...","search_placeholder":"Search... (Ctrl+K)","callout_warning":"Warning","var_table_value":"Value","agent":"Agent","copied":"Copied!","var_table_variable":"Variable","copy_code":"Copy code","var_table_title":"Variables","date":"Date","sections_visible":"{visible} / {total} sections visible","signature_date":"Date","callout_caution":"Caution","callout_important":"Important","name_placeholder":"Name","progress_template":"{done} of {total} tasks completed ({pct}%)","comment_placeholder":"Add a comment...","date_placeholder":"MM/DD/YYYY","callout_note":"Note","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?"};
+window.D2F_I18N = {"callout_warning":"Warning","copied":"Copied!","callout_note":"Note","callout_important":"Important","loading":"Loading...","search_placeholder":"Search... (Ctrl+K)","name_placeholder":"Name","setup_completed":"Process Completed","copy_code":"Copy code","var_table_title":"Variables","date_placeholder":"MM/DD/YYYY","contact":"Contact","var_table_variable":"Variable","save_state":"Save State","var_table_value":"Value","lang_code":"en","agent":"Agent","setup_in_progress":"Process in Progress","export_pdf":"Export as PDF","date":"Date","progress_template":"{done} of {total} tasks completed ({pct}%)","callout_caution":"Caution","sections_visible":"{visible} / {total} sections visible","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","comment_placeholder":"Add a comment...","reset_all":"Reset","company":"Company","signature_date":"Date","callout_tip":"Tip"};
 window.d2f = window.d2f || {};
 "use strict";
 (() => {
@@ -2559,21 +2558,10 @@ window.d2f = window.d2f || {};
     });
     printRawCodeMap.clear();
   }
-  function setupVariableInputAutoSelect() {
-    document.addEventListener("focusin", (e) => {
-      const target = e.target;
-      if (target instanceof HTMLInputElement && target.classList.contains("item-table-var-input")) {
-        window.requestAnimationFrame(() => {
-          target.select();
-        });
-      }
-    });
-  }
   if (typeof window !== "undefined") {
     window.copyCode = copyCode;
     window.addEventListener("beforeprint", preparePrintVariables);
     window.addEventListener("afterprint", restorePrintVariables);
-    setupVariableInputAutoSelect();
   }
 })();
 
