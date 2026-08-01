@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed ReferenceError when clicking PDF export, save state, reset, or copy code buttons by binding action handlers to the global window object.
 
 ### Added
+- Added modular TypeScript architecture and build pipeline for web frontend scripts (#20).
 - Added optional automatic section numbering (`number_sections: true`) for H1 and H2 headings.
 - Added live-in-browser search bar and quick-filter toolbar with keyboard shortcut (Ctrl+K), toggle button next to progress bar, clear button (✖), term highlighting, and printable CSS compatibility.
 - Section collapse/expand state is now persisted in `localStorage` and included in the exported HTML, so the layout is preserved across page reloads and when sharing the saved file.
