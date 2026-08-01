@@ -1,3 +1,5 @@
+import { registerResetHandler } from './core.js';
+
 let preSearchCollapsedState: Map<string, boolean> | null = null;
 let lastMatchedSectionIds: Set<string> = new Set();
 
@@ -199,3 +201,24 @@ export function toggleSearchToolbar(show?: boolean): void {
         performSearchAndFilter();
     }
 }
+
+export function resetSearch(): void {
+    preSearchCollapsedState = null;
+    lastMatchedSectionIds.clear();
+
+    const rawSearchInput = document.getElementById('search-input');
+    const searchInput = rawSearchInput instanceof HTMLInputElement ? rawSearchInput : null;
+    if (searchInput) {
+        searchInput.value = '';
+    }
+
+    const toolbar = document.getElementById('search-toolbar');
+    if (toolbar && !toolbar.classList.contains('hidden')) {
+        toggleSearchToolbar(false);
+    } else {
+        performSearchAndFilter();
+    }
+}
+
+registerResetHandler(resetSearch);
+

@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Doc2Flow v0.9.2+82.35c4bae.dev">
-<meta name="version" content="0.9.2+82.35c4bae.dev">
+<meta name="generator" content="Doc2Flow v0.9.2+84.d162079.dev">
+<meta name="version" content="0.9.2+84.d162079.dev">
 <meta name="repository" content="https://github.com/akjir/doc2flow">
 <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-<meta name="dcterms.created" content="2026-08-01T10:53:40Z">
+<meta name="dcterms.created" content="2026-08-01T11:09:52Z">
 <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
 <title>Doc2Flow English Showcase</title>
 <style>
@@ -1526,7 +1526,7 @@ mark.d2f-highlight {
 
 <script>
 window.D2F_DOC_ID = 'd2f_id_c9c539743b5bb460';
-window.D2F_I18N = {"copied":"Copied!","lang_code":"en","sections_visible":"{visible} / {total} sections visible","copy_code":"Copy code","search_placeholder":"Search... (Ctrl+K)","signature_date":"Date","name_placeholder":"Name","progress_template":"{done} of {total} tasks completed ({pct}%)","loading":"Loading...","confirm_reset":"Are you sure you want to reset all markings?","save_state":"Save State","agent":"Agent","callout_note":"Note","callout_important":"Important","setup_in_progress":"Process in Progress","callout_warning":"Warning","date":"Date","company":"Company","callout_tip":"Tip","callout_caution":"Caution","reset_all":"Reset","contact":"Contact","date_placeholder":"MM/DD/YYYY","comment_placeholder":"Add a comment...","export_pdf":"Export as PDF","setup_completed":"Process Completed"};
+window.D2F_I18N = {"callout_note":"Note","callout_important":"Important","comment_placeholder":"Add a comment...","company":"Company","date":"Date","setup_completed":"Process Completed","progress_template":"{done} of {total} tasks completed ({pct}%)","name_placeholder":"Name","callout_caution":"Caution","copied":"Copied!","reset_all":"Reset","contact":"Contact","callout_warning":"Warning","sections_visible":"{visible} / {total} sections visible","export_pdf":"Export as PDF","search_placeholder":"Search... (Ctrl+K)","loading":"Loading...","callout_tip":"Tip","agent":"Agent","lang_code":"en","confirm_reset":"Are you sure you want to reset all markings?","date_placeholder":"MM/DD/YYYY","signature_date":"Date","copy_code":"Copy code","save_state":"Save State","setup_in_progress":"Process in Progress"};
 "use strict";
 (() => {
   // src/core/storage.ts
@@ -1888,6 +1888,22 @@ window.D2F_I18N = {"copied":"Copied!","lang_code":"en","sections_visible":"{visi
       performSearchAndFilter();
     }
   }
+  function resetSearch() {
+    preSearchCollapsedState = null;
+    lastMatchedSectionIds.clear();
+    const rawSearchInput = document.getElementById("search-input");
+    const searchInput = rawSearchInput instanceof HTMLInputElement ? rawSearchInput : null;
+    if (searchInput) {
+      searchInput.value = "";
+    }
+    const toolbar = document.getElementById("search-toolbar");
+    if (toolbar && !toolbar.classList.contains("hidden")) {
+      toggleSearchToolbar(false);
+    } else {
+      performSearchAndFilter();
+    }
+  }
+  registerResetHandler(resetSearch);
 
   // src/core/fields.ts
   function isRecord2(val) {
