@@ -149,8 +149,46 @@ function restorePrintVariables(): void {
     printRawCodeMap.clear();
 }
 
+function checkCodeVariableWarnings(): void {
+    const codeVars = new Set<string>();
+    document.querySelectorAll<HTMLElement>('.code-block code').forEach((codeEl) => {
+        const text = codeEl.textContent ?? '';
+        const matches = text.matchAll(/\{\{([A-Za-z0-9_]+)\}\}/g);
+        for (const match of matches) {
+            if (match[1]) {
+                codeVars.add(match[1]);
+            }
+        }
+    });
+
+    const tableVars = new Set<string>();
+    document.querySelectorAll<HTMLInputElement>('input.item-table-var-input, input[data-var-key]').forEach((input) => {
+        const key = input.dataset.varKey || input.getAttribute('data-var-key');
+        if (key && key.trim() !== '') {
+            tableVars.add(key.trim());
+        }
+    });
+
+    tableVars.forEach((tv) => {
+        if (!codeVars.has(tv)) {
+            console.warn(`Doc2Flow: Variable "${tv}" in [Variables] table is not used in any code block.`);
+        }
+    });
+
+    codeVars.forEach((cv) => {
+        if (!tableVars.has(cv)) {
+            console.warn(`Doc2Flow: Variable "${cv}" in code block is missing from [Variables] table.`);
+        }
+    });
+}
+
 if (typeof window !== 'undefined') {
     window.copyCode = copyCode;
     window.addEventListener('beforeprint', preparePrintVariables);
     window.addEventListener('afterprint', restorePrintVariables);
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', checkCodeVariableWarnings);
+    } else {
+        checkCodeVariableWarnings();
+    }
 }

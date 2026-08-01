@@ -469,6 +469,37 @@ pub fn convert_markdown_to_html_with_options(
     let events: Vec<Event> = CommentFilter::new(parser).collect();
 
     let mut features = DocumentFeatures::default();
+
+    // 1. Collect all variable names used in code blocks across the document
+    let mut code_vars: Vec<String> = Vec::new();
+    let mut in_code_block_scan = false;
+    for ev in &events {
+        match ev {
+            Event::Start(Tag::CodeBlock(_)) => in_code_block_scan = true,
+            Event::End(TagEnd::CodeBlock) => in_code_block_scan = false,
+            Event::Text(text) if in_code_block_scan => {
+                let mut start = 0;
+                while let Some(s) = text[start..].find("{{") {
+                    let open_idx = start + s;
+                    if let Some(e) = text[open_idx + 2..].find("}}") {
+                        let close_idx = open_idx + 2 + e;
+                        let var_name = text[open_idx + 2..close_idx].trim();
+                        if !var_name.is_empty()
+                            && var_name.chars().all(|c| c.is_alphanumeric() || c == '_')
+                            && !code_vars.iter().any(|v| v == var_name)
+                        {
+                            code_vars.push(var_name.to_string());
+                        }
+                        start = close_idx + 2;
+                    } else {
+                        break;
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
     let mut var_table_html = String::new();
     let mut var_event_ranges: Vec<(usize, usize)> = Vec::new();
 
@@ -571,11 +602,39 @@ pub fn convert_markdown_to_html_with_options(
                         }
                     }
 
-                    let mut map = std::collections::BTreeMap::new();
+                    let mut raw_table_map: std::collections::BTreeMap<String, String> =
+                        std::collections::BTreeMap::new();
                     for (k, v) in &table_rows {
                         if !k.is_empty() {
-                            map.insert(k.as_str(), v.as_str());
+                            raw_table_map.insert(k.clone(), v.clone());
                         }
+                    }
+
+                    // Issue warnings for variables in [Variables] table unused in code blocks
+                    for k in raw_table_map.keys() {
+                        if !code_vars.iter().any(|cv| cv == k) {
+                            eprintln!(
+                                "Warning: Variable '{k}' in [Variables] table is not used in any code block."
+                            );
+                        }
+                    }
+
+                    // Build final rows only for variables used in code blocks
+                    let mut final_table_rows: Vec<(String, String)> = Vec::new();
+                    for cv in &code_vars {
+                        if let Some(val) = raw_table_map.get(cv) {
+                            final_table_rows.push((cv.clone(), val.clone()));
+                        } else {
+                            eprintln!(
+                                "Warning: Variable '{cv}' in code block is missing from [Variables] table."
+                            );
+                            final_table_rows.push((cv.clone(), String::new()));
+                        }
+                    }
+
+                    let mut map = std::collections::BTreeMap::new();
+                    for (k, v) in &final_table_rows {
+                        map.insert(k.as_str(), v.as_str());
                     }
 
                     let json_payload =
@@ -591,7 +650,7 @@ pub fn convert_markdown_to_html_with_options(
                         &mut var_table_html,
                         var_term,
                         val_term,
-                        &table_rows,
+                        &final_table_rows,
                         &json_payload,
                     );
 
@@ -602,6 +661,40 @@ pub fn convert_markdown_to_html_with_options(
         }
         scan_i += 1;
     }
+
+    // If no [Variables] table was parsed but code blocks contain variables, construct table from code_vars
+    if var_table_html.is_empty() && !code_vars.is_empty() {
+        let mut final_table_rows: Vec<(String, String)> = Vec::new();
+        for cv in &code_vars {
+            eprintln!(
+                "Warning: Variable '{cv}' in code block is missing from [Variables] table."
+            );
+            final_table_rows.push((cv.clone(), String::new()));
+        }
+
+        let mut map = std::collections::BTreeMap::new();
+        for (k, v) in &final_table_rows {
+            map.insert(k.as_str(), v.as_str());
+        }
+
+        let json_payload =
+            serde_json::to_string(&map).unwrap_or_else(|_| "{}".to_string());
+
+        let var_term = locale
+            .get_ignore_ascii_case("var_table_variable")
+            .unwrap_or("Variable");
+        let val_term =
+            locale.get_ignore_ascii_case("var_table_value").unwrap_or("Value");
+
+        components::render_variable_table(
+            &mut var_table_html,
+            var_term,
+            val_term,
+            &final_table_rows,
+            &json_payload,
+        );
+    }
+
 
     if !var_table_html.is_empty() {
         features.has_code = true;

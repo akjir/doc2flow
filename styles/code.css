@@ -65,8 +65,13 @@
   line-height: 1.6;
 }
 
-.code-block .c { color: #6A9955; }
-.code-block .s { color: #CE9178; }
+.code-block .c {
+  color: #6A9955;
+}
+
+.code-block .s {
+  color: #CE9178;
+}
 
 /* Print Rules for Code Blocks & Variables Table */
 @media print {
@@ -147,13 +152,7 @@
 
 .item-table-var-input:focus {
   outline: none;
-  background: #ffffff;
+  background: #f1f5f9;
   border-color: var(--bm, #2E75B6);
   box-shadow: 0 0 0 2px rgba(46, 117, 182, 0.2);
 }
-
-
-
-
-
-

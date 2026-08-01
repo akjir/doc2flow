@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Doc2Flow v0.9.3+107.018a933.dev">
-<meta name="version" content="0.9.3+107.018a933.dev">
+<meta name="generator" content="Doc2Flow v0.9.3+108.46c2c6c.dev">
+<meta name="version" content="0.9.3+108.46c2c6c.dev">
 <meta name="repository" content="https://github.com/akjir/doc2flow">
 <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-<meta name="dcterms.created" content="2026-08-01T22:46:51Z">
+<meta name="dcterms.created" content="2026-08-01T22:55:17Z">
 <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
 <title>Microservice Deployment & Infrastructure Setup</title>
 <style>
@@ -883,8 +883,13 @@ mark.d2f-highlight {
   line-height: 1.6;
 }
 
-.code-block .c { color: #6A9955; }
-.code-block .s { color: #CE9178; }
+.code-block .c {
+  color: #6A9955;
+}
+
+.code-block .s {
+  color: #CE9178;
+}
 
 /* Print Rules for Code Blocks & Variables Table */
 @media print {
@@ -965,17 +970,10 @@ mark.d2f-highlight {
 
 .item-table-var-input:focus {
   outline: none;
-  background: #ffffff;
+  background: #f1f5f9;
   border-color: var(--bm, #2E75B6);
   box-shadow: 0 0 0 2px rgba(46, 117, 182, 0.2);
 }
-
-
-
-
-
-
-
 
 </style>
 </head>
@@ -1027,12 +1025,12 @@ mark.d2f-highlight {
 </table>
 
 <!-- START GENERATED CONTENT -->
-<div class="item-table-var-wrap"><table class="item-table-var" data-variables="{&quot;APP_ENV&quot;:&quot;production&quot;,&quot;DB_HOST&quot;:&quot;db.internal.net&quot;,&quot;PORT&quot;:&quot;8080&quot;,&quot;SYSTEM&quot;:&quot;prod-server&quot;,&quot;UNSET_SECRET&quot;:&quot;&quot;}"><thead><tr><th>Variable</th><th>Value</th></tr></thead><tbody>
+<div class="item-table-var-wrap"><table class="item-table-var" data-variables="{&quot;APP_ENV&quot;:&quot;production&quot;,&quot;AUTH_TOKEN&quot;:&quot;&quot;,&quot;DB_HOST&quot;:&quot;db.internal.net&quot;,&quot;PORT&quot;:&quot;8080&quot;,&quot;SYSTEM&quot;:&quot;prod-server&quot;}"><thead><tr><th>Variable</th><th>Value</th></tr></thead><tbody>
 <tr><td>SYSTEM</td><td><input type="text" class="item-table-var-input persistent-field" id="f_var_SYSTEM" data-var-key="SYSTEM" data-default-value="prod-server" value="prod-server"></td></tr>
-<tr><td>PORT</td><td><input type="text" class="item-table-var-input persistent-field" id="f_var_PORT" data-var-key="PORT" data-default-value="8080" value="8080"></td></tr>
 <tr><td>DB_HOST</td><td><input type="text" class="item-table-var-input persistent-field" id="f_var_DB_HOST" data-var-key="DB_HOST" data-default-value="db.internal.net" value="db.internal.net"></td></tr>
 <tr><td>APP_ENV</td><td><input type="text" class="item-table-var-input persistent-field" id="f_var_APP_ENV" data-var-key="APP_ENV" data-default-value="production" value="production"></td></tr>
-<tr><td>UNSET_SECRET</td><td><input type="text" class="item-table-var-input persistent-field" id="f_var_UNSET_SECRET" data-var-key="UNSET_SECRET" data-default-value="" value=""></td></tr>
+<tr><td>PORT</td><td><input type="text" class="item-table-var-input persistent-field" id="f_var_PORT" data-var-key="PORT" data-default-value="8080" value="8080"></td></tr>
+<tr><td>AUTH_TOKEN</td><td><input type="text" class="item-table-var-input persistent-field" id="f_var_AUTH_TOKEN" data-var-key="AUTH_TOKEN" data-default-value="" value=""></td></tr>
 </tbody></table></div>
 <!-- S1 -->
 <section class="section" id="s1">
@@ -1086,20 +1084,7 @@ mark.d2f-highlight {
   <span class="text-content">Perform an automated health check against the newly deployed service:</span>
   <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
 </div>
-<div class="code-block-wrap"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)" title="Copy code" aria-label="Copy code"><svg aria-hidden="true" class="svg-icon iconCopy" width="14" height="15" viewBox="0 0 17 18"><path fill="currentColor" d="M5 6c0-1.09.91-2 2-2h4.5L15 7.5V15c0 1.09-.91 2-2 2H7c-1.09 0-2-.91-2-2zm6-1.25V8h3.25z"/><path fill="currentColor" d="M10 1a2 2 0 0 1 2 2H6a2 2 0 0 0-2 2v9a2 2 0 0 1-2-2V4a3 3 0 0 1 3-3z" opacity=".4"/></svg></button></div><pre class="code-block language-bash"><code>curl -f https://{{BLOCK}}.local:{{PORT}}/api/v1/health
-</code></pre></div>
-</div></section>
-
-<!-- S4 -->
-<section class="section" id="s4">
-<h2 class="sh" role="button" tabindex="0" aria-expanded="true"><span>1.3 Edge Cases &amp; Fallback Behavior</span>
-<div style="display:flex;align-items:center;gap:8px"><span class="sbadge" id="badge-s4"></span><span class="stog" id="tog-s4">&#9660;</span></div></h2>
-<div class="sb" id="body-s4">
-<div class="doc-item text-item" id="txt_s4_7">
-  <span class="text-content">Placeholders corresponding to unmapped keys or empty values remain unchanged when copied:</span>
-  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
-</div>
-<div class="code-block-wrap"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)" title="Copy code" aria-label="Copy code"><svg aria-hidden="true" class="svg-icon iconCopy" width="14" height="15" viewBox="0 0 17 18"><path fill="currentColor" d="M5 6c0-1.09.91-2 2-2h4.5L15 7.5V15c0 1.09-.91 2-2 2H7c-1.09 0-2-.91-2-2zm6-1.25V8h3.25z"/><path fill="currentColor" d="M10 1a2 2 0 0 1 2 2H6a2 2 0 0 0-2 2v9a2 2 0 0 1-2-2V4a3 3 0 0 1 3-3z" opacity=".4"/></svg></button></div><pre class="code-block language-bash"><code>echo &quot;Token: {{UNSET_SECRET}} | Region: {{UNKNOWN_VAR}}&quot;
+<div class="code-block-wrap"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)" title="Copy code" aria-label="Copy code"><svg aria-hidden="true" class="svg-icon iconCopy" width="14" height="15" viewBox="0 0 17 18"><path fill="currentColor" d="M5 6c0-1.09.91-2 2-2h4.5L15 7.5V15c0 1.09-.91 2-2 2H7c-1.09 0-2-.91-2-2zm6-1.25V8h3.25z"/><path fill="currentColor" d="M10 1a2 2 0 0 1 2 2H6a2 2 0 0 0-2 2v9a2 2 0 0 1-2-2V4a3 3 0 0 1 3-3z" opacity=".4"/></svg></button></div><pre class="code-block language-bash"><code>curl -f -H &quot;Authorization: Bearer {{AUTH_TOKEN}}&quot; https://{{SYSTEM}}.local:{{PORT}}/api/v1/health
 </code></pre></div>
 </div></section>
 
@@ -1119,7 +1104,7 @@ mark.d2f-highlight {
 
 <script>
 window.D2F_DOC_ID = 'd2f_id_fe4acdd7616c7913';
-window.D2F_I18N = {"reset_all":"Reset","loading":"Loading...","setup_in_progress":"Process in Progress","lang_code":"en","contact":"Contact","callout_note":"Note","callout_caution":"Caution","sections_visible":"{visible} / {total} sections visible","comment_placeholder":"Add a comment...","date":"Date","company":"Company","name_placeholder":"Name","save_state":"Save State","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","copied":"Copied!","callout_important":"Important","agent":"Agent","callout_tip":"Tip","var_table_variable":"Variable","signature_date":"Date","search_placeholder":"Search... (Ctrl+K)","copy_code":"Copy code","progress_template":"{done} of {total} tasks completed ({pct}%)","callout_warning":"Warning","setup_completed":"Process Completed","var_table_title":"Variables","var_table_value":"Value","export_pdf":"Export as PDF","date_placeholder":"MM/DD/YYYY"};
+window.D2F_I18N = {"var_table_value":"Value","date":"Date","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","callout_warning":"Warning","setup_in_progress":"Process in Progress","callout_important":"Important","search_placeholder":"Search... (Ctrl+K)","date_placeholder":"MM/DD/YYYY","loading":"Loading...","signature_date":"Date","progress_template":"{done} of {total} tasks completed ({pct}%)","callout_tip":"Tip","copy_code":"Copy code","save_state":"Save State","contact":"Contact","var_table_variable":"Variable","copied":"Copied!","reset_all":"Reset","lang_code":"en","export_pdf":"Export as PDF","callout_caution":"Caution","agent":"Agent","var_table_title":"Variables","callout_note":"Note","company":"Company","setup_completed":"Process Completed","comment_placeholder":"Add a comment...","sections_visible":"{visible} / {total} sections visible","name_placeholder":"Name"};
 window.d2f = window.d2f || {};
 "use strict";
 (() => {
@@ -2106,10 +2091,44 @@ window.d2f = window.d2f || {};
     });
     printRawCodeMap.clear();
   }
+  function checkCodeVariableWarnings() {
+    const codeVars = /* @__PURE__ */ new Set();
+    document.querySelectorAll(".code-block code").forEach((codeEl) => {
+      const text = codeEl.textContent ?? "";
+      const matches = text.matchAll(/\{\{([A-Za-z0-9_]+)\}\}/g);
+      for (const match of matches) {
+        if (match[1]) {
+          codeVars.add(match[1]);
+        }
+      }
+    });
+    const tableVars = /* @__PURE__ */ new Set();
+    document.querySelectorAll("input.item-table-var-input, input[data-var-key]").forEach((input) => {
+      const key = input.dataset.varKey || input.getAttribute("data-var-key");
+      if (key && key.trim() !== "") {
+        tableVars.add(key.trim());
+      }
+    });
+    tableVars.forEach((tv) => {
+      if (!codeVars.has(tv)) {
+        console.warn(`Doc2Flow: Variable "${tv}" in [Variables] table is not used in any code block.`);
+      }
+    });
+    codeVars.forEach((cv) => {
+      if (!tableVars.has(cv)) {
+        console.warn(`Doc2Flow: Variable "${cv}" in code block is missing from [Variables] table.`);
+      }
+    });
+  }
   if (typeof window !== "undefined") {
     window.copyCode = copyCode;
     window.addEventListener("beforeprint", preparePrintVariables);
     window.addEventListener("afterprint", restorePrintVariables);
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", checkCodeVariableWarnings);
+    } else {
+      checkCodeVariableWarnings();
+    }
   }
 })();
 

@@ -13,7 +13,7 @@ language: "en"
 | PORT | 8080 |
 | DB_HOST | db.internal.net |
 | APP_ENV | production |
-| UNSET_SECRET | |
+| UNUSED_METRIC_PORT | 9090 |
 
 # Microservice Deployment Procedure
 
@@ -52,13 +52,6 @@ docker run -d --name api-service -e ENV={{APP_ENV}} -p {{PORT}}:8080 acme/api-se
 Perform an automated health check against the newly deployed service:
 
 ```bash
-curl -f https://{{BLOCK}}.local:{{PORT}}/api/v1/health
+curl -f -H "Authorization: Bearer {{AUTH_TOKEN}}" https://{{SYSTEM}}.local:{{PORT}}/api/v1/health
 ```
 
-## Edge Cases & Fallback Behavior
-
-Placeholders corresponding to unmapped keys or empty values remain unchanged when copied:
-
-```bash
-echo "Token: {{UNSET_SECRET}} | Region: {{UNKNOWN_VAR}}"
-```
