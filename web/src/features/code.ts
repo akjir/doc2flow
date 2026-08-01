@@ -149,8 +149,20 @@ function restorePrintVariables(): void {
     printRawCodeMap.clear();
 }
 
+function setupVariableInputAutoSelect(): void {
+    document.addEventListener('focusin', (e: Event) => {
+        const target = e.target;
+        if (target instanceof HTMLInputElement && target.classList.contains('item-table-var-input')) {
+            window.requestAnimationFrame(() => {
+                target.select();
+            });
+        }
+    });
+}
+
 if (typeof window !== 'undefined') {
     window.copyCode = copyCode;
     window.addEventListener('beforeprint', preparePrintVariables);
     window.addEventListener('afterprint', restorePrintVariables);
+    setupVariableInputAutoSelect();
 }

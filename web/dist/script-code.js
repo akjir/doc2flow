@@ -123,9 +123,20 @@
     });
     printRawCodeMap.clear();
   }
+  function setupVariableInputAutoSelect() {
+    document.addEventListener("focusin", (e) => {
+      const target = e.target;
+      if (target instanceof HTMLInputElement && target.classList.contains("item-table-var-input")) {
+        window.requestAnimationFrame(() => {
+          target.select();
+        });
+      }
+    });
+  }
   if (typeof window !== "undefined") {
     window.copyCode = copyCode;
     window.addEventListener("beforeprint", preparePrintVariables);
     window.addEventListener("afterprint", restorePrintVariables);
+    setupVariableInputAutoSelect();
   }
 })();
