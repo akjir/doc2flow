@@ -135,7 +135,7 @@
   }
 
   // src/core/sections.ts
-  var SECTION_SELECTOR = ".d2f-section, .section";
+  var SECTION_SELECTOR = ".section";
   function isRecord2(val) {
     return typeof val === "object" && val !== null && !Array.isArray(val);
   }
@@ -583,7 +583,7 @@
     const rawSearchInput = document.getElementById("search-input");
     const searchInput = rawSearchInput instanceof HTMLInputElement ? rawSearchInput : null;
     const searchCounter = document.getElementById("search-counter");
-    const sections = document.querySelectorAll(".d2f-section, .section");
+    const sections = document.querySelectorAll(".section");
     if (sections.length === 0)
       return;
     const query = searchInput ? searchInput.value.trim() : "";

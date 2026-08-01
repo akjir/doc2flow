@@ -1,4 +1,4 @@
-const SECTION_SELECTOR = '.d2f-section, .section';
+const SECTION_SELECTOR = '.section';
 
 function isRecord(val: unknown): val is Record<string, unknown> {
     return typeof val === 'object' && val !== null && !Array.isArray(val);

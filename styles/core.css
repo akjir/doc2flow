@@ -580,7 +580,7 @@ mark.d2f-highlight {
     display: block !important;
   }
 
-  .section, .d2f-section {
+  .section {
     display: block !important;
     box-shadow: none;
     border: 1px solid #ccc;

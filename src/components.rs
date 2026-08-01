@@ -35,7 +35,7 @@ pub fn render_section_header(
     };
     let _ = write!(
         out,
-        "<!-- S{section_count} -->\n<section class=\"section d2f-section\" id=\"s{section_count}\"{checklist_attr}"
+        "<!-- S{section_count} -->\n<section class=\"section\" id=\"s{section_count}\"{checklist_attr}"
     );
     if let Some(ct) = callout_type
         && !ct.is_empty()
@@ -197,7 +197,7 @@ mod tests {
         let mut buf = String::new();
         render_section_header(&mut buf, 1, "Section Title", true, false, true, Some("note"));
         assert!(buf.contains("<!-- S1 -->"));
-        assert!(buf.contains("<section class=\"section d2f-section\" id=\"s1\" data-has-checklist=\"true\" data-callout-type=\"note\">"));
+        assert!(buf.contains("<section class=\"section\" id=\"s1\" data-has-checklist=\"true\" data-callout-type=\"note\">"));
         assert!(buf.contains("class=\"sh sh-h1\""));
         assert!(buf.contains("role=\"button\""));
         assert!(buf.contains("tabindex=\"0\""));

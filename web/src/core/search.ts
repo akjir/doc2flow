@@ -81,7 +81,7 @@ function performSearchAndFilter(): void {
     const rawSearchInput = document.getElementById('search-input');
     const searchInput = rawSearchInput instanceof HTMLInputElement ? rawSearchInput : null;
     const searchCounter = document.getElementById('search-counter');
-    const sections = document.querySelectorAll<HTMLElement>('.d2f-section, .section');
+    const sections = document.querySelectorAll<HTMLElement>('.section');
     if (sections.length === 0) return;
 
     const query = searchInput ? searchInput.value.trim() : '';

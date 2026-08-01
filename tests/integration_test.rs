@@ -740,11 +740,11 @@ number_sections: true
     assert!(html_body.contains("<span>2.1 Prerequisites</span>"));
 
     // Verify section IDs and classes are preserved
-    assert!(html_body.contains(r#"<section class="section d2f-section" id="s1">"#));
+    assert!(html_body.contains(r#"<section class="section" id="s1">"#));
     assert!(html_body.contains(r#"id="badge-s1""#));
     assert!(html_body.contains(r#"id="tog-s1""#));
-    assert!(html_body.contains(r#"<section class="section d2f-section" id="s2" data-has-checklist="true">"#));
-    assert!(html_body.contains(r#"<section class="section d2f-section" id="s3" data-has-checklist="true">"#));
+    assert!(html_body.contains(r#"<section class="section" id="s2" data-has-checklist="true">"#));
+    assert!(html_body.contains(r#"<section class="section" id="s3" data-has-checklist="true">"#));
 }
 
 #[test]

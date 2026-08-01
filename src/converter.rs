@@ -1081,14 +1081,14 @@ mod tests {
         let (html, _features) = convert_markdown_to_html(input).expect("conversion failed");
 
         assert!(html.contains(r#"<!-- S1 -->"#));
-        assert!(html.contains(r#"<section class="section d2f-section" id="s1" data-has-checklist="true">"#));
+        assert!(html.contains(r#"<section class="section" id="s1" data-has-checklist="true">"#));
         assert!(html.contains(r#"<h2 class="sh sh-h1" role="button" tabindex="0" aria-expanded="true"><span>Top Level Header</span>"#));
         assert!(html.contains(r#"badge-s1"#));
         assert!(html.contains(r#"tog-s1"#));
         assert!(html.contains(r#"id="wrap-cb_s1_1""#));
 
         assert!(html.contains(r#"<!-- S2 -->"#));
-        assert!(html.contains(r#"<section class="section d2f-section" id="s2" data-has-checklist="true">"#));
+        assert!(html.contains(r#"<section class="section" id="s2" data-has-checklist="true">"#));
         assert!(html.contains(r#"<h2 class="sh" role="button" tabindex="0" aria-expanded="true"><span>Sub Section</span>"#));
     }
 
@@ -1097,8 +1097,8 @@ mod tests {
         let input = "# Checklist Sec\n\n- [ ] Item 1\n\n## Callout Sec\n\n>! Important note";
         let (html, _features) = convert_markdown_to_html(input).expect("conversion failed");
 
-        assert!(html.contains(r#"<section class="section d2f-section" id="s1" data-has-checklist="true">"#));
-        assert!(html.contains(r#"<section class="section d2f-section" id="s2" data-callout-type="important">"#));
+        assert!(html.contains(r#"<section class="section" id="s1" data-has-checklist="true">"#));
+        assert!(html.contains(r#"<section class="section" id="s2" data-callout-type="important">"#));
     }
 
     #[test]
