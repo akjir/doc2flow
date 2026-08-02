@@ -1,6 +1,6 @@
 {
   "name": "doc2flow-web",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "private": true,
   "scripts": {
     "build": "npx -y esbuild src/core/core.ts --bundle --outfile=dist/script-core.js && npx -y esbuild src/features/tasks.ts --bundle --outfile=dist/script-tasks.js && npx -y esbuild src/features/images.ts --bundle --outfile=dist/script-images.js && npx -y esbuild src/features/toc.ts --bundle --outfile=dist/script-toc.js && npx -y esbuild src/features/code.ts --bundle --outfile=dist/script-code.js && npx -y esbuild src/features/table.ts --bundle --outfile=dist/script-table.js"
