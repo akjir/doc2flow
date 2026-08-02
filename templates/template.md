@@ -36,19 +36,23 @@ License: GPL-3.0-or-later
 5. CODE BLOCKS:
    - Fenced code blocks (```lang ... ```) render with language tags and copy button.
 
-6. IMAGES & LINKS:
+6. TABLES & CODE VARIABLES:
+   - Standard GFM tables (| Column 1 | Column 2 |) render as responsive data tables.
+   - Dynamic variables table ([Variables]) defines key-value pairs replaced in code blocks via {{VARIABLE_NAME}}.
+
+7. IMAGES & LINKS:
    - Local images (![Alt text](./path/to/image.png)) are automatically embedded as Base64.
    - Remote images (![Alt text](https://example.com/image.png)) are preserved as remote <img> tags.
    - Non-image files (![Doc](./manual.pdf)) are automatically converted to external <a> links.
    - Hyperlinks ([Link text](https://example.com)) render as clickable links.
 
-7. TEXT FORMATTING:
+8. TEXT FORMATTING:
    - Bold (**bold text**) and strikethrough (~~deleted text~~) styling.
 
-8. COMMENTS:
+9. COMMENTS:
    - HTML comments (like this) are ignored during parsing and omitted from output HTML.
 
-9. DATE SHORTCUTS & INTERACTIVE INPUTS:
+10. DATE SHORTCUTS & INTERACTIVE INPUTS:
    - Type "today" into any date input field to automatically insert today's date.
 ===============================================================================
 -->
@@ -61,6 +65,12 @@ language: "en"
 numbered_sections: true
 table_of_contents: false
 ---
+
+[Variables]
+| Variable | Value |
+| --- | --- |
+| TARGET_HOST | 192.168.1.100 |
+| SERVICE_PORT | 8080 |
 
 # Part 1: System Setup & Preparation
 
@@ -107,12 +117,20 @@ Execute the setup command:
 
 ```bash
 # Initialize system configuration
-d2f --init custom_guide.md
+d2f --init custom_guide.md --host {{TARGET_HOST}} --port {{SERVICE_PORT}}
 ```
 
 >!! Warning: Modifying environment settings will cause a service restart.
 
 >!!! Caution: Do not delete existing database volumes without a verified backup.
+
+### System Infrastructure Matrix
+
+| Component | Endpoint | Status |
+| --- | --- | --- |
+| Control Service | 192.168.1.100:8080 | Active |
+| Database Node | 192.168.1.101:5432 | Ready |
+| Worker Agent | 192.168.1.102:9090 | Standby |
 
 - Standard bullet item 1: Verify log directory permissions
   - Sub-item A: Ensure log rotation is active
