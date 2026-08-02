@@ -148,6 +148,7 @@ Annotate a Markdown table with `[Variables]` to extract key-value variables. Pla
 | [Variables] | |
 | IP_ADDRESS | 192.168.1.100 |
 | GATEWAY | 192.168.1.1 |
+```
 
 ```bash
 ping {{IP_ADDRESS}} -g {{GATEWAY}}
