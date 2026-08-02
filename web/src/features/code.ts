@@ -1,3 +1,9 @@
+interface Window {
+    d2f_code: {
+        readonly copy: (btn: HTMLElement | null) => Promise<void>;
+    };
+}
+
 // WeakMap stores the active timer per button to prevent race conditions
 const feedbackTimers = new WeakMap<HTMLElement, number>();
 
