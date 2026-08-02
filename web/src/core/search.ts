@@ -157,7 +157,6 @@ function performSearchAndFilter(): void {
 
         preSearchCollapsedState = null;
         lastMatchedSectionIds.clear();
-        window.d2f.storage.saveState();
     }
 
     const searchClearBtn = document.getElementById('search-clear-btn');
@@ -172,6 +171,8 @@ function performSearchAndFilter(): void {
             .replace('{visible}', String(visibleCount))
             .replace('{total}', String(totalCount));
     }
+    
+    window.d2f.storage.saveState();
 }
 
 function toggleSearchToolbar(show?: boolean): void {
@@ -239,7 +240,6 @@ if (typeof window !== 'undefined') {
                     searchInput.focus();
                 }
                 performSearchAndFilter();
-                window.d2f.storage.saveState();
             });
         }
     });
