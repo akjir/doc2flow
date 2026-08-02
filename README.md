@@ -152,7 +152,6 @@ Annotate a Markdown table with `[Variables]` to extract key-value variables. Pla
 ```bash
 ping {{IP_ADDRESS}} -g {{GATEWAY}}
 ```
-```
 
 In the rendered HTML, variables are presented in an interactive table with editable text inputs. Updates automatically propagate to code block copy actions and persist in `localStorage`.
 
