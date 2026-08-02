@@ -105,7 +105,7 @@ language: "de"
     let (fm, _body) = parse_frontmatter(input);
     assert_eq!(fm.language.as_deref(), Some("de"));
 
-    let locale = doc2flow::language::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let locale = doc2flow::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     assert_eq!(locale.lang_code, "de");
     assert_eq!(locale.get("company"), "Firma");
     assert_eq!(
@@ -133,7 +133,7 @@ test code
 ```
 "#;
 
-    let locale = doc2flow::language::Locale::from_lang_code("de");
+    let locale = doc2flow::locales::Locale::from_lang_code("de");
     let (html, _features) = doc2flow::converter::convert_markdown_to_html_with_locale(input, &locale)
         .expect("conversion failed");
 
@@ -167,7 +167,7 @@ language: "de"
 "#;
 
     let (fm, body) = doc2flow::converter::parse_frontmatter(input);
-    let locale = doc2flow::language::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let locale = doc2flow::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     let (html_body, features) = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale)
         .expect("body conversion failed");
 
@@ -202,7 +202,7 @@ fn test_showcase_en_fixture_conversion() {
     let md_content = doc2flow::io::read_file_to_string(std::path::Path::new("examples/showcase_en.md"))
         .expect("Failed to read examples/showcase_en.md");
     let (fm, body) = doc2flow::converter::parse_frontmatter(&md_content);
-    let locale = doc2flow::language::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let locale = doc2flow::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     let (html_body, features) = doc2flow::converter::convert_markdown_to_html_with_options(
         body,
         &locale,
@@ -236,7 +236,7 @@ fn test_showcase_de_fixture_conversion() {
     let md_content = doc2flow::io::read_file_to_string(std::path::Path::new("examples/showcase_de.md"))
         .expect("Failed to read examples/showcase_de.md");
     let (fm, body) = doc2flow::converter::parse_frontmatter(&md_content);
-    let locale = doc2flow::language::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let locale = doc2flow::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     let (html_body, features) = doc2flow::converter::convert_markdown_to_html_with_options(
         body,
         &locale,
@@ -269,7 +269,7 @@ fn test_showcase_de_fixture_conversion() {
 fn test_template_generator_conversion() {
     let template_md = doc2flow::template::generate_template_markdown();
     let (fm, body) = doc2flow::converter::parse_frontmatter(&template_md);
-    let locale = doc2flow::language::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let locale = doc2flow::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     let (html_body, features) = doc2flow::converter::convert_markdown_to_html_with_options(
         body,
         &locale,
@@ -362,7 +362,7 @@ date: "2026-07-26"
 "#;
 
     let (fm, body) = doc2flow::converter::parse_and_validate_frontmatter(input, Some("test_h1.md")).unwrap();
-    let locale = doc2flow::language::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let locale = doc2flow::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     let (html_body, features) = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).unwrap();
     let rendered = doc2flow::template::render(&fm, &locale, &html_body, &d2f_id, None, &features).unwrap();
@@ -404,7 +404,7 @@ date: "2026-07-26"
     let file_name = "spec_scale.md";
     let (fm, body) =
         doc2flow::converter::parse_and_validate_frontmatter(input, Some(file_name)).unwrap();
-    let locale = doc2flow::language::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let locale = doc2flow::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     let (html_body, features) =
         doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).unwrap();
@@ -450,7 +450,7 @@ date: "2026-07-26"
 "#;
 
     let (fm, body) = doc2flow::converter::parse_and_validate_frontmatter(input, Some("pipeline.md")).unwrap();
-    let locale = doc2flow::language::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let locale = doc2flow::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     let (html_body, features) = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).unwrap();
     let html = doc2flow::template::render(&fm, &locale, &html_body, &d2f_id, None, &features).unwrap();
@@ -478,7 +478,7 @@ date: "2026-07-26"
 "#;
 
     let (fm, body) = doc2flow::converter::parse_and_validate_frontmatter(input, Some("pdf_spec.md")).unwrap();
-    let locale = doc2flow::language::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let locale = doc2flow::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     let (html_body, features) = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).unwrap();
     let rendered = doc2flow::template::render(&fm, &locale, &html_body, &d2f_id, None, &features).unwrap();
@@ -535,7 +535,7 @@ language: "fr"
 "#;
 
     let (fm, body) = doc2flow::converter::parse_and_validate_frontmatter(input, Some("fallback.md")).unwrap();
-    let locale = doc2flow::language::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let locale = doc2flow::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     assert_eq!(locale.lang_code, "en"); // Fallback to English
     let (html_body, features) = doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).unwrap();
@@ -590,7 +590,7 @@ logo: "{}"
 
     let (fm, body) =
         doc2flow::converter::parse_and_validate_frontmatter(&input, Some("logo_spec.md")).unwrap();
-    let locale = doc2flow::language::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let locale = doc2flow::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     let (html_body, features) =
         doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).unwrap();
@@ -637,7 +637,7 @@ date: "2026-07-27"
 
     let (fm, body) =
         doc2flow::converter::parse_and_validate_frontmatter(input, Some("meta_spec.md")).unwrap();
-    let locale = doc2flow::language::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let locale = doc2flow::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     let (html_body, features) =
         doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).unwrap();
@@ -678,7 +678,7 @@ date: "2026-07-28"
 
     let (fm, body) =
         doc2flow::converter::parse_and_validate_frontmatter(input, Some("loose_task.md")).unwrap();
-    let locale = doc2flow::language::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let locale = doc2flow::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     let (html_body, _features) =
         doc2flow::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
 
@@ -725,7 +725,7 @@ number_sections: true
         doc2flow::converter::parse_and_validate_frontmatter(input, Some("numbering.md")).unwrap();
     assert!(fm.number_sections);
 
-    let locale = doc2flow::language::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let locale = doc2flow::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     let (html_body, _features) = doc2flow::converter::convert_markdown_to_html_with_options(
         body,
         &locale,
@@ -765,7 +765,7 @@ date: "2026-07-29"
 
     let (fm, body) =
         doc2flow::converter::parse_and_validate_frontmatter(input, Some("test.md")).unwrap();
-    let locale = doc2flow::language::Locale::from_lang_code("en");
+    let locale = doc2flow::locales::Locale::from_lang_code("en");
     let (html_body, features) = doc2flow::converter::convert_markdown_to_html(&body).unwrap();
     let full_doc = doc2flow::template::render(&fm, &locale, &html_body, "doc123", None, &features).unwrap();
 

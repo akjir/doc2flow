@@ -21,7 +21,7 @@ impl Locale {
     /// # Examples
     ///
     /// ```
-    /// use doc2flow::language::Locale;
+    /// use doc2flow::locales::Locale;
     ///
     /// let json = r#"{"lang_code": "en", "company": "Company"}"#;
     /// let locale = Locale::from_json(json);

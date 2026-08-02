@@ -1,7 +1,7 @@
 use crate::components;
 use crate::converter::{DocumentFeatures, Frontmatter};
 use crate::error::{Doc2FlowError, Result};
-use crate::language::{Locale, validate_locale_coverage};
+use crate::locales::{Locale, validate_locale_coverage};
 use std::collections::HashMap;
 use std::fmt::Write;
 
@@ -304,7 +304,7 @@ pub fn generate_template_markdown() -> String {
 ///
 /// ```
 /// use std::collections::HashMap;
-/// use doc2flow::language::Locale;
+/// use doc2flow::locales::Locale;
 /// use doc2flow::template::substitute_template;
 ///
 /// let mut vars = HashMap::new();

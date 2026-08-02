@@ -11,6 +11,7 @@
 
 ## 2. Rust
 - **Core:** Idiomatic, newtypes, 1-path exports, NO `unsafe`
+- **Clean:** Remove dead/obsolete code when adding new code.
 - **Errors:** Stdlib+`Doc2FlowError` (NO `anyhow`/`eyre`). `Result`=expected. `panic!`=bugs/stop (detailed msgs). NO `catch_unwind`.
 - **Docs:** 15-word max start, canonical headers (Examples/Errors/Panics), NO meta/journals
 - **Perf:** Min-alloc (borrow>owned), `with_capacity`, O(N) 1-pass, zero-copy (`split_once`,`strip_prefix`), `Cow`
