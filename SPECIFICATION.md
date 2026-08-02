@@ -122,7 +122,7 @@ d2f.exe --version
 ## 5. Module Architecture & Subsystem Decoupling
 
 * **Filesystem & I/O Isolation (`src/io.rs`):** Exclusive module for filesystem interactions, file reading/writing, path resolution (`Path`, `PathBuf`), and asset retrieval. Direct `std::fs`/`std::io` calls prohibited in processing modules.
-* **Pure In-Memory Processing Core:** Core modules (`src/converter.rs`, `src/template.rs`, `src/components.rs`, `src/i18n.rs`, `src/hasher.rs`, `src/id.rs`) perform pure in-memory string/AST data transformations decoupled from disk I/O.
+* **Pure In-Memory Processing Core:** Core modules (`src/converter.rs`, `src/template.rs`, `src/components.rs`, `src/language.rs`, `src/hasher.rs`, `src/id.rs`) perform pure in-memory string/AST data transformations decoupled from disk I/O.
 * **Strict Modular Feature Isolation (HTML, CSS, TS/JS):**
   * Extension features (`tasks`, `images`, `toc`) are fully decoupled and zero-knowledge of each other.
   * Each feature maintains dedicated TypeScript (`web/src/features/`) and CSS (`styles/`) modules.
@@ -196,7 +196,7 @@ doc2flow/
 │   ├── converter.rs          # Markdown AST parser and feature detector
 │   ├── error.rs              # Diagnostic error types and reporting
 │   ├── hasher.rs             # SHA-256 hash generator
-│   ├── i18n.rs               # Locale loader and translation engine
+│   ├── language.rs           # Locale loader and translation engine
 │   ├── id.rs                 # Document identifier generation
 │   ├── image.rs              # Image optimization, WebP scaling and Base64 embedding
 │   ├── io.rs                 # Central filesystem and asset IO

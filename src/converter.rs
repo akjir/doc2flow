@@ -1,6 +1,6 @@
 use crate::components;
 use crate::error::{DiagnosticError, Result};
-use crate::i18n::Locale;
+use crate::language::Locale;
 use crate::template;
 use pulldown_cmark::{
     CodeBlockKind, Event, HeadingLevel, Options, Parser as MarkdownParser, Tag, TagEnd, html,

@@ -4,7 +4,7 @@ pub mod components;
 pub mod converter;
 pub mod error;
 pub mod hasher;
-pub mod i18n;
+pub mod language;
 pub mod id;
 pub mod image;
 pub mod io;

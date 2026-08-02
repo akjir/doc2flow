@@ -21,7 +21,7 @@ impl Locale {
     /// # Examples
     ///
     /// ```
-    /// use doc2flow::i18n::Locale;
+    /// use doc2flow::language::Locale;
     ///
     /// let json = r#"{"lang_code": "en", "company": "Company"}"#;
     /// let locale = Locale::from_json(json);
@@ -183,4 +183,3 @@ mod tests {
         assert_eq!(default_loc.get("company"), "Company");
     }
 }
-

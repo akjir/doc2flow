@@ -244,7 +244,7 @@ doc2flow/
 │   ├── converter.rs      # Markdown AST parser & feature detector
 │   ├── error.rs          # Compiler-style diagnostic reporting
 │   ├── hasher.rs         # SHA-256 hash generator
-│   ├── i18n.rs           # Locale loader & translation engine
+│   ├── language.rs       # Locale loader & translation engine
 │   ├── id.rs             # Document identifier (d2f_id) generator
 │   ├── image.rs          # Base64 embedding & WebP auto-scaling
 │   ├── io.rs             # Centralized filesystem I/O operations
