@@ -737,7 +737,6 @@
       });
       preSearchCollapsedState = null;
       lastMatchedSectionIds.clear();
-      window.d2f.storage.saveState();
     }
     const searchClearBtn = document.getElementById("search-clear-btn");
     if (searchClearBtn) {
@@ -748,6 +747,7 @@
       const template = i18n.sections_visible ?? "{visible} / {total} sections visible";
       searchCounter.textContent = template.replace("{visible}", String(visibleCount)).replace("{total}", String(totalCount));
     }
+    window.d2f.storage.saveState();
   }
   function toggleSearchToolbar(show) {
     const toolbar = document.getElementById("search-toolbar");
@@ -809,7 +809,6 @@
             searchInput.focus();
           }
           performSearchAndFilter();
-          window.d2f.storage.saveState();
         });
       }
     });

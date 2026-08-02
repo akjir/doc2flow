@@ -18,6 +18,10 @@ for arg in "$@"; do
         BUILD_EXAMPLES=true
     elif [ "$arg" = "--tests" ]; then
         RUN_TESTS=true
+    elif [ "$arg" = "--release-windows" ]; then
+        CARGO_ARGS+=("--release" "--target" "x86_64-pc-windows-gnu")
+    elif [ "$arg" = "--release-linux" ]; then
+        CARGO_ARGS+=("--release" "--target" "x86_64-unknown-linux-gnu")
     else
         CARGO_ARGS+=("$arg")
     fi
@@ -47,10 +51,16 @@ fi
 if [ "$BUILD_EXAMPLES" = true ]; then
     echo "==> Building examples..."
     D2F_BIN="./target/debug/d2f"
-    for arg in "${CARGO_ARGS[@]:-}"; do
-        if [ "$arg" = "--release" ]; then
+    for ((i=0; i<${#CARGO_ARGS[@]}; i++)); do
+        if [ "${CARGO_ARGS[$i]}" = "--target" ] && [ $((i+1)) -lt ${#CARGO_ARGS[@]} ]; then
+            TARGET_NAME="${CARGO_ARGS[$((i+1))]}"
+            if [[ "$TARGET_NAME" == *"windows"* ]]; then
+                D2F_BIN="./target/${TARGET_NAME}/release/d2f.exe"
+            else
+                D2F_BIN="./target/${TARGET_NAME}/release/d2f"
+            fi
+        elif [ "${CARGO_ARGS[$i]}" = "--release" ]; then
             D2F_BIN="./target/release/d2f"
-            break
         fi
     done
 
