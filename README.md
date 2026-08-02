@@ -143,6 +143,7 @@ toc: false
 Annotate a Markdown table with `[Variables]` to extract key-value variables. Place `{{VARIABLE_NAME}}` placeholders inside code blocks to substitute values dynamically on copying and printing.
 
 ```markdown
+[Variables]
 | Parameter | Default |
 | --- | --- |
 | [Variables] | |
