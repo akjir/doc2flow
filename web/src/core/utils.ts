@@ -27,5 +27,4 @@ window.d2f = window.d2f || {};
 window.d2f.utils = {
     debounce,
     isRecord,
-};
-
+}

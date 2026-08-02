@@ -153,4 +153,3 @@ if (typeof window !== 'undefined') {
         }
     });
 }
-

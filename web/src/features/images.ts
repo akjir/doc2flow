@@ -46,4 +46,3 @@ if (typeof window !== 'undefined') {
         });
     });
 }
-

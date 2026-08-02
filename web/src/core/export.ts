@@ -79,5 +79,3 @@ function performExport(type: ExportType): void {
         URL.revokeObjectURL(url);
     }
 }
-
-

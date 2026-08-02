@@ -134,5 +134,3 @@ if (typeof window !== 'undefined') {
     document.addEventListener('input', handleCommentInput);
     document.addEventListener('change', handleCommentInput);
 }
-
-

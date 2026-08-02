@@ -128,5 +128,3 @@ if (typeof window !== 'undefined') {
         }
     });
 }
-
-
