@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.3+121.0fd3c52.dev">
-  <meta name="version" content="0.9.3+121.0fd3c52.dev">
+  <meta name="generator" content="Doc2Flow v0.9.3+128.04bcd9a.dev">
+  <meta name="version" content="0.9.3+128.04bcd9a.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-02T13:07:43Z">
+  <meta name="dcterms.created" content="2026-08-02T14:31:35Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <title>Doc2Flow Deutscher Showcase</title>
   <style>
@@ -1591,7 +1591,7 @@ mark.d2f-highlight {
     window.d2f.document = window.d2f.document || {};
     window.d2f.document.id = 'd2f_id_468e65bc2ccf89b4';
     window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {"reset_all":"Zurücksetzen","setup_completed":"Vorgang abgeschlossen","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","comment_placeholder":"Kommentar hinzufügen...","name_placeholder":"Name","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","callout_note":"Hinweis","callout_tip":"Tipp","loading":"Lade...","export_pdf":"Als PDF exportieren","save_state":"Stand sichern","callout_caution":"Achtung","copied":"Kopiert!","search_placeholder":"Suchen... (Ctrl+K)","var_table_value":"Wert","company":"Firma","contact":"Ansprechpartner","agent":"Bearbeiter","date_placeholder":"TT.MM.JJJJ","copy_code":"Code kopieren","callout_important":"Wichtig","var_table_title":"Variablen","date":"Datum","lang_code":"de","setup_in_progress":"Vorgang in Bearbeitung","var_table_variable":"Variable","signature_date":"Datum","callout_warning":"Warnung","sections_visible":"{visible} / {total} Abschnitte sichtbar"};
+    window.d2f.lang.dictionary = {"agent":"Bearbeiter","setup_completed":"Vorgang abgeschlossen","callout_warning":"Warnung","contact":"Ansprechpartner","date_placeholder":"TT.MM.JJJJ","callout_tip":"Tipp","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","comment_placeholder":"Kommentar hinzufügen...","var_table_variable":"Variable","signature_date":"Datum","search_placeholder":"Suchen... (Ctrl+K)","copy_code":"Code kopieren","company":"Firma","date":"Datum","var_table_title":"Variablen","export_pdf":"Als PDF exportieren","setup_in_progress":"Vorgang in Bearbeitung","callout_important":"Wichtig","save_state":"Stand sichern","callout_caution":"Achtung","copied":"Kopiert!","lang_code":"de","reset_all":"Zurücksetzen","sections_visible":"{visible} / {total} Abschnitte sichtbar","loading":"Lade...","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","callout_note":"Hinweis","var_table_value":"Wert","name_placeholder":"Name"};
     "use strict";
 (() => {
   // src/core/storage.ts
@@ -2331,7 +2331,6 @@ mark.d2f-highlight {
       });
       preSearchCollapsedState = null;
       lastMatchedSectionIds.clear();
-      window.d2f.storage.saveState();
     }
     const searchClearBtn = document.getElementById("search-clear-btn");
     if (searchClearBtn) {
@@ -2342,6 +2341,7 @@ mark.d2f-highlight {
       const template = i18n.sections_visible ?? "{visible} / {total} sections visible";
       searchCounter.textContent = template.replace("{visible}", String(visibleCount)).replace("{total}", String(totalCount));
     }
+    window.d2f.storage.saveState();
   }
   function toggleSearchToolbar(show) {
     const toolbar = document.getElementById("search-toolbar");
@@ -2403,7 +2403,6 @@ mark.d2f-highlight {
             searchInput.focus();
           }
           performSearchAndFilter();
-          window.d2f.storage.saveState();
         });
       }
     });

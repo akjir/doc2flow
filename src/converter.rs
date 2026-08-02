@@ -84,7 +84,7 @@ fn to_roman(n: u64) -> Cow<'static, str> {
         (1, "i"),
     ];
     let mut num = n;
-    let mut result = String::new();
+    let mut result = String::with_capacity(16);
     for (val, sym) in mapping {
         while num >= val {
             result.push_str(sym);
@@ -504,6 +504,8 @@ pub fn convert_markdown_to_html_with_options(
     let mut var_event_ranges: Vec<(usize, usize)> = Vec::new();
 
     let mut scan_i = 0;
+    let mut temp_scan_html = String::with_capacity(512);
+
     while scan_i < events.len() {
         if let Event::Start(Tag::Paragraph) = &events[scan_i] {
             let p_start = scan_i;
@@ -525,9 +527,9 @@ pub fn convert_markdown_to_html_with_options(
                 scan_i += 1;
             }
 
-            let mut p_html = String::new();
-            html::push_html(&mut p_html, events[p_start + 1..p_end].iter().cloned());
-            let clean_p = strip_paragraph_tags(p_html.trim()).trim();
+            temp_scan_html.clear();
+            html::push_html(&mut temp_scan_html, events[p_start + 1..p_end].iter().cloned());
+            let clean_p = strip_paragraph_tags(temp_scan_html.trim()).trim();
 
             if clean_p.eq_ignore_ascii_case("[Variables]") {
                 let mut next_t = p_end + 1;
@@ -561,9 +563,9 @@ pub fn convert_markdown_to_html_with_options(
 
                     var_event_ranges.push((p_start, table_end));
 
-                    let mut table_rows: Vec<(String, String)> = Vec::new();
-                    let mut current_row: Vec<String> = Vec::new();
-                    let mut current_cell = String::new();
+                    let mut table_rows: Vec<(String, String)> = Vec::with_capacity(8);
+                    let mut current_row: Vec<String> = Vec::with_capacity(4);
+                    let mut current_cell = String::with_capacity(128);
                     let mut in_cell = false;
 
                     for ev in &events[table_start..=table_end] {
@@ -577,9 +579,9 @@ pub fn convert_markdown_to_html_with_options(
                             }
                             Event::End(TagEnd::TableRow) => {
                                 if current_row.len() >= 2 {
-                                    table_rows.push((current_row[0].clone(), current_row[1].clone()));
+                                    table_rows.push((std::mem::take(&mut current_row[0]), std::mem::take(&mut current_row[1])));
                                 } else if current_row.len() == 1 {
-                                    table_rows.push((current_row[0].clone(), String::new()));
+                                    table_rows.push((std::mem::take(&mut current_row[0]), String::new()));
                                 }
                                 current_row.clear();
                             }
@@ -710,6 +712,7 @@ pub fn convert_markdown_to_html_with_options(
     let mut global_item_count = 0usize;
     let mut in_section = false;
     let mut list_stack: Vec<ListKind> = Vec::new();
+    let mut temp_html = String::with_capacity(1024);
 
     let mut idx = 0;
     while idx < events.len() {
@@ -745,9 +748,9 @@ pub fn convert_markdown_to_html_with_options(
                     idx += 1;
                 }
 
-                let mut heading_html = String::new();
-                html::push_html(&mut heading_html, events[start_idx..idx].iter().cloned());
-                let heading_text = heading_html.trim();
+                temp_html.clear();
+                html::push_html(&mut temp_html, events[start_idx..idx].iter().cloned());
+                let heading_text = temp_html.trim();
 
                 let is_empty = is_section_empty(&events[idx + 1..]);
                 let is_h1 = target_level == HeadingLevel::H1;
@@ -800,9 +803,9 @@ pub fn convert_markdown_to_html_with_options(
                     idx += 1;
                 }
 
-                let mut sub_html = String::new();
-                html::push_html(&mut sub_html, events[start_idx..idx].iter().cloned());
-                template::render_subheading(&mut out, &sub_html);
+                temp_html.clear();
+                html::push_html(&mut temp_html, events[start_idx..idx].iter().cloned());
+                template::render_subheading(&mut out, &temp_html);
             }
 
             // Blockquotes (> Note, >? Tip, >! Important, >!! Warning, >!!! Caution)
@@ -824,9 +827,9 @@ pub fn convert_markdown_to_html_with_options(
                     idx += 1;
                 }
 
-                let mut bq_html = String::new();
-                html::push_html(&mut bq_html, events[start_idx..idx].iter().cloned());
-                let trimmed = bq_html.trim();
+                temp_html.clear();
+                html::push_html(&mut temp_html, events[start_idx..idx].iter().cloned());
+                let trimmed = temp_html.trim();
 
                 let inner = strip_paragraph_tags(trimmed);
                 let (note_cls, note_content, callout_label, _) = parse_callout(inner, locale);
@@ -860,14 +863,14 @@ pub fn convert_markdown_to_html_with_options(
                     idx += 1;
                 }
 
-                let mut code_text = String::new();
+                temp_html.clear();
                 for ev in &events[start_idx..idx] {
                     if let Event::Text(text) = ev {
-                        code_text.push_str(text);
+                        temp_html.push_str(text);
                     }
                 }
 
-                let escaped_code = html_escape(&code_text);
+                let escaped_code = html_escape(&temp_html);
                 let copy_label = html_escape(locale.get("copy_code"));
 
                 let escaped_lang_opt = lang_opt.as_ref().map(|l| html_escape(l));
@@ -906,19 +909,19 @@ pub fn convert_markdown_to_html_with_options(
                     idx += 1;
                 }
 
-                let mut label_html = String::new();
+                temp_html.clear();
                 if is_task {
                     html::push_html(
-                        &mut label_html,
+                        &mut temp_html,
                         events[start_idx..idx]
                             .iter()
                             .filter(|ev| !matches!(ev, Event::TaskListMarker(_)))
                             .cloned(),
                     );
                 } else {
-                    html::push_html(&mut label_html, events[start_idx..idx].iter().cloned());
+                    html::push_html(&mut temp_html, events[start_idx..idx].iter().cloned());
                 }
-                let trimmed = label_html.trim();
+                let trimmed = temp_html.trim();
                 let clean_label = strip_paragraph_tags(trimmed);
 
                 let list_depth = if list_stack.is_empty() { 0 } else { list_stack.len() - 1 };
@@ -979,9 +982,9 @@ pub fn convert_markdown_to_html_with_options(
                     idx += 1;
                 }
 
-                let mut para_html = String::new();
-                html::push_html(&mut para_html, events[start_idx..idx].iter().cloned());
-                let trimmed = para_html.trim();
+                temp_html.clear();
+                html::push_html(&mut temp_html, events[start_idx..idx].iter().cloned());
+                let trimmed = temp_html.trim();
                 let clean_content = strip_paragraph_tags(trimmed).trim();
 
                 if !clean_content.is_empty() {
@@ -1018,9 +1021,9 @@ pub fn convert_markdown_to_html_with_options(
 
             // Fallback for standard events
             ev => {
-                let mut temp = String::new();
-                html::push_html(&mut temp, std::iter::once(ev.clone()));
-                out.push_str(&temp);
+                temp_html.clear();
+                html::push_html(&mut temp_html, std::iter::once(ev.clone()));
+                out.push_str(&temp_html);
             }
         }
         idx += 1;
@@ -1056,6 +1059,7 @@ fn is_section_empty(events: &[Event]) -> bool {
 fn inspect_section_metadata(events: &[Event], locale: &Locale) -> (bool, Option<String>) {
     let mut has_checklist = false;
     let mut callout_types: Vec<&'static str> = Vec::new();
+    let mut temp_html = String::with_capacity(256);
 
     let mut i = 0;
     while i < events.len() {
@@ -1084,9 +1088,9 @@ fn inspect_section_metadata(events: &[Event], locale: &Locale) -> (bool, Option<
                     }
                     i += 1;
                 }
-                let mut bq_html = String::new();
-                html::push_html(&mut bq_html, events[start_idx..i].iter().cloned());
-                let inner = strip_paragraph_tags(bq_html.trim());
+                temp_html.clear();
+                html::push_html(&mut temp_html, events[start_idx..i].iter().cloned());
+                let inner = strip_paragraph_tags(temp_html.trim());
                 let (_, _, _, ctype) = parse_callout(inner, locale);
                 if !callout_types.contains(&ctype) {
                     callout_types.push(ctype);

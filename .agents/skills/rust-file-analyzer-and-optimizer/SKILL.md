@@ -1,0 +1,45 @@
+---
+name: rust-file-analyzer-and-optimizer
+description: Analyzes/optimizes Rust code for memory efficiency, zero-allocation, idiomatic patterns, and performance (Doc2Flow context).
+---
+
+# Rust Analyzer & Optimizer
+
+**Goal:** Enforce high-performance, zero-copy parsing, minimal heap allocations, and idiomatic Rust for Doc2Flow.
+
+## USE WHEN
+- Auditing `src/*.rs` for bottlenecks/code smells.
+- Refactoring to eliminate heap allocations (`.to_string()`, `.clone()`, `format!`).
+- Optimizing buffer writes (`out.write_str` vs `write!`).
+- Enforcing idioms, zero `unsafe`, and strict `anyhow` error contexts.
+
+## EXECUTION WORKFLOW
+Follow these 4 steps sequentially, applying the 5 Pillars below:
+
+1. **Scan:** Audit code against the 5 Pillars (allocations, macros, loops, error contexts).
+2. **Trade-Off:** Weigh Performance vs. Readability. Reject readability-destroying micro-optimizations.
+3. **Output:** Provide FULL refactored module (NO placeholders). Retain `#[inline]` on hot-paths and all `#[cfg(test)]` modules.
+4. **Summary:** Provide a concise bulleted rationale mapping changes to specific benefits.
+
+## THE 5 PILLARS
+
+### 1: Memory & Allocations
+- **Borrowing:** Prefer `&str`, `&[u8]`, `Cow<'a, str>`. Avoid `String` parameters/statics.
+- **No Waste:** Eliminate unnecessary `.to_string()`, `.to_owned()`, `PathBuf::from()`.
+- **Zero-Copy:** Use `.split_once()`, `.strip_prefix()`. AVOID intermediate collections (`.collect::<Vec<_>>()`).
+- **Pre-allocate:** ALWAYS use `.with_capacity()` for dynamic collections in loops.
+
+### 2: Parsing & Loops
+- **No Chained Regex/Replace:** Replace `.replace().replace()` cascades with single-pass state machines/scanners.
+- **Declarative Iterators:** Prefer `.filter()`, `.map()`, `.fold()` over imperative loops with mutable state.
+
+### 3: Formatting & Buffer Directives
+- **Static:** `out.write_str("...")` STRICTLY for static literals (no variables).
+- **Dynamic:** `write!(out, "...", vars)` for HTML fragments with variables.
+- **Anti-Pattern:** NEVER fragment single HTML strings into multiple `write_str` calls solely to avoid `write!`. Maintain readability.
+
+### 4: Idioms & Architecture
+- **Errors:** Use `anyhow`/`eyre` with `.context(...)`. Avoid complex custom `Enum`s for basic app errors.
+- **Panics:** `unwrap()`/`expect()` ONLY for true invariants with descriptive msgs. NEVER for runtime/user I/O.
+- **Safety:** ZERO `unsafe` blocks.
+- **Logic:** Prefer `match` or lookup tables over `if-else` chains
