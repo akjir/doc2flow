@@ -84,6 +84,17 @@ The following configuration snippet must be applied to disable automatic updates
 echo "Initializing Doc2Flow showcase environment {{SERVER_NAME}}:{{PORT}} with key {{API_KEY}}..."
 ```
 
+### System Components & Specifications
+
+The table below outlines the hardware specifications of the installed system components:
+
+| Component | Model | Status | Capacity |
+|---|---|---|---|
+| Central Processor | Intel Xeon E-2388G | Active | 8 Cores / 16 Threads |
+| System Memory | DDR4 ECC Registered | Optimal | 64 GB (2x 32 GB) |
+| Primary Storage | NVMe SSD PCIe 4.0 | Normal | 2 TB RAID 1 |
+| Network Interface | Dual 10GbE SFP+ | Connected | 10 Gbps |
+
 ## Section 4: Informational Lists
 
 - Main task & system monitoring

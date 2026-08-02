@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.3+131.d19539c.dev">
-  <meta name="version" content="0.9.3+131.d19539c.dev">
+  <meta name="generator" content="Doc2Flow v0.9.3+133.a821a45.dev">
+  <meta name="version" content="0.9.3+133.a821a45.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-02T16:42:47Z">
+  <meta name="dcterms.created" content="2026-08-02T19:50:17Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <title>Doc2Flow English Showcase</title>
   <style>
@@ -1197,6 +1197,141 @@ mark.d2f-highlight {
   }
 }
 
+/* ==========================================================================
+   1. BASE TABLE STYLES & CSS VARIABLES
+   ========================================================================== */
+
+:root {
+  --table-border-color: #d0d7de;
+  --table-header-bg: #f1f5f9;
+  --table-row-even-bg: #f8fafc;
+  --table-row-hover-bg: #f0f6fc;
+  --table-text-color: #1e293b;
+  --table-header-text-color: #0f172a;
+}
+
+/* ==========================================================================
+   2. LAYOUT & CONTAINERS
+   ========================================================================== */
+
+.item-table-wrap {
+  width: 100%;
+  margin: 1rem 0;
+  overflow-x: auto;
+  border-radius: var(--radius-lg, 8px);
+  border: 1px solid var(--table-border-color);
+  background: var(--bg-surface, #ffffff);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ==========================================================================
+   3. COMPONENTS (.item-table)
+   ========================================================================== */
+
+.item-table,
+.section table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.8125rem; /* 13px - matches normal body text */
+  color: var(--table-text-color);
+}
+
+.item-table th,
+.section table th {
+  padding: 0.5rem 0.75rem;
+  font-weight: 600;
+  color: var(--table-header-text-color);
+  background-color: var(--table-header-bg);
+  border-bottom: 2px solid var(--table-border-color);
+  text-transform: uppercase;
+  font-size: 0.75rem; /* 12px */
+  letter-spacing: 0.04em;
+}
+
+.item-table td,
+.section table td {
+  padding: 0.5rem 0.75rem;
+  font-weight: normal;
+  text-transform: none;
+  font-size: 0.8125rem; /* 13px */
+  border-bottom: 1px solid var(--table-border-color);
+  vertical-align: middle;
+}
+
+.item-table tbody tr:nth-child(even),
+.section table tbody tr:nth-child(even) {
+  background-color: var(--table-row-even-bg);
+}
+
+.item-table tbody tr:hover,
+.item-table tbody tr.row-hover,
+.section table tbody tr:hover {
+  background-color: var(--table-row-hover-bg);
+  transition: background-color 0.15s ease-in-out;
+}
+
+.item-table tbody tr:last-child td,
+.section table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ==========================================================================
+   4. PRINT STYLES
+   ========================================================================== */
+
+@media print {
+  .item-table-wrap {
+    overflow: visible !important;
+    border: 1px solid #cbd5e1 !important;
+    background: transparent !important;
+    margin: 0.75rem 0 !important;
+  }
+
+  .item-table,
+  .section table {
+    width: 100% !important;
+    color: #0f172a !important;
+    font-size: 11px !important;
+    page-break-inside: auto !important;
+  }
+
+  .item-table tr,
+  .section table tr {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+  }
+
+  .item-table th,
+  .section table th {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+    font-size: 10.5px !important;
+    border-bottom: 2px solid #94a3b8 !important;
+    padding: 0.4rem 0.6rem !important;
+  }
+
+  .item-table td,
+  .section table td {
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding: 0.4rem 0.6rem !important;
+  }
+}
+
+/* ==========================================================================
+   5. RESPONSIVE MEDIA QUERIES
+   ========================================================================== */
+
+@media (max-width: 640px) {
+  .item-table th,
+  .item-table td,
+  .section table th,
+  .section table td {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.75rem;
+  }
+}
+
 
   </style>
 </head>
@@ -1392,6 +1527,18 @@ mark.d2f-highlight {
 <h3 class="subh">Unlabelled Script Block</h3>
 <div class="code-block-wrap"><div class="code-header"><button class="copy-btn" onclick="window.d2f_code.copy(this)" title="Copy code" aria-label="Copy code"><svg aria-hidden="true" class="svg-icon iconCopy" width="14" height="15" viewBox="0 0 17 18"><path fill="currentColor" d="M5 6c0-1.09.91-2 2-2h4.5L15 7.5V15c0 1.09-.91 2-2 2H7c-1.09 0-2-.91-2-2zm6-1.25V8h3.25z"/><path fill="currentColor" d="M10 1a2 2 0 0 1 2 2H6a2 2 0 0 0-2 2v9a2 2 0 0 1-2-2V4a3 3 0 0 1 3-3z" opacity=".4"/></svg></button></div><pre class="code-block"><code>echo &quot;Initializing Doc2Flow showcase environment {{SERVER_NAME}}:{{PORT}} with key {{API_KEY}}...&quot;
 </code></pre></div>
+<h3 class="subh">System Components &amp; Specifications</h3>
+<div class="doc-item text-item" id="txt_s5_6">
+  <span class="text-content">The table below outlines the hardware specifications of the installed system components:</span>
+  <span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>
+</div>
+<div class="item-table-wrap"><table><thead><tr><th>Component</th><th>Model</th><th>Status</th><th>Capacity</th></tr></thead><tbody>
+<tr><td>Central Processor</td><td>Intel Xeon E-2388G</td><td>Active</td><td>8 Cores / 16 Threads</td></tr>
+<tr><td>System Memory</td><td>DDR4 ECC Registered</td><td>Optimal</td><td>64 GB (2x 32 GB)</td></tr>
+<tr><td>Primary Storage</td><td>NVMe SSD PCIe 4.0</td><td>Normal</td><td>2 TB RAID 1</td></tr>
+<tr><td>Network Interface</td><td>Dual 10GbE SFP+</td><td>Connected</td><td>10 Gbps</td></tr>
+</tbody></table>
+</div>
 </div></section>
 
 <!-- S6 -->
@@ -1527,7 +1674,7 @@ mark.d2f-highlight {
     window.d2f.document = window.d2f.document || {};
     window.d2f.document.id = 'd2f_id_c9c539743b5bb460';
     window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {"setup_in_progress":"Process in Progress","setup_completed":"Process Completed","signature_date":"Date","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","callout_warning":"Warning","date_placeholder":"MM/DD/YYYY","comment_placeholder":"Add a comment...","callout_tip":"Tip","reset_all":"Reset","var_table_title":"Variables","lang_code":"en","copy_code":"Copy code","save_state":"Save State","var_table_variable":"Variable","name_placeholder":"Name","search_placeholder":"Search... (Ctrl+K)","callout_note":"Note","date":"Date","export_pdf":"Export as PDF","loading":"Loading...","sections_visible":"{visible} / {total} sections visible","copied":"Copied!","progress_template":"{done} of {total} tasks completed ({pct}%)","callout_important":"Important","callout_caution":"Caution","var_table_value":"Value"};
+    window.d2f.lang.dictionary = {"reset_all":"Reset","lang_code":"en","setup_completed":"Process Completed","export_pdf":"Export as PDF","copied":"Copied!","callout_note":"Note","date":"Date","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","callout_warning":"Warning","copy_code":"Copy code","progress_template":"{done} of {total} tasks completed ({pct}%)","callout_important":"Important","var_table_value":"Value","search_placeholder":"Search... (Ctrl+K)","setup_in_progress":"Process in Progress","name_placeholder":"Name","sections_visible":"{visible} / {total} sections visible","signature_date":"Date","date_placeholder":"MM/DD/YYYY","comment_placeholder":"Add a comment...","save_state":"Save State","loading":"Loading...","callout_tip":"Tip","callout_caution":"Caution","var_table_title":"Variables","var_table_variable":"Variable"};
     "use strict";
 (() => {
   // src/core/storage.ts
@@ -2659,6 +2806,53 @@ mark.d2f-highlight {
         }
       });
     });
+  }
+})();
+
+"use strict";
+(() => {
+  // src/features/table.ts
+  function initSectionTables() {
+    const wrappers = document.querySelectorAll(".item-table-wrap, .section table");
+    let tableCount = 0;
+    wrappers.forEach((wrapper) => {
+      const table = wrapper instanceof HTMLTableElement ? wrapper : wrapper.querySelector("table");
+      if (!table)
+        return;
+      tableCount += 1;
+      if (!table.classList.contains("item-table")) {
+        table.classList.add("item-table");
+      }
+      const tbody = table.querySelector("tbody");
+      if (tbody && !tbody.hasAttribute("data-hover-bound")) {
+        tbody.setAttribute("data-hover-bound", "true");
+        tbody.addEventListener("mouseover", (event) => {
+          const target = event.target;
+          if (target instanceof Element) {
+            const row = target.closest("tr");
+            if (row && row.parentElement === tbody) {
+              row.classList.add("row-hover");
+            }
+          }
+        });
+        tbody.addEventListener("mouseout", (event) => {
+          const target = event.target;
+          if (target instanceof Element) {
+            const row = target.closest("tr");
+            if (row && row.parentElement === tbody) {
+              row.classList.remove("row-hover");
+            }
+          }
+        });
+      }
+    });
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+      initSectionTables();
+    });
+  } else {
+    initSectionTables();
   }
 })();
 

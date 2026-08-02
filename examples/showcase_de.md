@@ -84,6 +84,17 @@ Der folgende Konfigurationsauszug muss angewendet werden, um automatische Update
 echo "Doc2Flow Showcase-Umgebung {{SERVER_NAME}}:{{PORT}} mit Schlüssel {{API_KEY}} wird initialisiert..."
 ```
 
+### Systemkomponenten & Spezifikationen
+
+Die folgende Tabelle enthält die Spezifikationen der installierten Hardwarekomponenten:
+
+| Komponente | Modell | Status | Kapazität |
+|---|---|---|---|
+| Hauptprozessor | Intel Xeon E-2388G | Aktiv | 8 Kerne / 16 Threads |
+| Arbeitsspeicher | DDR4 ECC Registered | Optimal | 64 GB (2x 32 GB) |
+| Primärspeicher | NVMe SSD PCIe 4.0 | Normal | 2 TB RAID 1 |
+| Netzwerkschnittstelle | Dual 10GbE SFP+ | Verbunden | 10 Gbps |
+
 ## Abschnitt 4: Informationslisten
 
 - Hauptaufgabe & Systemüberwachung

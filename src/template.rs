@@ -20,6 +20,9 @@ pub static STYLE_IMAGES: &str = include_str!("../styles/images.css");
 /// Embedded Table of Contents CSS feature styles.
 pub static STYLE_TOC: &str = include_str!("../styles/toc.css");
 
+/// Embedded section table CSS feature styles.
+pub static STYLE_TABLE: &str = include_str!("../styles/table.css");
+
 /// Embedded core JavaScript bundle.
 pub static SCRIPT_CORE: &str = include_str!("../web/dist/script-core.js");
 
@@ -34,6 +37,9 @@ pub static SCRIPT_IMAGES: &str = include_str!("../web/dist/script-images.js");
 
 /// Embedded Table of Contents JavaScript feature bundle.
 pub static SCRIPT_TOC: &str = include_str!("../web/dist/script-toc.js");
+
+/// Embedded section table JavaScript feature bundle.
+pub static SCRIPT_TABLE: &str = include_str!("../web/dist/script-table.js");
 
 /// Assembles active CSS feature styles into the provided output string based on detected document features.
 pub fn render_styles(out: &mut String, features: &DocumentFeatures) {
@@ -57,6 +63,11 @@ pub fn render_styles(out: &mut String, features: &DocumentFeatures) {
 
     if features.has_toc {
         out.push_str(STYLE_TOC);
+        out.push_str("\n");
+    }
+
+    if features.has_tables {
+        out.push_str(STYLE_TABLE);
         out.push_str("\n");
     }
 }
@@ -83,6 +94,11 @@ pub fn render_scripts(out: &mut String, features: &DocumentFeatures) {
 
     if features.has_toc {
         out.push_str(SCRIPT_TOC);
+        out.push_str("\n");
+    }
+
+    if features.has_tables {
+        out.push_str(SCRIPT_TABLE);
         out.push_str("\n");
     }
 }

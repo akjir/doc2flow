@@ -713,3 +713,36 @@ date: "2026-07-29"
     assert!(full_doc.contains(r#"data-has-checklist="true""#));
     assert!(full_doc.contains(r#"data-callout-type="warning""#));
 }
+
+#[test]
+fn test_section_table_feature_detection() {
+    let table_md = r#"# Ingredients
+| Item | Qty |
+|---|---|
+| Cocoa | 50g |
+"#;
+
+    let (html_body, features) = doc2flow::converter::convert_markdown_to_html(table_md).unwrap();
+    assert!(features.has_tables);
+    assert!(!features.has_code);
+    assert!(!features.has_tasks);
+    assert!(html_body.contains(r#"<div class="item-table-wrap">"#));
+
+    let fm = doc2flow::converter::Frontmatter::new();
+    let locale = doc2flow::locales::Locale::from_lang_code("en");
+    let full_doc = doc2flow::template::render(&fm, &locale, &html_body, "doc_table", None, &features).unwrap();
+
+    assert!(full_doc.contains("/* ==========================================================================\n   1. BASE TABLE STYLES & CSS VARIABLES"));
+    assert!(full_doc.contains("initSectionTables"));
+
+    // Verify [Variables] table alone does not enable has_tables
+    let var_table_md = r#"# Setup
+
+[Variables]
+| Key | Value |
+|---|---|
+| VAR_A | ValA |
+"#;
+    let (_var_html, var_features) = doc2flow::converter::convert_markdown_to_html(var_table_md).unwrap();
+    assert!(!var_features.has_tables);
+}

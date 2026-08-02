@@ -136,6 +136,7 @@ pub struct DocumentFeatures {
     pub has_tasks: bool,
     pub has_images: bool,
     pub has_toc: bool,
+    pub has_tables: bool,
 }
 
 impl Default for Frontmatter {
@@ -529,23 +530,7 @@ pub fn convert_markdown_to_html_with_options(
 
                 if next_t < events.len() && matches!(&events[next_t], Event::Start(Tag::Table(_))) {
                     let table_start = next_t;
-                    let mut table_end = table_start;
-                    let mut table_depth = 1;
-                    next_t += 1;
-                    while next_t < events.len() {
-                        match &events[next_t] {
-                            Event::Start(Tag::Table(_)) => table_depth += 1,
-                            Event::End(TagEnd::Table) => {
-                                table_depth -= 1;
-                                if table_depth == 0 {
-                                    table_end = next_t;
-                                    break;
-                                }
-                            }
-                            _ => {}
-                        }
-                        next_t += 1;
-                    }
+                    let table_end = find_table_end(&events, table_start);
 
                     var_event_ranges.push((p_start, table_end));
 
@@ -959,6 +944,18 @@ pub fn convert_markdown_to_html_with_options(
                 list_stack.pop();
             }
 
+            // Section Tables
+            Event::Start(Tag::Table(_)) => {
+                features.has_tables = true;
+                let end_table = find_table_end(&events, idx);
+
+                out.push_str("<div class=\"item-table-wrap\">");
+                html::push_html(&mut out, events[idx..=end_table].iter().cloned());
+                out.push_str("</div>\n");
+
+                idx = end_table;
+            }
+
             // Fallback for standard events
             ev => {
                 html::push_html(&mut out, std::iter::once(ev.clone()));
@@ -976,6 +973,25 @@ pub fn convert_markdown_to_html_with_options(
     }
 
     Ok((out, features))
+}
+
+/// Finds the index of the matching [`Event::End(TagEnd::Table)`] event for a table starting at `start_idx`.
+#[inline]
+fn find_table_end(events: &[Event], start_idx: usize) -> usize {
+    let mut table_depth = 1usize;
+    for (i, ev) in events.iter().enumerate().skip(start_idx + 1) {
+        match ev {
+            Event::Start(Tag::Table(_)) => table_depth += 1,
+            Event::End(TagEnd::Table) => {
+                table_depth -= 1;
+                if table_depth == 0 {
+                    return i;
+                }
+            }
+            _ => {}
+        }
+    }
+    start_idx
 }
 
 fn is_section_empty(events: &[Event]) -> bool {
