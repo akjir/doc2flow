@@ -199,8 +199,8 @@ language: "de"
 
 #[test]
 fn test_showcase_en_fixture_conversion() {
-    let md_content = doc2flow::io::read_file_to_string(std::path::Path::new("tests/showcase_en.md"))
-        .expect("Failed to read tests/showcase_en.md");
+    let md_content = doc2flow::io::read_file_to_string(std::path::Path::new("examples/showcase_en.md"))
+        .expect("Failed to read examples/showcase_en.md");
     let (fm, body) = doc2flow::converter::parse_frontmatter(&md_content);
     let locale = doc2flow::i18n::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     let (html_body, features) = doc2flow::converter::convert_markdown_to_html_with_options(
@@ -214,7 +214,7 @@ fn test_showcase_en_fixture_conversion() {
         doc2flow::template::render(&fm, &locale, &html_body, &d2f_id, None, &features).expect("rendering failed");
     let html = doc2flow::image::embed_images_as_base64(
         &rendered,
-        Some(std::path::Path::new("tests")),
+        Some(std::path::Path::new("examples")),
     )
     .expect("image embedding failed");
 
@@ -233,8 +233,8 @@ fn test_showcase_en_fixture_conversion() {
 
 #[test]
 fn test_showcase_de_fixture_conversion() {
-    let md_content = doc2flow::io::read_file_to_string(std::path::Path::new("tests/showcase_de.md"))
-        .expect("Failed to read tests/showcase_de.md");
+    let md_content = doc2flow::io::read_file_to_string(std::path::Path::new("examples/showcase_de.md"))
+        .expect("Failed to read examples/showcase_de.md");
     let (fm, body) = doc2flow::converter::parse_frontmatter(&md_content);
     let locale = doc2flow::i18n::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     let (html_body, features) = doc2flow::converter::convert_markdown_to_html_with_options(
@@ -248,7 +248,7 @@ fn test_showcase_de_fixture_conversion() {
         doc2flow::template::render(&fm, &locale, &html_body, &d2f_id, None, &features).expect("rendering failed");
     let html = doc2flow::image::embed_images_as_base64(
         &rendered,
-        Some(std::path::Path::new("tests")),
+        Some(std::path::Path::new("examples")),
     )
     .expect("image embedding failed");
 

@@ -10,7 +10,7 @@ description: Guides usage, build processes, CLI commands, and Markdown conversio
 ---
 
 ## 1. Build Workflows (`MAKE.sh`)
-- **Build/Test/Make:** `./MAKE.sh [--release] [--tests] [--examples]` (LTO/Size, Cargo Tests, md->HTML)
+- **Build/Test/Make:** `./MAKE.sh [--release] [--tests] [--examples] [--examples-only]` (LTO/Size, Cargo Tests, md->HTML, or examples only)
 
 ## 2. CLI `d2f` (Path: `./target/{debug,release}/d2f`)
 - `d2f in.md`: Convert (auto-names in.html)
