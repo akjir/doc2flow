@@ -48,7 +48,7 @@ plain text block
 
     // Code block with language tag and copy button
     assert!(html.contains("<span class=\"code-lang\">ini</span>"));
-    assert!(html.contains("<button class=\"copy-btn\" onclick=\"copyCode(this)\""));
+    assert!(html.contains("<button class=\"copy-btn\" onclick=\"window.d2f_code.copy(this)\""));
     assert!(html.contains("class=\"svg-icon iconCopy\""));
     assert!(html.contains("<pre class=\"code-block language-ini\"><code>[HKEY_LOCAL_MACHINE\\SOFTWARE\\Test]\n&quot;Setting&quot;=dword:00000001\n</code></pre>"));
 

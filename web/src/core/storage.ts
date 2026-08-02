@@ -12,12 +12,13 @@ export type LoadHandler = (state: State) => void;
 const saveHandlers = new Set<SaveHandler>();
 const loadHandlers = new Set<LoadHandler>();
 
+window.d2f = window.d2f || {};
 window.d2f.storage = {
     registerSaveHandler,
     registerLoadHandler,
     loadState,
     saveState,
-}
+};
 
 function registerSaveHandler(handler: SaveHandler): void {
     saveHandlers.add(handler);
@@ -72,7 +73,7 @@ function saveState(): void {
 }
 
 function getStateKey(): string {
-    const docId = window.D2F_DOC_ID ?? '';
+    const docId = window.d2f.document.id ?? '';
     const rawFilename = window.location.pathname.split('/').pop() || 'index.html';
     const filename = decodeURIComponent(rawFilename || 'index.html');
     return 'd2f_state_' + (docId ? `${docId}_` : '') + filename;

@@ -21,7 +21,7 @@ function getOrCreateCommentBox(checkItem: HTMLElement | null, initialValue?: str
         input = document.createElement('textarea');
         input.rows = 1;
         input.className = 'item-comment-input';
-        const i18n = window.D2F_I18N ?? {};
+        const i18n = window.d2f.lang.dictionary;
         const commentLabel = i18n.comment_placeholder ?? 'Add a comment...';
         input.placeholder = commentLabel;
         input.setAttribute('aria-label', commentLabel);

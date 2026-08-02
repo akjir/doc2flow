@@ -13,6 +13,7 @@ export interface Export {
 
 const exportHandlers = new Set<ExportHandler>();
 
+window.d2f = window.d2f || {};
 window.d2f.export = {
     export: performExport,
     registerExportHandler,

@@ -47,7 +47,7 @@ function formatDateFromTemplate(now: Date, template?: string): string | null {
 }
 
 function getTodayFormatted(): string {
-    const i18n = window.D2F_I18N ?? {};
+    const i18n = window.d2f.lang.dictionary;
     const now = new Date();
     try {
         const fromTemplate = formatDateFromTemplate(now, i18n.date_placeholder);

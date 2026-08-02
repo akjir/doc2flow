@@ -89,7 +89,7 @@ pub fn render_code_block(
     }
     let _ = write!(
         out,
-        "<button class=\"copy-btn\" onclick=\"copyCode(this)\" title=\"{copy_label}\" aria-label=\"{copy_label}\">{COPY_ICON_SVG}</button></div><pre class=\"code-block"
+        "<button class=\"copy-btn\" onclick=\"window.d2f_code.copy(this)\" title=\"{copy_label}\" aria-label=\"{copy_label}\">{COPY_ICON_SVG}</button></div><pre class=\"code-block"
     );
     if let Some(lang) = lang_opt {
         let _ = write!(out, " language-{lang}");

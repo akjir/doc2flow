@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Fixed
+- Fixed base template CSS/JS variable substitution tags, script initialization order, and namespace bindings for window.d2f.
 - Fixed state persistence and document export by registering storage handlers on script load and synchronizing HTML attributes (`value`, `checked`) for form fields and checkboxes.
 - Fixed clicking the item comment icon or delete button toggling task list check items.
 - Hide item comment button when an item comment box is displayed on a document item.

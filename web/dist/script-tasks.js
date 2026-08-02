@@ -13,7 +13,7 @@
     }
   }
   function updateProgress() {
-    const i18n = window.D2F_I18N ?? {};
+    const i18n = window.d2f.lang.dictionary;
     const sections = document.querySelectorAll(".section");
     let total = 0;
     let done = 0;

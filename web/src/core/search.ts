@@ -166,7 +166,7 @@ function performSearchAndFilter(): void {
     }
 
     if (searchCounter) {
-        const i18n = window.D2F_I18N ?? {};
+        const i18n = window.d2f.lang.dictionary;
         const template = i18n.sections_visible ?? '{visible} / {total} sections visible';
         searchCounter.textContent = template
             .replace('{visible}', String(visibleCount))

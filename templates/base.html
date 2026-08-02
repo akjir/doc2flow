@@ -1,85 +1,105 @@
 <!DOCTYPE html>
 <html lang="{{LANG_CODE}}">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Doc2Flow {{APP_VERSION}}">
-<meta name="version" content="{{APP_VERSION_RAW}}">
-<meta name="repository" content="{{REPOSITORY_URL}}">
-<meta name="license" content="{{LICENSE_URL}}">
-<meta name="dcterms.created" content="{{CREATED_AT}}">
-<meta name="dcterms.source" content="{{REPOSITORY_URL}}">
-<title>{{TITLE}}</title>
-<style>
-{{CSS}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="generator" content="Doc2Flow {{APP_VERSION}}">
+  <meta name="version" content="{{APP_VERSION_RAW}}">
+  <meta name="repository" content="{{REPOSITORY_URL}}">
+  <meta name="license" content="{{LICENSE_URL}}">
+  <meta name="dcterms.created" content="{{CREATED_AT}}">
+  <meta name="dcterms.source" content="{{REPOSITORY_URL}}">
+  <title>{{TITLE}}</title>
+  <style>
+    {{CSS}}
+  </style>
 </head>
+
 <body>
-<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
-  <symbol id="icon-comment" viewBox="0 0 32 32">
-    <g fill="currentColor" transform="translate(-204, -255)">
-      <path d="M228,267 C226.896,267 226,267.896 226,269 C226,270.104 226.896,271 228,271 C229.104,271 230,270.104 230,269 C230,267.896 229.104,267 228,267 L228,267 Z M220,281 C218.832,281 217.704,280.864 216.62,280.633 L211.912,283.463 L211.975,278.824 C208.366,276.654 206,273.066 206,269 C206,262.373 212.268,257 220,257 C227.732,257 234,262.373 234,269 C234,275.628 227.732,281 220,281 L220,281 Z M220,255 C211.164,255 204,261.269 204,269 C204,273.419 206.345,277.354 210,279.919 L210,287 L217.009,282.747 C217.979,282.907 218.977,283 220,283 C228.836,283 236,276.732 236,269 C236,261.269 228.836,255 220,255 L220,255 Z M212,267 C210.896,267 210,267.896 210,269 C210,270.104 210.896,271 212,271 C213.104,271 214,270.104 214,269 C214,267.896 213.104,267 212,267 L212,267 Z M220,267 C218.896,267 218,267.896 218,269 C218,270.104 218.896,271 220,271 C221.104,271 222,270.104 222,269 C222,267.896 221.104,267 220,267 L220,267 Z"/>
-    </g>
-  </symbol>
-</svg>
-<header class="doc-header">
-  <div class="header-top">
-    <div class="header-titles">
-      <h1>{{TITLE}}</h1>
-      <div class="sub">{{SUBTITLE}}</div>
-    </div>
-    <div class="logo-wrap">
-      {{LOGO}}
-    </div>
-  </div>
-  <div class="header-pb-row">
-    <button type="button" class="search-toggle-btn" id="search-toggle-btn" title="{{L_SEARCH_PLACEHOLDER}}" aria-label="{{L_SEARCH_PLACEHOLDER}}">
-      <svg width="13" height="13" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true"><path d="M281.1 0C153.782 0 50.2 103.582 50.2 230.9c0 45.12 13.019 87.25 35.483 122.853l-70.654 70.654c-20.039 20.039-20.039 52.527 0 72.564 20.039 20.039 52.527 20.039 72.564 0l70.654-70.654c35.605 22.464 77.735 35.483 122.853 35.483C408.418 461.8 512 358.218 512 230.9S408.42 0 281.1 0zm0 410.489c-99.025 0-179.589-80.564-179.589-179.589S182.074 51.311 281.1 51.311 460.689 131.875 460.689 230.9 380.127 410.489 281.1 410.489z"/></svg>
-    </button>
-    {{PROGRESS_BAR_HTML}}
-  </div>
-  <div class="search-toolbar hidden" id="search-toolbar">
-    <div class="search-input-wrap">
-      <input type="text" class="search-input" id="search-input" placeholder="{{L_SEARCH_PLACEHOLDER}}" aria-label="{{L_SEARCH_PLACEHOLDER}}">
-      <div class="search-input-badges">
-        <button type="button" class="search-clear-btn hidden" id="search-clear-btn" title="Clear search" aria-label="Clear search">&#10006;</button>
-        <span class="search-counter" id="search-counter"></span>
+  <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+    <symbol id="icon-comment" viewBox="0 0 32 32">
+      <g fill="currentColor" transform="translate(-204, -255)">
+        <path
+          d="M228,267 C226.896,267 226,267.896 226,269 C226,270.104 226.896,271 228,271 C229.104,271 230,270.104 230,269 C230,267.896 229.104,267 228,267 L228,267 Z M220,281 C218.832,281 217.704,280.864 216.62,280.633 L211.912,283.463 L211.975,278.824 C208.366,276.654 206,273.066 206,269 C206,262.373 212.268,257 220,257 C227.732,257 234,262.373 234,269 C234,275.628 227.732,281 220,281 L220,281 Z M220,255 C211.164,255 204,261.269 204,269 C204,273.419 206.345,277.354 210,279.919 L210,287 L217.009,282.747 C217.979,282.907 218.977,283 220,283 C228.836,283 236,276.732 236,269 C236,261.269 228.836,255 220,255 L220,255 Z M212,267 C210.896,267 210,267.896 210,269 C210,270.104 210.896,271 212,271 C213.104,271 214,270.104 214,269 C214,267.896 213.104,267 212,267 L212,267 Z M220,267 C218.896,267 218,267.896 218,269 C218,270.104 218.896,271 220,271 C221.104,271 222,270.104 222,269 C222,267.896 221.104,267 220,267 L220,267 Z" />
+      </g>
+    </symbol>
+  </svg>
+  <header class="doc-header">
+    <div class="header-top">
+      <div class="header-titles">
+        <h1>{{TITLE}}</h1>
+        <div class="sub">{{SUBTITLE}}</div>
+      </div>
+      <div class="logo-wrap">
+        {{LOGO}}
       </div>
     </div>
-  </div>
-</header>
-<main class="doc-body">
+    <div class="header-pb-row">
+      <button type="button" class="search-toggle-btn" id="search-toggle-btn" title="{{L_SEARCH_PLACEHOLDER}}"
+        aria-label="{{L_SEARCH_PLACEHOLDER}}">
+        <svg width="13" height="13" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true">
+          <path
+            d="M281.1 0C153.782 0 50.2 103.582 50.2 230.9c0 45.12 13.019 87.25 35.483 122.853l-70.654 70.654c-20.039 20.039-20.039 52.527 0 72.564 20.039 20.039 52.527 20.039 72.564 0l70.654-70.654c35.605 22.464 77.735 35.483 122.853 35.483C408.418 461.8 512 358.218 512 230.9S408.42 0 281.1 0zm0 410.489c-99.025 0-179.589-80.564-179.589-179.589S182.074 51.311 281.1 51.311 460.689 131.875 460.689 230.9 380.127 410.489 281.1 410.489z" />
+        </svg>
+      </button>
+      {{PROGRESS_BAR_HTML}}
+    </div>
+    <div class="search-toolbar hidden" id="search-toolbar">
+      <div class="search-input-wrap">
+        <input type="text" class="search-input" id="search-input" placeholder="{{L_SEARCH_PLACEHOLDER}}"
+          aria-label="{{L_SEARCH_PLACEHOLDER}}">
+        <div class="search-input-badges">
+          <button type="button" class="search-clear-btn hidden" id="search-clear-btn" title="Clear search"
+            aria-label="Clear search">&#10006;</button>
+          <span class="search-counter" id="search-counter"></span>
+        </div>
+      </div>
+    </div>
+  </header>
+  <main class="doc-body">
 
-<table class="info-table">
-  <tr><th>{{L_COMPANY}}</th><th>{{L_CONTACT}}</th><th>{{L_AGENT}}</th><th>{{L_DATE}}</th></tr>
-  <tr>
-    <td>{{COMPANY}}</td>
-    <td><input type="text" class="sf persistent-field" id="f_info_contact" value="{{CONTACT}}" placeholder="{{L_NAME_PLACEHOLDER}}" aria-label="{{L_CONTACT}}"></td>
-    <td><input type="text" class="sf persistent-field" id="f_info_agent" value="{{AGENT}}" placeholder="{{L_NAME_PLACEHOLDER}}" aria-label="{{L_AGENT}}"></td>
-    <td><input type="text" class="sf persistent-field" id="f_info_date" value="{{DATE}}" placeholder="{{L_DATE_PLACEHOLDER}}" aria-label="{{L_DATE}}"></td>
-  </tr>
-</table>
+    <table class="info-table">
+      <tr>
+        <th>{{L_COMPANY}}</th>
+        <th>{{L_CONTACT}}</th>
+        <th>{{L_AGENT}}</th>
+        <th>{{L_DATE}}</th>
+      </tr>
+      <tr>
+        <td>{{COMPANY}}</td>
+        <td><input type="text" class="sf persistent-field" id="f_info_contact" value="{{CONTACT}}"
+            placeholder="{{L_NAME_PLACEHOLDER}}" aria-label="{{L_CONTACT}}"></td>
+        <td><input type="text" class="sf persistent-field" id="f_info_agent" value="{{AGENT}}"
+            placeholder="{{L_NAME_PLACEHOLDER}}" aria-label="{{L_AGENT}}"></td>
+        <td><input type="text" class="sf persistent-field" id="f_info_date" value="{{DATE}}"
+            placeholder="{{L_DATE_PLACEHOLDER}}" aria-label="{{L_DATE}}"></td>
+      </tr>
+    </table>
 
-<!-- START GENERATED CONTENT -->
-{{CONTENT}}
-<!-- END GENERATED CONTENT -->
+    <!-- START GENERATED CONTENT -->
+    {{CONTENT}}
+    <!-- END GENERATED CONTENT -->
 
-{{FINISH_BOX_HTML}}
-<div class="btnrow">
-  <button class="btn-pdf" id="btn-pdf" onclick="exportPDF()">{{L_EXPORT_PDF}}</button>
-  <button class="btn-save" id="btn-save" onclick="saveDocumentState()">{{L_SAVE_STATE}}</button>
-  <button class="rst" onclick="resetAll()">{{L_RESET_ALL}}</button>
-</div>
+    {{FINISH_BOX_HTML}}
+    <div class="btnrow">
+      <button class="btn-pdf" id="btn-pdf" onclick="window.d2f.export.export('PDF')">{{L_EXPORT_PDF}}</button>
+      <button class="btn-save" id="btn-save" onclick="window.d2f.export.export('DOCUMENT')">{{L_SAVE_STATE}}</button>
+      <button class="rst" onclick="window.d2f.core.resetAll()">{{L_RESET_ALL}}</button>
+    </div>
 
-</main><!-- /doc-body -->
+  </main><!-- /doc-body -->
 
-{{LIGHTBOX_HTML}}
+  {{LIGHTBOX_HTML}}
 
-<script>
-window.D2F_DOC_ID = '{{DOC_ID}}';
-window.D2F_I18N = {{I18N_JSON}};
-window.d2f = window.d2f || {};
-{{JS}}
-</script>
+  <script>
+    window.d2f = window.d2f || {};
+    window.d2f.document = window.d2f.document || {};
+    window.d2f.document.id = '{{DOC_ID}}';
+    window.d2f.lang = window.d2f.lang || {};
+    window.d2f.lang.dictionary = {{I18N_JSON}};
+    {{JS}}
+  </script>
 </body>
+
 </html>

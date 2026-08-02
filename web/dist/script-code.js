@@ -134,9 +134,11 @@
     });
   }
   if (typeof window !== "undefined") {
-    window.copyCode = copyCode;
     window.addEventListener("beforeprint", preparePrintVariables);
     window.addEventListener("afterprint", restorePrintVariables);
     setupVariableInputAutoSelect();
+    window.d2f_code = {
+      copy: copyCode
+    };
   }
 })();

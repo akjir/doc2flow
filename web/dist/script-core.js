@@ -3,6 +3,7 @@
   // src/core/storage.ts
   var saveHandlers = /* @__PURE__ */ new Set();
   var loadHandlers = /* @__PURE__ */ new Set();
+  window.d2f = window.d2f || {};
   window.d2f.storage = {
     registerSaveHandler,
     registerLoadHandler,
@@ -56,7 +57,7 @@
     }
   }
   function getStateKey() {
-    const docId = window.D2F_DOC_ID ?? "";
+    const docId = window.d2f.document.id ?? "";
     const rawFilename = window.location.pathname.split("/").pop() || "index.html";
     const filename = decodeURIComponent(rawFilename || "index.html");
     return "d2f_state_" + (docId ? `${docId}_` : "") + filename;
@@ -84,6 +85,7 @@
   function isRecord(val) {
     return typeof val === "object" && val !== null && !Array.isArray(val);
   }
+  window.d2f = window.d2f || {};
   window.d2f.utils = {
     debounce,
     isRecord
@@ -95,6 +97,7 @@
     DOCUMENT: "DOCUMENT"
   };
   var exportHandlers = /* @__PURE__ */ new Set();
+  window.d2f = window.d2f || {};
   window.d2f.export = {
     export: performExport,
     registerExportHandler
@@ -278,7 +281,7 @@
       input = document.createElement("textarea");
       input.rows = 1;
       input.className = "item-comment-input";
-      const i18n = window.D2F_I18N ?? {};
+      const i18n = window.d2f.lang.dictionary;
       const commentLabel = i18n.comment_placeholder ?? "Add a comment...";
       input.placeholder = commentLabel;
       input.setAttribute("aria-label", commentLabel);
@@ -475,7 +478,7 @@
     return hasMatches && !/[A-Za-z]/.test(formatted) ? formatted : null;
   }
   function getTodayFormatted() {
-    const i18n = window.D2F_I18N ?? {};
+    const i18n = window.d2f.lang.dictionary;
     const now = /* @__PURE__ */ new Date();
     try {
       const fromTemplate = formatDateFromTemplate(now, i18n.date_placeholder);
@@ -741,7 +744,7 @@
       searchClearBtn.classList.toggle("hidden", query.length === 0);
     }
     if (searchCounter) {
-      const i18n = window.D2F_I18N ?? {};
+      const i18n = window.d2f.lang.dictionary;
       const template = i18n.sections_visible ?? "{visible} / {total} sections visible";
       searchCounter.textContent = template.replace("{visible}", String(visibleCount)).replace("{total}", String(totalCount));
     }
@@ -830,7 +833,7 @@
     resetHandlers.add(handler);
   }
   function resetAll() {
-    const i18n = window.D2F_I18N;
+    const i18n = window.d2f.lang.dictionary;
     const confirmMsg = i18n?.confirm_reset;
     if (!confirmMsg) {
       console.error("Missing i18n translation key: confirm_reset");
@@ -847,13 +850,9 @@
     }
     window.d2f.storage.saveState();
   }
+  window.d2f = window.d2f || {};
   window.d2f.core = {
     registerResetHandler,
     resetAll
   };
-  if (typeof window !== "undefined") {
-    window.exportPDF = () => window.d2f.export.export(ExportType.PDF);
-    window.saveDocumentState = () => window.d2f.export.export(ExportType.DOCUMENT);
-    window.resetAll = () => window.d2f.core.resetAll();
-  }
 })();

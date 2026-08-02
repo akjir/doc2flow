@@ -21,7 +21,7 @@ function registerResetHandler(handler: ResetHandler): void {
 }
 
 function resetAll(): void {
-    const i18n = window.D2F_I18N;
+    const i18n = window.d2f.lang.dictionary;
     const confirmMsg = i18n?.confirm_reset;
     if (!confirmMsg) {
         console.error('Missing i18n translation key: confirm_reset');
@@ -40,13 +40,8 @@ function resetAll(): void {
     window.d2f.storage.saveState();
 }
 
+window.d2f = window.d2f || {};
 window.d2f.core = {
     registerResetHandler,
     resetAll,
 };
-
-if (typeof window !== 'undefined') {
-    window.exportPDF = () => window.d2f.export.export(ExportType.PDF);
-    window.saveDocumentState = () => window.d2f.export.export(ExportType.DOCUMENT);
-    window.resetAll = () => window.d2f.core.resetAll();
-}

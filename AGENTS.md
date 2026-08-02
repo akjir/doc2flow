@@ -46,5 +46,5 @@
 - **BANNED:** Internal refactors/tests. No empty `[Unreleased]`.
 
 ## 6. Meta / Docs
-- **Text Edits:** Token-optimize for human readers (balanced). Reserve aggressive compression ONLY for `AGENTS.md`.
-- **Self-Editing:** Maintain aggressive token compression when updating `AGENTS.md`.
+- **Text Edits:** Token-optimize for human readers (balanced). Reserve aggressive compression ONLY for `AGENTS.md` and Skill files (`SKILL.md`).
+- **Self-Editing:** Maintain aggressive token compression when updating `AGENTS.md` or Skill files.

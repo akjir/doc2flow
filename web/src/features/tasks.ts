@@ -11,7 +11,7 @@ function styleItem(cb: HTMLInputElement): void {
 }
 
 function updateProgress(): void {
-    const i18n = window.D2F_I18N ?? {};
+    const i18n = window.d2f.lang.dictionary;
     const sections = document.querySelectorAll<HTMLElement>('.section');
     let total = 0;
     let done = 0;

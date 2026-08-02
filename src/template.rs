@@ -589,7 +589,7 @@ mod tests {
         assert!(!html_no_img.contains("openLightbox"));
         assert!(!html_no_img.contains("closeLightbox"));
         assert!(!html_no_img.contains(".code-block-wrap"));
-        assert!(!html_no_img.contains("copyCode"));
+        assert!(!html_no_img.contains("d2f_code"));
         assert!(!html_no_img.contains("id=\"finish-box\""));
         assert!(!html_no_img.contains("<div class=\"pb-col\">"));
 
@@ -606,7 +606,7 @@ mod tests {
         assert!(html_img.contains("openLightbox"));
         assert!(html_img.contains("closeLightbox"));
         assert!(html_img.contains(".code-block-wrap"));
-        assert!(html_img.contains("copyCode"));
+        assert!(html_img.contains("d2f_code"));
         assert!(html_img.contains("id=\"finish-box\""));
         assert!(html_img.contains("<div class=\"pb-col\">"));
     }
