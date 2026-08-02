@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added section table feature support with dedicated table.ts and table.css bundles.
 - Added dynamic code variable substitution from pre-section `[Variables]` tables with editable values, state persistence, code usage filtering, and print substitution.
+- Added dynamic `<meta name="features">` tag generation in base HTML reflecting enabled document features.
 
 ### Changed
 - Live-update code block variable substitution on initial page load and on input change in web preview.

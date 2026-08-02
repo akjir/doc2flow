@@ -590,6 +590,7 @@ date: "2026-07-27"
     assert!(rendered.contains("<meta name=\"license\" content=\"https://github.com/akjir/doc2flow/blob/main/LICENSE\">"));
     assert!(rendered.contains("<meta name=\"dcterms.created\" content=\""));
     assert!(rendered.contains("<meta name=\"dcterms.source\" content=\"https://github.com/akjir/doc2flow\">"));
+    assert!(rendered.contains("<meta name=\"features\" content=\"core, tasks\">"));
 
     // Verify template.md metadata comments
     let init_tmpl = doc2flow::template::generate_template_markdown();

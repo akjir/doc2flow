@@ -406,7 +406,9 @@ pub fn render(
     let app_version_raw = APP_VERSION.strip_prefix('v').unwrap_or(APP_VERSION);
     let created_at = format_iso8601_utc(std::time::SystemTime::now());
 
-    let mut vars = HashMap::with_capacity(20);
+    let features_str = features.to_features_string();
+
+    let mut vars = HashMap::with_capacity(22);
     vars.insert("APP_VERSION", APP_VERSION);
     vars.insert("APP_VERSION_RAW", app_version_raw);
     vars.insert("REPOSITORY_URL", REPOSITORY_URL);
@@ -426,6 +428,8 @@ pub fn render(
     vars.insert("CONTENT", html_content);
     vars.insert("DOC_ID", doc_id);
     vars.insert("LOGO", logo);
+    vars.insert("FEATURES", features_str.as_str());
+    vars.insert("features", features_str.as_str());
 
     Ok(substitute_template(base_html, &vars, Some(locale)))
 }
@@ -646,11 +650,19 @@ mod tests {
             "<meta name=\"dcterms.source\" content=\"{}\">",
             REPOSITORY_URL
         )));
+        assert!(html.contains("<meta name=\"features\" content=\"core\">"));
         assert!(!html.contains("{{APP_VERSION}}"));
         assert!(!html.contains("{{APP_VERSION_RAW}}"));
         assert!(!html.contains("{{REPOSITORY_URL}}"));
         assert!(!html.contains("{{LICENSE_URL}}"));
         assert!(!html.contains("{{CREATED_AT}}"));
+        assert!(!html.contains("{{FEATURES}}"));
+
+        let mut custom_features = DocumentFeatures::default();
+        custom_features.has_tasks = true;
+        custom_features.has_tables = true;
+        let html_custom = render(&fm, &locale, "<p>Content</p>", "doc_meta2", None, &custom_features).expect("Render failed");
+        assert!(html_custom.contains("<meta name=\"features\" content=\"core, tasks, table\">"));
     }
 
     #[test]

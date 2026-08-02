@@ -20,16 +20,21 @@ pub(crate) fn html_escape(input: &str) -> Cow<'_, str> {
 
     let mut escaped = String::with_capacity(input.len() + 16);
     escaped.push_str(&input[..first_pos]);
+    let mut last = first_pos;
 
-    for ch in input[first_pos..].chars() {
-        match ch {
-            '&' => escaped.push_str("&amp;"),
-            '<' => escaped.push_str("&lt;"),
-            '>' => escaped.push_str("&gt;"),
-            '"' => escaped.push_str("&quot;"),
-            _ => escaped.push(ch),
-        }
+    for (i, &b) in bytes.iter().enumerate().skip(first_pos) {
+        let sub = match b {
+            b'&' => "&amp;",
+            b'<' => "&lt;",
+            b'>' => "&gt;",
+            b'"' => "&quot;",
+            _ => continue,
+        };
+        escaped.push_str(&input[last..i]);
+        escaped.push_str(sub);
+        last = i + 1;
     }
+    escaped.push_str(&input[last..]);
     Cow::Owned(escaped)
 }
 
@@ -59,9 +64,8 @@ fn to_alpha(mut n: u64) -> Cow<'static, str> {
         buf[pos] = b'a' + (n % 26) as u8;
         n /= 26;
     }
-    Cow::Owned(String::from(
-        std::str::from_utf8(&buf[pos..]).expect("valid ASCII bytes"),
-    ))
+    let s = std::str::from_utf8(&buf[pos..]).expect("valid ASCII bytes");
+    Cow::Owned(s.to_string())
 }
 
 /// Converts a 1-based number to lowercase Roman numerals (1 -> i, 2 -> ii, 3 -> iii...).
@@ -137,6 +141,45 @@ pub struct DocumentFeatures {
     pub has_images: bool,
     pub has_toc: bool,
     pub has_tables: bool,
+}
+
+impl DocumentFeatures {
+    /// Renders a comma-separated list of enabled feature identifiers starting with `"core"`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use doc2flow::converter::DocumentFeatures;
+    ///
+    /// let mut features = DocumentFeatures::default();
+    /// assert_eq!(features.to_features_string(), "core");
+    ///
+    /// features.has_tasks = true;
+    /// assert_eq!(features.to_features_string(), "core, tasks");
+    ///
+    /// features.has_tables = true;
+    /// assert_eq!(features.to_features_string(), "core, tasks, table");
+    /// ```
+    pub fn to_features_string(&self) -> String {
+        let mut out = String::with_capacity(32);
+        out.push_str("core");
+        if self.has_code {
+            out.push_str(", code");
+        }
+        if self.has_tasks {
+            out.push_str(", tasks");
+        }
+        if self.has_images {
+            out.push_str(", images");
+        }
+        if self.has_toc {
+            out.push_str(", toc");
+        }
+        if self.has_tables {
+            out.push_str(", table");
+        }
+        out
+    }
 }
 
 impl Default for Frontmatter {
@@ -349,11 +392,11 @@ fn parse_callout<'a>(
 fn build_variable_table(
     out: &mut String,
     locale: &Locale,
-    table_rows: &[(String, String)],
+    table_rows: &[(&str, &str)],
 ) {
     let mut map = std::collections::BTreeMap::new();
-    for (k, v) in table_rows {
-        map.insert(k.as_str(), v.as_str());
+    for &(k, v) in table_rows {
+        map.insert(k, v);
     }
 
     let json_payload = serde_json::to_string(&map).unwrap_or_else(|_| "{}".to_string());
@@ -458,7 +501,7 @@ pub fn convert_markdown_to_html_with_options(
     let mut features = DocumentFeatures::default();
 
     // 1. Collect all variable names used in code blocks across the document
-    let mut code_vars: Vec<String> = Vec::new();
+    let mut code_vars: Vec<&str> = Vec::new();
     let mut in_code_block_scan = false;
     for ev in &events {
         match ev {
@@ -473,9 +516,9 @@ pub fn convert_markdown_to_html_with_options(
                         let var_name = text[open_idx + 2..close_idx].trim();
                         if !var_name.is_empty()
                             && var_name.chars().all(|c| c.is_alphanumeric() || c == '_')
-                            && !code_vars.iter().any(|v| v == var_name)
+                            && !code_vars.contains(&var_name)
                         {
-                            code_vars.push(var_name.to_string());
+                            code_vars.push(var_name);
                         }
                         start = close_idx + 2;
                     } else {
@@ -534,10 +577,10 @@ pub fn convert_markdown_to_html_with_options(
 
                     var_event_ranges.push((p_start, table_end));
 
-                    let mut raw_table_map: std::collections::BTreeMap<String, String> =
+                    let mut raw_table_map: std::collections::BTreeMap<&str, &str> =
                         std::collections::BTreeMap::new();
-                    let mut current_row: Vec<String> = Vec::with_capacity(2);
-                    let mut current_cell = String::with_capacity(64);
+                    let mut current_row: Vec<&str> = Vec::with_capacity(2);
+                    let mut current_cell = "";
                     let mut in_cell = false;
 
                     for ev in &events[table_start..=table_end] {
@@ -550,11 +593,11 @@ pub fn convert_markdown_to_html_with_options(
                             }
                             Event::End(TagEnd::TableRow) => {
                                 if !current_row.is_empty() {
-                                    let key = std::mem::take(&mut current_row[0]);
+                                    let key = current_row[0];
                                     let val = if current_row.len() >= 2 {
-                                        std::mem::take(&mut current_row[1])
+                                        current_row[1]
                                     } else {
-                                        String::new()
+                                        ""
                                     };
                                     if !key.is_empty() {
                                         raw_table_map.insert(key, val);
@@ -564,15 +607,15 @@ pub fn convert_markdown_to_html_with_options(
                             }
                             Event::Start(Tag::TableCell) => {
                                 in_cell = true;
-                                current_cell.clear();
+                                current_cell = "";
                             }
                             Event::End(TagEnd::TableCell) => {
                                 in_cell = false;
-                                current_row.push(current_cell.trim().to_string());
-                                current_cell.clear();
+                                current_row.push(current_cell.trim());
+                                current_cell = "";
                             }
                             Event::Text(t) | Event::Code(t) if in_cell => {
-                                current_cell.push_str(t);
+                                current_cell = t.as_ref();
                             }
                             _ => {}
                         }
@@ -580,7 +623,7 @@ pub fn convert_markdown_to_html_with_options(
 
                     // Issue warnings for variables in [Variables] table unused in code blocks
                     for k in raw_table_map.keys() {
-                        if !code_vars.iter().any(|cv| cv == k) {
+                        if !code_vars.contains(k) {
                             eprintln!(
                                 "Warning: Variable '{k}' in [Variables] table is not used in any code block."
                             );
@@ -588,16 +631,16 @@ pub fn convert_markdown_to_html_with_options(
                     }
 
                     // Build final rows only for variables used in code blocks
-                    let mut final_table_rows: Vec<(String, String)> =
+                    let mut final_table_rows: Vec<(&str, &str)> =
                         Vec::with_capacity(code_vars.len());
                     for cv in &code_vars {
                         if let Some(val) = raw_table_map.remove(cv) {
-                            final_table_rows.push((cv.clone(), val));
+                            final_table_rows.push((cv, val));
                         } else {
                             eprintln!(
                                 "Warning: Variable '{cv}' in code block is missing from [Variables] table."
                             );
-                            final_table_rows.push((cv.clone(), String::new()));
+                            final_table_rows.push((cv, ""));
                         }
                     }
 
@@ -613,12 +656,12 @@ pub fn convert_markdown_to_html_with_options(
 
     // If no [Variables] table was parsed but code blocks contain variables, construct table from code_vars
     if var_table_html.is_empty() && !code_vars.is_empty() {
-        let mut final_table_rows: Vec<(String, String)> = Vec::with_capacity(code_vars.len());
+        let mut final_table_rows: Vec<(&str, &str)> = Vec::with_capacity(code_vars.len());
         for cv in &code_vars {
             eprintln!(
                 "Warning: Variable '{cv}' in code block is missing from [Variables] table."
             );
-            final_table_rows.push((cv.clone(), String::new()));
+            final_table_rows.push((cv, ""));
         }
 
         build_variable_table(&mut var_table_html, locale, &final_table_rows);
@@ -642,9 +685,11 @@ pub fn convert_markdown_to_html_with_options(
 
     let mut idx = 0;
     while idx < events.len() {
-        if let Some(&(_, end_idx)) = var_event_ranges.iter().find(|(s, e)| idx >= *s && idx <= *e) {
-            idx = end_idx + 1;
-            continue;
+        if !var_event_ranges.is_empty() {
+            if let Some(&(_, end_idx)) = var_event_ranges.iter().find(|(s, e)| idx >= *s && idx <= *e) {
+                idx = end_idx + 1;
+                continue;
+            }
         }
 
         match &events[idx] {
@@ -1010,7 +1055,10 @@ fn is_section_empty(events: &[Event]) -> bool {
     true
 }
 
-fn inspect_section_metadata(events: &[Event], locale: &Locale) -> (bool, Option<String>) {
+fn inspect_section_metadata(
+    events: &[Event],
+    locale: &Locale,
+) -> (bool, Option<Cow<'static, str>>) {
     let mut has_checklist = false;
     let mut callout_types: Vec<&'static str> = Vec::new();
 
@@ -1051,10 +1099,10 @@ fn inspect_section_metadata(events: &[Event], locale: &Locale) -> (bool, Option<
         i += 1;
     }
 
-    let callout_type = if callout_types.is_empty() {
-        None
-    } else {
-        Some(callout_types.join(" "))
+    let callout_type = match callout_types.len() {
+        0 => None,
+        1 => Some(Cow::Borrowed(callout_types[0])),
+        _ => Some(Cow::Owned(callout_types.join(" "))),
     };
 
     (has_checklist, callout_type)
@@ -1522,5 +1570,22 @@ curl https://{{BLOCK}}.local:{{PORT}}/api
         assert!(html.contains(r#"value="prod-server""#));
         assert!(html.find("<div class=\"item-table-var-wrap\">").unwrap() < html.find("<!-- S1 -->").unwrap());
         assert!(html.contains("curl https://{{BLOCK}}.local:{{PORT}}/api"));
+    }
+
+    #[test]
+    fn test_document_features_to_features_string() {
+        let mut features = DocumentFeatures::default();
+        assert_eq!(features.to_features_string(), "core");
+
+        features.has_tasks = true;
+        assert_eq!(features.to_features_string(), "core, tasks");
+
+        features.has_tables = true;
+        assert_eq!(features.to_features_string(), "core, tasks, table");
+
+        features.has_code = true;
+        features.has_images = true;
+        features.has_toc = true;
+        assert_eq!(features.to_features_string(), "core, code, tasks, images, toc, table");
     }
 }
