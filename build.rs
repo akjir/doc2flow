@@ -148,11 +148,13 @@ fn generate_version_metadata() {
     let commit_hash = get_git_commit_hash();
     let suffix = if is_git_dirty() { ".dev" } else { "" };
 
-    let full_version = format!("v{}+{}.{}{}", pkg_version, commit_count, commit_hash, suffix);
+    let full_version = format!(
+        "v{}+{}.{}{}",
+        pkg_version, commit_count, commit_hash, suffix
+    );
     println!("cargo:rustc-env=D2F_FULL_VERSION={}", full_version);
 
     println!("cargo:rerun-if-changed=.git/HEAD");
     println!("cargo:rerun-if-changed=.git/index");
     println!("cargo:rerun-if-changed=.git/refs");
 }
-
