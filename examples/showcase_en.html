@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+135.59542ed.dev">
-  <meta name="version" content="0.9.4+135.59542ed.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+136.c1d7e29.dev">
+  <meta name="version" content="0.9.4+136.c1d7e29.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-02T20:26:35Z">
+  <meta name="dcterms.created" content="2026-08-02T20:43:30Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, code, tasks, images, table">
   <title>Doc2Flow English Showcase</title>
@@ -691,6 +691,7 @@ mark.d2f-highlight {
   .doc-header {
     position: static;
     box-shadow: none;
+    margin-bottom: 14px;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -1277,16 +1278,37 @@ mark.d2f-highlight {
   border-bottom: none;
 }
 
+.item-table tr:first-child th:first-child,
+.section table tr:first-child th:first-child {
+  border-top-left-radius: var(--radius-lg, 8px);
+}
+
+.item-table tr:first-child th:last-child,
+.section table tr:first-child th:last-child {
+  border-top-right-radius: var(--radius-lg, 8px);
+}
+
 /* ==========================================================================
    4. PRINT STYLES
    ========================================================================== */
 
 @media print {
   .item-table-wrap {
-    overflow: visible !important;
+    overflow: hidden !important;
+    border-radius: var(--radius-lg, 8px) !important;
     border: 1px solid #cbd5e1 !important;
     background: transparent !important;
     margin: 0.75rem 0 !important;
+  }
+
+  .item-table tr:first-child th:first-child,
+  .section table tr:first-child th:first-child {
+    border-top-left-radius: 7px !important;
+  }
+
+  .item-table tr:first-child th:last-child,
+  .section table tr:first-child th:last-child {
+    border-top-right-radius: 7px !important;
   }
 
   .item-table,
@@ -1295,6 +1317,8 @@ mark.d2f-highlight {
     color: #0f172a !important;
     font-size: 11px !important;
     page-break-inside: auto !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .item-table tr,
@@ -1310,6 +1334,15 @@ mark.d2f-highlight {
     font-size: 10.5px !important;
     border-bottom: 2px solid #94a3b8 !important;
     padding: 0.4rem 0.6rem !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .item-table tbody tr:nth-child(even),
+  .section table tbody tr:nth-child(even) {
+    background-color: #f8fafc !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .item-table td,
@@ -1675,7 +1708,7 @@ mark.d2f-highlight {
     window.d2f.document = window.d2f.document || {};
     window.d2f.document.id = 'd2f_id_c9c539743b5bb460';
     window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {"lang_code":"en","date":"Date","copied":"Copied!","copy_code":"Copy code","progress_template":"{done} of {total} tasks completed ({pct}%)","callout_caution":"Caution","signature_date":"Date","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","save_state":"Save State","reset_all":"Reset","loading":"Loading...","callout_tip":"Tip","search_placeholder":"Search... (Ctrl+K)","name_placeholder":"Name","sections_visible":"{visible} / {total} sections visible","var_table_value":"Value","setup_in_progress":"Process in Progress","callout_important":"Important","callout_note":"Note","callout_warning":"Warning","date_placeholder":"MM/DD/YYYY","comment_placeholder":"Add a comment...","setup_completed":"Process Completed","var_table_title":"Variables","var_table_variable":"Variable","export_pdf":"Export as PDF"};
+    window.d2f.lang.dictionary = {"var_table_value":"Value","signature_date":"Date","comment_placeholder":"Add a comment...","callout_tip":"Tip","export_pdf":"Export as PDF","callout_important":"Important","name_placeholder":"Name","setup_in_progress":"Process in Progress","progress_template":"{done} of {total} tasks completed ({pct}%)","search_placeholder":"Search... (Ctrl+K)","reset_all":"Reset","callout_warning":"Warning","sections_visible":"{visible} / {total} sections visible","loading":"Loading...","callout_note":"Note","lang_code":"en","date_placeholder":"MM/DD/YYYY","callout_caution":"Caution","copied":"Copied!","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","setup_completed":"Process Completed","copy_code":"Copy code","var_table_title":"Variables","var_table_variable":"Variable","save_state":"Save State","date":"Date"};
     "use strict";
 (() => {
   // src/core/storage.ts

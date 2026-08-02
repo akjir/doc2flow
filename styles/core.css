@@ -676,6 +676,7 @@ mark.d2f-highlight {
   .doc-header {
     position: static;
     box-shadow: none;
+    margin-bottom: 14px;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }

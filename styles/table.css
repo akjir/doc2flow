@@ -77,16 +77,37 @@
   border-bottom: none;
 }
 
+.item-table tr:first-child th:first-child,
+.section table tr:first-child th:first-child {
+  border-top-left-radius: var(--radius-lg, 8px);
+}
+
+.item-table tr:first-child th:last-child,
+.section table tr:first-child th:last-child {
+  border-top-right-radius: var(--radius-lg, 8px);
+}
+
 /* ==========================================================================
    4. PRINT STYLES
    ========================================================================== */
 
 @media print {
   .item-table-wrap {
-    overflow: visible !important;
+    overflow: hidden !important;
+    border-radius: var(--radius-lg, 8px) !important;
     border: 1px solid #cbd5e1 !important;
     background: transparent !important;
     margin: 0.75rem 0 !important;
+  }
+
+  .item-table tr:first-child th:first-child,
+  .section table tr:first-child th:first-child {
+    border-top-left-radius: 7px !important;
+  }
+
+  .item-table tr:first-child th:last-child,
+  .section table tr:first-child th:last-child {
+    border-top-right-radius: 7px !important;
   }
 
   .item-table,
@@ -95,6 +116,8 @@
     color: #0f172a !important;
     font-size: 11px !important;
     page-break-inside: auto !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .item-table tr,
@@ -110,6 +133,15 @@
     font-size: 10.5px !important;
     border-bottom: 2px solid #94a3b8 !important;
     padding: 0.4rem 0.6rem !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .item-table tbody tr:nth-child(even),
+  .section table tbody tr:nth-child(even) {
+    background-color: #f8fafc !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .item-table td,

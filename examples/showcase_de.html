@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+135.59542ed.dev">
-  <meta name="version" content="0.9.4+135.59542ed.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+136.c1d7e29.dev">
+  <meta name="version" content="0.9.4+136.c1d7e29.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-02T20:26:35Z">
+  <meta name="dcterms.created" content="2026-08-02T20:43:30Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, code, tasks, images, table">
   <title>Doc2Flow Deutscher Showcase</title>
@@ -691,6 +691,7 @@ mark.d2f-highlight {
   .doc-header {
     position: static;
     box-shadow: none;
+    margin-bottom: 14px;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -1277,16 +1278,37 @@ mark.d2f-highlight {
   border-bottom: none;
 }
 
+.item-table tr:first-child th:first-child,
+.section table tr:first-child th:first-child {
+  border-top-left-radius: var(--radius-lg, 8px);
+}
+
+.item-table tr:first-child th:last-child,
+.section table tr:first-child th:last-child {
+  border-top-right-radius: var(--radius-lg, 8px);
+}
+
 /* ==========================================================================
    4. PRINT STYLES
    ========================================================================== */
 
 @media print {
   .item-table-wrap {
-    overflow: visible !important;
+    overflow: hidden !important;
+    border-radius: var(--radius-lg, 8px) !important;
     border: 1px solid #cbd5e1 !important;
     background: transparent !important;
     margin: 0.75rem 0 !important;
+  }
+
+  .item-table tr:first-child th:first-child,
+  .section table tr:first-child th:first-child {
+    border-top-left-radius: 7px !important;
+  }
+
+  .item-table tr:first-child th:last-child,
+  .section table tr:first-child th:last-child {
+    border-top-right-radius: 7px !important;
   }
 
   .item-table,
@@ -1295,6 +1317,8 @@ mark.d2f-highlight {
     color: #0f172a !important;
     font-size: 11px !important;
     page-break-inside: auto !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .item-table tr,
@@ -1310,6 +1334,15 @@ mark.d2f-highlight {
     font-size: 10.5px !important;
     border-bottom: 2px solid #94a3b8 !important;
     padding: 0.4rem 0.6rem !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .item-table tbody tr:nth-child(even),
+  .section table tbody tr:nth-child(even) {
+    background-color: #f8fafc !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .item-table td,
@@ -1675,7 +1708,7 @@ mark.d2f-highlight {
     window.d2f.document = window.d2f.document || {};
     window.d2f.document.id = 'd2f_id_468e65bc2ccf89b4';
     window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {"sections_visible":"{visible} / {total} Abschnitte sichtbar","signature_date":"Datum","date":"Datum","name_placeholder":"Name","loading":"Lade...","date_placeholder":"TT.MM.JJJJ","save_state":"Stand sichern","callout_warning":"Warnung","callout_caution":"Achtung","var_table_title":"Variablen","lang_code":"de","reset_all":"Zurücksetzen","setup_in_progress":"Vorgang in Bearbeitung","callout_note":"Hinweis","export_pdf":"Als PDF exportieren","search_placeholder":"Suchen... (Ctrl+K)","var_table_variable":"Variable","copy_code":"Code kopieren","var_table_value":"Wert","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","copied":"Kopiert!","callout_important":"Wichtig","setup_completed":"Vorgang abgeschlossen","callout_tip":"Tipp","comment_placeholder":"Kommentar hinzufügen..."};
+    window.d2f.lang.dictionary = {"copy_code":"Code kopieren","sections_visible":"{visible} / {total} Abschnitte sichtbar","callout_warning":"Warnung","copied":"Kopiert!","name_placeholder":"Name","search_placeholder":"Suchen... (Ctrl+K)","setup_completed":"Vorgang abgeschlossen","loading":"Lade...","callout_note":"Hinweis","callout_tip":"Tipp","reset_all":"Zurücksetzen","var_table_variable":"Variable","callout_important":"Wichtig","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","signature_date":"Datum","date":"Datum","export_pdf":"Als PDF exportieren","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","save_state":"Stand sichern","setup_in_progress":"Vorgang in Bearbeitung","lang_code":"de","date_placeholder":"TT.MM.JJJJ","callout_caution":"Achtung","comment_placeholder":"Kommentar hinzufügen...","var_table_title":"Variablen","var_table_value":"Wert"};
     "use strict";
 (() => {
   // src/core/storage.ts
