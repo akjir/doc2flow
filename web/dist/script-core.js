@@ -432,30 +432,6 @@
   }
 
   // src/core/fields.ts
-  function syncFieldPair(id1, id2, sourceInput) {
-    const raw1 = document.getElementById(id1);
-    const raw2 = document.getElementById(id2);
-    const el1 = raw1 instanceof HTMLInputElement ? raw1 : null;
-    const el2 = raw2 instanceof HTMLInputElement ? raw2 : null;
-    if (!el1 || !el2)
-      return;
-    if (sourceInput === el1) {
-      el2.value = el1.value;
-    } else if (sourceInput === el2) {
-      el1.value = el2.value;
-    } else {
-      if (el1.value && !el2.value)
-        el2.value = el1.value;
-      else if (el2.value && !el1.value)
-        el1.value = el2.value;
-      else if (el1.value)
-        el2.value = el1.value;
-    }
-  }
-  function syncLinkedFields(sourceInput) {
-    syncFieldPair("f_info_agent", "f_sign_agent", sourceInput);
-    syncFieldPair("f_info_date", "f_sign_date", sourceInput);
-  }
   function formatDateFromTemplate(now, template) {
     if (!template || typeof template !== "string")
       return null;
@@ -518,7 +494,6 @@
         }
       });
     }
-    syncLinkedFields();
     return false;
   }
   function resetFields() {
@@ -543,7 +518,6 @@
         el.selectedIndex = 0;
       }
     });
-    syncLinkedFields();
   }
   if (typeof window !== "undefined") {
     window.d2f.storage.registerSaveHandler(saveFields);
@@ -551,7 +525,6 @@
     document.addEventListener("DOMContentLoaded", () => {
       window.d2f.core.registerResetHandler(resetFields);
     });
-    const linkedIds = ["f_info_agent", "f_sign_agent", "f_info_date", "f_sign_date"];
     const saveStateDebounced = window.d2f.utils.debounce(() => window.d2f.storage.saveState(), 300);
     const handleInputOrChange = (e) => {
       const target = e.target;
@@ -561,25 +534,7 @@
         target.setAttribute("value", target.value);
         saveStateDebounced();
       }
-      if (target.id && linkedIds.includes(target.id)) {
-        if (target.id.toLowerCase().includes("date")) {
-          checkDateShortcut(target);
-        }
-        syncLinkedFields(target);
-        const el1 = document.getElementById("f_info_agent");
-        const el2 = document.getElementById("f_sign_agent");
-        const el3 = document.getElementById("f_info_date");
-        const el4 = document.getElementById("f_sign_date");
-        if (el1 instanceof HTMLInputElement)
-          el1.setAttribute("value", el1.value);
-        if (el2 instanceof HTMLInputElement)
-          el2.setAttribute("value", el2.value);
-        if (el3 instanceof HTMLInputElement)
-          el3.setAttribute("value", el3.value);
-        if (el4 instanceof HTMLInputElement)
-          el4.setAttribute("value", el4.value);
-        saveStateDebounced();
-      } else if (target.matches('input[id*="date"], input[name*="date"], input.date-field')) {
+      if (target.matches('input[id*="date"], input[name*="date"], input.date-field')) {
         checkDateShortcut(target);
         target.setAttribute("value", target.value);
         saveStateDebounced();

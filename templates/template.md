@@ -8,14 +8,12 @@ License: GPL-3.0-or-later
 1. FRONTMATTER METADATA:
    - title: Main document title.
    - subtitle: Subtitle or document description.
-   - company: Company organization name (required).
-   - contact: Responsible contact person name.
-   - agent: Executing agent name.
    - date: Protocol date (YYYY-MM-DD).
    - version: Document version.
    - language / lang: Language code for static UI translation ('en', 'de').
    - logo: Optional path to a custom logo image (SVG, PNG, JPG, WebP).
-   - number_sections: Enable automatic section numbering for H1 and H2 headings (true / false, default: true).
+   - numbered_sections: Enable automatic section numbering for H1 and H2 headings (true / false, default: true).
+   - table_of_contents: Enable Table of Contents navigation menu (true / false, default: false).
 
 2. DOCUMENT STRUCTURE:
    - Level 1 Headings (# Heading): Collapsible main section headers (without completion badge).
@@ -57,13 +55,11 @@ License: GPL-3.0-or-later
 ---
 title: "Doc2Flow Standard Operating Procedure"
 subtitle: "Interactive Setup & Maintenance Protocol"
-company: "Acme Corporation"
-contact: "Jane Doe"
-agent: "John Smith"
 version: "1.0.0"
 date: "2026-07-25"
 language: "en"
-number_sections: true
+numbered_sections: true
+table_of_contents: false
 ---
 
 # Part 1: System Setup & Preparation

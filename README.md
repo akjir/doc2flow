@@ -86,28 +86,22 @@ d2f --version
 
 Doc2Flow uses CommonMark with GitHub Flavored Markdown (GFM) extensions alongside custom metadata and annotation syntax:
 
-### 1. YAML Frontmatter (Metadata & Localization)
+### 1. YAML Frontmatter (Metadata & Document Control)
 
-Place YAML metadata at the very top of your `.md` file to populate header metadata and configure document options:
+Place YAML metadata at the very top of your `.md` file to configure document settings and options:
 
 ```yaml
 ---
 title: "Server Deployment Guide"
 subtitle: "Standard Operating Procedure"
-company: "Acme Corporation"  # Required field
-contact: "Jane Doe"
-agent: "John Smith"
 date: "2026-07-25"
 version: "1.0.0"
 language: "de"
 logo: "images/company_logo.svg"
-number_sections: true
-toc: false
+numbered_sections: true
+table_of_contents: false
 ---
 ```
-
-> [!IMPORTANT]
-> The `company` field is **required**. If omitted, `d2f` will raise a compiler diagnostic error.
 
 ### 2. Collapsible Sections & Headings
 

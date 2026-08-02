@@ -1,6 +1,5 @@
 ---
 title: "Microservice Deployment & Infrastructure Setup"
-company: "Acme Cloud Ops"
 version: "1.0.0"
 date: "2026-08-02"
 language: "en"

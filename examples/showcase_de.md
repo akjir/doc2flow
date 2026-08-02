@@ -1,13 +1,10 @@
 ---
 title: "Doc2Flow Deutscher Showcase"
 subtitle: "Umfassendes Testdokument für alle aktuellen und zukünftigen Funktionen"
-company: "ACME Deutschland GmbH"
-contact: "Max Mustermann"
-agent: "Erika Musterfrau"
 date: "25.07.2026"
 version: "1.0.0"
 language: "de"
-number_sections: true
+numbered_sections: true
 ---
 
 [Variables]

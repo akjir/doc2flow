@@ -60,26 +60,26 @@ d2f.exe --version
   ---
   title: "Server Maintenance Guide"
   subtitle: "Standard Operating Procedure"
-  company: "Acme Corp" # Required
-  contact: "John Doe"
-  agent: "Jane Smith"
   date: "2026-07-25"
   version: "1.0.0"
   language: "de"
   logo: "images/custom_logo.svg"
-  number_sections: true
+  numbered_sections: true
+  table_of_contents: false
   ---
   ```
-  * `company`: Company name (**required**; throws diagnostic error if missing).
+  * `title`: Document title.
+  * `subtitle`: Subtitle or secondary description.
+  * `date`: Document date.
+  * `version`: Document version string.
   * `language` / `lang`: Locale code (`en`, `de`) for static UI translations.
   * `logo`: Path to custom logo image (overridden by CLI `-l` / `--logo`).
-  * `number_sections`: Enables section numbering (`1. `, `1.1 `). Default: `true`.
-  * `toc`: Enables Table of Contents feature script and styles. Default: `false`.
-  * **Header Metadata Table:** Renders Company (`{{COMPANY}}`), Contact (`{{CONTACT}}`), Agent (`{{AGENT}}`), and an interactive persistent Date field.
+  * `numbered_sections`: Enables section numbering (`1. `, `1.1 `). Default: `true`.
+  * `table_of_contents`: Enables Table of Contents feature script and styles. Default: `false`.
 * **Callout / Note Box Annotations:** Blockquotes converted to alert panels via prefixes:
   * `>` / `> Note`: Standard Note box (`.note`, neutral styling).
   * `>?` / `>? Tip`: Tip box (`.note-tip`, green accent).
-  * `>!` / `>! Important`: Important box (`.note-important`, purple accent).
+  * `>!` / `>! Important`: Important note panel (`.note-important`, purple accent).
   * `>!!` / `>!! Warning`: Warning box (`.note-warning`, yellow accent).
   * `>!!!` / `>!!! Caution`: Caution box (`.note-caution`, red accent).
 * **Document Structure & Structural Mapping:**
@@ -106,7 +106,7 @@ d2f.exe --version
 ## 4. Output Specification (HTML & UX)
 
 * **Self-Contained Document:** Generates a single HTML5 file with fully embedded CSS (`<style>`) and JavaScript (`<script>`).
-* **Document Identity (`d2f_id`):** Deterministic SHA-256 key derived from metadata (`company`, `title`, `subtitle`, `date`, `version`) to uniquely scope browser `localStorage`.
+* **Document Identity (`d2f_id`):** Deterministic SHA-256 key derived from metadata (`title`, `version`, `date`) to uniquely scope browser `localStorage`.
 * **Internationalization & Localization (i18n):**
   * Supports localized UI elements via frontmatter `language` tag, mapping to embedded locale JSON files (default: `en`).
   * Placeholders formatted as `{{L_KEY}}` map to `"key"` in target locale JSON. Missing keys emit non-blocking `stderr` warnings.

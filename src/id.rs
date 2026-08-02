@@ -22,7 +22,7 @@ const HEX_CHARS: &[u8; 16] = b"0123456789abcdef";
 /// use doc2flow::converter::Frontmatter;
 /// use doc2flow::id::generate_d2f_id;
 ///
-/// let mut fm = Frontmatter::new("Acme Corp");
+/// let mut fm = Frontmatter::new();
 /// fm.title = Some("Server Guide".into());
 /// fm.version = Some("1.0.0".into());
 /// fm.date = Some("2026-07-25".into());
@@ -98,7 +98,7 @@ mod tests {
 
     #[test]
     fn test_generate_d2f_id_success() {
-        let mut fm = Frontmatter::new("Test Corp");
+        let mut fm = Frontmatter::new();
         fm.title = Some("Maintenance Protocol".into());
         fm.version = Some("v1.2.3".into());
         fm.date = Some("2026-07-25".into());
@@ -110,12 +110,12 @@ mod tests {
 
     #[test]
     fn test_generate_d2f_id_determinism() {
-        let mut fm1 = Frontmatter::new("Test Corp");
+        let mut fm1 = Frontmatter::new();
         fm1.title = Some("  Maintenance Protocol  ".into());
         fm1.version = Some("V1.2.3".into());
         fm1.date = Some("2026-07-25".into());
 
-        let mut fm2 = Frontmatter::new("Test Corp");
+        let mut fm2 = Frontmatter::new();
         fm2.title = Some("maintenance protocol".into());
         fm2.version = Some("v1.2.3".into());
         fm2.date = Some("2026-07-25".into());
@@ -127,12 +127,12 @@ mod tests {
 
     #[test]
     fn test_generate_d2f_id_version_truncation() {
-        let mut fm = Frontmatter::new("Test Corp");
+        let mut fm = Frontmatter::new();
         fm.title = Some("System Spec".into());
         fm.version = Some("1.0.0-beta.release.99".into());
         fm.date = Some("2026-07-25".into());
 
-        let mut fm_truncated_manually = Frontmatter::new("Test Corp");
+        let mut fm_truncated_manually = Frontmatter::new();
         fm_truncated_manually.title = Some("System Spec".into());
         fm_truncated_manually.version = Some("1.0.0-beta.r".into());
         fm_truncated_manually.date = Some("2026-07-25".into());
@@ -144,7 +144,7 @@ mod tests {
 
     #[test]
     fn test_generate_d2f_id_version_truncation_unicode() {
-        let mut fm = Frontmatter::new("Test Corp");
+        let mut fm = Frontmatter::new();
         fm.title = Some("System Spec".into());
         fm.version = Some("1.0.0-beta.äöü.99".into());
         fm.date = Some("2026-07-25".into());
@@ -166,7 +166,7 @@ mod tests {
 
     #[test]
     fn test_generate_d2f_id_one_missing_field_allowed() {
-        let mut fm = Frontmatter::new("Test Corp");
+        let mut fm = Frontmatter::new();
         fm.title = Some("System Spec".into());
         fm.version = Some("1.0".into());
 
@@ -176,7 +176,7 @@ mod tests {
 
     #[test]
     fn test_generate_d2f_id_two_missing_fields_fatal() {
-        let mut fm = Frontmatter::new("Test Corp");
+        let mut fm = Frontmatter::new();
         fm.title = Some("System Spec".into());
 
         let result = generate_d2f_id(&fm);
@@ -191,14 +191,14 @@ mod tests {
 
     #[test]
     fn test_generate_d2f_id_three_missing_fields_fatal() {
-        let fm = Frontmatter::new("Test Corp");
+        let fm = Frontmatter::new();
         let result = generate_d2f_id(&fm);
         assert!(result.is_err());
     }
 
     #[test]
     fn test_generate_d2f_id_exact_12_char_version() {
-        let mut fm = Frontmatter::new("Test Corp");
+        let mut fm = Frontmatter::new();
         fm.title = Some("System Spec".into());
         fm.version = Some("123456789012".into());
         fm.date = Some("2026-07-26".into());
@@ -209,7 +209,7 @@ mod tests {
 
     #[test]
     fn test_generate_d2f_id_emoji_unicode_truncation() {
-        let mut fm = Frontmatter::new("Test Corp");
+        let mut fm = Frontmatter::new();
         fm.title = Some("Unicode Test".into());
         fm.version = Some("v1.0.0-🚀🌟✨🎉🎈🎊".into());
         fm.date = Some("2026-07-26".into());
@@ -223,7 +223,7 @@ mod tests {
 
     #[test]
     fn test_generate_d2f_id_missing_title_allowed() {
-        let mut fm = Frontmatter::new("Test Corp");
+        let mut fm = Frontmatter::new();
         fm.version = Some("v1.0".into());
         fm.date = Some("2026-07-26".into());
 
@@ -233,7 +233,7 @@ mod tests {
 
     #[test]
     fn test_generate_d2f_id_missing_version_allowed() {
-        let mut fm = Frontmatter::new("Test Corp");
+        let mut fm = Frontmatter::new();
         fm.title = Some("Title Only".into());
         fm.date = Some("2026-07-26".into());
 

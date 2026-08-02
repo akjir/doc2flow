@@ -1,13 +1,10 @@
 ---
 title: "Doc2Flow English Showcase"
 subtitle: "Comprehensive test document for all present and future features"
-company: "ACME Global Corp"
-contact: "John Doe"
-agent: "Jane Smith"
 date: "2026-07-25"
 version: "1.0.0"
 language: "en"
-number_sections: true
+numbered_sections: true
 ---
 
 [Variables]

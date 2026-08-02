@@ -1,9 +1,6 @@
 ---
 title: "Stellar Evolution Overview"
 subtitle: "A Brief Guide to Stellar Life Cycles"
-company: "Astrophysics Research Group"
-contact: "Dr. Alex Vance"
-agent: "Stellar Data Division"
 date: "2026-08-01"
 version: "1.0.0"
 language: "en"

@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.3+130.9ddaa1a.dev">
-  <meta name="version" content="0.9.3+130.9ddaa1a.dev">
+  <meta name="generator" content="Doc2Flow v0.9.3+131.d19539c.dev">
+  <meta name="version" content="0.9.3+131.d19539c.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-02T16:20:04Z">
+  <meta name="dcterms.created" content="2026-08-02T16:42:47Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <title>Stellar Evolution Overview</title>
   <style>
@@ -277,46 +277,7 @@ mark.d2f-highlight {
   padding: 0 14px 60px;
 }
 
-/* Info Table */
-.info-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 20px;
-  background: var(--bg-surface);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-  table-layout: fixed;
-}
 
-.info-table th {
-  background: var(--bl);
-  color: var(--bd);
-  font-weight: bold;
-  padding: 8px 10px;
-  border: 1px solid var(--border-light);
-  font-size: 12px;
-}
-
-.info-table th:nth-child(1), .info-table td:nth-child(1) { width: 35%; }
-.info-table th:nth-child(2), .info-table td:nth-child(2) { width: 25%; }
-.info-table th:nth-child(3), .info-table td:nth-child(3) { width: 25%; }
-.info-table th:nth-child(4), .info-table td:nth-child(4) { width: 15%; }
-
-.info-table td {
-  padding: 8px 10px;
-  border: 1px solid #ddd;
-  font-size: 12px;
-}
-
-.info-table td input {
-  width: 100%;
-  border: none;
-  outline: none;
-  font-size: 12px;
-  font-family: var(--font-sans);
-  background: transparent;
-}
 
 /* Collapsible Sections */
 .section {
@@ -790,9 +751,6 @@ mark.d2f-highlight {
     text-decoration: none;
   }
 
-  .info-table input {
-    border: none;
-  }
 }
 
 /* Responsive */
@@ -811,10 +769,6 @@ mark.d2f-highlight {
     margin-top: 8px;
   }
 
-  .info-table th, .info-table td {
-    padding: 6px 6px;
-    font-size: 11px;
-  }
 }
 
 
@@ -864,24 +818,6 @@ mark.d2f-highlight {
     </div>
   </header>
   <main class="doc-body">
-
-    <table class="info-table">
-      <tr>
-        <th>Company</th>
-        <th>Contact</th>
-        <th>Agent</th>
-        <th>Date</th>
-      </tr>
-      <tr>
-        <td>Astrophysics Research Group</td>
-        <td><input type="text" class="sf persistent-field" id="f_info_contact" value="Dr. Alex Vance"
-            placeholder="Name" aria-label="Contact"></td>
-        <td><input type="text" class="sf persistent-field" id="f_info_agent" value="Stellar Data Division"
-            placeholder="Name" aria-label="Agent"></td>
-        <td><input type="text" class="sf persistent-field" id="f_info_date" value="2026-08-01"
-            placeholder="MM/DD/YYYY" aria-label="Date"></td>
-      </tr>
-    </table>
 
     <!-- START GENERATED CONTENT -->
     <!-- S1 -->
@@ -1031,7 +967,7 @@ mark.d2f-highlight {
     window.d2f.document = window.d2f.document || {};
     window.d2f.document.id = 'd2f_id_b6b654e25fa9dc2c';
     window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {"reset_all":"Reset","setup_in_progress":"Process in Progress","copied":"Copied!","loading":"Loading...","save_state":"Save State","lang_code":"en","var_table_value":"Value","var_table_variable":"Variable","copy_code":"Copy code","progress_template":"{done} of {total} tasks completed ({pct}%)","callout_caution":"Caution","var_table_title":"Variables","callout_important":"Important","company":"Company","export_pdf":"Export as PDF","setup_completed":"Process Completed","search_placeholder":"Search... (Ctrl+K)","callout_tip":"Tip","date":"Date","comment_placeholder":"Add a comment...","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","name_placeholder":"Name","date_placeholder":"MM/DD/YYYY","signature_date":"Date","contact":"Contact","callout_warning":"Warning","agent":"Agent","callout_note":"Note","sections_visible":"{visible} / {total} sections visible"};
+    window.d2f.lang.dictionary = {"reset_all":"Reset","lang_code":"en","setup_completed":"Process Completed","callout_note":"Note","export_pdf":"Export as PDF","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","callout_warning":"Warning","comment_placeholder":"Add a comment...","date_placeholder":"MM/DD/YYYY","copied":"Copied!","copy_code":"Copy code","callout_important":"Important","search_placeholder":"Search... (Ctrl+K)","sections_visible":"{visible} / {total} sections visible","var_table_title":"Variables","var_table_variable":"Variable","signature_date":"Date","setup_in_progress":"Process in Progress","var_table_value":"Value","date":"Date","callout_tip":"Tip","callout_caution":"Caution","name_placeholder":"Name","loading":"Loading...","save_state":"Save State","progress_template":"{done} of {total} tasks completed ({pct}%)"};
     "use strict";
 (() => {
   // src/core/storage.ts
@@ -1466,30 +1402,6 @@ mark.d2f-highlight {
   }
 
   // src/core/fields.ts
-  function syncFieldPair(id1, id2, sourceInput) {
-    const raw1 = document.getElementById(id1);
-    const raw2 = document.getElementById(id2);
-    const el1 = raw1 instanceof HTMLInputElement ? raw1 : null;
-    const el2 = raw2 instanceof HTMLInputElement ? raw2 : null;
-    if (!el1 || !el2)
-      return;
-    if (sourceInput === el1) {
-      el2.value = el1.value;
-    } else if (sourceInput === el2) {
-      el1.value = el2.value;
-    } else {
-      if (el1.value && !el2.value)
-        el2.value = el1.value;
-      else if (el2.value && !el1.value)
-        el1.value = el2.value;
-      else if (el1.value)
-        el2.value = el1.value;
-    }
-  }
-  function syncLinkedFields(sourceInput) {
-    syncFieldPair("f_info_agent", "f_sign_agent", sourceInput);
-    syncFieldPair("f_info_date", "f_sign_date", sourceInput);
-  }
   function formatDateFromTemplate(now, template) {
     if (!template || typeof template !== "string")
       return null;
@@ -1552,7 +1464,6 @@ mark.d2f-highlight {
         }
       });
     }
-    syncLinkedFields();
     return false;
   }
   function resetFields() {
@@ -1577,7 +1488,6 @@ mark.d2f-highlight {
         el.selectedIndex = 0;
       }
     });
-    syncLinkedFields();
   }
   if (typeof window !== "undefined") {
     window.d2f.storage.registerSaveHandler(saveFields);
@@ -1585,7 +1495,6 @@ mark.d2f-highlight {
     document.addEventListener("DOMContentLoaded", () => {
       window.d2f.core.registerResetHandler(resetFields);
     });
-    const linkedIds = ["f_info_agent", "f_sign_agent", "f_info_date", "f_sign_date"];
     const saveStateDebounced = window.d2f.utils.debounce(() => window.d2f.storage.saveState(), 300);
     const handleInputOrChange = (e) => {
       const target = e.target;
@@ -1595,25 +1504,7 @@ mark.d2f-highlight {
         target.setAttribute("value", target.value);
         saveStateDebounced();
       }
-      if (target.id && linkedIds.includes(target.id)) {
-        if (target.id.toLowerCase().includes("date")) {
-          checkDateShortcut(target);
-        }
-        syncLinkedFields(target);
-        const el1 = document.getElementById("f_info_agent");
-        const el2 = document.getElementById("f_sign_agent");
-        const el3 = document.getElementById("f_info_date");
-        const el4 = document.getElementById("f_sign_date");
-        if (el1 instanceof HTMLInputElement)
-          el1.setAttribute("value", el1.value);
-        if (el2 instanceof HTMLInputElement)
-          el2.setAttribute("value", el2.value);
-        if (el3 instanceof HTMLInputElement)
-          el3.setAttribute("value", el3.value);
-        if (el4 instanceof HTMLInputElement)
-          el4.setAttribute("value", el4.value);
-        saveStateDebounced();
-      } else if (target.matches('input[id*="date"], input[name*="date"], input.date-field')) {
+      if (target.matches('input[id*="date"], input[name*="date"], input.date-field')) {
         checkDateShortcut(target);
         target.setAttribute("value", target.value);
         saveStateDebounced();

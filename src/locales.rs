@@ -23,9 +23,9 @@ impl Locale {
     /// ```
     /// use doc2flow::locales::Locale;
     ///
-    /// let json = r#"{"lang_code": "en", "company": "Company"}"#;
+    /// let json = r#"{"lang_code": "en", "agent": "Agent"}"#;
     /// let locale = Locale::from_json(json);
-    /// assert_eq!(locale.get("company"), "Company");
+    /// assert_eq!(locale.get("agent"), "Agent");
     /// ```
     pub fn from_json(json_str: &str) -> Self {
         Self::try_from_json(json_str).unwrap_or_else(|_| Locale {
@@ -129,23 +129,23 @@ mod tests {
         let json = r#"{
             "lang_code": "fr",
             "custom_key": "Bonjour",
-            "company": "Client"
+            "role": "Client"
         }"#;
         let locale = Locale::from_json(json);
         assert_eq!(locale.lang_code, "fr");
         assert_eq!(locale.get("custom_key"), "Bonjour");
-        assert_eq!(locale.get("company"), "Client");
+        assert_eq!(locale.get("role"), "Client");
     }
 
     #[test]
     fn test_from_lang_code_resolution() {
         let de_locale = Locale::from_lang_code("de");
         assert_eq!(de_locale.lang_code, "de");
-        assert_eq!(de_locale.get("company"), "Firma");
+        assert_eq!(de_locale.get("export_pdf"), "Als PDF exportieren");
 
         let en_locale = Locale::from_lang_code("en");
         assert_eq!(en_locale.lang_code, "en");
-        assert_eq!(en_locale.get("company"), "Company");
+        assert_eq!(en_locale.get("export_pdf"), "Export as PDF");
 
         let unknown = Locale::from_lang_code("xyz");
         assert_eq!(unknown.lang_code, "en");
@@ -160,13 +160,13 @@ mod tests {
     #[test]
     fn test_validate_locale_coverage() {
         let mut entries = HashMap::new();
-        entries.insert("company".into(), "Firma".into());
+        entries.insert("export_pdf".into(), "Als PDF exportieren".into());
         let locale = Locale {
             lang_code: "de".into(),
             entries,
         };
 
-        let tmpl = "<div>{{L_COMPANY}}</div><div>{{L_MISSING_KEY}}</div>";
+        let tmpl = "<div>{{L_EXPORT_PDF}}</div><div>{{L_MISSING_KEY}}</div>";
         // Call validation; missing key prints to stderr without panicking
         validate_locale_coverage(tmpl, &locale);
     }
@@ -175,15 +175,15 @@ mod tests {
     fn test_from_lang_code_uppercase_and_whitespace() {
         let de_upper = Locale::from_lang_code("  DE ");
         assert_eq!(de_upper.lang_code, "de");
-        assert_eq!(de_upper.get("company"), "Firma");
+        assert_eq!(de_upper.get("export_pdf"), "Als PDF exportieren");
     }
 
     #[test]
     fn test_get_ignore_ascii_case() {
         let locale = Locale::from_lang_code("en");
-        assert_eq!(locale.get_ignore_ascii_case("COMPANY"), Some("Company"));
-        assert_eq!(locale.get_ignore_ascii_case("Company"), Some("Company"));
-        assert_eq!(locale.get_ignore_ascii_case("company"), Some("Company"));
+        assert_eq!(locale.get_ignore_ascii_case("EXPORT_PDF"), Some("Export as PDF"));
+        assert_eq!(locale.get_ignore_ascii_case("Export_Pdf"), Some("Export as PDF"));
+        assert_eq!(locale.get_ignore_ascii_case("export_pdf"), Some("Export as PDF"));
         assert_eq!(locale.get_ignore_ascii_case("NONEXISTENT"), None);
     }
 
@@ -191,6 +191,6 @@ mod tests {
     fn test_locale_default_impl() {
         let default_loc = Locale::default();
         assert_eq!(default_loc.lang_code, "en");
-        assert_eq!(default_loc.get("company"), "Company");
+        assert_eq!(default_loc.get("export_pdf"), "Export as PDF");
     }
 }

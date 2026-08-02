@@ -133,71 +133,7 @@ impl<'a> DiagnosticError<'a> {
         Doc2FlowError::Diagnostic(self.render())
     }
 
-    /// Builder for missing frontmatter field errors.
-    pub fn missing_frontmatter_field(file_path: &'a str, line_no: usize) -> Doc2FlowError {
-        DiagnosticError {
-            message: Cow::Borrowed("missing required frontmatter field 'company'"),
-            file_path: Cow::Borrowed(file_path),
-            line_number: line_no,
-            col_number: 1,
-            line_snippet: Cow::Borrowed("---"),
-            annotation_carets: Cow::Borrowed("^^^"),
-            annotation_text: Cow::Borrowed(
-                "frontmatter block defined here is missing required field 'company'",
-            ),
-            help_text: Cow::Borrowed(
-                "add 'company: \"Company Name\"' to the YAML frontmatter block at the top of your Markdown file.",
-            ),
-        }
-        .to_doc2flow()
-    }
 
-    /// Builder for empty frontmatter field errors.
-    pub fn empty_frontmatter_field(
-        file_path: &'a str,
-        line_no: usize,
-        line_content: &'a str,
-    ) -> Doc2FlowError {
-        let line_len = line_content
-            .trim_end()
-            .len()
-            .max(1)
-            .min(STATIC_CARETS.len());
-        let carets = Cow::Borrowed(&STATIC_CARETS[..line_len]);
-
-        DiagnosticError {
-            message: Cow::Borrowed("required frontmatter field 'company' cannot be empty"),
-            file_path: Cow::Borrowed(file_path),
-            line_number: line_no,
-            col_number: 1,
-            line_snippet: Cow::Borrowed(line_content),
-            annotation_carets: carets,
-            annotation_text: Cow::Borrowed("'company' field value cannot be empty"),
-            help_text: Cow::Borrowed("provide a valid company name, e.g. company: \"Acme Corp\""),
-        }
-        .to_doc2flow()
-    }
-
-    /// Builder for missing frontmatter block errors.
-    pub fn missing_frontmatter_block(file_path: &'a str, first_line: &'a str) -> Doc2FlowError {
-        DiagnosticError {
-            message: Cow::Borrowed(
-                "missing YAML frontmatter block with required field 'company'",
-            ),
-            file_path: Cow::Borrowed(file_path),
-            line_number: 1,
-            col_number: 1,
-            line_snippet: Cow::Borrowed(first_line),
-            annotation_carets: Cow::Borrowed("^"),
-            annotation_text: Cow::Borrowed(
-                "missing frontmatter section '---' with required field 'company' at start of file",
-            ),
-            help_text: Cow::Borrowed(
-                "add YAML frontmatter at the top of your Markdown file:\n          ---\n          title: \"Document Title\"\n          company: \"Company Name\"\n          date: \"YYYY-MM-DD\"\n          ---",
-            ),
-        }
-        .to_doc2flow()
-    }
 
     /// Builder for local image size exceeding maximum limit errors.
     pub fn image_too_large(
@@ -280,34 +216,7 @@ mod tests {
         assert!(rendered.contains("= help: help text"));
     }
 
-    #[test]
-    fn test_missing_frontmatter_field_builder() {
-        let err = DiagnosticError::missing_frontmatter_field("doc.md", 1);
-        let err_str = err.to_string();
-        assert!(err_str.contains("error: missing required frontmatter field 'company'"));
-        assert!(err_str.contains("--> doc.md:1:1"));
-        assert!(err_str.contains("1 | ---"));
-    }
 
-    #[test]
-    fn test_empty_frontmatter_field_builder() {
-        let err = DiagnosticError::empty_frontmatter_field("doc.md", 3, "company: \"\"");
-        let err_str = err.to_string();
-        assert!(err_str.contains("error: required frontmatter field 'company' cannot be empty"));
-        assert!(err_str.contains("--> doc.md:3:1"));
-        assert!(err_str.contains("3 | company: \"\""));
-    }
-
-    #[test]
-    fn test_missing_frontmatter_block_builder() {
-        let err = DiagnosticError::missing_frontmatter_block("doc.md", "# Title");
-        let err_str = err.to_string();
-        assert!(
-            err_str.contains("error: missing YAML frontmatter block with required field 'company'")
-        );
-        assert!(err_str.contains("--> doc.md:1:1"));
-        assert!(err_str.contains("1 | # Title"));
-    }
 
     #[test]
     fn test_image_too_large_builder() {

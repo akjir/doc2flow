@@ -47,9 +47,9 @@ fn run() -> Result<()> {
     let (html_content, mut features) = converter::convert_markdown_to_html_with_options(
         markdown_body,
         &locale,
-        frontmatter.number_sections,
+        frontmatter.numbered_sections,
     )?;
-    features.has_toc = frontmatter.toc;
+    features.has_toc = frontmatter.table_of_contents;
 
     let base_dir = input_path.parent();
 

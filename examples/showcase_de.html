@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.3+130.9ddaa1a.dev">
-  <meta name="version" content="0.9.3+130.9ddaa1a.dev">
+  <meta name="generator" content="Doc2Flow v0.9.3+131.d19539c.dev">
+  <meta name="version" content="0.9.3+131.d19539c.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-02T16:20:04Z">
+  <meta name="dcterms.created" content="2026-08-02T16:42:47Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <title>Doc2Flow Deutscher Showcase</title>
   <style>
@@ -277,46 +277,7 @@ mark.d2f-highlight {
   padding: 0 14px 60px;
 }
 
-/* Info Table */
-.info-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 20px;
-  background: var(--bg-surface);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-  table-layout: fixed;
-}
 
-.info-table th {
-  background: var(--bl);
-  color: var(--bd);
-  font-weight: bold;
-  padding: 8px 10px;
-  border: 1px solid var(--border-light);
-  font-size: 12px;
-}
-
-.info-table th:nth-child(1), .info-table td:nth-child(1) { width: 35%; }
-.info-table th:nth-child(2), .info-table td:nth-child(2) { width: 25%; }
-.info-table th:nth-child(3), .info-table td:nth-child(3) { width: 25%; }
-.info-table th:nth-child(4), .info-table td:nth-child(4) { width: 15%; }
-
-.info-table td {
-  padding: 8px 10px;
-  border: 1px solid #ddd;
-  font-size: 12px;
-}
-
-.info-table td input {
-  width: 100%;
-  border: none;
-  outline: none;
-  font-size: 12px;
-  font-family: var(--font-sans);
-  background: transparent;
-}
 
 /* Collapsible Sections */
 .section {
@@ -790,9 +751,6 @@ mark.d2f-highlight {
     text-decoration: none;
   }
 
-  .info-table input {
-    border: none;
-  }
 }
 
 /* Responsive */
@@ -811,10 +769,6 @@ mark.d2f-highlight {
     margin-top: 8px;
   }
 
-  .info-table th, .info-table td {
-    padding: 6px 6px;
-    font-size: 11px;
-  }
 }
 
 /* ==========================================================================
@@ -1294,24 +1248,6 @@ mark.d2f-highlight {
   </header>
   <main class="doc-body">
 
-    <table class="info-table">
-      <tr>
-        <th>Firma</th>
-        <th>Ansprechpartner</th>
-        <th>Bearbeiter</th>
-        <th>Datum</th>
-      </tr>
-      <tr>
-        <td>ACME Deutschland GmbH</td>
-        <td><input type="text" class="sf persistent-field" id="f_info_contact" value="Max Mustermann"
-            placeholder="Name" aria-label="Ansprechpartner"></td>
-        <td><input type="text" class="sf persistent-field" id="f_info_agent" value="Erika Musterfrau"
-            placeholder="Name" aria-label="Bearbeiter"></td>
-        <td><input type="text" class="sf persistent-field" id="f_info_date" value="25.07.2026"
-            placeholder="TT.MM.JJJJ" aria-label="Datum"></td>
-      </tr>
-    </table>
-
     <!-- START GENERATED CONTENT -->
     <div class="item-table-var-wrap"><table class="item-table-var" data-variables="{&quot;API_KEY&quot;:&quot;secret-key-de-12345&quot;,&quot;PORT&quot;:&quot;8080&quot;,&quot;SERVER_NAME&quot;:&quot;prod-srv-de-01&quot;}"><thead><tr><th>Variable</th><th>Wert</th></tr></thead><tbody>
 <tr><td>SERVER_NAME</td><td><input type="text" class="item-table-var-input persistent-field" id="f_var_SERVER_NAME" data-var-key="SERVER_NAME" data-default-value="prod-srv-de-01" value="prod-srv-de-01"></td></tr>
@@ -1568,7 +1504,7 @@ mark.d2f-highlight {
   <div class="big" id="finish-icon">&#x2714;</div>
   <h2 id="finish-title">Vorgang abgeschlossen</h2>
   <div class="sigs">
-    <div><input type="text" class="sf persistent-field" id="f_sign_agent" placeholder="Name" aria-label="Bearbeiter"><div style="margin-top:4px">Bearbeiter</div></div>
+    <div><input type="text" class="sf persistent-field" id="f_sign_agent" placeholder="Name" aria-label="Name"><div style="margin-top:4px">Name</div></div>
     <div><input type="text" class="sf persistent-field" id="f_sign_date" placeholder="TT.MM.JJJJ" aria-label="Datum"><div style="margin-top:4px">Datum</div></div>
   </div>
 </div>
@@ -1591,7 +1527,7 @@ mark.d2f-highlight {
     window.d2f.document = window.d2f.document || {};
     window.d2f.document.id = 'd2f_id_468e65bc2ccf89b4';
     window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {"date_placeholder":"TT.MM.JJJJ","setup_in_progress":"Vorgang in Bearbeitung","save_state":"Stand sichern","name_placeholder":"Name","date":"Datum","callout_important":"Wichtig","lang_code":"de","export_pdf":"Als PDF exportieren","callout_note":"Hinweis","setup_completed":"Vorgang abgeschlossen","callout_warning":"Warnung","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","signature_date":"Datum","copy_code":"Code kopieren","contact":"Ansprechpartner","var_table_variable":"Variable","search_placeholder":"Suchen... (Ctrl+K)","var_table_value":"Wert","callout_tip":"Tipp","copied":"Kopiert!","var_table_title":"Variablen","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","callout_caution":"Achtung","sections_visible":"{visible} / {total} Abschnitte sichtbar","reset_all":"Zurücksetzen","comment_placeholder":"Kommentar hinzufügen...","company":"Firma","agent":"Bearbeiter","loading":"Lade..."};
+    window.d2f.lang.dictionary = {"loading":"Lade...","setup_in_progress":"Vorgang in Bearbeitung","copy_code":"Code kopieren","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","setup_completed":"Vorgang abgeschlossen","save_state":"Stand sichern","callout_note":"Hinweis","callout_important":"Wichtig","signature_date":"Datum","callout_warning":"Warnung","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","callout_caution":"Achtung","sections_visible":"{visible} / {total} Abschnitte sichtbar","var_table_title":"Variablen","var_table_variable":"Variable","comment_placeholder":"Kommentar hinzufügen...","search_placeholder":"Suchen... (Ctrl+K)","date":"Datum","reset_all":"Zurücksetzen","callout_tip":"Tipp","var_table_value":"Wert","date_placeholder":"TT.MM.JJJJ","lang_code":"de","copied":"Kopiert!","name_placeholder":"Name","export_pdf":"Als PDF exportieren"};
     "use strict";
 (() => {
   // src/core/storage.ts
@@ -2026,30 +1962,6 @@ mark.d2f-highlight {
   }
 
   // src/core/fields.ts
-  function syncFieldPair(id1, id2, sourceInput) {
-    const raw1 = document.getElementById(id1);
-    const raw2 = document.getElementById(id2);
-    const el1 = raw1 instanceof HTMLInputElement ? raw1 : null;
-    const el2 = raw2 instanceof HTMLInputElement ? raw2 : null;
-    if (!el1 || !el2)
-      return;
-    if (sourceInput === el1) {
-      el2.value = el1.value;
-    } else if (sourceInput === el2) {
-      el1.value = el2.value;
-    } else {
-      if (el1.value && !el2.value)
-        el2.value = el1.value;
-      else if (el2.value && !el1.value)
-        el1.value = el2.value;
-      else if (el1.value)
-        el2.value = el1.value;
-    }
-  }
-  function syncLinkedFields(sourceInput) {
-    syncFieldPair("f_info_agent", "f_sign_agent", sourceInput);
-    syncFieldPair("f_info_date", "f_sign_date", sourceInput);
-  }
   function formatDateFromTemplate(now, template) {
     if (!template || typeof template !== "string")
       return null;
@@ -2112,7 +2024,6 @@ mark.d2f-highlight {
         }
       });
     }
-    syncLinkedFields();
     return false;
   }
   function resetFields() {
@@ -2137,7 +2048,6 @@ mark.d2f-highlight {
         el.selectedIndex = 0;
       }
     });
-    syncLinkedFields();
   }
   if (typeof window !== "undefined") {
     window.d2f.storage.registerSaveHandler(saveFields);
@@ -2145,7 +2055,6 @@ mark.d2f-highlight {
     document.addEventListener("DOMContentLoaded", () => {
       window.d2f.core.registerResetHandler(resetFields);
     });
-    const linkedIds = ["f_info_agent", "f_sign_agent", "f_info_date", "f_sign_date"];
     const saveStateDebounced = window.d2f.utils.debounce(() => window.d2f.storage.saveState(), 300);
     const handleInputOrChange = (e) => {
       const target = e.target;
@@ -2155,25 +2064,7 @@ mark.d2f-highlight {
         target.setAttribute("value", target.value);
         saveStateDebounced();
       }
-      if (target.id && linkedIds.includes(target.id)) {
-        if (target.id.toLowerCase().includes("date")) {
-          checkDateShortcut(target);
-        }
-        syncLinkedFields(target);
-        const el1 = document.getElementById("f_info_agent");
-        const el2 = document.getElementById("f_sign_agent");
-        const el3 = document.getElementById("f_info_date");
-        const el4 = document.getElementById("f_sign_date");
-        if (el1 instanceof HTMLInputElement)
-          el1.setAttribute("value", el1.value);
-        if (el2 instanceof HTMLInputElement)
-          el2.setAttribute("value", el2.value);
-        if (el3 instanceof HTMLInputElement)
-          el3.setAttribute("value", el3.value);
-        if (el4 instanceof HTMLInputElement)
-          el4.setAttribute("value", el4.value);
-        saveStateDebounced();
-      } else if (target.matches('input[id*="date"], input[name*="date"], input.date-field')) {
+      if (target.matches('input[id*="date"], input[name*="date"], input.date-field')) {
         checkDateShortcut(target);
         target.setAttribute("value", target.value);
         saveStateDebounced();

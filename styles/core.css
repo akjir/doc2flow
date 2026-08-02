@@ -263,46 +263,7 @@ mark.d2f-highlight {
   padding: 0 14px 60px;
 }
 
-/* Info Table */
-.info-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 20px;
-  background: var(--bg-surface);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-  table-layout: fixed;
-}
 
-.info-table th {
-  background: var(--bl);
-  color: var(--bd);
-  font-weight: bold;
-  padding: 8px 10px;
-  border: 1px solid var(--border-light);
-  font-size: 12px;
-}
-
-.info-table th:nth-child(1), .info-table td:nth-child(1) { width: 35%; }
-.info-table th:nth-child(2), .info-table td:nth-child(2) { width: 25%; }
-.info-table th:nth-child(3), .info-table td:nth-child(3) { width: 25%; }
-.info-table th:nth-child(4), .info-table td:nth-child(4) { width: 15%; }
-
-.info-table td {
-  padding: 8px 10px;
-  border: 1px solid #ddd;
-  font-size: 12px;
-}
-
-.info-table td input {
-  width: 100%;
-  border: none;
-  outline: none;
-  font-size: 12px;
-  font-family: var(--font-sans);
-  background: transparent;
-}
 
 /* Collapsible Sections */
 .section {
@@ -776,9 +737,6 @@ mark.d2f-highlight {
     text-decoration: none;
   }
 
-  .info-table input {
-    border: none;
-  }
 }
 
 /* Responsive */
@@ -797,8 +755,4 @@ mark.d2f-highlight {
     margin-top: 8px;
   }
 
-  .info-table th, .info-table td {
-    padding: 6px 6px;
-    font-size: 11px;
-  }
 }

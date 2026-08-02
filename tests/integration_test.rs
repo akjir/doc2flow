@@ -96,7 +96,6 @@ fn test_simple_and_mixed_list_items_conversion() {
 fn test_frontmatter_language_parsing() {
     let input = r#"---
 title: "Test"
-company: "Test Corp"
 language: "de"
 ---
 ## Section 1
@@ -107,7 +106,7 @@ language: "de"
 
     let locale = doc2flow::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     assert_eq!(locale.lang_code, "de");
-    assert_eq!(locale.get("company"), "Firma");
+    assert_eq!(locale.get("export_pdf"), "Als PDF exportieren");
     assert_eq!(
         locale.get("reset_all"),
         "Zurücksetzen"
@@ -158,7 +157,6 @@ test code
 fn test_end_to_end_template_rendering() {
     let input = r#"---
 title: "End-to-End Test"
-company: "Test Corp"
 language: "de"
 ---
 ## Test Section
@@ -177,17 +175,8 @@ language: "de"
     assert!(final_html.contains("<!DOCTYPE html>"));
     assert!(final_html.contains("<html lang=\"de\">"));
     assert!(final_html.contains("End-to-End Test"));
-    assert!(final_html.contains("Test Corp"));
     assert!(final_html.contains("doc_test_123"));
     assert!(final_html.contains("<input type=\"checkbox\" id=\"cb_s1_1\">"));
-    assert!(final_html.contains("id=\"f_info_contact\""));
-    assert!(final_html.contains("id=\"f_info_agent\""));
-    assert!(final_html.contains("id=\"f_info_date\""));
-    assert!(final_html.contains("table-layout: fixed"));
-    assert!(
-        final_html
-            .contains(".info-table th:nth-child(4), .info-table td:nth-child(4) { width: 15%; }")
-    );
     assert!(final_html.contains("id=\"finish-box\""));
     assert!(final_html.contains("id=\"finish-icon\""));
     assert!(final_html.contains("id=\"finish-title\""));
@@ -206,7 +195,7 @@ fn test_showcase_en_fixture_conversion() {
     let (html_body, features) = doc2flow::converter::convert_markdown_to_html_with_options(
         body,
         &locale,
-        fm.number_sections,
+        fm.numbered_sections,
     )
     .expect("conversion failed");
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).expect("id gen failed");
@@ -240,7 +229,7 @@ fn test_showcase_de_fixture_conversion() {
     let (html_body, features) = doc2flow::converter::convert_markdown_to_html_with_options(
         body,
         &locale,
-        fm.number_sections,
+        fm.numbered_sections,
     )
     .expect("conversion failed");
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).expect("id gen failed");
@@ -273,7 +262,7 @@ fn test_template_generator_conversion() {
     let (html_body, features) = doc2flow::converter::convert_markdown_to_html_with_options(
         body,
         &locale,
-        fm.number_sections,
+        fm.numbered_sections,
     )
     .expect("conversion failed");
     let d2f_id = doc2flow::id::generate_d2f_id(&fm).expect("id gen failed");
@@ -289,68 +278,23 @@ fn test_template_generator_conversion() {
 }
 
 #[test]
-fn test_frontmatter_company_validation_success() {
+fn test_frontmatter_validation_success() {
     let input = r#"---
 title: "Valid Spec"
-company: "ACME Corp"
 date: "2026-07-25"
 ---
 ## Section 1
 "#;
 
     let (fm, _body) = doc2flow::converter::parse_and_validate_frontmatter(input, Some("test.md"))
-        .expect("validation failed for valid company");
-    assert_eq!(fm.company, "ACME Corp");
-}
-
-#[test]
-fn test_frontmatter_company_validation_missing_error_feedback() {
-    let input = r#"---
-title: "Missing Company Spec"
-date: "2026-07-25"
----
-## Section 1
-"#;
-
-    let err =
-        doc2flow::converter::parse_and_validate_frontmatter(input, Some("invalid.md")).unwrap_err();
-    let err_msg = err.to_string();
-
-    assert!(err_msg.contains("error: missing required frontmatter field 'company'"));
-    assert!(err_msg.contains("--> invalid.md:1:1"));
-    assert!(err_msg.contains("1 | ---"));
-    assert!(
-        err_msg.contains("^^^ frontmatter block defined here is missing required field 'company'")
-    );
-    assert!(err_msg.contains("= help: add 'company: \"Company Name\"'"));
-}
-
-#[test]
-fn test_frontmatter_company_validation_empty_error_feedback() {
-    let input = r#"---
-title: "Empty Company Spec"
-company: ""
-date: "2026-07-25"
----
-## Section 1
-"#;
-
-    let err =
-        doc2flow::converter::parse_and_validate_frontmatter(input, Some("empty.md")).unwrap_err();
-    let err_msg = err.to_string();
-
-    assert!(err_msg.contains("error: required frontmatter field 'company' cannot be empty"));
-    assert!(err_msg.contains("--> empty.md:3:1"));
-    assert!(err_msg.contains("3 | company: \"\""));
-    assert!(err_msg.contains("^^^^^^^^^^^ 'company' field value cannot be empty"));
-    assert!(err_msg.contains("= help: provide a valid company name"));
+        .expect("validation failed for valid frontmatter");
+    assert_eq!(fm.title.as_deref(), Some("Valid Spec"));
 }
 
 #[test]
 fn test_level_1_heading_integration() {
     let input = r#"---
 title: "H1 Test"
-company: "Test Corp"
 date: "2026-07-26"
 ---
 # Main Section
@@ -393,7 +337,6 @@ fn test_auto_scale_integration_test() {
 
     let input = r#"---
 title: "Auto Scale Spec"
-company: "Test Corp"
 date: "2026-07-26"
 ---
 ## System Overview
@@ -428,7 +371,6 @@ date: "2026-07-26"
 fn test_full_pipeline_multi_language_and_callouts() {
     let input = r#"---
 title: "Pipeline Callouts & Multilang"
-company: "Global Tech"
 language: "de"
 version: "2.1.0"
 date: "2026-07-26"
@@ -469,7 +411,6 @@ date: "2026-07-26"
 fn test_non_image_resource_link_wrapper_integration() {
     let input = r#"---
 title: "PDF Resource Spec"
-company: "Docs Inc"
 date: "2026-07-26"
 ---
 ## Attachments
@@ -526,7 +467,6 @@ fn test_cli_version_output_formatting() {
 fn test_unknown_locale_fallback_to_english() {
     let input = r#"---
 title: "Fallback Spec"
-company: "Global Inc"
 date: "2026-07-26"
 language: "fr"
 ---
@@ -578,7 +518,6 @@ fn test_custom_logo_frontmatter_and_cli_precedence_integration() {
     let input = format!(
         r#"---
 title: "Custom Logo Spec"
-company: "Logo Inc"
 date: "2026-07-27"
 logo: "{}"
 ---
@@ -627,7 +566,6 @@ logo: "{}"
 fn test_metadata_injection_integration() {
     let input = r#"---
 title: "Metadata Spec"
-company: "Acme Corp"
 version: "1.0.0"
 date: "2026-07-27"
 ---
@@ -664,7 +602,6 @@ date: "2026-07-27"
 fn test_loose_task_list_integration() {
     let input = r#"---
 title: "Loose Task List Test"
-company: "Acme Corp"
 date: "2026-07-28"
 ---
 ## Loose Checklist
@@ -703,9 +640,8 @@ date: "2026-07-28"
 fn test_section_numbering_integration() {
     let input = r#"---
 title: "Section Numbering Test"
-company: "Acme Corp"
 date: "2026-07-29"
-number_sections: true
+numbered_sections: true
 ---
 # Main Architecture
 
@@ -723,13 +659,13 @@ number_sections: true
 
     let (fm, body) =
         doc2flow::converter::parse_and_validate_frontmatter(input, Some("numbering.md")).unwrap();
-    assert!(fm.number_sections);
+    assert!(fm.numbered_sections);
 
     let locale = doc2flow::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     let (html_body, _features) = doc2flow::converter::convert_markdown_to_html_with_options(
         body,
         &locale,
-        fm.number_sections,
+        fm.numbered_sections,
     )
     .unwrap();
 

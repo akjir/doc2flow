@@ -204,14 +204,13 @@ pub fn render_finish_box(
     has_tasks: bool,
     setup_completed_label: &str,
     name_placeholder: &str,
-    agent_label: &str,
     date_placeholder: &str,
     signature_date_label: &str,
 ) {
     if has_tasks {
         let _ = write!(
             out,
-            "<div class=\"finish\" id=\"finish-box\">\n  <div class=\"big\" id=\"finish-icon\">&#x2714;</div>\n  <h2 id=\"finish-title\">{setup_completed_label}</h2>\n  <div class=\"sigs\">\n    <div><input type=\"text\" class=\"sf persistent-field\" id=\"f_sign_agent\" placeholder=\"{name_placeholder}\" aria-label=\"{agent_label}\"><div style=\"margin-top:4px\">{agent_label}</div></div>\n    <div><input type=\"text\" class=\"sf persistent-field\" id=\"f_sign_date\" placeholder=\"{date_placeholder}\" aria-label=\"{signature_date_label}\"><div style=\"margin-top:4px\">{signature_date_label}</div></div>\n  </div>\n</div>"
+            "<div class=\"finish\" id=\"finish-box\">\n  <div class=\"big\" id=\"finish-icon\">&#x2714;</div>\n  <h2 id=\"finish-title\">{setup_completed_label}</h2>\n  <div class=\"sigs\">\n    <div><input type=\"text\" class=\"sf persistent-field\" id=\"f_sign_agent\" placeholder=\"{name_placeholder}\" aria-label=\"{name_placeholder}\"><div style=\"margin-top:4px\">{name_placeholder}</div></div>\n    <div><input type=\"text\" class=\"sf persistent-field\" id=\"f_sign_date\" placeholder=\"{date_placeholder}\" aria-label=\"{signature_date_label}\"><div style=\"margin-top:4px\">{signature_date_label}</div></div>\n  </div>\n</div>"
         );
     }
 }
@@ -367,7 +366,6 @@ mod tests {
             true,
             "Completed",
             "Name",
-            "Agent",
             "MM/DD/YYYY",
             "Date",
         );
@@ -380,7 +378,6 @@ mod tests {
             false,
             "Completed",
             "Name",
-            "Agent",
             "MM/DD/YYYY",
             "Date",
         );

@@ -105,7 +105,6 @@ pub fn render_progress_bar(out: &mut impl Write, features: &DocumentFeatures, lo
 pub fn render_finish_box(out: &mut impl Write, features: &DocumentFeatures, locale: &Locale) {
     let setup_completed = locale.get_ignore_ascii_case("SETUP_COMPLETED").unwrap_or("");
     let name_placeholder = locale.get_ignore_ascii_case("NAME_PLACEHOLDER").unwrap_or("");
-    let agent = locale.get_ignore_ascii_case("AGENT").unwrap_or("");
     let date_placeholder = locale.get_ignore_ascii_case("DATE_PLACEHOLDER").unwrap_or("");
     let signature_date = locale.get_ignore_ascii_case("SIGNATURE_DATE").unwrap_or("");
 
@@ -114,7 +113,6 @@ pub fn render_finish_box(out: &mut impl Write, features: &DocumentFeatures, loca
         features.has_tasks,
         setup_completed,
         name_placeholder,
-        agent,
         date_placeholder,
         signature_date,
     );
@@ -392,7 +390,7 @@ pub fn render(
     let app_version_raw = APP_VERSION.strip_prefix('v').unwrap_or(APP_VERSION);
     let created_at = format_iso8601_utc(std::time::SystemTime::now());
 
-    let mut vars = HashMap::with_capacity(23);
+    let mut vars = HashMap::with_capacity(20);
     vars.insert("APP_VERSION", APP_VERSION);
     vars.insert("APP_VERSION_RAW", app_version_raw);
     vars.insert("REPOSITORY_URL", REPOSITORY_URL);
@@ -402,9 +400,6 @@ pub fn render(
     vars.insert("LANG_CODE", locale.lang_code.as_str());
     vars.insert("TITLE", frontmatter.title.as_deref().unwrap_or(""));
     vars.insert("SUBTITLE", frontmatter.subtitle.as_deref().unwrap_or(""));
-    vars.insert("COMPANY", frontmatter.company.as_str());
-    vars.insert("CONTACT", frontmatter.contact.as_deref().unwrap_or(""));
-    vars.insert("AGENT", frontmatter.agent.as_deref().unwrap_or(""));
     vars.insert("DATE", frontmatter.date.as_deref().unwrap_or(""));
     vars.insert("I18N_JSON", i18n_json.as_str());
     vars.insert("CSS", style_css.as_str());
@@ -428,9 +423,6 @@ mod tests {
         let content = generate_template_markdown();
         assert!(content.contains("title:"));
         assert!(content.contains("subtitle:"));
-        assert!(content.contains("company:"));
-        assert!(content.contains("contact:"));
-        assert!(content.contains("agent:"));
         assert!(content.contains("date:"));
         assert!(content.contains("version:"));
         assert!(content.contains("language:"));
@@ -480,7 +472,7 @@ mod tests {
 
     #[test]
     fn test_render_full_document() {
-        let mut fm = Frontmatter::new("Test Corp");
+        let mut fm = Frontmatter::new();
         fm.title = Some("Doc Title".into());
         fm.language = Some("de".into());
 
@@ -496,15 +488,13 @@ mod tests {
         assert!(html.contains("test_id_99"));
         assert!(!html.contains("{{TITLE}}"));
         assert!(!html.contains("{{CONTENT}}"));
-        assert!(!html.contains("{{L_COMPANY}}"));
         assert!(!html.contains("{{LOGO}}"));
         assert!(html.contains("<svg"));
-        assert!(html.contains("Firma"));
     }
 
     #[test]
     fn test_render_with_custom_logo() {
-        let mut fm = Frontmatter::new("Acme");
+        let mut fm = Frontmatter::new();
         fm.title = Some("Doc Title".into());
         let locale = Locale::from_lang_code("en");
         let custom_logo = "<img src=\"data:image/png;base64,1234\" alt=\"Logo\">";
@@ -538,12 +528,12 @@ mod tests {
     #[test]
     fn test_substitute_template_var_precedence_over_locale() {
         let mut vars = HashMap::new();
-        vars.insert("L_COMPANY", "Overridden Company");
-        let locale = Locale::from_lang_code("de"); // has "company": "Firma"
+        vars.insert("L_AGENT", "Overridden Agent");
+        let locale = Locale::from_lang_code("de"); // has "agent": "Bearbeiter"
 
-        let tmpl = "<div>{{L_COMPANY}}</div>";
+        let tmpl = "<div>{{L_AGENT}}</div>";
         let res = substitute_template(tmpl, &vars, Some(&locale));
-        assert_eq!(res, "<div>Overridden Company</div>");
+        assert_eq!(res, "<div>Overridden Agent</div>");
     }
 
     #[test]
@@ -573,7 +563,7 @@ mod tests {
 
     #[test]
     fn test_render_feature_isolation_full() {
-        let fm = Frontmatter::new("Test Corp");
+        let fm = Frontmatter::new();
         let locale = Locale::from_lang_code("en");
 
         // Case 1: No images, code, or tasks feature
@@ -613,7 +603,7 @@ mod tests {
 
     #[test]
     fn test_render_metadata_injection() {
-        let fm = Frontmatter::new("Test Corp");
+        let fm = Frontmatter::new();
         let locale = Locale::from_lang_code("en");
         let features = DocumentFeatures::default();
         let html = render(&fm, &locale, "<p>Content</p>", "doc_meta", None, &features).expect("Render failed");

@@ -1,5 +1,5 @@
 use crate::components;
-use crate::error::{DiagnosticError, Result};
+use crate::error::Result;
 use crate::locales::Locale;
 use crate::template;
 use pulldown_cmark::{
@@ -121,15 +121,12 @@ fn format_bullet(kind: &mut ListKind, depth: usize) -> Cow<'static, str> {
 pub struct Frontmatter {
     pub title: Option<String>,
     pub subtitle: Option<String>,
-    pub company: String,
-    pub contact: Option<String>,
-    pub agent: Option<String>,
     pub date: Option<String>,
     pub version: Option<String>,
     pub language: Option<String>,
     pub logo: Option<String>,
-    pub number_sections: bool,
-    pub toc: bool,
+    pub numbered_sections: bool,
+    pub table_of_contents: bool,
 }
 
 /// Detected interactive features present in a Markdown document.
@@ -141,22 +138,25 @@ pub struct DocumentFeatures {
     pub has_toc: bool,
 }
 
-impl Frontmatter {
-    /// Creates a new `Frontmatter` instance with the required `company` field and default optional values.
-    pub fn new(company: impl Into<String>) -> Self {
+impl Default for Frontmatter {
+    fn default() -> Self {
         Self {
-            company: company.into(),
             title: None,
             subtitle: None,
-            contact: None,
-            agent: None,
             date: None,
             version: None,
             language: None,
             logo: None,
-            number_sections: true,
-            toc: false,
+            numbered_sections: true,
+            table_of_contents: false,
         }
+    }
+}
+
+impl Frontmatter {
+    /// Creates a new `Frontmatter` instance with default optional values and flags.
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 
@@ -165,15 +165,11 @@ impl Frontmatter {
 struct FrontmatterBounds<'a> {
     frontmatter_text: &'a str,
     body_text: &'a str,
-    start_line_no: usize,
 }
 
 /// Finds frontmatter bounds robustly using line-based iteration.
 fn find_frontmatter_bounds(md_content: &str) -> Option<FrontmatterBounds<'_>> {
-    let mut line_no = 1;
     let mut in_leading_comment = false;
-
-    let mut start_line = 1;
     let mut content_start_offset = None;
 
     for line in md_content.lines() {
@@ -182,7 +178,6 @@ fn find_frontmatter_bounds(md_content: &str) -> Option<FrontmatterBounds<'_>> {
             if trimmed.contains("-->") {
                 in_leading_comment = false;
             }
-            line_no += 1;
             continue;
         }
 
@@ -190,12 +185,10 @@ fn find_frontmatter_bounds(md_content: &str) -> Option<FrontmatterBounds<'_>> {
             if !trimmed.contains("-->") {
                 in_leading_comment = true;
             }
-            line_no += 1;
             continue;
         }
 
         if trimmed.is_empty() {
-            line_no += 1;
             continue;
         }
 
@@ -209,7 +202,6 @@ fn find_frontmatter_bounds(md_content: &str) -> Option<FrontmatterBounds<'_>> {
                 .unwrap_or(after_first);
 
             content_start_offset = Some(content_start);
-            start_line = line_no;
             break;
         } else {
             return None;
@@ -248,7 +240,6 @@ fn find_frontmatter_bounds(md_content: &str) -> Option<FrontmatterBounds<'_>> {
     Some(FrontmatterBounds {
         frontmatter_text,
         body_text,
-        start_line_no: start_line,
     })
 }
 
@@ -267,34 +258,38 @@ fn trim_matching_quotes(input: &str) -> &str {
 /// Parses YAML-style frontmatter delimited by `---`.
 pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
     if let Some(bounds) = find_frontmatter_bounds(md_content) {
-        let mut fm = Frontmatter::new("");
+        let mut fm = Frontmatter::new();
 
         for line in bounds.frontmatter_text.lines() {
             if let Some((key, val)) = line.split_once(':') {
                 let key = key.trim();
                 let val_trimmed = trim_matching_quotes(val);
 
-                if val_trimmed.is_empty() && key != "number_sections" && key != "toc" {
+                if val_trimmed.is_empty()
+                    && key != "numbered_sections"
+                    && key != "table_of_contents"
+                {
                     continue;
                 }
 
                 match key {
                     "title" => fm.title = Some(val_trimmed.to_string()),
                     "subtitle" => fm.subtitle = Some(val_trimmed.to_string()),
-                    "company" => fm.company = val_trimmed.to_string(),
-                    "contact" => fm.contact = Some(val_trimmed.to_string()),
-                    "agent" => fm.agent = Some(val_trimmed.to_string()),
                     "date" => fm.date = Some(val_trimmed.to_string()),
                     "version" => fm.version = Some(val_trimmed.to_string()),
                     "language" | "lang" => fm.language = Some(val_trimmed.to_string()),
                     "logo" => fm.logo = Some(val_trimmed.to_string()),
-                    "number_sections" => {
-                        fm.number_sections = val_trimmed.eq_ignore_ascii_case("true");
+                    "numbered_sections" => {
+                        fm.numbered_sections = val_trimmed.eq_ignore_ascii_case("true");
                     }
-                    "toc" => {
-                        fm.toc = val_trimmed.eq_ignore_ascii_case("true");
+                    "table_of_contents" => {
+                        fm.table_of_contents = val_trimmed.eq_ignore_ascii_case("true");
                     }
-                    _ => {}
+                    _ => {
+                        crate::error::print_warning(&format!(
+                            "Unknown frontmatter option '{key}'. Refer to starter template ('d2f --init') for supported options."
+                        ));
+                    }
                 }
             }
         }
@@ -302,50 +297,16 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
         return (fm, bounds.body_text);
     }
 
-    (Frontmatter::new(""), md_content)
+    (Frontmatter::new(), md_content)
 }
 
-/// Validates frontmatter metadata for required fields, returning a compiler-style diagnostic error if invalid.
+/// Validates frontmatter metadata for required fields.
 pub fn validate_frontmatter(
-    frontmatter: &Frontmatter,
-    md_content: &str,
-    file_name: Option<&str>,
+    _frontmatter: &Frontmatter,
+    _md_content: &str,
+    _file_name: Option<&str>,
 ) -> Result<()> {
-    if !frontmatter.company.trim().is_empty() {
-        return Ok(());
-    }
-
-    let file_path = file_name.unwrap_or("input.md");
-
-    if let Some(bounds) = find_frontmatter_bounds(md_content) {
-        let mut company_line_info = None;
-
-        for (idx, line) in bounds.frontmatter_text.lines().enumerate() {
-            if matches!(line.split_once(':'), Some((key, _)) if key.trim() == "company") {
-                let line_no = bounds.start_line_no + idx + 1;
-                company_line_info = Some((line_no, line.to_string()));
-                break;
-            }
-        }
-
-        if let Some((line_no, line_content)) = company_line_info {
-            Err(DiagnosticError::empty_frontmatter_field(
-                file_path,
-                line_no,
-                &line_content,
-            ))
-        } else {
-            Err(DiagnosticError::missing_frontmatter_field(
-                file_path,
-                bounds.start_line_no,
-            ))
-        }
-    } else {
-        let first_line = md_content.lines().next().unwrap_or("");
-        Err(DiagnosticError::missing_frontmatter_block(
-            file_path, first_line,
-        ))
-    }
+    Ok(())
 }
 
 /// Parses and validates YAML frontmatter from Markdown content.
@@ -1256,58 +1217,12 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_frontmatter_valid_company() {
-        let input = "---\ntitle: \"Guide\"\ncompany: \"Acme Corp\"\n---\n## Section 1";
-        let (fm, body) = parse_and_validate_frontmatter(input, Some("guide.md")).unwrap();
-        assert_eq!(fm.company, "Acme Corp");
-        assert_eq!(body, "## Section 1");
-    }
-
-    #[test]
-    fn test_validate_frontmatter_missing_company_field() {
+    fn test_parse_frontmatter_valid() {
         let input = "---\ntitle: \"Guide\"\ndate: \"2026-07-25\"\n---\n## Section 1";
-        let (fm, _) = parse_frontmatter(input);
-        let err = validate_frontmatter(&fm, input, Some("guide.md")).unwrap_err();
-        let err_str = err.to_string();
-
-        assert!(err_str.contains("error: missing required frontmatter field 'company'"));
-        assert!(err_str.contains("--> guide.md:1:1"));
-        assert!(err_str.contains("1 | ---"));
-        assert!(
-            err_str
-                .contains("^^^ frontmatter block defined here is missing required field 'company'")
-        );
-        assert!(err_str.contains("= help: add 'company: \"Company Name\"'"));
-    }
-
-    #[test]
-    fn test_validate_frontmatter_empty_company_field() {
-        let input = "---\ntitle: \"Guide\"\ncompany: \"\"\ndate: \"2026-07-25\"\n---\n## Section 1";
-        let (fm, _) = parse_frontmatter(input);
-        let err = validate_frontmatter(&fm, input, Some("guide.md")).unwrap_err();
-        let err_str = err.to_string();
-
-        assert!(err_str.contains("error: required frontmatter field 'company' cannot be empty"));
-        assert!(err_str.contains("--> guide.md:3:1"));
-        assert!(err_str.contains("3 | company: \"\""));
-        assert!(err_str.contains("^^^^^^^^^^^ 'company' field value cannot be empty"));
-        assert!(err_str.contains("= help: provide a valid company name"));
-    }
-
-    #[test]
-    fn test_validate_frontmatter_missing_block() {
-        let input = "# No Frontmatter Document\n\nContent paragraph.";
-        let fm = Frontmatter::new("");
-        let err = validate_frontmatter(&fm, input, Some("doc.md")).unwrap_err();
-        let err_str = err.to_string();
-
-        assert!(
-            err_str.contains("error: missing YAML frontmatter block with required field 'company'")
-        );
-        assert!(err_str.contains("--> doc.md:1:1"));
-        assert!(err_str.contains("1 | # No Frontmatter Document"));
-        assert!(err_str.contains("^ missing frontmatter section '---'"));
-        assert!(err_str.contains("= help: add YAML frontmatter"));
+        let (fm, body) = parse_and_validate_frontmatter(input, Some("guide.md")).unwrap();
+        assert_eq!(fm.title.as_deref(), Some("Guide"));
+        assert_eq!(fm.date.as_deref(), Some("2026-07-25"));
+        assert_eq!(body, "## Section 1");
     }
 
     #[test]
@@ -1367,23 +1282,19 @@ mod tests {
 
     #[test]
     fn test_frontmatter_windows_crlf_line_endings() {
-        let input = "---\r\ntitle: \"CRLF Title\"\r\ncompany: \"CRLF Corp\"\r\nlanguage: de\r\n---\r\n## Section 1\r\nBody line";
+        let input = "---\r\ntitle: \"CRLF Title\"\r\nlanguage: de\r\n---\r\n## Section 1\r\nBody line";
         let (fm, body) = parse_frontmatter(input);
         assert_eq!(fm.title.as_deref(), Some("CRLF Title"));
-        assert_eq!(fm.company, "CRLF Corp");
         assert_eq!(fm.language.as_deref(), Some("de"));
         assert_eq!(body, "## Section 1\r\nBody line");
     }
 
     #[test]
     fn test_frontmatter_quoted_and_unquoted_fields() {
-        let input = "---\ntitle: 'Single Quoted'\nsubtitle: \"Double Quoted\"\ncompany:   Unquoted Spaced   \ncontact: 'person@example.com'\nagent: \"Agent 007\"\ndate: 2026-07-26\nversion: '1.2.3'\nlang: en\n---\nBody";
+        let input = "---\ntitle: 'Single Quoted'\nsubtitle: \"Double Quoted\"\ndate: 2026-07-26\nversion: '1.2.3'\nlang: en\n---\nBody";
         let (fm, _) = parse_frontmatter(input);
         assert_eq!(fm.title.as_deref(), Some("Single Quoted"));
         assert_eq!(fm.subtitle.as_deref(), Some("Double Quoted"));
-        assert_eq!(fm.company, "Unquoted Spaced");
-        assert_eq!(fm.contact.as_deref(), Some("person@example.com"));
-        assert_eq!(fm.agent.as_deref(), Some("Agent 007"));
         assert_eq!(fm.date.as_deref(), Some("2026-07-26"));
         assert_eq!(fm.version.as_deref(), Some("1.2.3"));
         assert_eq!(fm.language.as_deref(), Some("en"));
@@ -1492,37 +1403,44 @@ mod tests {
     }
 
     #[test]
-    fn test_number_sections_frontmatter_parsing() {
-        let input1 = "---\nnumber_sections: true\n---";
+    fn test_numbered_sections_frontmatter_parsing() {
+        let input1 = "---\nnumbered_sections: true\n---";
         let (fm1, _) = parse_frontmatter(input1);
-        assert!(fm1.number_sections);
+        assert!(fm1.numbered_sections);
 
-        let input2 = "---\nnumber_sections: True\n---";
+        let input2 = "---\nnumbered_sections: True\n---";
         let (fm2, _) = parse_frontmatter(input2);
-        assert!(fm2.number_sections);
+        assert!(fm2.numbered_sections);
 
-        let input3 = "---\nnumber_sections: false\n---";
+        let input3 = "---\nnumbered_sections: false\n---";
         let (fm3, _) = parse_frontmatter(input3);
-        assert!(!fm3.number_sections);
+        assert!(!fm3.numbered_sections);
 
         let input4 = "---\ntitle: \"Default Test\"\n---";
         let (fm4, _) = parse_frontmatter(input4);
-        assert!(fm4.number_sections);
+        assert!(fm4.numbered_sections);
     }
 
     #[test]
-    fn test_toc_frontmatter_parsing() {
-        let input1 = "---\ntoc: true\n---";
+    fn test_table_of_contents_frontmatter_parsing() {
+        let input1 = "---\ntable_of_contents: true\n---";
         let (fm1, _) = parse_frontmatter(input1);
-        assert!(fm1.toc);
+        assert!(fm1.table_of_contents);
 
-        let input2 = "---\ntoc: false\n---";
+        let input2 = "---\ntable_of_contents: false\n---";
         let (fm2, _) = parse_frontmatter(input2);
-        assert!(!fm2.toc);
+        assert!(!fm2.table_of_contents);
 
         let input3 = "---\ntitle: \"Default Test\"\n---";
         let (fm3, _) = parse_frontmatter(input3);
-        assert!(!fm3.toc);
+        assert!(!fm3.table_of_contents);
+    }
+
+    #[test]
+    fn test_unknown_frontmatter_option_warning() {
+        let input = "---\ntitle: \"Test Doc\"\nunknown_key: \"some_value\"\n---";
+        let (fm, _) = parse_frontmatter(input);
+        assert_eq!(fm.title.as_deref(), Some("Test Doc"));
     }
 
     #[test]
