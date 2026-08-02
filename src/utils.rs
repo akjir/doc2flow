@@ -7,25 +7,62 @@ use std::path::{Path, PathBuf};
 
 const BASE64_CHARS: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-/// Static mapping of file extensions to standard MIME content types.
-const MIME_TYPES: &[(&[&str], &str)] = &[
-    (&["png"], "image/png"),
-    (&["jpg", "jpeg"], "image/jpeg"),
-    (&["webp"], "image/webp"),
-    (&["svg"], "image/svg+xml"),
-    (&["gif"], "image/gif"),
-    (&["bmp"], "image/bmp"),
-    (&["ico"], "image/x-icon"),
-    (&["avif"], "image/avif"),
-    (&["tiff", "tif"], "image/tiff"),
-    (&["pdf"], "application/pdf"),
-    (&["zip"], "application/zip"),
-    (&["html", "htm"], "text/html"),
-    (&["css"], "text/css"),
-    (&["js"], "text/javascript"),
-    (&["json"], "application/json"),
-    (&["txt"], "text/plain"),
-];
+/// Encodes binary data into Base64 format, appending directly into the provided [`String`] buffer.
+///
+/// Pre-allocates buffer capacity and pushes ASCII bytes directly to avoid intermediate
+/// string allocations or UTF-8 validation overhead.
+///
+/// # Examples
+///
+/// ```
+/// use doc2flow::utils::base64_encode_into;
+///
+/// let mut buf = String::from("data:text/plain;base64,");
+/// base64_encode_into(b"foo", &mut buf);
+/// assert_eq!(buf, "data:text/plain;base64,Zm9v");
+/// ```
+#[inline]
+pub fn base64_encode_into(data: &[u8], out: &mut String) {
+    if data.is_empty() {
+        return;
+    }
+
+    let capacity = data.len().div_ceil(3) * 4;
+    out.reserve(capacity);
+
+    let chunks = data.chunks_exact(3);
+    let remainder = chunks.remainder();
+
+    for chunk in chunks {
+        let b0 = chunk[0];
+        let b1 = chunk[1];
+        let b2 = chunk[2];
+
+        out.push(BASE64_CHARS[(b0 >> 2) as usize] as char);
+        out.push(BASE64_CHARS[(((b0 & 0x03) << 4) | (b1 >> 4)) as usize] as char);
+        out.push(BASE64_CHARS[(((b1 & 0x0F) << 2) | (b2 >> 6)) as usize] as char);
+        out.push(BASE64_CHARS[(b2 & 0x3F) as usize] as char);
+    }
+
+    match remainder.len() {
+        1 => {
+            let b0 = remainder[0];
+            out.push(BASE64_CHARS[(b0 >> 2) as usize] as char);
+            out.push(BASE64_CHARS[((b0 & 0x03) << 4) as usize] as char);
+            out.push('=');
+            out.push('=');
+        }
+        2 => {
+            let b0 = remainder[0];
+            let b1 = remainder[1];
+            out.push(BASE64_CHARS[(b0 >> 2) as usize] as char);
+            out.push(BASE64_CHARS[(((b0 & 0x03) << 4) | (b1 >> 4)) as usize] as char);
+            out.push(BASE64_CHARS[((b1 & 0x0F) << 2) as usize] as char);
+            out.push('=');
+        }
+        _ => {}
+    }
+}
 
 /// Encodes binary data into an RFC 4648 standard Base64 string representation.
 ///
@@ -38,50 +75,13 @@ const MIME_TYPES: &[(&[&str], &str)] = &[
 ///
 /// assert_eq!(base64_encode(b"foo"), "Zm9v");
 /// ```
+#[inline]
 pub fn base64_encode(data: &[u8]) -> String {
-    if data.is_empty() {
-        return String::new();
-    }
-
     let capacity = data.len().div_ceil(3) * 4;
-    let mut buf = Vec::with_capacity(capacity);
-
-    let chunks = data.chunks_exact(3);
-    let remainder = chunks.remainder();
-
-    for chunk in chunks {
-        let b0 = chunk[0];
-        let b1 = chunk[1];
-        let b2 = chunk[2];
-
-        buf.push(BASE64_CHARS[(b0 >> 2) as usize]);
-        buf.push(BASE64_CHARS[(((b0 & 0x03) << 4) | (b1 >> 4)) as usize]);
-        buf.push(BASE64_CHARS[(((b1 & 0x0F) << 2) | (b2 >> 6)) as usize]);
-        buf.push(BASE64_CHARS[(b2 & 0x3F) as usize]);
-    }
-
-    match remainder.len() {
-        1 => {
-            let b0 = remainder[0];
-            buf.push(BASE64_CHARS[(b0 >> 2) as usize]);
-            buf.push(BASE64_CHARS[((b0 & 0x03) << 4) as usize]);
-            buf.push(b'=');
-            buf.push(b'=');
-        }
-        2 => {
-            let b0 = remainder[0];
-            let b1 = remainder[1];
-            buf.push(BASE64_CHARS[(b0 >> 2) as usize]);
-            buf.push(BASE64_CHARS[(((b0 & 0x03) << 4) | (b1 >> 4)) as usize]);
-            buf.push(BASE64_CHARS[((b1 & 0x0F) << 2) as usize]);
-            buf.push(b'=');
-        }
-        _ => {}
-    }
-
-    String::from_utf8(buf).expect("Base64 output must be valid UTF-8")
+    let mut out = String::with_capacity(capacity);
+    base64_encode_into(data, &mut out);
+    out
 }
-
 
 /// Guesses the MIME type based on a file path extension without heap allocations.
 ///
@@ -96,15 +96,31 @@ pub fn base64_encode(data: &[u8]) -> String {
 /// assert_eq!(guess_mime_type(Path::new("image.png")), "image/png");
 /// assert_eq!(guess_mime_type(Path::new("file.unknown")), "application/octet-stream");
 /// ```
+#[inline]
 pub fn guess_mime_type(path: &Path) -> &'static str {
     let Some(ext) = path.extension().and_then(|e| e.to_str()) else {
         return "application/octet-stream";
     };
 
-    MIME_TYPES
-        .iter()
-        .find(|(exts, _)| exts.iter().any(|&e| e.eq_ignore_ascii_case(ext)))
-        .map_or("application/octet-stream", |(_, mime)| *mime)
+    match ext {
+        e if e.eq_ignore_ascii_case("png") => "image/png",
+        e if e.eq_ignore_ascii_case("jpg") || e.eq_ignore_ascii_case("jpeg") => "image/jpeg",
+        e if e.eq_ignore_ascii_case("webp") => "image/webp",
+        e if e.eq_ignore_ascii_case("svg") => "image/svg+xml",
+        e if e.eq_ignore_ascii_case("gif") => "image/gif",
+        e if e.eq_ignore_ascii_case("bmp") => "image/bmp",
+        e if e.eq_ignore_ascii_case("ico") => "image/x-icon",
+        e if e.eq_ignore_ascii_case("avif") => "image/avif",
+        e if e.eq_ignore_ascii_case("tiff") || e.eq_ignore_ascii_case("tif") => "image/tiff",
+        e if e.eq_ignore_ascii_case("pdf") => "application/pdf",
+        e if e.eq_ignore_ascii_case("zip") => "application/zip",
+        e if e.eq_ignore_ascii_case("html") || e.eq_ignore_ascii_case("htm") => "text/html",
+        e if e.eq_ignore_ascii_case("css") => "text/css",
+        e if e.eq_ignore_ascii_case("js") => "text/javascript",
+        e if e.eq_ignore_ascii_case("json") => "application/json",
+        e if e.eq_ignore_ascii_case("txt") => "text/plain",
+        _ => "application/octet-stream",
+    }
 }
 
 /// Reads a local file and encodes its content into a Base64 Data URI string.
@@ -138,7 +154,7 @@ pub fn file_to_data_uri(path: &Path) -> Result<String> {
     out.push_str(prefix);
     out.push_str(mime);
     out.push_str(suffix);
-    out.push_str(&base64_encode(&bytes));
+    base64_encode_into(&bytes, &mut out);
     Ok(out)
 }
 
@@ -218,45 +234,26 @@ where
                     parsed.init = Some(PathBuf::from("template.md"));
                 }
             }
-            opt if opt.starts_with("--output=") => {
-                let val = &opt["--output=".len()..];
-                if val.is_empty() {
-                    return Err("Option '--output' requires a non-empty path value".to_string());
-                }
-                parsed.output = Some(PathBuf::from(val));
-            }
-            opt if opt.starts_with("--logo=") => {
-                let val = &opt["--logo=".len()..];
-                if val.is_empty() {
-                    return Err("Option '--logo' requires a non-empty path value".to_string());
-                }
-                parsed.logo = Some(PathBuf::from(val));
-            }
-            opt if opt.starts_with("-l=") => {
-                let val = &opt["-l=".len()..];
-                if val.is_empty() {
-                    return Err("Option '--logo' requires a non-empty path value".to_string());
-                }
-                parsed.logo = Some(PathBuf::from(val));
-            }
-            opt if opt.starts_with("--init=") => {
-                let val = &opt["--init=".len()..];
-                if val.is_empty() {
-                    parsed.init = Some(PathBuf::from("template.md"));
-                } else {
-                    parsed.init = Some(PathBuf::from(val));
-                }
-            }
-            opt if opt.starts_with("-i=") => {
-                let val = &opt["-i=".len()..];
-                if val.is_empty() {
-                    parsed.init = Some(PathBuf::from("template.md"));
-                } else {
-                    parsed.init = Some(PathBuf::from(val));
-                }
-            }
             opt if opt.starts_with('-') => {
-                return Err(format!("Unrecognized option '{arg_str}'"));
+                if let Some(val) = opt.strip_prefix("--output=") {
+                    if val.is_empty() {
+                        return Err("Option '--output' requires a non-empty path value".to_string());
+                    }
+                    parsed.output = Some(PathBuf::from(val));
+                } else if let Some(val) = opt.strip_prefix("--logo=").or_else(|| opt.strip_prefix("-l=")) {
+                    if val.is_empty() {
+                        return Err("Option '--logo' requires a non-empty path value".to_string());
+                    }
+                    parsed.logo = Some(PathBuf::from(val));
+                } else if let Some(val) = opt.strip_prefix("--init=").or_else(|| opt.strip_prefix("-i=")) {
+                    if val.is_empty() {
+                        parsed.init = Some(PathBuf::from("template.md"));
+                    } else {
+                        parsed.init = Some(PathBuf::from(val));
+                    }
+                } else {
+                    return Err(format!("Unrecognized option '{arg_str}'"));
+                }
             }
             _ => {
                 if parsed.input.is_some() {
@@ -310,6 +307,13 @@ mod tests {
         let input = vec![0x00, 0x01, 0x02, 0xFE, 0xFF];
         let encoded = base64_encode(&input);
         assert_eq!(encoded, "AAEC/v8=");
+    }
+
+    #[test]
+    fn test_base64_encode_into() {
+        let mut out = String::from("prefix:");
+        base64_encode_into(b"foo", &mut out);
+        assert_eq!(out, "prefix:Zm9v");
     }
 
     #[test]

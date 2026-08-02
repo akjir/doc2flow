@@ -1,12 +1,13 @@
 use doc2flow::converter;
 use doc2flow::error::{Doc2FlowError, Result};
-use doc2flow::language::Locale;
 use doc2flow::io;
+use doc2flow::language::Locale;
 use doc2flow::template;
 use doc2flow::utils::{help_message, parse_args};
 use std::env;
+use std::process::ExitCode;
 
-fn main() -> Result<()> {
+fn run() -> Result<()> {
     let args = parse_args(env::args()).map_err(Doc2FlowError::Message)?;
 
     if args.show_help {
@@ -33,11 +34,7 @@ fn main() -> Result<()> {
         ));
     };
 
-    let output_path = args.output.unwrap_or_else(|| {
-        let mut p = input_path.clone();
-        p.set_extension("html");
-        p
-    });
+    let output_path = args.output.unwrap_or_else(|| input_path.with_extension("html"));
 
     let md_content = io::read_file_to_string(&input_path)?;
 
@@ -78,4 +75,13 @@ fn main() -> Result<()> {
 
     println!("Successfully generated {}", output_path.display());
     Ok(())
+}
+
+fn main() -> ExitCode {
+    if let Err(err) = run() {
+        eprintln!("{err}");
+        ExitCode::FAILURE
+    } else {
+        ExitCode::SUCCESS
+    }
 }

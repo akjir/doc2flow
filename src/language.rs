@@ -47,11 +47,20 @@ impl Locale {
 
     /// Loads an embedded locale corresponding to the normalized language code.
     ///
-    /// Normalizes `code` by trimming whitespace and converting to lowercase. If no matching
+    /// Checks exact trimmed `code` first before allocating a lowercase string. If no matching
     /// locale file is embedded, falls back to default English (`"en"`).
     pub fn from_lang_code(code: &str) -> Self {
-        let normalized = code.trim().to_lowercase();
-        match get_embedded_locale(&normalized).or_else(|| get_embedded_locale("en")) {
+        let trimmed = code.trim();
+        if let Some(json_str) = get_embedded_locale(trimmed) {
+            return Self::from_json(json_str);
+        }
+
+        let normalized = trimmed.to_ascii_lowercase();
+        if let Some(json_str) = get_embedded_locale(&normalized) {
+            return Self::from_json(json_str);
+        }
+
+        match get_embedded_locale("en") {
             Some(json_str) => Self::from_json(json_str),
             None => Locale {
                 lang_code: normalized,
@@ -61,12 +70,14 @@ impl Locale {
     }
 
     /// Safe getter returning the string entry for `key`, or empty string if missing.
+    #[inline]
     pub fn get(&self, key: &str) -> &str {
-        self.entries.get(key).map(|s| s.as_str()).unwrap_or("")
+        self.entries.get(key).map_or("", |s| s.as_str())
     }
 
     /// Returns the localized entry value for `key` ignoring ASCII case.
     /// Uses O(1) exact hash match fast path before case-insensitive fallback.
+    #[inline]
     pub fn get_ignore_ascii_case(&self, key: &str) -> Option<&str> {
         if let Some(v) = self.entries.get(key) {
             return Some(v.as_str());
@@ -92,9 +103,9 @@ pub fn validate_locale_coverage(template: &str, locale: &Locale) {
     let mut cursor = 0;
     while let Some(start) = template[cursor..].find("{{L_") {
         let abs_start = cursor + start;
-        if let Some(end) = template[abs_start + 4..].find("}}") {
-            let abs_end = abs_start + 4 + end;
-            let key_name = &template[abs_start + 4..abs_end];
+        let rest = &template[abs_start + 4..];
+        if let Some(end) = rest.find("}}") {
+            let key_name = &rest[..end];
 
             if locale.get_ignore_ascii_case(key_name).is_none() {
                 eprintln!(
@@ -102,7 +113,7 @@ pub fn validate_locale_coverage(template: &str, locale: &Locale) {
                     key_name, locale.lang_code
                 );
             }
-            cursor = abs_end + 2;
+            cursor = abs_start + 4 + end + 2;
         } else {
             break;
         }

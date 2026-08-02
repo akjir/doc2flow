@@ -4,8 +4,9 @@
   var feedbackTimers = /* @__PURE__ */ new WeakMap();
   function showCopiedFeedback(btn) {
     btn.classList.add("copied");
-    if (feedbackTimers.has(btn)) {
-      window.clearTimeout(feedbackTimers.get(btn));
+    const existingTimer = feedbackTimers.get(btn);
+    if (existingTimer !== void 0) {
+      window.clearTimeout(existingTimer);
     }
     const timer = window.setTimeout(() => {
       btn.classList.remove("copied");
@@ -15,29 +16,6 @@
   }
   function getVariableMap() {
     const map = {};
-    const elements = document.querySelectorAll(".item-table-var, .var-table, [data-variables]");
-    elements.forEach((el) => {
-      const rawJson = el.dataset.variables;
-      if (typeof rawJson === "string" && rawJson.length > 0) {
-        try {
-          const parsed = JSON.parse(rawJson);
-          if (typeof parsed === "object" && parsed !== null) {
-            const entries = Object.entries(parsed);
-            for (const entry of entries) {
-              const k = entry[0];
-              const v = entry[1];
-              if (typeof k === "string" && typeof v === "string") {
-                const trimmedKey = k.trim();
-                if (trimmedKey !== "") {
-                  map[trimmedKey] = v;
-                }
-              }
-            }
-          }
-        } catch {
-        }
-      }
-    });
     const inputs = document.querySelectorAll("input.item-table-var-input, input[data-var-key]");
     inputs.forEach((input) => {
       const key = input.dataset.varKey || input.getAttribute("data-var-key");
@@ -58,6 +36,19 @@
         return val;
       }
       return match;
+    });
+  }
+  function updateAllCodeVariables() {
+    const codeElements = document.querySelectorAll(".code-block code");
+    codeElements.forEach((codeEl) => {
+      if (!codeEl.hasAttribute("data-raw-code")) {
+        codeEl.setAttribute("data-raw-code", codeEl.textContent ?? "");
+      }
+      const rawText = codeEl.getAttribute("data-raw-code") ?? "";
+      const replacedText = replaceCodeVariables(rawText);
+      if (codeEl.textContent !== replacedText) {
+        codeEl.textContent = replacedText;
+      }
     });
   }
   function fallbackCopyText(text, btn) {
@@ -92,8 +83,7 @@
     const codeEl = wrap.querySelector("code");
     if (!codeEl)
       return;
-    const rawText = codeEl.textContent ?? "";
-    const text = replaceCodeVariables(rawText);
+    const text = codeEl.textContent ?? "";
     if (navigator.clipboard && window.isSecureContext) {
       try {
         await navigator.clipboard.writeText(text);
@@ -105,24 +95,6 @@
     }
     fallbackCopyText(text, btn);
   }
-  var printRawCodeMap = /* @__PURE__ */ new Map();
-  function preparePrintVariables() {
-    const codeElements = document.querySelectorAll(".code-block code");
-    codeElements.forEach((codeEl) => {
-      const rawText = codeEl.textContent ?? "";
-      printRawCodeMap.set(codeEl, rawText);
-      const replacedText = replaceCodeVariables(rawText);
-      if (replacedText !== rawText) {
-        codeEl.textContent = replacedText;
-      }
-    });
-  }
-  function restorePrintVariables() {
-    printRawCodeMap.forEach((rawText, codeEl) => {
-      codeEl.textContent = rawText;
-    });
-    printRawCodeMap.clear();
-  }
   function setupVariableInputAutoSelect() {
     document.addEventListener("focusin", (e) => {
       const target = e.target;
@@ -133,10 +105,22 @@
       }
     });
   }
+  function setupVariableInputListeners() {
+    document.addEventListener("input", (e) => {
+      const target = e.target;
+      if (target instanceof HTMLInputElement && (target.classList.contains("item-table-var-input") || target.hasAttribute("data-var-key"))) {
+        updateAllCodeVariables();
+      }
+    });
+  }
   if (typeof window !== "undefined") {
-    window.addEventListener("beforeprint", preparePrintVariables);
-    window.addEventListener("afterprint", restorePrintVariables);
+    if (document.readyState === "loading") {
+      window.addEventListener("DOMContentLoaded", updateAllCodeVariables);
+    } else {
+      updateAllCodeVariables();
+    }
     setupVariableInputAutoSelect();
+    setupVariableInputListeners();
     window.d2f_code = {
       copy: copyCode
     };

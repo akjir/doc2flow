@@ -3,7 +3,7 @@ use crate::error::{DiagnosticError, Result};
 use crate::language::Locale;
 use crate::template;
 use pulldown_cmark::{
-    CodeBlockKind, Event, HeadingLevel, Options, Parser as MarkdownParser, Tag, TagEnd, html,
+    html, CodeBlockKind, Event, HeadingLevel, Options, Parser as MarkdownParser, Tag, TagEnd,
 };
 use std::borrow::Cow;
 
@@ -18,7 +18,7 @@ pub(crate) fn html_escape(input: &str) -> Cow<'_, str> {
         None => return Cow::Borrowed(input),
     };
 
-    let mut escaped = String::with_capacity(input.len() + 8);
+    let mut escaped = String::with_capacity(input.len() + 16);
     escaped.push_str(&input[..first_pos]);
 
     for ch in input[first_pos..].chars() {
@@ -51,15 +51,17 @@ fn to_alpha(mut n: u64) -> Cow<'static, str> {
         ];
         return Cow::Borrowed(ALPHAS[(n - 1) as usize]);
     }
-    let mut buf = Vec::with_capacity(8);
+    let mut buf = [0u8; 16];
+    let mut pos = 16;
     while n > 0 {
         n -= 1;
-        let rem = (n % 26) as u8;
-        buf.push(b'a' + rem);
+        pos -= 1;
+        buf[pos] = b'a' + (n % 26) as u8;
         n /= 26;
     }
-    buf.reverse();
-    Cow::Owned(String::from_utf8(buf).expect("valid ASCII bytes"))
+    Cow::Owned(String::from(
+        std::str::from_utf8(&buf[pos..]).expect("valid ASCII bytes"),
+    ))
 }
 
 /// Converts a 1-based number to lowercase Roman numerals (1 -> i, 2 -> ii, 3 -> iii...).
@@ -68,7 +70,7 @@ fn to_roman(n: u64) -> Cow<'static, str> {
         const ROMANS: &[&str; 10] = &["i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"];
         return Cow::Borrowed(ROMANS[(n - 1) as usize]);
     }
-    let mapping = [
+    const ROMAN_MAPPING: [(u64, &str); 13] = [
         (1000, "m"),
         (900, "cm"),
         (500, "d"),
@@ -85,7 +87,7 @@ fn to_roman(n: u64) -> Cow<'static, str> {
     ];
     let mut num = n;
     let mut result = String::with_capacity(16);
-    for (val, sym) in mapping {
+    for (val, sym) in ROMAN_MAPPING {
         while num >= val {
             result.push_str(sym);
             num -= val;
@@ -356,29 +358,52 @@ pub fn parse_and_validate_frontmatter<'a>(
     Ok((fm, body))
 }
 
+const CALLOUT_TABLE: &[(&str, &str, &str, &str)] = &[
+    ("!!! ", "note note-caution", "callout_caution", "caution"),
+    ("!!!", "note note-caution", "callout_caution", "caution"),
+    ("!! ", "note note-warning", "callout_warning", "warning"),
+    ("!!", "note note-warning", "callout_warning", "warning"),
+    ("! ", "note note-important", "callout_important", "important"),
+    ("!", "note note-important", "callout_important", "important"),
+    ("? ", "note note-tip", "callout_tip", "tip"),
+    ("?", "note note-tip", "callout_tip", "tip"),
+];
+
 /// Parses callout metadata (CSS class, inner text, callout label, callout type) from raw blockquote inner string.
 fn parse_callout<'a>(
     inner: &'a str,
     locale: &'a Locale,
 ) -> (&'static str, &'a str, &'a str, &'static str) {
-    let prefixes: &[(&str, &'static str, &str, &'static str)] = &[
-        ("!!! ", "note note-caution", locale.get("callout_caution"), "caution"),
-        ("!!!", "note note-caution", locale.get("callout_caution"), "caution"),
-        ("!! ", "note note-warning", locale.get("callout_warning"), "warning"),
-        ("!!", "note note-warning", locale.get("callout_warning"), "warning"),
-        ("! ", "note note-important", locale.get("callout_important"), "important"),
-        ("!", "note note-important", locale.get("callout_important"), "important"),
-        ("? ", "note note-tip", locale.get("callout_tip"), "tip"),
-        ("?", "note note-tip", locale.get("callout_tip"), "tip"),
-    ];
-
-    for &(prefix, css_class, label, ctype) in prefixes {
+    for &(prefix, css_class, key, ctype) in CALLOUT_TABLE {
         if let Some(stripped) = inner.strip_prefix(prefix) {
-            return (css_class, stripped, label, ctype);
+            return (css_class, stripped, locale.get(key), ctype);
         }
     }
 
     ("note", inner, locale.get("callout_note"), "note")
+}
+
+/// Helper function to build and render the variable table component.
+fn build_variable_table(
+    out: &mut String,
+    locale: &Locale,
+    table_rows: &[(String, String)],
+) {
+    let mut map = std::collections::BTreeMap::new();
+    for (k, v) in table_rows {
+        map.insert(k.as_str(), v.as_str());
+    }
+
+    let json_payload = serde_json::to_string(&map).unwrap_or_else(|_| "{}".to_string());
+
+    let var_term = locale
+        .get_ignore_ascii_case("var_table_variable")
+        .unwrap_or("Variable");
+    let val_term = locale
+        .get_ignore_ascii_case("var_table_value")
+        .unwrap_or("Value");
+
+    components::render_variable_table(out, var_term, val_term, table_rows, &json_payload);
 }
 
 /// Iterator adapter filtering out HTML comment blocks from a stream of Markdown events.
@@ -563,25 +588,31 @@ pub fn convert_markdown_to_html_with_options(
 
                     var_event_ranges.push((p_start, table_end));
 
-                    let mut table_rows: Vec<(String, String)> = Vec::with_capacity(8);
-                    let mut current_row: Vec<String> = Vec::with_capacity(4);
-                    let mut current_cell = String::with_capacity(128);
+                    let mut raw_table_map: std::collections::BTreeMap<String, String> =
+                        std::collections::BTreeMap::new();
+                    let mut current_row: Vec<String> = Vec::with_capacity(2);
+                    let mut current_cell = String::with_capacity(64);
                     let mut in_cell = false;
 
                     for ev in &events[table_start..=table_end] {
                         match ev {
-                            Event::Start(Tag::TableHead) => {}
+                            Event::Start(Tag::TableHead) | Event::Start(Tag::TableRow) => {
+                                current_row.clear();
+                            }
                             Event::End(TagEnd::TableHead) => {
                                 current_row.clear();
                             }
-                            Event::Start(Tag::TableRow) => {
-                                current_row.clear();
-                            }
                             Event::End(TagEnd::TableRow) => {
-                                if current_row.len() >= 2 {
-                                    table_rows.push((std::mem::take(&mut current_row[0]), std::mem::take(&mut current_row[1])));
-                                } else if current_row.len() == 1 {
-                                    table_rows.push((std::mem::take(&mut current_row[0]), String::new()));
+                                if !current_row.is_empty() {
+                                    let key = std::mem::take(&mut current_row[0]);
+                                    let val = if current_row.len() >= 2 {
+                                        std::mem::take(&mut current_row[1])
+                                    } else {
+                                        String::new()
+                                    };
+                                    if !key.is_empty() {
+                                        raw_table_map.insert(key, val);
+                                    }
                                 }
                                 current_row.clear();
                             }
@@ -594,21 +625,10 @@ pub fn convert_markdown_to_html_with_options(
                                 current_row.push(current_cell.trim().to_string());
                                 current_cell.clear();
                             }
-                            Event::Text(t) if in_cell => {
+                            Event::Text(t) | Event::Code(t) if in_cell => {
                                 current_cell.push_str(t);
                             }
-                            Event::Code(c) if in_cell => {
-                                current_cell.push_str(c);
-                            }
                             _ => {}
-                        }
-                    }
-
-                    let mut raw_table_map: std::collections::BTreeMap<String, String> =
-                        std::collections::BTreeMap::new();
-                    for (k, v) in &table_rows {
-                        if !k.is_empty() {
-                            raw_table_map.insert(k.clone(), v.clone());
                         }
                     }
 
@@ -622,10 +642,11 @@ pub fn convert_markdown_to_html_with_options(
                     }
 
                     // Build final rows only for variables used in code blocks
-                    let mut final_table_rows: Vec<(String, String)> = Vec::new();
+                    let mut final_table_rows: Vec<(String, String)> =
+                        Vec::with_capacity(code_vars.len());
                     for cv in &code_vars {
-                        if let Some(val) = raw_table_map.get(cv) {
-                            final_table_rows.push((cv.clone(), val.clone()));
+                        if let Some(val) = raw_table_map.remove(cv) {
+                            final_table_rows.push((cv.clone(), val));
                         } else {
                             eprintln!(
                                 "Warning: Variable '{cv}' in code block is missing from [Variables] table."
@@ -634,27 +655,7 @@ pub fn convert_markdown_to_html_with_options(
                         }
                     }
 
-                    let mut map = std::collections::BTreeMap::new();
-                    for (k, v) in &final_table_rows {
-                        map.insert(k.as_str(), v.as_str());
-                    }
-
-                    let json_payload =
-                        serde_json::to_string(&map).unwrap_or_else(|_| "{}".to_string());
-
-                    let var_term = locale
-                        .get_ignore_ascii_case("var_table_variable")
-                        .unwrap_or("Variable");
-                    let val_term =
-                        locale.get_ignore_ascii_case("var_table_value").unwrap_or("Value");
-
-                    components::render_variable_table(
-                        &mut var_table_html,
-                        var_term,
-                        val_term,
-                        &final_table_rows,
-                        &json_payload,
-                    );
+                    build_variable_table(&mut var_table_html, locale, &final_table_rows);
 
                     scan_i = table_end + 1;
                     continue;
@@ -666,7 +667,7 @@ pub fn convert_markdown_to_html_with_options(
 
     // If no [Variables] table was parsed but code blocks contain variables, construct table from code_vars
     if var_table_html.is_empty() && !code_vars.is_empty() {
-        let mut final_table_rows: Vec<(String, String)> = Vec::new();
+        let mut final_table_rows: Vec<(String, String)> = Vec::with_capacity(code_vars.len());
         for cv in &code_vars {
             eprintln!(
                 "Warning: Variable '{cv}' in code block is missing from [Variables] table."
@@ -674,29 +675,8 @@ pub fn convert_markdown_to_html_with_options(
             final_table_rows.push((cv.clone(), String::new()));
         }
 
-        let mut map = std::collections::BTreeMap::new();
-        for (k, v) in &final_table_rows {
-            map.insert(k.as_str(), v.as_str());
-        }
-
-        let json_payload =
-            serde_json::to_string(&map).unwrap_or_else(|_| "{}".to_string());
-
-        let var_term = locale
-            .get_ignore_ascii_case("var_table_variable")
-            .unwrap_or("Variable");
-        let val_term =
-            locale.get_ignore_ascii_case("var_table_value").unwrap_or("Value");
-
-        components::render_variable_table(
-            &mut var_table_html,
-            var_term,
-            val_term,
-            &final_table_rows,
-            &json_payload,
-        );
+        build_variable_table(&mut var_table_html, locale, &final_table_rows);
     }
-
 
     if !var_table_html.is_empty() {
         features.has_code = true;
@@ -841,8 +821,8 @@ pub fn convert_markdown_to_html_with_options(
             // Code Blocks (e.g. ```ini ... ```)
             Event::Start(Tag::CodeBlock(kind)) => {
                 features.has_code = true;
-                let lang_opt = match kind {
-                    CodeBlockKind::Fenced(lang) if !lang.is_empty() => Some(lang.to_string()),
+                let lang_str = match kind {
+                    CodeBlockKind::Fenced(lang) if !lang.is_empty() => Some(lang.as_ref()),
                     _ => None,
                 };
 
@@ -873,7 +853,7 @@ pub fn convert_markdown_to_html_with_options(
                 let escaped_code = html_escape(&temp_html);
                 let copy_label = html_escape(locale.get("copy_code"));
 
-                let escaped_lang_opt = lang_opt.as_ref().map(|l| html_escape(l));
+                let escaped_lang_opt = lang_str.map(html_escape);
                 let lang_ref = escaped_lang_opt.as_deref();
 
                 template::render_code_block(&mut out, lang_ref, &escaped_code, &copy_label);
@@ -924,7 +904,7 @@ pub fn convert_markdown_to_html_with_options(
                 let trimmed = temp_html.trim();
                 let clean_label = strip_paragraph_tags(trimmed);
 
-                let list_depth = if list_stack.is_empty() { 0 } else { list_stack.len() - 1 };
+                let list_depth = list_stack.len().saturating_sub(1);
                 let sec_num = if section_count == 0 { 1 } else { section_count };
 
                 if is_task {
@@ -995,8 +975,7 @@ pub fn convert_markdown_to_html_with_options(
                     } else {
                         global_txt_count += 1;
                         let sec_num = if section_count == 0 { 1 } else { section_count };
-                        let list_depth =
-                            if list_stack.is_empty() { 0 } else { list_stack.len() - 1 };
+                        let list_depth = list_stack.len().saturating_sub(1);
                         template::render_text_item(
                             &mut out,
                             sec_num,
@@ -1021,9 +1000,7 @@ pub fn convert_markdown_to_html_with_options(
 
             // Fallback for standard events
             ev => {
-                temp_html.clear();
-                html::push_html(&mut temp_html, std::iter::once(ev.clone()));
-                out.push_str(&temp_html);
+                html::push_html(&mut out, std::iter::once(ev.clone()));
             }
         }
         idx += 1;
@@ -1059,7 +1036,6 @@ fn is_section_empty(events: &[Event]) -> bool {
 fn inspect_section_metadata(events: &[Event], locale: &Locale) -> (bool, Option<String>) {
     let mut has_checklist = false;
     let mut callout_types: Vec<&'static str> = Vec::new();
-    let mut temp_html = String::with_capacity(256);
 
     let mut i = 0;
     while i < events.len() {
@@ -1088,10 +1064,7 @@ fn inspect_section_metadata(events: &[Event], locale: &Locale) -> (bool, Option<
                     }
                     i += 1;
                 }
-                temp_html.clear();
-                html::push_html(&mut temp_html, events[start_idx..i].iter().cloned());
-                let inner = strip_paragraph_tags(temp_html.trim());
-                let (_, _, _, ctype) = parse_callout(inner, locale);
+                let ctype = callout_type_from_events(&events[start_idx..i], locale);
                 if !callout_types.contains(&ctype) {
                     callout_types.push(ctype);
                 }
@@ -1108,6 +1081,17 @@ fn inspect_section_metadata(events: &[Event], locale: &Locale) -> (bool, Option<
     };
 
     (has_checklist, callout_type)
+}
+
+fn callout_type_from_events(events: &[Event], locale: &Locale) -> &'static str {
+    for ev in events {
+        if let Event::Text(text) = ev {
+            let s = text.trim();
+            let (_, _, _, ctype) = parse_callout(s, locale);
+            return ctype;
+        }
+    }
+    "note"
 }
 
 #[cfg(test)]
@@ -1606,5 +1590,3 @@ curl https://{{BLOCK}}.local:{{PORT}}/api
         assert!(html.contains("curl https://{{BLOCK}}.local:{{PORT}}/api"));
     }
 }
-
-

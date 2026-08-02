@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added dynamic code variable substitution from pre-section `[Variables]` tables with editable values, state persistence, code usage filtering, and print substitution.
 
+### Changed
+- Live-update code block variable substitution on initial page load and on input change in web preview.
+
 
 ### Fixed
 - Fixed base template CSS/JS variable substitution tags, script initialization order, and namespace bindings for window.d2f.

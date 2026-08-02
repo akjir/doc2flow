@@ -15,7 +15,7 @@ number_sections: true
 | --- | --- |
 | SERVER_NAME | prod-srv-01 |
 | PORT | 8080 |
-| UNUSED_CONFIG | 100 |
+| API_KEY | secret-key-en-12345 |
 
 # Part 1: System Setup & Preparation
 

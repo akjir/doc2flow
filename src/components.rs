@@ -107,21 +107,20 @@ pub fn render_task_item(
     clean_label: &str,
     indent_depth: usize,
 ) {
-    let checked_cls = if is_checked { " checked" } else { "" };
     let checked_attr = if is_checked { " checked" } else { "" };
     let label_text = clean_label.trim();
 
+    let _ = write!(
+        out,
+        "<div class=\"doc-item check-item{checked_attr}\" id=\"wrap-cb_s{sec_num}_{cb_count}\""
+    );
     if indent_depth > 0 {
-        let _ = write!(
-            out,
-            "<div class=\"doc-item check-item{checked_cls}\" id=\"wrap-cb_s{sec_num}_{cb_count}\" style=\"--indent: {indent_depth};\">\n  <input type=\"checkbox\" id=\"cb_s{sec_num}_{cb_count}\"{checked_attr}>\n  <label class=\"check-label\" for=\"cb_s{sec_num}_{cb_count}\">{label_text}</label>\n  {COMMENT_ICON_SVG}\n</div>\n"
-        );
-    } else {
-        let _ = write!(
-            out,
-            "<div class=\"doc-item check-item{checked_cls}\" id=\"wrap-cb_s{sec_num}_{cb_count}\">\n  <input type=\"checkbox\" id=\"cb_s{sec_num}_{cb_count}\"{checked_attr}>\n  <label class=\"check-label\" for=\"cb_s{sec_num}_{cb_count}\">{label_text}</label>\n  {COMMENT_ICON_SVG}\n</div>\n"
-        );
+        let _ = write!(out, " style=\"--indent: {indent_depth};\"");
     }
+    let _ = write!(
+        out,
+        ">\n  <input type=\"checkbox\" id=\"cb_s{sec_num}_{cb_count}\"{checked_attr}>\n  <label class=\"check-label\" for=\"cb_s{sec_num}_{cb_count}\">{label_text}</label>\n  {COMMENT_ICON_SVG}\n</div>\n"
+    );
 }
 
 /// Renders a simple list item component directly into the output buffer.
@@ -136,17 +135,17 @@ pub fn render_list_item(
 ) {
     let label_text = clean_label.trim();
 
+    let _ = write!(
+        out,
+        "<div class=\"doc-item simple-item\" id=\"item_s{sec_num}_{item_count}\""
+    );
     if indent_depth > 0 {
-        let _ = write!(
-            out,
-            "<div class=\"doc-item simple-item\" id=\"item_s{sec_num}_{item_count}\" style=\"--indent: {indent_depth};\">\n  <span class=\"list-bullet\">{bullet}</span>\n  <span class=\"check-label\">{label_text}</span>\n  {COMMENT_ICON_SVG}\n</div>\n"
-        );
-    } else {
-        let _ = write!(
-            out,
-            "<div class=\"doc-item simple-item\" id=\"item_s{sec_num}_{item_count}\">\n  <span class=\"list-bullet\">{bullet}</span>\n  <span class=\"check-label\">{label_text}</span>\n  {COMMENT_ICON_SVG}\n</div>\n"
-        );
+        let _ = write!(out, " style=\"--indent: {indent_depth};\"");
     }
+    let _ = write!(
+        out,
+        ">\n  <span class=\"list-bullet\">{bullet}</span>\n  <span class=\"check-label\">{label_text}</span>\n  {COMMENT_ICON_SVG}\n</div>\n"
+    );
 }
 
 /// Renders a standalone text paragraph item component directly into the output buffer.
@@ -158,17 +157,17 @@ pub fn render_text_item(
     content_html: &str,
     indent_depth: usize,
 ) {
+    let _ = write!(
+        out,
+        "<div class=\"doc-item text-item\" id=\"txt_s{sec_num}_{txt_count}\""
+    );
     if indent_depth > 0 {
-        let _ = write!(
-            out,
-            "<div class=\"doc-item text-item\" id=\"txt_s{sec_num}_{txt_count}\" style=\"--indent: {indent_depth};\">\n  <span class=\"text-content\">{content_html}</span>\n  {COMMENT_ICON_SVG}\n</div>\n"
-        );
-    } else {
-        let _ = write!(
-            out,
-            "<div class=\"doc-item text-item\" id=\"txt_s{sec_num}_{txt_count}\">\n  <span class=\"text-content\">{content_html}</span>\n  {COMMENT_ICON_SVG}\n</div>\n"
-        );
+        let _ = write!(out, " style=\"--indent: {indent_depth};\"");
     }
+    let _ = write!(
+        out,
+        ">\n  <span class=\"text-content\">{content_html}</span>\n  {COMMENT_ICON_SVG}\n</div>\n"
+    );
 }
 
 /// Renders an image container block directly into the output buffer.
@@ -219,11 +218,11 @@ pub fn render_finish_box(
 
 /// Renders an annotated `[Variables]` key-value table component into the output buffer.
 #[inline]
-pub fn render_variable_table(
+pub fn render_variable_table<K: AsRef<str>, V: AsRef<str>>(
     out: &mut impl Write,
     col_variable: &str,
     col_value: &str,
-    rows: &[(String, String)],
+    rows: &[(K, V)],
     json_payload: &str,
 ) {
     let escaped_json = crate::converter::html_escape(json_payload);
@@ -235,8 +234,8 @@ pub fn render_variable_table(
         "<div class=\"item-table-var-wrap\"><table class=\"item-table-var\" data-variables=\"{escaped_json}\"><thead><tr><th>{escaped_col_var}</th><th>{escaped_col_val}</th></tr></thead><tbody>"
     );
     for (k, v) in rows {
-        let escaped_k = crate::converter::html_escape(k);
-        let escaped_v = crate::converter::html_escape(v);
+        let escaped_k = crate::converter::html_escape(k.as_ref());
+        let escaped_v = crate::converter::html_escape(v.as_ref());
         let _ = write!(
             out,
             "<tr><td>{escaped_k}</td><td><input type=\"text\" class=\"item-table-var-input persistent-field\" id=\"f_var_{escaped_k}\" data-var-key=\"{escaped_k}\" data-default-value=\"{escaped_v}\" value=\"{escaped_v}\"></td></tr>\n"

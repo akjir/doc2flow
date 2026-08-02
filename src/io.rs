@@ -100,6 +100,7 @@ pub fn get_file_size(path: impl AsRef<Path>) -> Result<u64> {
 ///
 /// assert!(!path_exists("non_existent_file_xyz.txt"));
 /// ```
+#[inline]
 pub fn path_exists(path: impl AsRef<Path>) -> bool {
     path.as_ref().exists()
 }
@@ -115,6 +116,7 @@ pub fn path_exists(path: impl AsRef<Path>) -> bool {
 /// let resolved = resolve_relative_path("img.png", Some("docs"));
 /// assert_eq!(resolved, Path::new("docs").join("img.png"));
 /// ```
+#[inline]
 pub fn resolve_relative_path(
     path: impl AsRef<Path>,
     base_dir: Option<impl AsRef<Path>>,
@@ -139,6 +141,7 @@ pub fn resolve_relative_path(
 ///
 /// assert_eq!(resolve_image_path("non_existent.png", None::<&str>), None);
 /// ```
+#[inline]
 pub fn resolve_image_path(
     path: impl AsRef<Path>,
     base_dir: Option<impl AsRef<Path>>,
@@ -173,6 +176,7 @@ pub fn resolve_image_path(
 /// let resolved = resolve_logo_path("logo.svg", None::<&str>);
 /// assert_eq!(resolved, Path::new("logo.svg"));
 /// ```
+#[inline]
 pub fn resolve_logo_path(
     path: impl AsRef<Path>,
     base_dir: Option<impl AsRef<Path>>,
@@ -189,6 +193,7 @@ pub fn resolve_logo_path(
 /// # Errors
 ///
 /// Returns [`Doc2FlowError::Io`] if directory creation fails.
+#[inline]
 pub fn create_dir_all(path: impl AsRef<Path>) -> Result<()> {
     let path = path.as_ref();
     fs::create_dir_all(path).map_err(|source| Doc2FlowError::Io {
@@ -202,6 +207,7 @@ pub fn create_dir_all(path: impl AsRef<Path>) -> Result<()> {
 /// # Errors
 ///
 /// Returns [`Doc2FlowError::Io`] if directory deletion fails.
+#[inline]
 pub fn remove_dir_all(path: impl AsRef<Path>) -> Result<()> {
     let path = path.as_ref();
     fs::remove_dir_all(path).map_err(|source| Doc2FlowError::Io {
@@ -223,8 +229,8 @@ pub fn prompt_user_yes_no(prompt_msg: &str) -> bool {
 
     let mut input = String::new();
     if std::io::stdin().read_line(&mut input).is_ok() {
-        let trimmed = input.trim().to_lowercase();
-        return matches!(trimmed.as_str(), "y" | "yes");
+        let trimmed = input.trim();
+        return trimmed.eq_ignore_ascii_case("y") || trimmed.eq_ignore_ascii_case("yes");
     }
     false
 }

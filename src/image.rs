@@ -1,10 +1,10 @@
 use crate::error::{DiagnosticError, Doc2FlowError, Result, print_warning};
 use crate::io;
 use crate::template::DEFAULT_LOGO_SVG;
-use crate::utils::{base64_encode, file_to_data_uri, guess_mime_type};
+use crate::utils::{base64_encode_into, file_to_data_uri, guess_mime_type};
 use image::{GenericImageView, ImageFormat, imageops::FilterType};
 use std::collections::HashMap;
-use std::fmt::Write as _;
+use std::collections::hash_map::Entry;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
 
@@ -16,7 +16,7 @@ pub fn resolve_logo_path(path: &Path, base_dir: Option<&Path>) -> PathBuf {
     io::resolve_logo_path(path, base_dir)
 }
 
-/// Loads and processes a custom logo image (SVG or raster), or falls back to the default embedded SVG logo.
+/// Loads and processes a custom logo image (SVG or raster), or falls back to default.
 ///
 /// If `logo_path` is `None` or points to an empty path, returns [`DEFAULT_LOGO_SVG`].
 /// If the custom logo file cannot be found or read, outputs a user-friendly warning message to `stderr`
@@ -107,7 +107,7 @@ pub fn embed_images_as_base64(html: &str, base_dir: Option<&Path>) -> Result<Str
     embed_images_as_base64_with_source(html, None, None, base_dir, false)
 }
 
-/// Embeds local image references in HTML as Base64 `data:` URIs with Markdown source context for error diagnostics.
+/// Embeds local image references in HTML as Base64 `data:` URIs with Markdown source context.
 ///
 /// Scans `<img ... src="..." ...>` tags in the input HTML. Checks image sizes against `MAX_IMAGE_SIZE_BYTES` (250 KB).
 /// If an image exceeds this limit, offers interactive scaling/conversion to WebP or returns a compiler-style `DiagnosticError`.
@@ -149,20 +149,20 @@ pub fn embed_images_as_base64_with_source(
 
                 if let Some(next_cursor) = strip_img_item_wrapper(&mut out, html, img_end) {
                     let comment_icon = crate::template::COMMENT_ICON_SVG;
-                    let _ = out.write_str("<div class=\"doc-item text-item\">\n  <span class=\"text-content\"><a href=\"");
-                    let _ = out.write_str(src_val);
-                    let _ = out.write_str("\" target=\"_blank\" rel=\"noopener noreferrer\">");
-                    let _ = out.write_str(alt_text);
-                    let _ = out.write_str("</a></span>\n  ");
-                    let _ = out.write_str(comment_icon);
-                    let _ = out.write_str("\n</div>\n");
+                    out.push_str("<div class=\"doc-item text-item\">\n  <span class=\"text-content\"><a href=\"");
+                    out.push_str(src_val);
+                    out.push_str("\" target=\"_blank\" rel=\"noopener noreferrer\">");
+                    out.push_str(alt_text);
+                    out.push_str("</a></span>\n  ");
+                    out.push_str(comment_icon);
+                    out.push_str("\n</div>\n");
                     cursor = next_cursor;
                 } else {
-                    let _ = out.write_str("<a href=\"");
-                    let _ = out.write_str(src_val);
-                    let _ = out.write_str("\" target=\"_blank\" rel=\"noopener noreferrer\">");
-                    let _ = out.write_str(alt_text);
-                    let _ = out.write_str("</a>");
+                    out.push_str("<a href=\"");
+                    out.push_str(src_val);
+                    out.push_str("\" target=\"_blank\" rel=\"noopener noreferrer\">");
+                    out.push_str(alt_text);
+                    out.push_str("</a>");
                     cursor = img_end;
                 }
                 continue;
@@ -175,60 +175,73 @@ pub fn embed_images_as_base64_with_source(
             if !is_remote_or_data {
                 let path = Path::new(src_val);
                 if let Some(resolved_path) = resolve_image_path(path, base_dir) {
-                    if !cache.contains_key(&resolved_path) {
-                        match io::read_file_bytes(&resolved_path) {
-                            Ok(bytes) => {
-                                let size = bytes.len() as u64;
-                                if size > MAX_IMAGE_SIZE_BYTES {
-                                    let should_scale =
-                                        auto_scale || prompt_user_for_resizing(src_val, size);
+                    let data_uri = match cache.entry(resolved_path) {
+                        Entry::Occupied(entry) => entry.into_mut(),
+                        Entry::Vacant(entry) => {
+                            let resolved = entry.key();
+                            let uri = match io::read_file_bytes(resolved) {
+                                Ok(bytes) => {
+                                    let size = bytes.len() as u64;
+                                    if size > MAX_IMAGE_SIZE_BYTES {
+                                        let should_scale = auto_scale
+                                            || prompt_user_for_resizing(src_val, size);
 
-                                    let mut scaled = false;
-                                    if let Some(Ok(data_uri)) =
-                                        should_scale.then(|| process_and_encode_image_as_webp(&resolved_path))
-                                    {
-                                        cache.insert(resolved_path.clone(), data_uri);
-                                        scaled = true;
-                                    }
+                                        let mut scaled_uri = None;
+                                        if should_scale {
+                                            if let Ok(u) =
+                                                process_and_encode_image_as_webp(resolved)
+                                            {
+                                                scaled_uri = Some(u);
+                                            }
+                                        }
 
-                                    if !scaled {
-                                        let (line_no, col_no, line_snippet) =
-                                            find_markdown_location(md_content, src_val);
-                                        let f_name = file_name.unwrap_or("input.md");
-                                        return Err(DiagnosticError::image_too_large(
-                                            f_name,
-                                            line_no,
-                                            col_no,
-                                            line_snippet,
-                                            src_val,
-                                            size,
-                                        ));
-                                    }
-                                } else {
-                                    let mime = guess_mime_type(&resolved_path);
-                                    let bytes_to_encode = if mime == "image/svg+xml" {
-                                        if let Ok(utf8_str) = std::str::from_utf8(&bytes) {
-                                            clean_svg(utf8_str).into_bytes()
+                                        if let Some(u) = scaled_uri {
+                                            u
                                         } else {
-                                            bytes
+                                            let (line_no, col_no, line_snippet) =
+                                                find_markdown_location(md_content, src_val);
+                                            let f_name = file_name.unwrap_or("input.md");
+                                            return Err(DiagnosticError::image_too_large(
+                                                f_name,
+                                                line_no,
+                                                col_no,
+                                                line_snippet,
+                                                src_val,
+                                                size,
+                                            ));
                                         }
                                     } else {
-                                        bytes
-                                    };
-                                    let b64 = base64_encode(&bytes_to_encode);
-                                    cache.insert(
-                                        resolved_path.clone(),
-                                        format!("data:{mime};base64,{b64}"),
-                                    );
-                                }
-                            }
-                            Err(_) => {
-                                cache.insert(resolved_path.clone(), src_val.to_string());
-                            }
-                        }
-                    }
+                                        let mime = guess_mime_type(resolved);
+                                        let bytes_to_encode = if mime == "image/svg+xml" {
+                                            if let Ok(utf8_str) = std::str::from_utf8(&bytes) {
+                                                clean_svg(utf8_str).into_bytes()
+                                            } else {
+                                                bytes
+                                            }
+                                        } else {
+                                            bytes
+                                        };
 
-                    if let Some(data_uri) = cache.get(&resolved_path).filter(|&d| d != src_val) {
+                                        let b64_len = bytes_to_encode.len().div_ceil(3) * 4;
+                                        let prefix = "data:";
+                                        let suffix = ";base64,";
+                                        let capacity =
+                                            prefix.len() + mime.len() + suffix.len() + b64_len;
+                                        let mut uri_buf = String::with_capacity(capacity);
+                                        uri_buf.push_str(prefix);
+                                        uri_buf.push_str(mime);
+                                        uri_buf.push_str(suffix);
+                                        base64_encode_into(&bytes_to_encode, &mut uri_buf);
+                                        uri_buf
+                                    }
+                                }
+                                Err(_) => src_val.to_string(),
+                            };
+                            entry.insert(uri)
+                        }
+                    };
+
+                    if data_uri != src_val {
                         out.push_str(&tag_slice[..attr_start]);
                         out.push_str("src=\"");
                         out.push_str(data_uri);
@@ -252,11 +265,11 @@ pub fn embed_images_as_base64_with_source(
     Ok(out)
 }
 
-/// Resizes a local image file and converts it to WebP format until its size is within `MAX_IMAGE_SIZE_BYTES` (250 KB).
+/// Resizes a local image file and converts it to WebP format until its size is within 250 KB.
 ///
 /// # Errors
 ///
-/// Returns an error if opening or encoding the image fails.
+/// Returns a [`Doc2FlowError::ImageProcess`] if opening or encoding the image fails.
 pub fn process_and_encode_image_as_webp(image_path: &Path) -> Result<String> {
     let img = image::open(image_path).map_err(|e| {
         Doc2FlowError::ImageProcess(format!(
@@ -314,8 +327,12 @@ pub fn process_and_encode_image_as_webp(image_path: &Path) -> Result<String> {
         final_h
     );
 
-    let b64 = base64_encode(&buffer);
-    Ok(format!("data:image/webp;base64,{b64}"))
+    let b64_len = buffer.len().div_ceil(3) * 4;
+    let prefix = "data:image/webp;base64,";
+    let mut data_uri = String::with_capacity(prefix.len() + b64_len);
+    data_uri.push_str(prefix);
+    base64_encode_into(&buffer, &mut data_uri);
+    Ok(data_uri)
 }
 
 /// Asks user interactively via stderr/stdin whether to resize/convert an image that exceeds 250 KB.
@@ -326,7 +343,7 @@ fn prompt_user_for_resizing(src_val: &str, size_bytes: u64) -> bool {
     ))
 }
 
-/// Finds the line number (1-based), column number (1-based), and line snippet in Markdown for an image source string.
+/// Finds line number, column number, and line snippet in Markdown for an image source string.
 fn find_markdown_location<'a>(
     md_content: Option<&'a str>,
     src_val: &'a str,
@@ -369,7 +386,7 @@ fn strip_img_item_wrapper(out: &mut String, html: &str, img_end: usize) -> Optio
     Some(img_end + suffix_len)
 }
 
-/// Helper to extract attribute bounds and value from an HTML tag slice without heap allocations.
+/// Extracts attribute bounds and value from an HTML tag slice without heap allocations.
 fn extract_attribute<'a>(tag: &'a str, attr_name: &str) -> Option<(usize, usize, &'a str)> {
     let bytes = tag.as_bytes();
     let attr_bytes = attr_name.as_bytes();
@@ -378,15 +395,21 @@ fn extract_attribute<'a>(tag: &'a str, attr_name: &str) -> Option<(usize, usize,
 
     while i + attr_len < bytes.len() {
         if bytes[i..i + attr_len].eq_ignore_ascii_case(attr_bytes) && bytes[i + attr_len] == b'=' {
+            if i > 0 && bytes[i - 1].is_ascii_alphanumeric() {
+                i += 1;
+                continue;
+            }
+
             let abs_pos = i;
             let val_search_start = abs_pos + attr_len + 1;
-            let rest = tag[val_search_start..].trim_start();
-            let quote = rest.chars().next()?;
+            let rest = &tag[val_search_start..];
+            let rest_trimmed = rest.trim_start();
+            let quote = rest_trimmed.as_bytes().first().copied()?;
 
-            if quote == '"' || quote == '\'' {
-                let quote_offset = tag[val_search_start..].len() - rest.len();
+            if quote == b'"' || quote == b'\'' {
+                let quote_offset = rest.len() - rest_trimmed.len();
                 let val_start = val_search_start + quote_offset + 1;
-                if let Some(val_end_rel) = tag[val_start..].find(quote) {
+                if let Some(val_end_rel) = tag[val_start..].as_bytes().iter().position(|&b| b == quote) {
                     let val_end = val_start + val_end_rel;
                     let attr_end = val_end + 1;
                     return Some((abs_pos, attr_end, &tag[val_start..val_end]));
@@ -398,22 +421,49 @@ fn extract_attribute<'a>(tag: &'a str, attr_name: &str) -> Option<(usize, usize,
     None
 }
 
-/// Checks if a file path or URL points to an image resource based on file extension or MIME type.
+/// Checks if a file path or URL points to an image resource based on extension or MIME type.
 fn is_image_source(src: &str, base_dir: Option<&Path>) -> bool {
     if let Some(ext) = Path::new(src).extension().and_then(|e| e.to_str()) {
-        const NON_IMAGE_EXTS: &[&str] = &[
-            "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "zip", "tar", "gz", "7z",
-            "txt", "csv", "json", "xml", "html", "htm", "mp4", "mp3", "avi", "mov", "wav",
-        ];
-        if NON_IMAGE_EXTS.iter().any(|&e| e.eq_ignore_ascii_case(ext)) {
-            return false;
-        }
-
-        const IMAGE_EXTS: &[&str] = &[
-            "png", "jpg", "jpeg", "gif", "svg", "webp", "bmp", "ico", "avif", "tiff",
-        ];
-        if IMAGE_EXTS.iter().any(|&e| e.eq_ignore_ascii_case(ext)) {
-            return true;
+        match ext {
+            e if e.eq_ignore_ascii_case("png")
+                || e.eq_ignore_ascii_case("jpg")
+                || e.eq_ignore_ascii_case("jpeg")
+                || e.eq_ignore_ascii_case("gif")
+                || e.eq_ignore_ascii_case("svg")
+                || e.eq_ignore_ascii_case("webp")
+                || e.eq_ignore_ascii_case("bmp")
+                || e.eq_ignore_ascii_case("ico")
+                || e.eq_ignore_ascii_case("avif")
+                || e.eq_ignore_ascii_case("tiff") =>
+            {
+                return true;
+            }
+            e if e.eq_ignore_ascii_case("pdf")
+                || e.eq_ignore_ascii_case("doc")
+                || e.eq_ignore_ascii_case("docx")
+                || e.eq_ignore_ascii_case("xls")
+                || e.eq_ignore_ascii_case("xlsx")
+                || e.eq_ignore_ascii_case("ppt")
+                || e.eq_ignore_ascii_case("pptx")
+                || e.eq_ignore_ascii_case("zip")
+                || e.eq_ignore_ascii_case("tar")
+                || e.eq_ignore_ascii_case("gz")
+                || e.eq_ignore_ascii_case("7z")
+                || e.eq_ignore_ascii_case("txt")
+                || e.eq_ignore_ascii_case("csv")
+                || e.eq_ignore_ascii_case("json")
+                || e.eq_ignore_ascii_case("xml")
+                || e.eq_ignore_ascii_case("html")
+                || e.eq_ignore_ascii_case("htm")
+                || e.eq_ignore_ascii_case("mp4")
+                || e.eq_ignore_ascii_case("mp3")
+                || e.eq_ignore_ascii_case("avi")
+                || e.eq_ignore_ascii_case("mov")
+                || e.eq_ignore_ascii_case("wav") =>
+            {
+                return false;
+            }
+            _ => {}
         }
     }
 
@@ -437,112 +487,113 @@ fn resolve_image_path(path: &Path, base_dir: Option<&Path>) -> Option<PathBuf> {
     io::resolve_image_path(path, base_dir)
 }
 
-/// Cleans and minifies SVG content by removing XML headers, comments, editor metadata tags
-/// (e.g. `<sodipodi:namedview>`, `<metadata>`), empty `<defs/>`, and Inkscape/Sodipodi namespace attributes.
+/// Cleans and minifies SVG content by stripping declarations, comments, and editor metadata.
 pub fn clean_svg(input: &str) -> String {
-    let mut s = input.trim();
+    let mut result = String::with_capacity(input.len());
+    let mut rest = input.trim_start();
 
-    // 1. Strip XML declarations <?xml ...?> and <!DOCTYPE ...>
-    while let Some(start) = s.find("<?") {
-        if let Some(end) = s[start..].find("?>") {
-            s = s[start + end + 2..].trim();
-        } else {
-            break;
-        }
-    }
-    while let Some(start) = s.find("<!DOCTYPE") {
-        if let Some(end) = s[start..].find('>') {
-            s = s[start + end + 1..].trim();
-        } else {
-            break;
-        }
-    }
-
-    // 2. Strip comments <!-- ... -->
-    let mut no_comments = String::with_capacity(s.len());
-    let mut cur = 0;
-    while let Some(rel_start) = s[cur..].find("<!--") {
-        let start = cur + rel_start;
-        no_comments.push_str(&s[cur..start]);
-        if let Some(rel_end) = s[start..].find("-->") {
-            cur = start + rel_end + 3;
-        } else {
-            cur = s.len();
-            break;
-        }
-    }
-    no_comments.push_str(&s[cur..]);
-
-    // 3. Process XML tags & elements
-    let mut result = String::with_capacity(no_comments.len());
-    let mut rest = no_comments.as_str();
-
-    while let Some(tag_start) = rest.find('<') {
-        let text_before = rest[..tag_start].trim();
-        if !text_before.is_empty() {
-            result.push_str(text_before);
-        }
-
-        let tag_rest = &rest[tag_start..];
-        if let Some(tag_end) = tag_rest.find('>') {
-            let full_tag = &tag_rest[..=tag_end];
-            rest = &tag_rest[tag_end + 1..];
-
-            let is_closing = full_tag.starts_with("</");
-            let is_self_closing = full_tag.ends_with("/>");
-            let tag_inner = match (is_closing, is_self_closing) {
-                (true, _) => full_tag[2..full_tag.len() - 1].trim(),
-                (false, true) => full_tag[1..full_tag.len() - 2].trim(),
-                (false, false) => full_tag[1..full_tag.len() - 1].trim(),
-            };
-
-            let tag_name = tag_inner
-                .split_whitespace()
-                .next()
-                .unwrap_or("")
-                .trim_end_matches('/');
-
-            // Skip editor-specific metadata tags
-            if tag_name.starts_with("sodipodi:") || tag_name == "metadata" {
-                if !is_closing && !is_self_closing {
-                    let closing = format!("</{tag_name}>");
-                    if let Some(close_pos) = rest.find(&closing) {
-                        rest = &rest[close_pos + closing.len()..];
-                    }
-                }
+    while !rest.is_empty() {
+        if rest.starts_with("<?") {
+            if let Some(end) = rest.find("?>") {
+                rest = rest[end + 2..].trim_start();
                 continue;
             }
-
-            if is_closing && (tag_name.starts_with("sodipodi:") || tag_name == "metadata") {
+        }
+        if rest.starts_with("<!DOCTYPE") || rest.starts_with("<!doctype") {
+            if let Some(end) = rest.find('>') {
+                rest = rest[end + 1..].trim_start();
                 continue;
             }
-
-            // Skip empty <defs .../> tags without children
-            if !is_closing && tag_name == "defs" && is_self_closing {
+        }
+        if rest.starts_with("<!--") {
+            if let Some(end) = rest.find("-->") {
+                rest = &rest[end + 3..];
                 continue;
-            }
-
-            if is_closing {
-                let _ = write!(result, "</{tag_name}>");
             } else {
-                let cleaned_attrs = clean_tag_attributes(tag_name, tag_inner);
-                match (cleaned_attrs.is_empty(), is_self_closing) {
-                    (true, true) => {
-                        let _ = write!(result, "<{tag_name}/>");
+                break;
+            }
+        }
+
+        if let Some(tag_start) = rest.find('<') {
+            let text_before = rest[..tag_start].trim();
+            if !text_before.is_empty() {
+                result.push_str(text_before);
+            }
+
+            let tag_rest = &rest[tag_start..];
+            if tag_rest.starts_with("<!--")
+                || tag_rest.starts_with("<?")
+                || tag_rest.starts_with("<!DOCTYPE")
+                || tag_rest.starts_with("<!doctype")
+            {
+                rest = tag_rest;
+                continue;
+            }
+
+            if let Some(tag_end) = tag_rest.find('>') {
+                let full_tag = &tag_rest[..=tag_end];
+                rest = &tag_rest[tag_end + 1..];
+
+                let is_closing = full_tag.starts_with("</");
+                let is_self_closing = full_tag.ends_with("/>");
+                let tag_inner = match (is_closing, is_self_closing) {
+                    (true, _) => full_tag[2..full_tag.len() - 1].trim(),
+                    (false, true) => full_tag[1..full_tag.len() - 2].trim(),
+                    (false, false) => full_tag[1..full_tag.len() - 1].trim(),
+                };
+
+                let tag_name = tag_inner
+                    .split_whitespace()
+                    .next()
+                    .unwrap_or("")
+                    .trim_end_matches('/');
+
+                if tag_name.starts_with("sodipodi:") || tag_name == "metadata" {
+                    if !is_closing && !is_self_closing {
+                        if let Some(pos) = rest.find("</") {
+                            let after = &rest[pos + 2..];
+                            if let Some(close_tag_end) = after.find('>') {
+                                let inside = after[..close_tag_end].trim();
+                                if inside == tag_name {
+                                    rest = &after[close_tag_end + 1..];
+                                }
+                            }
+                        }
                     }
-                    (true, false) => {
-                        let _ = write!(result, "<{tag_name}>");
-                    }
-                    (false, true) => {
-                        let _ = write!(result, "<{tag_name} {cleaned_attrs}/>");
-                    }
-                    (false, false) => {
-                        let _ = write!(result, "<{tag_name} {cleaned_attrs}>");
+                    continue;
+                }
+
+                if is_closing && (tag_name.starts_with("sodipodi:") || tag_name == "metadata") {
+                    continue;
+                }
+
+                if !is_closing && tag_name == "defs" && is_self_closing {
+                    continue;
+                }
+
+                if is_closing {
+                    result.push_str("</");
+                    result.push_str(tag_name);
+                    result.push('>');
+                } else {
+                    result.push('<');
+                    result.push_str(tag_name);
+                    write_cleaned_tag_attributes(&mut result, tag_name, tag_inner);
+                    if is_self_closing {
+                        result.push_str("/>");
+                    } else {
+                        result.push('>');
                     }
                 }
+            } else {
+                result.push_str(tag_rest);
+                break;
             }
         } else {
-            result.push_str(tag_rest);
+            let text = rest.trim();
+            if !text.is_empty() {
+                result.push_str(text);
+            }
             break;
         }
     }
@@ -550,9 +601,8 @@ pub fn clean_svg(input: &str) -> String {
     result
 }
 
-/// Helper function to clean attributes of an XML tag, stripping editor namespaces and attributes.
-fn clean_tag_attributes(tag_name: &str, tag_inner: &str) -> String {
-    let mut attrs = Vec::new();
+/// Helper function to clean attributes of an XML tag, streaming valid attributes into buffer.
+fn write_cleaned_tag_attributes(out: &mut String, tag_name: &str, tag_inner: &str) {
     let tag_name_len = tag_name.len();
     let attr_str = if tag_inner.len() > tag_name_len {
         tag_inner[tag_name_len..].trim()
@@ -589,7 +639,10 @@ fn clean_tag_attributes(tag_name: &str, tag_inner: &str) -> String {
         }
 
         let mut val = "";
+        let mut has_equals = false;
+
         if cursor < bytes.len() && bytes[cursor] == b'=' {
+            has_equals = true;
             cursor += 1;
             while cursor < bytes.len() && bytes[cursor].is_ascii_whitespace() {
                 cursor += 1;
@@ -622,7 +675,7 @@ fn clean_tag_attributes(tag_name: &str, tag_inner: &str) -> String {
         let is_generic_svg_id = name == "id"
             && val.starts_with("svg")
             && val.len() > 3
-            && val[3..].chars().all(|c| c.is_ascii_digit());
+            && val[3..].bytes().all(|b| b.is_ascii_digit());
 
         let should_remove = name.starts_with("inkscape:")
             || name.starts_with("sodipodi:")
@@ -633,15 +686,15 @@ fn clean_tag_attributes(tag_name: &str, tag_inner: &str) -> String {
             || (tag_name == "g" && name == "id" && val.starts_with("layer"));
 
         if !should_remove {
-            if val.is_empty() && !attr_str[name_start..cursor].contains('=') {
-                attrs.push(name.to_string());
-            } else {
-                attrs.push(format!("{name}=\"{val}\""));
+            out.push(' ');
+            out.push_str(name);
+            if !val.is_empty() || has_equals {
+                out.push_str("=\"");
+                out.push_str(val);
+                out.push('"');
             }
         }
     }
-
-    attrs.join(" ")
 }
 
 #[cfg(test)]
@@ -776,18 +829,15 @@ mod tests {
 
     #[test]
     fn test_load_logo_default_and_custom() {
-        // None or empty returns default logo
         let default_logo = load_logo(None, None);
         assert_eq!(default_logo, DEFAULT_LOGO_SVG);
 
         let empty_logo = load_logo(Some(Path::new("")), None);
         assert_eq!(empty_logo, DEFAULT_LOGO_SVG);
 
-        // Temp dir for testing custom SVG & PNG logos
         let temp_dir = std::env::temp_dir().join("d2f_test_logo");
         let _ = io::create_dir_all(&temp_dir);
 
-        // Custom SVG
         let svg_path = temp_dir.join("test_logo.svg");
         let svg_content = "<?xml version=\"1.0\"?><svg width=\"100\" height=\"100\"><circle cx=\"50\" cy=\"50\" r=\"40\"/></svg>";
         io::write_file(&svg_path, svg_content).unwrap();
@@ -797,7 +847,6 @@ mod tests {
         assert!(loaded_svg.contains("circle"));
         assert!(loaded_svg.ends_with("</svg>"));
 
-        // Custom PNG
         let png_path = temp_dir.join("test_logo.png");
         io::write_file(&png_path, b"fake png data").unwrap();
 
@@ -866,4 +915,3 @@ mod tests {
         assert!(cleaned.contains("path"));
     }
 }
-

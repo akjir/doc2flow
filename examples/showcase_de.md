@@ -15,7 +15,7 @@ number_sections: true
 | --- | --- |
 | SERVER_NAME | prod-srv-de-01 |
 | PORT | 8080 |
-| UNUSED_CONFIG | 100 |
+| API_KEY | secret-key-de-12345 |
 
 # Teil 1: Systemeinrichtung & Vorbereitung
 
