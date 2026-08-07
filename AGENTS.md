@@ -33,10 +33,10 @@
   - Vars replaced via frontmatter
 - **TS:**
   - Config: `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax`
-  - Scope: NO function `export`/`import`; decouple via `window.d2f` namespace
+  - Scope: NO function `export`/`import`; decouple via `window.d2f` namespace. `window.d2f_{module}` interface ONLY when another module needs its functions.
   - State: Discriminated unions, `readonly`
   - Format: `interface` (expandable), `type` (unions), `satisfies` operator
-  - BANNED: `any`, `as`, `!`, `enum`, `{}`/`Object`
+  - BANNED: `any`, `as`, `!`, `enum`, `{}`/`Object`, `?` (optional props/params — omit aggressively, when in doubt leave out)
 - **CSS:**
   - `:root` vars, BEM classes, ZERO external deps (fonts)
   - Print: Hide UI/buttons, expand collapsed (`display:block!important`), natural page breaks (no forced), exact print colors, no strikethrough
