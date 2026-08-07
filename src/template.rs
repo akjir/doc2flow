@@ -6,13 +6,13 @@ use std::collections::HashMap;
 use std::fmt::Write;
 
 /// Embedded core CSS styles.
-pub static STYLE_CORE: &str = include_str!("../styles/core.css");
+pub static STYLE_CORE: &str = include_str!("core/core.css");
 
 /// Embedded code block CSS feature styles.
 pub static STYLE_CODE: &str = include_str!("features/code/code.css");
 
 /// Embedded task list and checklist CSS feature styles.
-pub static STYLE_TASKS: &str = include_str!("../styles/tasks.css");
+pub static STYLE_TASKS: &str = include_str!("features/tasks/tasks.css");
 
 /// Embedded image lightbox CSS feature styles.
 pub static STYLE_IMAGES: &str = include_str!("features/image/image.css");
