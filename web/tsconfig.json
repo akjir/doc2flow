@@ -11,9 +11,10 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "../src"
   },
   "include": [
-    "src/**/*"
+    "../src/core/ts/**/*",
+    "../src/features/**/*"
   ]
 }

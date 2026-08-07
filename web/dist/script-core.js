@@ -1,6 +1,5 @@
-"use strict";
 (() => {
-  // src/core/storage.ts
+  // ../src/core/ts/storage.ts
   var saveHandlers = /* @__PURE__ */ new Set();
   var loadHandlers = /* @__PURE__ */ new Set();
   window.d2f = window.d2f || {};
@@ -72,7 +71,7 @@
     }
   }
 
-  // src/core/utils.ts
+  // ../src/core/ts/utils.ts
   function debounce(func, wait) {
     let timeout;
     return function(...args) {
@@ -91,71 +90,7 @@
     isRecord
   };
 
-  // src/core/export.ts
-  var ExportType = {
-    PDF: "PDF",
-    DOCUMENT: "DOCUMENT"
-  };
-  var exportHandlers = /* @__PURE__ */ new Set();
-  window.d2f = window.d2f || {};
-  window.d2f.export = {
-    export: performExport,
-    registerExportHandler
-  };
-  function registerExportHandler(handler) {
-    exportHandlers.add(handler);
-  }
-  function performExport(type) {
-    for (const handler of exportHandlers) {
-      try {
-        handler(type);
-      } catch (e) {
-        console.warn("Failed to execute export handler", e);
-      }
-    }
-    if (type === ExportType.PDF) {
-      const collapsed = Array.from(document.querySelectorAll(".sb.collapsed"));
-      collapsed.forEach((el) => el.classList.remove("collapsed"));
-      const restore = () => {
-        collapsed.forEach((el) => el.classList.add("collapsed"));
-        window.removeEventListener("afterprint", restore);
-      };
-      window.addEventListener("afterprint", restore);
-      setTimeout(() => window.print(), 100);
-      return;
-    }
-    if (type === ExportType.DOCUMENT) {
-      window.d2f.storage.saveState();
-      document.querySelectorAll('input.persistent-field, input[type="text"]').forEach((input) => {
-        input.setAttribute("value", input.value);
-      });
-      document.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
-        if (cb.checked) {
-          cb.setAttribute("checked", "");
-        } else {
-          cb.removeAttribute("checked");
-        }
-      });
-      document.querySelectorAll("textarea").forEach((ta) => {
-        ta.textContent = ta.value;
-        ta.setAttribute("value", ta.value);
-      });
-      const rawFilename = window.location.pathname.split("/").pop() || "index.html";
-      const filename = decodeURIComponent(rawFilename || "index.html");
-      const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
-      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-  }
-
-  // src/core/sections.ts
+  // ../src/core/ts/sections.ts
   function setSectionCollapseState(sec, isCollapsed) {
     const body = sec.querySelector(".sb");
     const sh = sec.querySelector(".sh");
@@ -263,7 +198,7 @@
     });
   }
 
-  // src/core/comments.ts
+  // ../src/core/ts/comments.ts
   function autoExpandTextarea(el) {
     if (!el)
       return;
@@ -381,7 +316,7 @@
     document.addEventListener("change", handleCommentInput);
   }
 
-  // src/core/items.ts
+  // ../src/core/ts/items.ts
   function saveItems() {
     const texts = {};
     document.querySelectorAll(".doc-item.text-item, .doc-item.simple-item").forEach((item, index) => {
@@ -431,7 +366,7 @@
     });
   }
 
-  // src/core/fields.ts
+  // ../src/core/ts/fields.ts
   function formatDateFromTemplate(now, template) {
     if (!template || typeof template !== "string")
       return null;
@@ -544,7 +479,7 @@
     document.addEventListener("change", handleInputOrChange);
   }
 
-  // src/core/search.ts
+  // ../src/core/ts/search.ts
   var preSearchCollapsedState = null;
   var lastMatchedSectionIds = /* @__PURE__ */ new Set();
   function removeHighlights(container) {
@@ -781,7 +716,7 @@
     });
   }
 
-  // src/core/core.ts
+  // ../src/core/ts/core.ts
   var resetHandlers = /* @__PURE__ */ new Set();
   function registerResetHandler(handler) {
     resetHandlers.add(handler);

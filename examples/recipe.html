@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+144.da96c60.dev">
-  <meta name="version" content="0.9.4+144.da96c60.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+145.3241875.dev">
+  <meta name="version" content="0.9.4+145.3241875.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-07T20:50:51Z">
+  <meta name="dcterms.created" content="2026-08-07T21:05:31Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, table">
   <title>Classic Chocolate Fudge Cake Recipe</title>
@@ -1084,10 +1084,9 @@ mark.d2f-highlight {
     window.d2f.document = window.d2f.document || {};
     window.d2f.document.id = 'd2f_id_45e58deeaeda3004';
     window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {"search_placeholder":"Search... (Ctrl+K)","callout_warning":"Warning","reset_all":"Reset","progress_template":"{done} of {total} tasks completed ({pct}%)","save_state":"Save State","sections_visible":"{visible} / {total} sections visible","name_placeholder":"Name","setup_in_progress":"Process in Progress","callout_note":"Note","date_placeholder":"MM/DD/YYYY","date":"Date","var_table_value":"Value","callout_important":"Important","export_pdf":"Export as PDF","callout_caution":"Caution","signature_date":"Date","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","comment_placeholder":"Add a comment...","setup_completed":"Process Completed","loading":"Loading...","callout_tip":"Tip","copied":"Copied!","var_table_variable":"Variable","var_table_title":"Variables","lang_code":"en","copy_code":"Copy code"};
-    "use strict";
-(() => {
-  // src/core/storage.ts
+    window.d2f.lang.dictionary = {"progress_template":"{done} of {total} tasks completed ({pct}%)","lang_code":"en","var_table_value":"Value","signature_date":"Date","export_pdf":"Export as PDF","callout_warning":"Warning","comment_placeholder":"Add a comment...","var_table_title":"Variables","setup_completed":"Process Completed","setup_in_progress":"Process in Progress","date_placeholder":"MM/DD/YYYY","callout_note":"Note","loading":"Loading...","callout_caution":"Caution","name_placeholder":"Name","callout_tip":"Tip","save_state":"Save State","copied":"Copied!","reset_all":"Reset","copy_code":"Copy code","callout_important":"Important","sections_visible":"{visible} / {total} sections visible","var_table_variable":"Variable","search_placeholder":"Search... (Ctrl+K)","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","date":"Date"};
+    (() => {
+  // ../src/core/ts/storage.ts
   var saveHandlers = /* @__PURE__ */ new Set();
   var loadHandlers = /* @__PURE__ */ new Set();
   window.d2f = window.d2f || {};
@@ -1159,7 +1158,7 @@ mark.d2f-highlight {
     }
   }
 
-  // src/core/utils.ts
+  // ../src/core/ts/utils.ts
   function debounce(func, wait) {
     let timeout;
     return function(...args) {
@@ -1178,71 +1177,7 @@ mark.d2f-highlight {
     isRecord
   };
 
-  // src/core/export.ts
-  var ExportType = {
-    PDF: "PDF",
-    DOCUMENT: "DOCUMENT"
-  };
-  var exportHandlers = /* @__PURE__ */ new Set();
-  window.d2f = window.d2f || {};
-  window.d2f.export = {
-    export: performExport,
-    registerExportHandler
-  };
-  function registerExportHandler(handler) {
-    exportHandlers.add(handler);
-  }
-  function performExport(type) {
-    for (const handler of exportHandlers) {
-      try {
-        handler(type);
-      } catch (e) {
-        console.warn("Failed to execute export handler", e);
-      }
-    }
-    if (type === ExportType.PDF) {
-      const collapsed = Array.from(document.querySelectorAll(".sb.collapsed"));
-      collapsed.forEach((el) => el.classList.remove("collapsed"));
-      const restore = () => {
-        collapsed.forEach((el) => el.classList.add("collapsed"));
-        window.removeEventListener("afterprint", restore);
-      };
-      window.addEventListener("afterprint", restore);
-      setTimeout(() => window.print(), 100);
-      return;
-    }
-    if (type === ExportType.DOCUMENT) {
-      window.d2f.storage.saveState();
-      document.querySelectorAll('input.persistent-field, input[type="text"]').forEach((input) => {
-        input.setAttribute("value", input.value);
-      });
-      document.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
-        if (cb.checked) {
-          cb.setAttribute("checked", "");
-        } else {
-          cb.removeAttribute("checked");
-        }
-      });
-      document.querySelectorAll("textarea").forEach((ta) => {
-        ta.textContent = ta.value;
-        ta.setAttribute("value", ta.value);
-      });
-      const rawFilename = window.location.pathname.split("/").pop() || "index.html";
-      const filename = decodeURIComponent(rawFilename || "index.html");
-      const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
-      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-  }
-
-  // src/core/sections.ts
+  // ../src/core/ts/sections.ts
   function setSectionCollapseState(sec, isCollapsed) {
     const body = sec.querySelector(".sb");
     const sh = sec.querySelector(".sh");
@@ -1350,7 +1285,7 @@ mark.d2f-highlight {
     });
   }
 
-  // src/core/comments.ts
+  // ../src/core/ts/comments.ts
   function autoExpandTextarea(el) {
     if (!el)
       return;
@@ -1468,7 +1403,7 @@ mark.d2f-highlight {
     document.addEventListener("change", handleCommentInput);
   }
 
-  // src/core/items.ts
+  // ../src/core/ts/items.ts
   function saveItems() {
     const texts = {};
     document.querySelectorAll(".doc-item.text-item, .doc-item.simple-item").forEach((item, index) => {
@@ -1518,7 +1453,7 @@ mark.d2f-highlight {
     });
   }
 
-  // src/core/fields.ts
+  // ../src/core/ts/fields.ts
   function formatDateFromTemplate(now, template) {
     if (!template || typeof template !== "string")
       return null;
@@ -1631,7 +1566,7 @@ mark.d2f-highlight {
     document.addEventListener("change", handleInputOrChange);
   }
 
-  // src/core/search.ts
+  // ../src/core/ts/search.ts
   var preSearchCollapsedState = null;
   var lastMatchedSectionIds = /* @__PURE__ */ new Set();
   function removeHighlights(container) {
@@ -1868,7 +1803,7 @@ mark.d2f-highlight {
     });
   }
 
-  // src/core/core.ts
+  // ../src/core/ts/core.ts
   var resetHandlers = /* @__PURE__ */ new Set();
   function registerResetHandler(handler) {
     resetHandlers.add(handler);

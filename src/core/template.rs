@@ -6,34 +6,34 @@ use std::collections::HashMap;
 use std::fmt::Write;
 
 /// Embedded core CSS styles.
-pub static STYLE_CORE: &str = include_str!("core/core.css");
+pub static STYLE_CORE: &str = include_str!("css/core.css");
 
 /// Embedded code block CSS feature styles.
-pub static STYLE_CODE: &str = include_str!("features/code/code.css");
+pub static STYLE_CODE: &str = include_str!("../features/code/code.css");
 
 /// Embedded task list and checklist CSS feature styles.
-pub static STYLE_TASKS: &str = include_str!("features/tasks/tasks.css");
+pub static STYLE_TASKS: &str = include_str!("../features/tasks/tasks.css");
 
 /// Embedded image lightbox CSS feature styles.
-pub static STYLE_IMAGES: &str = include_str!("features/image/image.css");
+pub static STYLE_IMAGES: &str = include_str!("../features/image/image.css");
 
 /// Embedded section table CSS feature styles.
-pub static STYLE_TABLE: &str = include_str!("features/table/table.css");
+pub static STYLE_TABLE: &str = include_str!("../features/table/table.css");
 
 /// Embedded core JavaScript bundle.
-pub static SCRIPT_CORE: &str = include_str!("../web/dist/script-core.js");
+pub static SCRIPT_CORE: &str = include_str!("../../web/dist/script-core.js");
 
 /// Embedded code block JavaScript feature bundle.
-pub static SCRIPT_CODE: &str = include_str!("../web/dist/script-code.js");
+pub static SCRIPT_CODE: &str = include_str!("../../web/dist/script-code.js");
 
 /// Embedded task list and checklist JavaScript feature bundle.
-pub static SCRIPT_TASKS: &str = include_str!("../web/dist/script-tasks.js");
+pub static SCRIPT_TASKS: &str = include_str!("../../web/dist/script-tasks.js");
 
 /// Embedded image lightbox JavaScript feature bundle.
-pub static SCRIPT_IMAGES: &str = include_str!("../web/dist/script-images.js");
+pub static SCRIPT_IMAGES: &str = include_str!("../../web/dist/script-images.js");
 
 /// Embedded section table JavaScript feature bundle.
-pub static SCRIPT_TABLE: &str = include_str!("../web/dist/script-table.js");
+pub static SCRIPT_TABLE: &str = include_str!("../../web/dist/script-table.js");
 
 /// Assembles active CSS feature styles into the provided output string based on detected document features.
 pub fn render_styles(out: &mut String, features: &DocumentFeatures) {
@@ -289,7 +289,7 @@ pub fn render_image_item(out: &mut impl Write, clean_content: &str) {
 /// assert!(template.contains("## Section 1: Initial System Verification"));
 /// ```
 pub fn generate_template_markdown() -> String {
-    let raw = include_str!("../templates/template.md");
+    let raw = include_str!("../../templates/template.md");
     raw.replace("{{APP_VERSION}}", APP_VERSION)
 }
 
@@ -361,7 +361,7 @@ pub fn render(
     logo_html: Option<&str>,
     features: &DocumentFeatures,
 ) -> Result<String> {
-    let base_html = include_str!("../templates/base.html");
+    let base_html = include_str!("../../templates/base.html");
 
     let mut style_css = String::with_capacity(32768);
     render_styles(&mut style_css, features);

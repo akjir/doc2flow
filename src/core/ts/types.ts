@@ -1,8 +1,8 @@
-import type { Core } from './core/core.ts';
-import type { Export } from './core/export.ts';
-import type { Language } from './core/lang.ts';
-import type { Storage } from './core/storage.ts';
-import type { Utils } from './core/utils.ts';
+import type { Core } from './core.ts';
+import type { Export } from './export.ts';
+import type { Language } from './lang.ts';
+import type { Storage } from './storage.ts';
+import type { Utils } from './utils.ts';
 
 declare global {
     interface Window {
