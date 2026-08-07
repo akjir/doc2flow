@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+146.69cda02.dev">
-  <meta name="version" content="0.9.4+146.69cda02.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+147.78f4123.dev">
+  <meta name="version" content="0.9.4+147.78f4123.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-07T21:34:14Z">
+  <meta name="dcterms.created" content="2026-08-07T22:45:13Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, table">
   <title>Classic Chocolate Fudge Cake Recipe</title>
@@ -1084,7 +1084,7 @@ mark.d2f-highlight {
     window.d2f.document = window.d2f.document || {};
     window.d2f.document.id = 'd2f_id_45e58deeaeda3004';
     window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {"copy_code":"Copy code","callout_important":"Important","date_placeholder":"MM/DD/YYYY","export_pdf":"Export as PDF","callout_caution":"Caution","comment_placeholder":"Add a comment...","signature_date":"Date","callout_note":"Note","progress_template":"{done} of {total} tasks completed ({pct}%)","lang_code":"en","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","callout_warning":"Warning","date":"Date","setup_completed":"Process Completed","save_state":"Save State","sections_visible":"{visible} / {total} sections visible","callout_tip":"Tip","loading":"Loading...","var_table_title":"Variables","var_table_variable":"Variable","copied":"Copied!","reset_all":"Reset","search_placeholder":"Search... (Ctrl+K)","setup_in_progress":"Process in Progress","var_table_value":"Value","name_placeholder":"Name"};
+    window.d2f.lang.dictionary = {"callout_tip":"Tip","lang_code":"en","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","callout_caution":"Caution","comment_placeholder":"Add a comment...","callout_warning":"Warning","sections_visible":"{visible} / {total} sections visible","setup_in_progress":"Process in Progress","setup_completed":"Process Completed","reset_all":"Reset","var_table_title":"Variables","callout_important":"Important","var_table_variable":"Variable","export_pdf":"Export as PDF","callout_note":"Note","var_table_value":"Value","signature_date":"Date","save_state":"Save State","search_placeholder":"Search... (Ctrl+K)","loading":"Loading...","date":"Date","copied":"Copied!","progress_template":"{done} of {total} tasks completed ({pct}%)","name_placeholder":"Name","date_placeholder":"MM/DD/YYYY","copy_code":"Copy code"};
     (() => {
   // ../src/core/ts/storage.ts
   var saveHandlers = /* @__PURE__ */ new Set();
@@ -1869,11 +1869,9 @@ mark.d2f-highlight {
         }
       });
     }
-    const feature = {
+    window.d2f_table = {
       init: initSectionTables
     };
-    window.d2f = window.d2f ?? {};
-    window.d2f.table = feature;
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", initSectionTables);
     } else {

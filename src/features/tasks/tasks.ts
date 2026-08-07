@@ -1,36 +1,11 @@
-interface D2FTasksFeature {
-    readonly updateProgress: () => void;
-    readonly save: () => Record<string, unknown>;
-    readonly load: (state: Record<string, unknown>) => boolean;
-    readonly reset: () => void;
-}
-
 interface Window {
-    d2f?: {
-        core?: {
-            readonly registerResetHandler: (handler: () => void) => void;
-        };
-        storage?: {
-            readonly registerSaveHandler: (handler: () => Record<string, unknown>) => void;
-            readonly registerLoadHandler: (handler: (state: Record<string, unknown>) => boolean) => void;
-            readonly saveState: () => void;
-        };
-        lang?: {
-            readonly dictionary: {
-                readonly progress_template?: string;
-                readonly setup_in_progress?: string;
-                readonly setup_completed?: string;
-            };
-        };
-        utils?: {
-            readonly isRecord: (val: unknown) => val is Record<string, unknown>;
-        };
-        tasks?: D2FTasksFeature;
-    };
-    d2f_tasks?: {
+    d2f_tasks: {
         readonly updateProgress: () => void;
-    };
-}
+        readonly save: () => Record<string, unknown>;
+        readonly load: (state: Record<string, unknown>) => boolean;
+        readonly reset: () => void;
+    }
+};
 
 (() => {
     function styleItem(cb: HTMLInputElement): void {
@@ -46,7 +21,7 @@ interface Window {
     }
 
     function updateProgress(): void {
-        const i18n = window.d2f?.lang?.dictionary ?? {};
+        const i18n = window.d2f.lang.dictionary ?? {};
         const sections = document.querySelectorAll<HTMLElement>('.section');
         let total = 0;
         let done = 0;
@@ -129,7 +104,7 @@ interface Window {
 
     function loadTasks(state: Record<string, unknown>): boolean {
         const checksData = state['checks'];
-        const isRecord = window.d2f?.utils?.isRecord;
+        const isRecord = window.d2f.utils.isRecord;
         if (isRecord && isRecord(checksData)) {
             document.querySelectorAll<HTMLInputElement>('.check-item input[type="checkbox"]').forEach((cb, index) => {
                 const key = cb.id || ('cb_' + String(index));
@@ -176,29 +151,23 @@ interface Window {
                 }
                 styleItem(cb);
                 updateProgress();
-                window.d2f?.storage?.saveState();
+                window.d2f.storage.saveState();
             }
         }
     }
 
-    const feature = {
+    window.d2f_tasks = {
         updateProgress,
         save: saveTasks,
         load: loadTasks,
         reset: resetTasks,
-    } satisfies D2FTasksFeature;
-
-    window.d2f = window.d2f ?? {};
-    window.d2f.tasks = feature;
-    window.d2f_tasks = {
-        updateProgress,
     };
 
-    window.d2f?.storage?.registerSaveHandler(saveTasks);
-    window.d2f?.storage?.registerLoadHandler(loadTasks);
+    window.d2f.storage.registerSaveHandler(saveTasks);
+    window.d2f.storage.registerLoadHandler(loadTasks);
 
     function init(): void {
-        window.d2f?.core?.registerResetHandler(resetTasks);
+        window.d2f.core.registerResetHandler(resetTasks);
         document.addEventListener('click', handleDocumentClick);
         updateProgress();
     }

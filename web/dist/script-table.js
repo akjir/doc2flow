@@ -34,11 +34,9 @@
         }
       });
     }
-    const feature = {
+    window.d2f_table = {
       init: initSectionTables
     };
-    window.d2f = window.d2f ?? {};
-    window.d2f.table = feature;
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", initSectionTables);
     } else {

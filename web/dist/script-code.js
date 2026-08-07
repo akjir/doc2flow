@@ -130,14 +130,9 @@
         pre.appendChild(btn);
       });
     }
-    const feature = {
+    window.d2f_code = {
       copy: copyCode,
       updateVariables: updateAllCodeVariables
-    };
-    window.d2f = window.d2f ?? {};
-    window.d2f.code = feature;
-    window.d2f_code = {
-      copy: copyCode
     };
     function init() {
       updateAllCodeVariables();

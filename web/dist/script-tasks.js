@@ -13,7 +13,7 @@
       }
     }
     function updateProgress() {
-      const i18n = window.d2f?.lang?.dictionary ?? {};
+      const i18n = window.d2f.lang.dictionary ?? {};
       const sections = document.querySelectorAll(".section");
       let total = 0;
       let done = 0;
@@ -92,7 +92,7 @@
     }
     function loadTasks(state) {
       const checksData = state["checks"];
-      const isRecord = window.d2f?.utils?.isRecord;
+      const isRecord = window.d2f.utils.isRecord;
       if (isRecord && isRecord(checksData)) {
         document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb, index) => {
           const key = cb.id || "cb_" + String(index);
@@ -129,25 +129,20 @@
           }
           styleItem(cb);
           updateProgress();
-          window.d2f?.storage?.saveState();
+          window.d2f.storage.saveState();
         }
       }
     }
-    const feature = {
+    window.d2f_tasks = {
       updateProgress,
       save: saveTasks,
       load: loadTasks,
       reset: resetTasks
     };
-    window.d2f = window.d2f ?? {};
-    window.d2f.tasks = feature;
-    window.d2f_tasks = {
-      updateProgress
-    };
-    window.d2f?.storage?.registerSaveHandler(saveTasks);
-    window.d2f?.storage?.registerLoadHandler(loadTasks);
+    window.d2f.storage.registerSaveHandler(saveTasks);
+    window.d2f.storage.registerLoadHandler(loadTasks);
     function init() {
-      window.d2f?.core?.registerResetHandler(resetTasks);
+      window.d2f.core.registerResetHandler(resetTasks);
       document.addEventListener("click", handleDocumentClick);
       updateProgress();
     }

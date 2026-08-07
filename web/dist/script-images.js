@@ -41,12 +41,10 @@
         }
       }
     }
-    const feature = {
+    window.d2f_image = {
       open: openLightbox,
       close: closeLightbox
     };
-    window.d2f = window.d2f ?? {};
-    window.d2f.image = feature;
     function init() {
       document.addEventListener("click", handleDocumentClick);
     }

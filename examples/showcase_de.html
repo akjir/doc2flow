@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+146.69cda02.dev">
-  <meta name="version" content="0.9.4+146.69cda02.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+147.78f4123.dev">
+  <meta name="version" content="0.9.4+147.78f4123.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-07T21:34:14Z">
+  <meta name="dcterms.created" content="2026-08-07T22:45:13Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, code, tasks, images, table">
   <title>Doc2Flow Deutscher Showcase</title>
@@ -1716,7 +1716,7 @@ mark.d2f-highlight {
     window.d2f.document = window.d2f.document || {};
     window.d2f.document.id = 'd2f_id_468e65bc2ccf89b4';
     window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {"name_placeholder":"Name","callout_note":"Hinweis","var_table_variable":"Variable","setup_in_progress":"Vorgang in Bearbeitung","copied":"Kopiert!","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","setup_completed":"Vorgang abgeschlossen","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","lang_code":"de","loading":"Lade...","copy_code":"Code kopieren","callout_important":"Wichtig","export_pdf":"Als PDF exportieren","sections_visible":"{visible} / {total} Abschnitte sichtbar","callout_warning":"Warnung","callout_caution":"Achtung","var_table_title":"Variablen","search_placeholder":"Suchen... (Ctrl+K)","date":"Datum","date_placeholder":"TT.MM.JJJJ","callout_tip":"Tipp","comment_placeholder":"Kommentar hinzufügen...","var_table_value":"Wert","signature_date":"Datum","save_state":"Stand sichern","reset_all":"Zurücksetzen"};
+    window.d2f.lang.dictionary = {"date_placeholder":"TT.MM.JJJJ","signature_date":"Datum","save_state":"Stand sichern","callout_note":"Hinweis","callout_important":"Wichtig","callout_tip":"Tipp","callout_caution":"Achtung","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","var_table_value":"Wert","copy_code":"Code kopieren","date":"Datum","setup_in_progress":"Vorgang in Bearbeitung","comment_placeholder":"Kommentar hinzufügen...","var_table_variable":"Variable","sections_visible":"{visible} / {total} Abschnitte sichtbar","var_table_title":"Variablen","reset_all":"Zurücksetzen","lang_code":"de","search_placeholder":"Suchen... (Ctrl+K)","loading":"Lade...","copied":"Kopiert!","callout_warning":"Warnung","export_pdf":"Als PDF exportieren","setup_completed":"Vorgang abgeschlossen","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","name_placeholder":"Name"};
     (() => {
   // ../src/core/ts/storage.ts
   var saveHandlers = /* @__PURE__ */ new Set();
@@ -2597,14 +2597,9 @@ mark.d2f-highlight {
         pre.appendChild(btn);
       });
     }
-    const feature = {
+    window.d2f_code = {
       copy: copyCode,
       updateVariables: updateAllCodeVariables
-    };
-    window.d2f = window.d2f ?? {};
-    window.d2f.code = feature;
-    window.d2f_code = {
-      copy: copyCode
     };
     function init() {
       updateAllCodeVariables();
@@ -2635,7 +2630,7 @@ mark.d2f-highlight {
       }
     }
     function updateProgress() {
-      const i18n = window.d2f?.lang?.dictionary ?? {};
+      const i18n = window.d2f.lang.dictionary ?? {};
       const sections = document.querySelectorAll(".section");
       let total = 0;
       let done = 0;
@@ -2714,7 +2709,7 @@ mark.d2f-highlight {
     }
     function loadTasks(state) {
       const checksData = state["checks"];
-      const isRecord = window.d2f?.utils?.isRecord;
+      const isRecord = window.d2f.utils.isRecord;
       if (isRecord && isRecord(checksData)) {
         document.querySelectorAll('.check-item input[type="checkbox"]').forEach((cb, index) => {
           const key = cb.id || "cb_" + String(index);
@@ -2751,25 +2746,20 @@ mark.d2f-highlight {
           }
           styleItem(cb);
           updateProgress();
-          window.d2f?.storage?.saveState();
+          window.d2f.storage.saveState();
         }
       }
     }
-    const feature = {
+    window.d2f_tasks = {
       updateProgress,
       save: saveTasks,
       load: loadTasks,
       reset: resetTasks
     };
-    window.d2f = window.d2f ?? {};
-    window.d2f.tasks = feature;
-    window.d2f_tasks = {
-      updateProgress
-    };
-    window.d2f?.storage?.registerSaveHandler(saveTasks);
-    window.d2f?.storage?.registerLoadHandler(loadTasks);
+    window.d2f.storage.registerSaveHandler(saveTasks);
+    window.d2f.storage.registerLoadHandler(loadTasks);
     function init() {
-      window.d2f?.core?.registerResetHandler(resetTasks);
+      window.d2f.core.registerResetHandler(resetTasks);
       document.addEventListener("click", handleDocumentClick);
       updateProgress();
     }
@@ -2824,12 +2814,10 @@ mark.d2f-highlight {
         }
       }
     }
-    const feature = {
+    window.d2f_image = {
       open: openLightbox,
       close: closeLightbox
     };
-    window.d2f = window.d2f ?? {};
-    window.d2f.image = feature;
     function init() {
       document.addEventListener("click", handleDocumentClick);
     }
@@ -2877,11 +2865,9 @@ mark.d2f-highlight {
         }
       });
     }
-    const feature = {
+    window.d2f_table = {
       init: initSectionTables
     };
-    window.d2f = window.d2f ?? {};
-    window.d2f.table = feature;
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", initSectionTables);
     } else {

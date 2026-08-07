@@ -1,14 +1,7 @@
-interface D2FCodeFeature {
-    readonly copy: (btn: HTMLElement | null) => Promise<void>;
-    readonly updateVariables: () => void;
-}
-
 interface Window {
-    d2f?: {
-        code?: D2FCodeFeature;
-    };
-    d2f_code?: {
+    d2f_code: {
         readonly copy: (btn: HTMLElement | null) => Promise<void>;
+        readonly updateVariables: () => void;
     };
 }
 
@@ -165,15 +158,9 @@ interface Window {
         });
     }
 
-    const feature = {
-        copy: copyCode,
-        updateVariables: updateAllCodeVariables,
-    } satisfies D2FCodeFeature;
-
-    window.d2f = window.d2f ?? {};
-    window.d2f.code = feature;
     window.d2f_code = {
         copy: copyCode,
+        updateVariables: updateAllCodeVariables
     };
 
     function init(): void {

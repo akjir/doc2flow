@@ -1,11 +1,5 @@
-interface D2FTableFeature {
-    readonly init: () => void;
-}
-
 interface Window {
-    d2f?: {
-        table?: D2FTableFeature;
-    };
+    d2f_table: { readonly init: () => void; };
 }
 
 (() => {
@@ -50,12 +44,9 @@ interface Window {
         });
     }
 
-    const feature = {
+    window.d2f_table = {
         init: initSectionTables,
-    } satisfies D2FTableFeature;
-
-    window.d2f = window.d2f ?? {};
-    window.d2f.table = feature;
+    };
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initSectionTables);

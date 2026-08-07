@@ -1,11 +1,7 @@
-interface D2FImageFeature {
-    readonly open: (src: string) => void;
-    readonly close: () => void;
-}
-
 interface Window {
-    d2f?: {
-        image?: D2FImageFeature;
+    d2f_image: {
+        readonly open: (src: string) => void;
+        readonly close: () => void;
     };
 }
 
@@ -55,13 +51,10 @@ interface Window {
         }
     }
 
-    const feature = {
+    window.d2f_image = {
         open: openLightbox,
         close: closeLightbox,
-    } satisfies D2FImageFeature;
-
-    window.d2f = window.d2f ?? {};
-    window.d2f.image = feature;
+    };
 
     function init(): void {
         document.addEventListener('click', handleDocumentClick);
