@@ -44,12 +44,11 @@ fn run() -> Result<()> {
     let language_code = frontmatter.language.as_deref().unwrap_or("en");
     let locale = Locale::from_lang_code(language_code);
 
-    let (html_content, mut features) = converter::convert_markdown_to_html_with_options(
+    let (html_content, features) = converter::convert_markdown_to_html_with_options(
         markdown_body,
         &locale,
         frontmatter.numbered_sections,
     )?;
-    features.has_toc = frontmatter.table_of_contents;
 
     let base_dir = input_path.parent();
 

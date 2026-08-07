@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Updated starter template (`templates/template.md`) with GFM table support, variables table documentation, and sample code variable usage.
 
+### Removed
+- Removed Table of Contents (TOC) feature and table_of_contents frontmatter option.
+
 ### Fixed
 - Fixed print styles to preserve table background colors and alternating row colors.
 - Fixed header margin in print mode to match spacing between sections.

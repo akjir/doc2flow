@@ -17,9 +17,6 @@ pub static STYLE_TASKS: &str = include_str!("features/tasks/tasks.css");
 /// Embedded image lightbox CSS feature styles.
 pub static STYLE_IMAGES: &str = include_str!("features/image/image.css");
 
-/// Embedded Table of Contents CSS feature styles.
-pub static STYLE_TOC: &str = include_str!("../styles/toc.css");
-
 /// Embedded section table CSS feature styles.
 pub static STYLE_TABLE: &str = include_str!("features/table/table.css");
 
@@ -34,9 +31,6 @@ pub static SCRIPT_TASKS: &str = include_str!("../web/dist/script-tasks.js");
 
 /// Embedded image lightbox JavaScript feature bundle.
 pub static SCRIPT_IMAGES: &str = include_str!("../web/dist/script-images.js");
-
-/// Embedded Table of Contents JavaScript feature bundle.
-pub static SCRIPT_TOC: &str = include_str!("../web/dist/script-toc.js");
 
 /// Embedded section table JavaScript feature bundle.
 pub static SCRIPT_TABLE: &str = include_str!("../web/dist/script-table.js");
@@ -58,11 +52,6 @@ pub fn render_styles(out: &mut String, features: &DocumentFeatures) {
 
     if features.has_images {
         out.push_str(STYLE_IMAGES);
-        out.push_str("\n");
-    }
-
-    if features.has_toc {
-        out.push_str(STYLE_TOC);
         out.push_str("\n");
     }
 
@@ -89,11 +78,6 @@ pub fn render_scripts(out: &mut String, features: &DocumentFeatures) {
 
     if features.has_images {
         out.push_str(SCRIPT_IMAGES);
-        out.push_str("\n");
-    }
-
-    if features.has_toc {
-        out.push_str(SCRIPT_TOC);
         out.push_str("\n");
     }
 
@@ -567,7 +551,6 @@ mod tests {
         let mut features = DocumentFeatures::default();
         features.has_tasks = true;
         features.has_images = false;
-        features.has_toc = true;
 
         let mut script_out = String::new();
         render_scripts(&mut script_out, &features);

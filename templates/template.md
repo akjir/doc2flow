@@ -13,7 +13,6 @@ License: GPL-3.0-or-later
    - language / lang: Language code for static UI translation ('en', 'de').
    - logo: Optional path to a custom logo image (SVG, PNG, JPG, WebP).
    - numbered_sections: Enable automatic section numbering for H1 and H2 headings (true / false, default: true).
-   - table_of_contents: Enable Table of Contents navigation menu (true / false, default: false).
 
 2. DOCUMENT STRUCTURE:
    - Level 1 Headings (# Heading): Collapsible main section headers (without completion badge).
@@ -63,7 +62,6 @@ version: "1.0.0"
 date: "2026-07-25"
 language: "en"
 numbered_sections: true
-table_of_contents: false
 ---
 
 [Variables]

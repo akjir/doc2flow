@@ -130,7 +130,6 @@ pub struct Frontmatter {
     pub language: Option<String>,
     pub logo: Option<String>,
     pub numbered_sections: bool,
-    pub table_of_contents: bool,
 }
 
 /// Detected interactive features present in a Markdown document.
@@ -139,7 +138,6 @@ pub struct DocumentFeatures {
     pub has_code: bool,
     pub has_tasks: bool,
     pub has_images: bool,
-    pub has_toc: bool,
     pub has_tables: bool,
 }
 
@@ -172,9 +170,6 @@ impl DocumentFeatures {
         if self.has_images {
             out.push_str(", images");
         }
-        if self.has_toc {
-            out.push_str(", toc");
-        }
         if self.has_tables {
             out.push_str(", table");
         }
@@ -192,7 +187,6 @@ impl Default for Frontmatter {
             language: None,
             logo: None,
             numbered_sections: true,
-            table_of_contents: false,
         }
     }
 }
@@ -226,7 +220,6 @@ impl Frontmatter {
             map.insert("logo".to_string(), lg.clone());
         }
         map.insert("numbered_sections".to_string(), self.numbered_sections.to_string());
-        map.insert("table_of_contents".to_string(), self.table_of_contents.to_string());
         map
     }
 }
@@ -338,7 +331,6 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
 
                 if val_trimmed.is_empty()
                     && key != "numbered_sections"
-                    && key != "table_of_contents"
                 {
                     continue;
                 }
@@ -352,9 +344,6 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
                     "logo" => fm.logo = Some(val_trimmed.to_string()),
                     "numbered_sections" => {
                         fm.numbered_sections = val_trimmed.eq_ignore_ascii_case("true");
-                    }
-                    "table_of_contents" => {
-                        fm.table_of_contents = val_trimmed.eq_ignore_ascii_case("true");
                     }
                     _ => {
                         crate::error::print_warning(&format!(
@@ -1528,20 +1517,6 @@ mod tests {
         assert!(fm4.numbered_sections);
     }
 
-    #[test]
-    fn test_table_of_contents_frontmatter_parsing() {
-        let input1 = "---\ntable_of_contents: true\n---";
-        let (fm1, _) = parse_frontmatter(input1);
-        assert!(fm1.table_of_contents);
-
-        let input2 = "---\ntable_of_contents: false\n---";
-        let (fm2, _) = parse_frontmatter(input2);
-        assert!(!fm2.table_of_contents);
-
-        let input3 = "---\ntitle: \"Default Test\"\n---";
-        let (fm3, _) = parse_frontmatter(input3);
-        assert!(!fm3.table_of_contents);
-    }
 
     #[test]
     fn test_unknown_frontmatter_option_warning() {
@@ -1628,7 +1603,6 @@ curl https://{{BLOCK}}.local:{{PORT}}/api
 
         features.has_code = true;
         features.has_images = true;
-        features.has_toc = true;
-        assert_eq!(features.to_features_string(), "core, code, tasks, images, toc, table");
+        assert_eq!(features.to_features_string(), "core, code, tasks, images, table");
     }
 }

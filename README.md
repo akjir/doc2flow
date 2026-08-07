@@ -19,9 +19,8 @@ The generated HTML files are completely self-contained—embedding all CSS styli
   - Extract parameters from Markdown tables annotated with `[Variables]`.
   - Replace `{{VARIABLE_NAME}}` placeholders inside code blocks dynamically on copy or print.
   - Interactive table UI rendered with persistent input fields.
-- 🔍 **Search Toolbar & Table of Contents (TOC):**
+- 🔍 **Search Toolbar:**
   - Built-in live search bar for filtering text and sections.
-  - Optional Table of Contents (`toc: true`) with dynamic scroll tracking.
 - 🖼️ **Image Lightbox & Auto-Scaling:**
   - Converts local images to embedded Base64 data URIs.
   - Automatic WebP compression (`-s` / `--auto-scale`) for local images exceeding 250 KB.
@@ -99,7 +98,6 @@ version: "1.0.0"
 language: "de"
 logo: "images/company_logo.svg"
 numbered_sections: true
-table_of_contents: false
 ---
 ```
 
@@ -223,14 +221,12 @@ cargo test
 doc2flow/
 ├── .cargo/               # Cargo cross-compile configuration & aliases
 ├── locales/              # Static UI translations (de.json, en.json)
-├── styles/               # Modular CSS (code, core, images, tasks, toc)
 ├── templates/            # HTML base layout and starter Markdown templates
 ├── web/                  # TypeScript client toolchain
 │   ├── package.json      # Bundler & Node scripts
 │   ├── tsconfig.json     # TypeScript configuration
 │   └── src/
-│       ├── core/         # Storage, items, sections, fields, export, search
-│       └── features/     # Code copy/variables, images/lightbox, tasks, TOC
+│       └── core/         # Storage, items, sections, fields, export, search
 ├── src/                  # Rust CLI backend engine
 │   ├── main.rs           # CLI entrypoint & argument parsing
 │   ├── lib.rs            # Module declarations & exports

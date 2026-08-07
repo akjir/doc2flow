@@ -3,7 +3,7 @@
   "version": "0.9.4",
   "private": true,
   "scripts": {
-    "build": "npx -y esbuild src/core/core.ts --bundle --outfile=dist/script-core.js && npx -y esbuild ../src/features/tasks/tasks.ts --bundle --outfile=dist/script-tasks.js && npx -y esbuild ../src/features/image/image.ts --bundle --outfile=dist/script-images.js && npx -y esbuild src/features/toc.ts --bundle --outfile=dist/script-toc.js && npx -y esbuild ../src/features/code/code.ts --bundle --outfile=dist/script-code.js && npx -y esbuild ../src/features/table/table.ts --bundle --outfile=dist/script-table.js"
+    "build": "npx -y esbuild src/core/core.ts --bundle --outfile=dist/script-core.js && npx -y esbuild ../src/features/tasks/tasks.ts --bundle --outfile=dist/script-tasks.js && npx -y esbuild ../src/features/image/image.ts --bundle --outfile=dist/script-images.js && npx -y esbuild ../src/features/code/code.ts --bundle --outfile=dist/script-code.js && npx -y esbuild ../src/features/table/table.ts --bundle --outfile=dist/script-table.js"
   },
   "devDependencies": {
     "esbuild": "^0.20.0",
