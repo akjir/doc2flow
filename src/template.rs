@@ -21,7 +21,7 @@ pub static STYLE_IMAGES: &str = include_str!("features/image/image.css");
 pub static STYLE_TOC: &str = include_str!("../styles/toc.css");
 
 /// Embedded section table CSS feature styles.
-pub static STYLE_TABLE: &str = include_str!("../styles/table.css");
+pub static STYLE_TABLE: &str = include_str!("features/table/table.css");
 
 /// Embedded core JavaScript bundle.
 pub static SCRIPT_CORE: &str = include_str!("../web/dist/script-core.js");

@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+141.a4cfbc7.dev">
-  <meta name="version" content="0.9.4+141.a4cfbc7.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+142.60cd73f.dev">
+  <meta name="version" content="0.9.4+142.60cd73f.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-07T20:35:31Z">
+  <meta name="dcterms.created" content="2026-08-07T20:41:52Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, code, tasks, images, table">
   <title>Doc2Flow Deutscher Showcase</title>
@@ -1224,7 +1224,7 @@ mark.d2f-highlight {
 }
 
 /* ==========================================================================
-   2. LAYOUT & CONTAINERS
+   1. LAYOUT & CONTAINERS
    ========================================================================== */
 
 .item-table-wrap {
@@ -1238,7 +1238,7 @@ mark.d2f-highlight {
 }
 
 /* ==========================================================================
-   3. COMPONENTS (.item-table)
+   2. COMPONENTS (.item-table)
    ========================================================================== */
 
 .item-table,
@@ -1300,11 +1300,12 @@ mark.d2f-highlight {
 }
 
 /* ==========================================================================
-   4. PRINT STYLES
+   3. PRINT STYLES
    ========================================================================== */
 
 @media print {
   .item-table-wrap {
+    display: block !important;
     overflow: hidden !important;
     border-radius: var(--radius-lg, 8px) !important;
     border: 1px solid #cbd5e1 !important;
@@ -1364,7 +1365,7 @@ mark.d2f-highlight {
 }
 
 /* ==========================================================================
-   5. RESPONSIVE MEDIA QUERIES
+   4. RESPONSIVE MEDIA QUERIES
    ========================================================================== */
 
 @media (max-width: 640px) {
@@ -1719,7 +1720,7 @@ mark.d2f-highlight {
     window.d2f.document = window.d2f.document || {};
     window.d2f.document.id = 'd2f_id_468e65bc2ccf89b4';
     window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {"name_placeholder":"Name","date_placeholder":"TT.MM.JJJJ","loading":"Lade...","var_table_value":"Wert","signature_date":"Datum","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","callout_note":"Hinweis","reset_all":"Zurücksetzen","copied":"Kopiert!","callout_tip":"Tipp","comment_placeholder":"Kommentar hinzufügen...","search_placeholder":"Suchen... (Ctrl+K)","sections_visible":"{visible} / {total} Abschnitte sichtbar","save_state":"Stand sichern","setup_completed":"Vorgang abgeschlossen","copy_code":"Code kopieren","var_table_variable":"Variable","lang_code":"de","export_pdf":"Als PDF exportieren","date":"Datum","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","callout_important":"Wichtig","callout_caution":"Achtung","setup_in_progress":"Vorgang in Bearbeitung","var_table_title":"Variablen","callout_warning":"Warnung"};
+    window.d2f.lang.dictionary = {"setup_completed":"Vorgang abgeschlossen","copy_code":"Code kopieren","callout_tip":"Tipp","sections_visible":"{visible} / {total} Abschnitte sichtbar","loading":"Lade...","comment_placeholder":"Kommentar hinzufügen...","lang_code":"de","copied":"Kopiert!","setup_in_progress":"Vorgang in Bearbeitung","date":"Datum","reset_all":"Zurücksetzen","signature_date":"Datum","export_pdf":"Als PDF exportieren","save_state":"Stand sichern","callout_note":"Hinweis","callout_warning":"Warnung","search_placeholder":"Suchen... (Ctrl+K)","var_table_title":"Variablen","var_table_variable":"Variable","var_table_value":"Wert","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","name_placeholder":"Name","callout_important":"Wichtig","callout_caution":"Achtung","date_placeholder":"TT.MM.JJJJ","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?"};
     "use strict";
 (() => {
   // src/core/storage.ts
@@ -2865,51 +2866,53 @@ mark.d2f-highlight {
   })();
 })();
 
-"use strict";
 (() => {
-  // src/features/table.ts
-  function initSectionTables() {
-    const wrappers = document.querySelectorAll(".item-table-wrap, .section table");
-    let tableCount = 0;
-    wrappers.forEach((wrapper) => {
-      const table = wrapper instanceof HTMLTableElement ? wrapper : wrapper.querySelector("table");
-      if (!table)
-        return;
-      tableCount += 1;
-      if (!table.classList.contains("item-table")) {
-        table.classList.add("item-table");
-      }
-      const tbody = table.querySelector("tbody");
-      if (tbody && !tbody.hasAttribute("data-hover-bound")) {
-        tbody.setAttribute("data-hover-bound", "true");
-        tbody.addEventListener("mouseover", (event) => {
-          const target = event.target;
-          if (target instanceof Element) {
-            const row = target.closest("tr");
-            if (row && row.parentElement === tbody) {
-              row.classList.add("row-hover");
+  // ../src/features/table/table.ts
+  (() => {
+    function initSectionTables() {
+      const wrappers = document.querySelectorAll(".item-table-wrap, .section table");
+      wrappers.forEach((wrapper) => {
+        const table = wrapper instanceof HTMLTableElement ? wrapper : wrapper.querySelector("table");
+        if (!table)
+          return;
+        if (!table.classList.contains("item-table")) {
+          table.classList.add("item-table");
+        }
+        const tbody = table.querySelector("tbody");
+        if (tbody && !tbody.hasAttribute("data-hover-bound")) {
+          tbody.setAttribute("data-hover-bound", "true");
+          tbody.addEventListener("mouseover", (event) => {
+            const target = event.target;
+            if (target instanceof Element) {
+              const row = target.closest("tr");
+              if (row && row.parentElement === tbody) {
+                row.classList.add("row-hover");
+              }
             }
-          }
-        });
-        tbody.addEventListener("mouseout", (event) => {
-          const target = event.target;
-          if (target instanceof Element) {
-            const row = target.closest("tr");
-            if (row && row.parentElement === tbody) {
-              row.classList.remove("row-hover");
+          });
+          tbody.addEventListener("mouseout", (event) => {
+            const target = event.target;
+            if (target instanceof Element) {
+              const row = target.closest("tr");
+              if (row && row.parentElement === tbody) {
+                row.classList.remove("row-hover");
+              }
             }
-          }
-        });
-      }
-    });
-  }
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => {
+          });
+        }
+      });
+    }
+    const feature = {
+      init: initSectionTables
+    };
+    window.d2f = window.d2f ?? {};
+    window.d2f.table = feature;
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initSectionTables);
+    } else {
       initSectionTables();
-    });
-  } else {
-    initSectionTables();
-  }
+    }
+  })();
 })();
 
 

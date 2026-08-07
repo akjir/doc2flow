@@ -2,7 +2,7 @@
 
 use crate::core::feature::{DocumentContext, Feature};
 use crate::error::{Doc2FlowError, Result};
-use crate::locales::{validate_locale_coverage, Locale};
+use crate::locales::{Locale, validate_locale_coverage};
 use std::collections::HashMap;
 
 /// Embedded core CSS styles for layout and components.
@@ -87,9 +87,21 @@ pub fn assemble_html(
         }
     }
 
-    let title = ctx.frontmatter.get("title").map(String::as_str).unwrap_or("");
-    let subtitle = ctx.frontmatter.get("subtitle").map(String::as_str).unwrap_or("");
-    let date = ctx.frontmatter.get("date").map(String::as_str).unwrap_or("");
+    let title = ctx
+        .frontmatter
+        .get("title")
+        .map(String::as_str)
+        .unwrap_or("");
+    let subtitle = ctx
+        .frontmatter
+        .get("subtitle")
+        .map(String::as_str)
+        .unwrap_or("");
+    let date = ctx
+        .frontmatter
+        .get("date")
+        .map(String::as_str)
+        .unwrap_or("");
 
     let mut vars = HashMap::with_capacity(24);
     vars.insert("APP_VERSION", app_version);
@@ -114,7 +126,11 @@ pub fn assemble_html(
     vars.insert("FEATURES", active_features_str.as_str());
     vars.insert("features", active_features_str.as_str());
 
-    Ok(crate::template::substitute_template(base_html, &vars, Some(locale)))
+    Ok(crate::template::substitute_template(
+        base_html,
+        &vars,
+        Some(locale),
+    ))
 }
 
 #[cfg(test)]
@@ -128,7 +144,7 @@ mod tests {
         let feature_list: Vec<Box<dyn Feature>> = vec![Box::new(CodeFeature::new())];
 
         // 1. Context with code blocks: feature is enabled
-        let mut fm = HashMap::new();
+        let fm = HashMap::new();
         let ctx_with_code = DocumentContext::new(&fm, "```rust\nfn main() {}\n```");
 
         let mut styles = String::new();
