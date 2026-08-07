@@ -220,8 +220,10 @@ cargo test
 ```text
 doc2flow/
 ├── .cargo/               # Cargo cross-compile configuration & aliases
-├── locales/              # Static UI translations (de.json, en.json)
-├── templates/            # HTML base layout and starter Markdown templates
+├── resources/            # Embedded resources (images, locales, templates)
+│   ├── images/           # Built-in icons and default logo (logo.svg)
+│   ├── locales/          # Static UI translations (de.json, en.json)
+│   └── templates/        # HTML base layout and starter Markdown templates
 ├── web/                  # TypeScript client toolchain
 │   ├── package.json      # Bundler & Node scripts
 │   ├── tsconfig.json     # TypeScript configuration

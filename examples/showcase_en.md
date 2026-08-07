@@ -24,7 +24,7 @@ This top-level section describes the basic system configuration. Tasks within H1
 
 This is an arbitrary text paragraph in the section body. It provides general instructions and information for the operator to review before starting the procedure.
 
-![Example System Architecture](../images/example1.jpg)
+![Example System Architecture](../resources/images/example1.jpg)
 
 ![External Remote Image](https://picsum.photos/600/300)
 
@@ -64,7 +64,7 @@ This arbitrary text paragraph describes the preliminary setup steps that must be
 - [ ] Configure firewall rules according to company policy
 - [x] Verify remote access service
 
-![Software Configuration Overview](../images/example2.jpg)
+![Software Configuration Overview](../resources/images/example2.jpg)
 
 # Part 2: Maintenance & System Reference
 
@@ -116,9 +116,9 @@ The table below outlines the hardware specifications of the installed system com
 
 ---
 
-![System Information Overview](../images/example3.jpg)
+![System Information Overview](../resources/images/example3.jpg)
 
-![White Background Test Image](../images/example4.png)
+![White Background Test Image](../resources/images/example4.png)
 
 # Empty Top-Level Section
 

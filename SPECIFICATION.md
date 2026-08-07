@@ -151,12 +151,15 @@ d2f.exe --version
 doc2flow/
 ├── .cargo/
 │   └── config.toml           # Cargo Aliases and Cross-Compile configuration
-├── locales/                  # Internationalization JSON translations
-│   ├── de.json               # German static UI translations
-│   └── en.json               # English static UI translations
-├── templates/                # HTML layout and starter Markdown templates
-│   ├── base.html             # Base layout template
-│   └── template.md           # Starter Markdown template for init command
+├── resources/                # Embedded static resources
+│   ├── images/               # Built-in vector icons and logos
+│   │   └── logo.svg          # Default document header logo
+│   ├── locales/              # Internationalization JSON translations
+│   │   ├── de.json           # German static UI translations
+│   │   └── en.json           # English static UI translations
+│   └── templates/            # HTML layout and starter Markdown templates
+│       ├── base.html         # Base layout template
+│       └── template.md       # Starter Markdown template for init command
 ├── web/                      # Client-side TypeScript toolchain
 │   ├── package.json          # Node and esbuild bundler configuration
 │   ├── tsconfig.json         # TypeScript compiler configuration

@@ -5,14 +5,14 @@ use std::path::Path;
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-changed=locales");
+    println!("cargo:rerun-if-changed=resources/locales");
 
     generate_version_metadata();
 
     let out_dir = env::var("OUT_DIR").expect("OUT_DIR environment variable not set");
     let dest_path = Path::new(&out_dir).join("locales_gen.rs");
 
-    let locales_dir = Path::new("locales");
+    let locales_dir = Path::new("resources/locales");
     let mut locale_entries = Vec::new();
 
     if let Ok(entries) = fs::read_dir(locales_dir) {

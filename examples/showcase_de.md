@@ -24,7 +24,7 @@ Dieser übergeordnete Abschnitt beschreibt die grundlegende Systemkonfiguration.
 
 Dies ist ein beliebiger Textabsatz im Abschnitts-Hauptteil. Er liefert allgemeine Anweisungen und Informationen für den Bearbeiter, die vor Beginn des Verfahrens durchgelesen werden sollten.
 
-![Beispiel Systemdiagramm](../images/example1.jpg)
+![Beispiel Systemdiagramm](../resources/images/example1.jpg)
 
 ![Externes Remote-Bild](https://picsum.photos/600/300)
 
@@ -64,7 +64,7 @@ Dieser beliebige Textabsatz beschreibt die vorbereitenden Schritte, die erfüllt
 - [ ] Firewall-Regeln gemäß Unternehmensrichtlinie konfigurieren
 - [x] Fernzugriffs-Dienst überprüfen
 
-![Software-Konfiguration Screenshots](../images/example2.jpg)
+![Software-Konfiguration Screenshots](../resources/images/example2.jpg)
 
 # Teil 2: Wartung & Systemreferenz
 
@@ -116,9 +116,9 @@ Die folgende Tabelle enthält die Spezifikationen der installierten Hardwarekomp
 
 ---
 
-![System-Informationsübersicht](../images/example3.jpg)
+![System-Informationsübersicht](../resources/images/example3.jpg)
 
-![Weißes Testbild mit Rahmen](../images/example4.png)
+![Weißes Testbild mit Rahmen](../resources/images/example4.png)
 
 # Leerer Hauptabschnitt
 

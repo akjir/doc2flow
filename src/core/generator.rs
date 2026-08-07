@@ -57,7 +57,7 @@ pub fn assemble_html(
     doc_id: &str,
     logo_html: Option<&str>,
 ) -> Result<String> {
-    let base_html = include_str!("../../templates/base.html");
+    let base_html = include_str!("../../resources/templates/base.html");
 
     let mut style_css = String::with_capacity(32768);
     assemble_styles(ctx, features, &mut style_css);

@@ -289,7 +289,7 @@ pub fn render_image_item(out: &mut impl Write, clean_content: &str) {
 /// assert!(template.contains("## Section 1: Initial System Verification"));
 /// ```
 pub fn generate_template_markdown() -> String {
-    let raw = include_str!("../../templates/template.md");
+    let raw = include_str!("../../resources/templates/template.md");
     raw.replace("{{APP_VERSION}}", APP_VERSION)
 }
 
@@ -361,7 +361,7 @@ pub fn render(
     logo_html: Option<&str>,
     features: &DocumentFeatures,
 ) -> Result<String> {
-    let base_html = include_str!("../../templates/base.html");
+    let base_html = include_str!("../../resources/templates/base.html");
 
     let mut style_css = String::with_capacity(32768);
     render_styles(&mut style_css, features);
