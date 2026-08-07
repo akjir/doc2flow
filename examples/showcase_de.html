@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+147.78f4123.dev">
-  <meta name="version" content="0.9.4+147.78f4123.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+148.a5a67ec.dev">
+  <meta name="version" content="0.9.4+148.a5a67ec.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-07T22:45:13Z">
+  <meta name="dcterms.created" content="2026-08-07T22:48:50Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, code, tasks, images, table">
   <title>Doc2Flow Deutscher Showcase</title>
@@ -1716,7 +1716,7 @@ mark.d2f-highlight {
     window.d2f.document = window.d2f.document || {};
     window.d2f.document.id = 'd2f_id_468e65bc2ccf89b4';
     window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {"date_placeholder":"TT.MM.JJJJ","signature_date":"Datum","save_state":"Stand sichern","callout_note":"Hinweis","callout_important":"Wichtig","callout_tip":"Tipp","callout_caution":"Achtung","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","var_table_value":"Wert","copy_code":"Code kopieren","date":"Datum","setup_in_progress":"Vorgang in Bearbeitung","comment_placeholder":"Kommentar hinzufügen...","var_table_variable":"Variable","sections_visible":"{visible} / {total} Abschnitte sichtbar","var_table_title":"Variablen","reset_all":"Zurücksetzen","lang_code":"de","search_placeholder":"Suchen... (Ctrl+K)","loading":"Lade...","copied":"Kopiert!","callout_warning":"Warnung","export_pdf":"Als PDF exportieren","setup_completed":"Vorgang abgeschlossen","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","name_placeholder":"Name"};
+    window.d2f.lang.dictionary = {"callout_tip":"Tipp","var_table_variable":"Variable","date":"Datum","export_pdf":"Als PDF exportieren","callout_important":"Wichtig","comment_placeholder":"Kommentar hinzufügen...","var_table_value":"Wert","search_placeholder":"Suchen... (Ctrl+K)","setup_in_progress":"Vorgang in Bearbeitung","var_table_title":"Variablen","lang_code":"de","copy_code":"Code kopieren","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","date_placeholder":"TT.MM.JJJJ","callout_note":"Hinweis","name_placeholder":"Name","copied":"Kopiert!","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","callout_warning":"Warnung","callout_caution":"Achtung","signature_date":"Datum","reset_all":"Zurücksetzen","loading":"Lade...","sections_visible":"{visible} / {total} Abschnitte sichtbar","setup_completed":"Vorgang abgeschlossen","save_state":"Stand sichern"};
     (() => {
   // ../src/core/ts/storage.ts
   var saveHandlers = /* @__PURE__ */ new Set();
@@ -2750,12 +2750,6 @@ mark.d2f-highlight {
         }
       }
     }
-    window.d2f_tasks = {
-      updateProgress,
-      save: saveTasks,
-      load: loadTasks,
-      reset: resetTasks
-    };
     window.d2f.storage.registerSaveHandler(saveTasks);
     window.d2f.storage.registerLoadHandler(loadTasks);
     function init() {

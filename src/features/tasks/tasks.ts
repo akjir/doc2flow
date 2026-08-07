@@ -1,12 +1,3 @@
-interface Window {
-    d2f_tasks: {
-        readonly updateProgress: () => void;
-        readonly save: () => Record<string, unknown>;
-        readonly load: (state: Record<string, unknown>) => boolean;
-        readonly reset: () => void;
-    }
-};
-
 (() => {
     function styleItem(cb: HTMLInputElement): void {
         const item = cb.closest('.check-item');
@@ -155,13 +146,6 @@ interface Window {
             }
         }
     }
-
-    window.d2f_tasks = {
-        updateProgress,
-        save: saveTasks,
-        load: loadTasks,
-        reset: resetTasks,
-    };
 
     window.d2f.storage.registerSaveHandler(saveTasks);
     window.d2f.storage.registerLoadHandler(loadTasks);

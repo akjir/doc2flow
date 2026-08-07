@@ -133,12 +133,6 @@
         }
       }
     }
-    window.d2f_tasks = {
-      updateProgress,
-      save: saveTasks,
-      load: loadTasks,
-      reset: resetTasks
-    };
     window.d2f.storage.registerSaveHandler(saveTasks);
     window.d2f.storage.registerLoadHandler(loadTasks);
     function init() {
