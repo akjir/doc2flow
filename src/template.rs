@@ -9,7 +9,7 @@ use std::fmt::Write;
 pub static STYLE_CORE: &str = include_str!("../styles/core.css");
 
 /// Embedded code block CSS feature styles.
-pub static STYLE_CODE: &str = include_str!("../styles/code.css");
+pub static STYLE_CODE: &str = include_str!("features/code/code.css");
 
 /// Embedded task list and checklist CSS feature styles.
 pub static STYLE_TASKS: &str = include_str!("../styles/tasks.css");

@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+139.2ae1024.dev">
-  <meta name="version" content="0.9.4+139.2ae1024.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+140.0b653f4.dev">
+  <meta name="version" content="0.9.4+140.0b653f4.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-07T20:22:27Z">
+  <meta name="dcterms.created" content="2026-08-07T20:31:41Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, code, tasks, images, table">
   <title>Doc2Flow English Showcase</title>
@@ -774,7 +774,7 @@ mark.d2f-highlight {
 }
 
 /* ==========================================================================
-   Code Block Feature Styles
+   Code Block & Variable Substitution Feature Styles
    ========================================================================== */
 
 .code-block-wrap {
@@ -799,8 +799,8 @@ mark.d2f-highlight {
 .code-lang {
   font-size: 10px;
   font-weight: bold;
-  font-family: var(--font-sans);
-  color: var(--gray-muted);
+  font-family: var(--font-sans, Arial, sans-serif);
+  color: var(--gray-muted, #8c959f);
   user-select: none;
 }
 
@@ -808,17 +808,17 @@ mark.d2f-highlight {
   background: transparent;
   border: none;
   cursor: pointer;
-  color: var(--gray-muted);
+  color: var(--gray-muted, #8c959f);
   padding: 2px 4px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-sm, 4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.15s, background 0.15s;
+  transition: color 0.15s ease, background 0.15s ease;
 }
 
 .copy-btn:hover {
-  color: var(--bd);
+  color: var(--bd, #163a5c);
   background: rgba(0, 0, 0, 0.06);
 }
 
@@ -829,11 +829,11 @@ mark.d2f-highlight {
 .code-block {
   background: #f0f2f5;
   color: #24292f;
-  border: 1px solid var(--border-color);
-  font-family: var(--font-mono);
+  border: 1px solid var(--border-color, #d0d7de);
+  font-family: var(--font-mono, 'Courier New', monospace);
   font-size: 11.5px;
   padding: 12px 16px;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-xl, 10px);
   margin: 8px 0 12px;
   white-space: pre;
   overflow-x: auto;
@@ -841,11 +841,11 @@ mark.d2f-highlight {
 }
 
 .code-block .c {
-  color: #6A9955;
+  color: #6a9955;
 }
 
 .code-block .s {
-  color: #CE9178;
+  color: #ce9178;
 }
 
 /* Print Rules for Code Blocks & Variables Table */
@@ -853,6 +853,10 @@ mark.d2f-highlight {
   .code-block {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+
+  .copy-btn {
+    display: none !important;
   }
 
   .item-table-var-wrap {
@@ -867,7 +871,7 @@ mark.d2f-highlight {
 .item-table-var-wrap {
   margin: 12px 0 16px;
   border: 1px solid #94a3b8;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-xl, 10px);
   overflow: hidden;
   background: #e2e8f0;
 }
@@ -876,7 +880,7 @@ mark.d2f-highlight {
   width: 100%;
   border-collapse: collapse;
   font-size: 12px;
-  font-family: var(--font-sans);
+  font-family: var(--font-sans, Arial, sans-serif);
 }
 
 .item-table-var th,
@@ -900,14 +904,14 @@ mark.d2f-highlight {
 }
 
 .item-table-var td:first-child {
-  font-family: var(--font-mono);
+  font-family: var(--font-mono, 'Courier New', monospace);
   font-weight: 600;
   color: #0f172a;
   width: 35%;
 }
 
 .item-table-var td:nth-child(2) {
-  font-family: var(--font-mono);
+  font-family: var(--font-mono, 'Courier New', monospace);
   color: #334155;
   padding: 4px 8px;
 }
@@ -918,7 +922,7 @@ mark.d2f-highlight {
   border: 1px solid #cbd5e1;
   border-radius: var(--radius-sm, 4px);
   padding: 4px 8px;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono, 'Courier New', monospace);
   font-size: 11.5px;
   color: #0f172a;
   box-sizing: border-box;
@@ -928,9 +932,10 @@ mark.d2f-highlight {
 .item-table-var-input:focus {
   outline: none;
   background: #f1f5f9;
-  border-color: var(--bm, #2E75B6);
+  border-color: var(--bm, #2e75b6);
   box-shadow: 0 0 0 2px rgba(46, 117, 182, 0.2);
 }
+
 /* ==========================================================================
    Tasks & Checklist Feature Styles
    ========================================================================== */
@@ -1708,7 +1713,7 @@ mark.d2f-highlight {
     window.d2f.document = window.d2f.document || {};
     window.d2f.document.id = 'd2f_id_c9c539743b5bb460';
     window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {"comment_placeholder":"Add a comment...","callout_caution":"Caution","date_placeholder":"MM/DD/YYYY","setup_in_progress":"Process in Progress","lang_code":"en","copy_code":"Copy code","save_state":"Save State","progress_template":"{done} of {total} tasks completed ({pct}%)","search_placeholder":"Search... (Ctrl+K)","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","var_table_variable":"Variable","signature_date":"Date","callout_note":"Note","setup_completed":"Process Completed","sections_visible":"{visible} / {total} sections visible","var_table_title":"Variables","copied":"Copied!","name_placeholder":"Name","loading":"Loading...","callout_important":"Important","var_table_value":"Value","date":"Date","callout_tip":"Tip","export_pdf":"Export as PDF","reset_all":"Reset","callout_warning":"Warning"};
+    window.d2f.lang.dictionary = {"date_placeholder":"MM/DD/YYYY","export_pdf":"Export as PDF","callout_important":"Important","date":"Date","setup_completed":"Process Completed","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","save_state":"Save State","setup_in_progress":"Process in Progress","name_placeholder":"Name","sections_visible":"{visible} / {total} sections visible","reset_all":"Reset","progress_template":"{done} of {total} tasks completed ({pct}%)","copy_code":"Copy code","callout_note":"Note","callout_tip":"Tip","callout_caution":"Caution","lang_code":"en","signature_date":"Date","comment_placeholder":"Add a comment...","var_table_title":"Variables","loading":"Loading...","search_placeholder":"Search... (Ctrl+K)","copied":"Copied!","var_table_variable":"Variable","var_table_value":"Value","callout_warning":"Warning"};
     "use strict";
 (() => {
   // src/core/storage.ts

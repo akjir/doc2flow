@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+139.2ae1024.dev">
-  <meta name="version" content="0.9.4+139.2ae1024.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+140.0b653f4.dev">
+  <meta name="version" content="0.9.4+140.0b653f4.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-07T20:22:27Z">
+  <meta name="dcterms.created" content="2026-08-07T20:31:41Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, code, tasks, images, table">
   <title>Doc2Flow Deutscher Showcase</title>
@@ -774,7 +774,7 @@ mark.d2f-highlight {
 }
 
 /* ==========================================================================
-   Code Block Feature Styles
+   Code Block & Variable Substitution Feature Styles
    ========================================================================== */
 
 .code-block-wrap {
@@ -799,8 +799,8 @@ mark.d2f-highlight {
 .code-lang {
   font-size: 10px;
   font-weight: bold;
-  font-family: var(--font-sans);
-  color: var(--gray-muted);
+  font-family: var(--font-sans, Arial, sans-serif);
+  color: var(--gray-muted, #8c959f);
   user-select: none;
 }
 
@@ -808,17 +808,17 @@ mark.d2f-highlight {
   background: transparent;
   border: none;
   cursor: pointer;
-  color: var(--gray-muted);
+  color: var(--gray-muted, #8c959f);
   padding: 2px 4px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-sm, 4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.15s, background 0.15s;
+  transition: color 0.15s ease, background 0.15s ease;
 }
 
 .copy-btn:hover {
-  color: var(--bd);
+  color: var(--bd, #163a5c);
   background: rgba(0, 0, 0, 0.06);
 }
 
@@ -829,11 +829,11 @@ mark.d2f-highlight {
 .code-block {
   background: #f0f2f5;
   color: #24292f;
-  border: 1px solid var(--border-color);
-  font-family: var(--font-mono);
+  border: 1px solid var(--border-color, #d0d7de);
+  font-family: var(--font-mono, 'Courier New', monospace);
   font-size: 11.5px;
   padding: 12px 16px;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-xl, 10px);
   margin: 8px 0 12px;
   white-space: pre;
   overflow-x: auto;
@@ -841,11 +841,11 @@ mark.d2f-highlight {
 }
 
 .code-block .c {
-  color: #6A9955;
+  color: #6a9955;
 }
 
 .code-block .s {
-  color: #CE9178;
+  color: #ce9178;
 }
 
 /* Print Rules for Code Blocks & Variables Table */
@@ -853,6 +853,10 @@ mark.d2f-highlight {
   .code-block {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+
+  .copy-btn {
+    display: none !important;
   }
 
   .item-table-var-wrap {
@@ -867,7 +871,7 @@ mark.d2f-highlight {
 .item-table-var-wrap {
   margin: 12px 0 16px;
   border: 1px solid #94a3b8;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-xl, 10px);
   overflow: hidden;
   background: #e2e8f0;
 }
@@ -876,7 +880,7 @@ mark.d2f-highlight {
   width: 100%;
   border-collapse: collapse;
   font-size: 12px;
-  font-family: var(--font-sans);
+  font-family: var(--font-sans, Arial, sans-serif);
 }
 
 .item-table-var th,
@@ -900,14 +904,14 @@ mark.d2f-highlight {
 }
 
 .item-table-var td:first-child {
-  font-family: var(--font-mono);
+  font-family: var(--font-mono, 'Courier New', monospace);
   font-weight: 600;
   color: #0f172a;
   width: 35%;
 }
 
 .item-table-var td:nth-child(2) {
-  font-family: var(--font-mono);
+  font-family: var(--font-mono, 'Courier New', monospace);
   color: #334155;
   padding: 4px 8px;
 }
@@ -918,7 +922,7 @@ mark.d2f-highlight {
   border: 1px solid #cbd5e1;
   border-radius: var(--radius-sm, 4px);
   padding: 4px 8px;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono, 'Courier New', monospace);
   font-size: 11.5px;
   color: #0f172a;
   box-sizing: border-box;
@@ -928,9 +932,10 @@ mark.d2f-highlight {
 .item-table-var-input:focus {
   outline: none;
   background: #f1f5f9;
-  border-color: var(--bm, #2E75B6);
+  border-color: var(--bm, #2e75b6);
   box-shadow: 0 0 0 2px rgba(46, 117, 182, 0.2);
 }
+
 /* ==========================================================================
    Tasks & Checklist Feature Styles
    ========================================================================== */
@@ -1708,7 +1713,7 @@ mark.d2f-highlight {
     window.d2f.document = window.d2f.document || {};
     window.d2f.document.id = 'd2f_id_468e65bc2ccf89b4';
     window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {"comment_placeholder":"Kommentar hinzufügen...","signature_date":"Datum","var_table_variable":"Variable","name_placeholder":"Name","copied":"Kopiert!","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","setup_in_progress":"Vorgang in Bearbeitung","date":"Datum","export_pdf":"Als PDF exportieren","sections_visible":"{visible} / {total} Abschnitte sichtbar","callout_important":"Wichtig","copy_code":"Code kopieren","var_table_value":"Wert","callout_caution":"Achtung","callout_note":"Hinweis","callout_tip":"Tipp","save_state":"Stand sichern","search_placeholder":"Suchen... (Ctrl+K)","date_placeholder":"TT.MM.JJJJ","loading":"Lade...","setup_completed":"Vorgang abgeschlossen","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","var_table_title":"Variablen","lang_code":"de","reset_all":"Zurücksetzen","callout_warning":"Warnung"};
+    window.d2f.lang.dictionary = {"copy_code":"Code kopieren","save_state":"Stand sichern","lang_code":"de","date":"Datum","setup_in_progress":"Vorgang in Bearbeitung","loading":"Lade...","search_placeholder":"Suchen... (Ctrl+K)","var_table_variable":"Variable","var_table_value":"Wert","callout_warning":"Warnung","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","export_pdf":"Als PDF exportieren","callout_important":"Wichtig","callout_caution":"Achtung","sections_visible":"{visible} / {total} Abschnitte sichtbar","date_placeholder":"TT.MM.JJJJ","var_table_title":"Variablen","callout_note":"Hinweis","copied":"Kopiert!","callout_tip":"Tipp","setup_completed":"Vorgang abgeschlossen","reset_all":"Zurücksetzen","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","comment_placeholder":"Kommentar hinzufügen...","signature_date":"Datum","name_placeholder":"Name"};
     "use strict";
 (() => {
   // src/core/storage.ts
