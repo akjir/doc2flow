@@ -1,5 +1,5 @@
-use crate::components;
 use crate::error::Result;
+use crate::features;
 use crate::locales::Locale;
 use crate::template;
 use pulldown_cmark::{
@@ -440,7 +440,7 @@ fn build_variable_table(
         .get_ignore_ascii_case("var_table_value")
         .unwrap_or("Value");
 
-    components::render_variable_table(out, var_term, val_term, table_rows, &json_payload);
+    features::code::render_variable_table(out, var_term, val_term, table_rows, &json_payload);
 }
 
 /// Iterator adapter filtering out HTML comment blocks from a stream of Markdown events.

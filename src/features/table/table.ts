@@ -1,7 +1,3 @@
-interface Window {
-    d2f_table: { readonly init: () => void; };
-}
-
 (() => {
     function initSectionTables(): void {
         const wrappers = document.querySelectorAll<HTMLElement>('.item-table-wrap, .section table');
@@ -43,10 +39,6 @@ interface Window {
             }
         });
     }
-
-    window.d2f_table = {
-        init: initSectionTables,
-    };
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initSectionTables);

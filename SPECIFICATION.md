@@ -123,10 +123,10 @@ d2f.exe --version
 * **Pure In-Memory Processing Core:** Core modules (`src/converter.rs`, `src/template.rs`, `src/components.rs`, `src/locales.rs`, `src/hasher.rs`, `src/id.rs`) perform pure in-memory string/AST data transformations decoupled from disk I/O.
 * **Strict Modular Feature Isolation (HTML, CSS, TS/JS):**
   * Extension features (`code`, `image`, `table`, `tasks`) are fully decoupled and zero-knowledge of each other.
-  * Each feature maintains dedicated TypeScript and CSS modules within its vertical slice directory (`src/features/<name>/`).
+  * Each feature maintains dedicated HTML components, TypeScript and CSS modules within its vertical slice directory (`src/features/<name>/`).
   * If a feature is omitted/disabled (`DocumentFeatures`), zero HTML elements, zero CSS rules, and zero JS/TS code for that feature are emitted in the rendered document.
 * **HTML UI Components & Templating (`src/components.rs` & `src/template.rs`):**
-  * `src/components.rs`: Reusable zero-allocation HTML UI building blocks (`out: &mut impl Write`).
+  * `src/components.rs`: Core-universal zero-allocation HTML UI building blocks (`out: &mut impl Write`). Feature-specific HTML components reside in their respective feature modules.
   * `src/template.rs`: Central HTML page orchestrator, feature style assembler (`render_styles`), and script bundle assembler (`render_scripts`).
 * **Centralized Diagnostic Error Handling (`src/error.rs`):** Runtime, I/O, and syntax errors map to domain error types (`Doc2FlowError`) with compiler-style `stderr` warnings (`print_warning`).
 
@@ -174,7 +174,7 @@ doc2flow/
 │   ├── lib.rs                # Module declarations and library interface
 │   ├── core/                 # Core architecture, engine, stylesheets and TS runtime
 │   │   ├── mod.rs            # Core module exports
-│   │   ├── components.rs     # HTML UI component generators
+│   │   ├── components.rs     # Core-universal HTML UI component generators
 │   │   ├── converter.rs      # Markdown AST parser and feature detector interface
 │   │   ├── error.rs          # Diagnostic error types and reporting
 │   │   ├── feature.rs        # Feature trait and DocumentContext detection
@@ -204,11 +204,11 @@ doc2flow/
 │   └── features/             # Vertical slice feature modules
 │       ├── mod.rs            # Central feature registry (get_all_features)
 │       ├── code/             # Unified code block and copy feature vertical slice
-│       │   ├── module.rs     # Rust Feature struct and trait implementation
+│       │   ├── module.rs     # Rust Feature struct, trait implementation, and HTML components
 │       │   ├── code.ts       # TypeScript client script for variables and copy button
 │       │   └── code.css      # Isolated CSS for code blocks, variables table and copy button
 │       ├── image/            # Unified image container and lightbox vertical slice
-│       │   ├── module.rs     # Rust Feature struct and trait implementation
+│       │   ├── module.rs     # Rust Feature struct, trait implementation, and HTML components
 │       │   ├── image.ts      # TypeScript client script for lightbox modal
 │       │   └── image.css     # Isolated CSS for image container, lightbox and print
 │       ├── table/            # Unified section table and tabular layout vertical slice
@@ -216,7 +216,7 @@ doc2flow/
 │       │   ├── table.ts      # TypeScript client script for section table hover and formatting
 │       │   └── table.css     # Isolated CSS for section tables and print styles
 │       └── tasks/            # Unified task list and checklist progress vertical slice
-│           ├── module.rs     # Rust Feature struct and trait implementation
+│           ├── module.rs     # Rust Feature struct, trait implementation, and HTML components
 │           ├── tasks.ts      # TypeScript client script for checklist progress and finish box
 │           └── tasks.css     # Isolated CSS for checklist items, progress bar and finish box
 ├── tests/

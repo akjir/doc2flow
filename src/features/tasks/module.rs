@@ -1,6 +1,63 @@
 //! Task list, checklist progress tracking, and sign-off finish box feature slice.
 
+use crate::core::components::COMMENT_ICON_SVG;
 use crate::core::feature::{DocumentContext, Feature};
+use std::fmt::Write;
+
+/// Renders a task list checkbox item directly into the output buffer.
+#[inline]
+pub fn render_task_item(
+    out: &mut impl Write,
+    sec_num: usize,
+    cb_count: usize,
+    is_checked: bool,
+    clean_label: &str,
+    indent_depth: usize,
+) {
+    let checked_attr = if is_checked { " checked" } else { "" };
+    let label_text = clean_label.trim();
+
+    let _ = write!(
+        out,
+        "<div class=\"doc-item check-item{checked_attr}\" id=\"wrap-cb_s{sec_num}_{cb_count}\""
+    );
+    if indent_depth > 0 {
+        let _ = write!(out, " style=\"--indent: {indent_depth};\"");
+    }
+    let _ = write!(
+        out,
+        ">\n  <input type=\"checkbox\" id=\"cb_s{sec_num}_{cb_count}\"{checked_attr}>\n  <label class=\"check-label\" for=\"cb_s{sec_num}_{cb_count}\">{label_text}</label>\n  {COMMENT_ICON_SVG}\n</div>\n"
+    );
+}
+
+/// Renders the top process progress bar component if the tasks feature is enabled.
+#[inline]
+pub fn render_progress_bar(out: &mut impl Write, has_tasks: bool, loading_label: &str) {
+    if has_tasks {
+        let _ = write!(
+            out,
+            "<div class=\"pb-col\">\n  <div class=\"pb-wrap\" role=\"progressbar\" aria-valuenow=\"0\" aria-valuemin=\"0\" aria-valuemax=\"100\"><div class=\"pb\" id=\"pb\"></div></div>\n  <div class=\"pt\" id=\"pt\">{loading_label}</div>\n</div>"
+        );
+    }
+}
+
+/// Renders the bottom finish box component if the tasks feature is enabled.
+#[inline]
+pub fn render_finish_box(
+    out: &mut impl Write,
+    has_tasks: bool,
+    setup_completed_label: &str,
+    name_placeholder: &str,
+    date_placeholder: &str,
+    signature_date_label: &str,
+) {
+    if has_tasks {
+        let _ = write!(
+            out,
+            "<div class=\"finish\" id=\"finish-box\">\n  <div class=\"big\" id=\"finish-icon\">&#x2714;</div>\n  <h2 id=\"finish-title\">{setup_completed_label}</h2>\n  <div class=\"sigs\">\n    <div><input type=\"text\" class=\"sf persistent-field\" id=\"f_sign_agent\" placeholder=\"{name_placeholder}\" aria-label=\"{name_placeholder}\"><div style=\"margin-top:4px\">{name_placeholder}</div></div>\n    <div><input type=\"text\" class=\"sf persistent-field\" id=\"f_sign_date\" placeholder=\"{date_placeholder}\" aria-label=\"{signature_date_label}\"><div style=\"margin-top:4px\">{signature_date_label}</div></div>\n  </div>\n</div>"
+        );
+    }
+}
 
 /// Unified tasks feature slice providing interactive checklist toggles, progress bar tracking, and sign-off footer.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -92,5 +149,52 @@ mod tests {
         assert!(css.contains(".pb-wrap"));
         assert!(css.contains(".finish"));
         assert!(css.contains(".sbadge"));
+    }
+
+    #[test]
+    fn test_render_task_item() {
+        let mut buf = String::new();
+        render_task_item(&mut buf, 1, 2, true, "Check task", 0);
+        assert!(buf.contains("<div class=\"doc-item check-item checked\" id=\"wrap-cb_s1_2\">"));
+        assert!(buf.contains("<input type=\"checkbox\" id=\"cb_s1_2\" checked>"));
+        assert!(buf.contains("<label class=\"check-label\" for=\"cb_s1_2\">Check task</label>"));
+    }
+
+    #[test]
+    fn test_render_progress_bar() {
+        let mut buf_true = String::new();
+        render_progress_bar(&mut buf_true, true, "Loading...");
+        assert!(buf_true.contains("<div class=\"pb-col\">"));
+        assert!(buf_true.contains("<div class=\"pt\" id=\"pt\">Loading...</div>"));
+
+        let mut buf_false = String::new();
+        render_progress_bar(&mut buf_false, false, "Loading...");
+        assert_eq!(buf_false, "");
+    }
+
+    #[test]
+    fn test_render_finish_box() {
+        let mut buf_true = String::new();
+        render_finish_box(
+            &mut buf_true,
+            true,
+            "Completed",
+            "Name",
+            "MM/DD/YYYY",
+            "Date",
+        );
+        assert!(buf_true.contains("<div class=\"finish\" id=\"finish-box\">"));
+        assert!(buf_true.contains("<h2 id=\"finish-title\">Completed</h2>"));
+
+        let mut buf_false = String::new();
+        render_finish_box(
+            &mut buf_false,
+            false,
+            "Completed",
+            "Name",
+            "MM/DD/YYYY",
+            "Date",
+        );
+        assert_eq!(buf_false, "");
     }
 }

@@ -5,9 +5,6 @@ use std::fmt::Write;
 /// Embedded SVG comment icon for interactive elements.
 pub const COMMENT_ICON_SVG: &str = r##"<span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>"##;
 
-/// Code copy SVG icon button element.
-pub const COPY_ICON_SVG: &str = r#"<svg aria-hidden="true" class="svg-icon iconCopy" width="14" height="15" viewBox="0 0 17 18"><path fill="currentColor" d="M5 6c0-1.09.91-2 2-2h4.5L15 7.5V15c0 1.09-.91 2-2 2H7c-1.09 0-2-.91-2-2zm6-1.25V8h3.25z"/><path fill="currentColor" d="M10 1a2 2 0 0 1 2 2H6a2 2 0 0 0-2 2v9a2 2 0 0 1-2-2V4a3 3 0 0 1 3-3z" opacity=".4"/></svg>"#;
-
 /// Default embedded SVG header logo.
 pub const DEFAULT_LOGO_SVG: &str = include_str!("../../resources/images/logo.svg");
 
@@ -75,54 +72,6 @@ pub fn render_callout(
     );
 }
 
-/// Renders a code block component with header, copy button, and syntax language badge.
-#[inline]
-pub fn render_code_block(
-    out: &mut impl Write,
-    lang_opt: Option<&str>,
-    escaped_code: &str,
-    copy_label: &str,
-) {
-    let _ = out.write_str("<div class=\"code-block-wrap\"><div class=\"code-header\">");
-    if let Some(lang) = lang_opt {
-        let _ = write!(out, "<span class=\"code-lang\">{lang}</span>");
-    }
-    let _ = write!(
-        out,
-        "<button class=\"copy-btn\" onclick=\"window.d2f_code.copy(this)\" title=\"{copy_label}\" aria-label=\"{copy_label}\">{COPY_ICON_SVG}</button></div><pre class=\"code-block"
-    );
-    if let Some(lang) = lang_opt {
-        let _ = write!(out, " language-{lang}");
-    }
-    let _ = writeln!(out, "\"><code>{escaped_code}</code></pre></div>");
-}
-
-/// Renders a task list checkbox item directly into the output buffer.
-#[inline]
-pub fn render_task_item(
-    out: &mut impl Write,
-    sec_num: usize,
-    cb_count: usize,
-    is_checked: bool,
-    clean_label: &str,
-    indent_depth: usize,
-) {
-    let checked_attr = if is_checked { " checked" } else { "" };
-    let label_text = clean_label.trim();
-
-    let _ = write!(
-        out,
-        "<div class=\"doc-item check-item{checked_attr}\" id=\"wrap-cb_s{sec_num}_{cb_count}\""
-    );
-    if indent_depth > 0 {
-        let _ = write!(out, " style=\"--indent: {indent_depth};\"");
-    }
-    let _ = write!(
-        out,
-        ">\n  <input type=\"checkbox\" id=\"cb_s{sec_num}_{cb_count}\"{checked_attr}>\n  <label class=\"check-label\" for=\"cb_s{sec_num}_{cb_count}\">{label_text}</label>\n  {COMMENT_ICON_SVG}\n</div>\n"
-    );
-}
-
 /// Renders a simple list item component directly into the output buffer.
 #[inline]
 pub fn render_list_item(
@@ -170,82 +119,6 @@ pub fn render_text_item(
     );
 }
 
-/// Renders an image container block directly into the output buffer.
-#[inline]
-pub fn render_image_item(out: &mut impl Write, clean_content: &str) {
-    let _ = write!(out, "<div class=\"img-item\">\n  {clean_content}\n</div>\n");
-}
-
-/// Renders the image lightbox modal markup if the document contains images.
-#[inline]
-pub fn render_lightbox(out: &mut impl Write, has_images: bool) {
-    if has_images {
-        let _ = out.write_str(
-            "<div class=\"lightbox\" id=\"lightbox\">\n  <span class=\"lb-x\">&times;</span>\n  <img id=\"lb-img\" src=\"\" alt=\"\">\n</div>\n",
-        );
-    }
-}
-
-/// Renders the top process progress bar component if the tasks feature is enabled.
-#[inline]
-pub fn render_progress_bar(out: &mut impl Write, has_tasks: bool, loading_label: &str) {
-    if has_tasks {
-        let _ = write!(
-            out,
-            "<div class=\"pb-col\">\n  <div class=\"pb-wrap\" role=\"progressbar\" aria-valuenow=\"0\" aria-valuemin=\"0\" aria-valuemax=\"100\"><div class=\"pb\" id=\"pb\"></div></div>\n  <div class=\"pt\" id=\"pt\">{loading_label}</div>\n</div>"
-        );
-    }
-}
-
-/// Renders the bottom finish box component if the tasks feature is enabled.
-#[inline]
-pub fn render_finish_box(
-    out: &mut impl Write,
-    has_tasks: bool,
-    setup_completed_label: &str,
-    name_placeholder: &str,
-    date_placeholder: &str,
-    signature_date_label: &str,
-) {
-    if has_tasks {
-        let _ = write!(
-            out,
-            "<div class=\"finish\" id=\"finish-box\">\n  <div class=\"big\" id=\"finish-icon\">&#x2714;</div>\n  <h2 id=\"finish-title\">{setup_completed_label}</h2>\n  <div class=\"sigs\">\n    <div><input type=\"text\" class=\"sf persistent-field\" id=\"f_sign_agent\" placeholder=\"{name_placeholder}\" aria-label=\"{name_placeholder}\"><div style=\"margin-top:4px\">{name_placeholder}</div></div>\n    <div><input type=\"text\" class=\"sf persistent-field\" id=\"f_sign_date\" placeholder=\"{date_placeholder}\" aria-label=\"{signature_date_label}\"><div style=\"margin-top:4px\">{signature_date_label}</div></div>\n  </div>\n</div>"
-        );
-    }
-}
-
-/// Renders an annotated `[Variables]` key-value table component into the output buffer.
-#[inline]
-pub fn render_variable_table<K: AsRef<str>, V: AsRef<str>>(
-    out: &mut impl Write,
-    col_variable: &str,
-    col_value: &str,
-    rows: &[(K, V)],
-    json_payload: &str,
-) {
-    let escaped_json = crate::converter::html_escape(json_payload);
-    let escaped_col_var = crate::converter::html_escape(col_variable);
-    let escaped_col_val = crate::converter::html_escape(col_value);
-
-    let _ = writeln!(
-        out,
-        "<div class=\"item-table-var-wrap\"><table class=\"item-table-var\" data-variables=\"{escaped_json}\"><thead><tr><th>{escaped_col_var}</th><th>{escaped_col_val}</th></tr></thead><tbody>"
-    );
-    for (k, v) in rows {
-        let escaped_k = crate::converter::html_escape(k.as_ref());
-        let escaped_v = crate::converter::html_escape(v.as_ref());
-        let _ = write!(
-            out,
-            "<tr><td>{escaped_k}</td><td><input type=\"text\" class=\"item-table-var-input persistent-field\" id=\"f_var_{escaped_k}\" data-var-key=\"{escaped_k}\" data-default-value=\"{escaped_v}\" value=\"{escaped_v}\"></td></tr>\n"
-        );
-    }
-    let _ = out.write_str("</tbody></table></div>\n");
-}
-
-
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -292,24 +165,6 @@ mod tests {
     }
 
     #[test]
-    fn test_render_code_block() {
-        let mut buf = String::new();
-        render_code_block(&mut buf, Some("rust"), "fn main() {}", "Copy");
-        assert!(buf.contains("<span class=\"code-lang\">rust</span>"));
-        assert!(buf.contains("language-rust"));
-        assert!(buf.contains("<code>fn main() {}</code>"));
-    }
-
-    #[test]
-    fn test_render_task_item() {
-        let mut buf = String::new();
-        render_task_item(&mut buf, 1, 2, true, "Check task", 0);
-        assert!(buf.contains("<div class=\"doc-item check-item checked\" id=\"wrap-cb_s1_2\">"));
-        assert!(buf.contains("<input type=\"checkbox\" id=\"cb_s1_2\" checked>"));
-        assert!(buf.contains("<label class=\"check-label\" for=\"cb_s1_2\">Check task</label>"));
-    }
-
-    #[test]
     fn test_render_list_item() {
         let mut buf = String::new();
         render_list_item(&mut buf, 2, 1, "&bull;", "Bullet item", 1);
@@ -324,80 +179,4 @@ mod tests {
         assert!(buf.contains("id=\"txt_s1_3\""));
         assert!(buf.contains("<span class=\"text-content\">Text line</span>"));
     }
-
-    #[test]
-    fn test_render_image_item() {
-        let mut buf = String::new();
-        render_image_item(&mut buf, "<img src=\"foo.png\">");
-        assert_eq!(
-            buf,
-            "<div class=\"img-item\">\n  <img src=\"foo.png\">\n</div>\n"
-        );
-    }
-
-    #[test]
-    fn test_render_lightbox() {
-        let mut buf_true = String::new();
-        render_lightbox(&mut buf_true, true);
-        assert!(buf_true.contains("<div class=\"lightbox\" id=\"lightbox\">"));
-
-        let mut buf_false = String::new();
-        render_lightbox(&mut buf_false, false);
-        assert_eq!(buf_false, "");
-    }
-
-    #[test]
-    fn test_render_progress_bar() {
-        let mut buf_true = String::new();
-        render_progress_bar(&mut buf_true, true, "Loading...");
-        assert!(buf_true.contains("<div class=\"pb-col\">"));
-        assert!(buf_true.contains("<div class=\"pt\" id=\"pt\">Loading...</div>"));
-
-        let mut buf_false = String::new();
-        render_progress_bar(&mut buf_false, false, "Loading...");
-        assert_eq!(buf_false, "");
-    }
-
-    #[test]
-    fn test_render_finish_box() {
-        let mut buf_true = String::new();
-        render_finish_box(
-            &mut buf_true,
-            true,
-            "Completed",
-            "Name",
-            "MM/DD/YYYY",
-            "Date",
-        );
-        assert!(buf_true.contains("<div class=\"finish\" id=\"finish-box\">"));
-        assert!(buf_true.contains("<h2 id=\"finish-title\">Completed</h2>"));
-
-        let mut buf_false = String::new();
-        render_finish_box(
-            &mut buf_false,
-            false,
-            "Completed",
-            "Name",
-            "MM/DD/YYYY",
-            "Date",
-        );
-        assert_eq!(buf_false, "");
-    }
-
-    #[test]
-    fn test_render_variable_table() {
-        let mut buf = String::new();
-        let rows = vec![("BLOCK".to_string(), "prod-server".to_string())];
-        let json = "{\"BLOCK\":\"prod-server\"}";
-        render_variable_table(&mut buf, "Variable", "Value", &rows, json);
-        assert!(buf.contains("<div class=\"item-table-var-wrap\">"));
-        assert!(buf.contains("<th>Variable</th><th>Value</th>"));
-        assert!(buf.contains("<td>BLOCK</td>"));
-        assert!(buf.contains("class=\"item-table-var-input persistent-field\""));
-        assert!(buf.contains("data-var-key=\"BLOCK\""));
-        assert!(buf.contains("value=\"prod-server\""));
-    }
 }
-
-
-

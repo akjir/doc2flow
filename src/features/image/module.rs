@@ -1,6 +1,23 @@
 //! Image lightbox and embedding feature slice.
 
 use crate::core::feature::{DocumentContext, Feature};
+use std::fmt::Write;
+
+/// Renders an image container block directly into the output buffer.
+#[inline]
+pub fn render_image_item(out: &mut impl Write, clean_content: &str) {
+    let _ = write!(out, "<div class=\"img-item\">\n  {clean_content}\n</div>\n");
+}
+
+/// Renders the image lightbox modal markup if the document contains images.
+#[inline]
+pub fn render_lightbox(out: &mut impl Write, has_images: bool) {
+    if has_images {
+        let _ = out.write_str(
+            "<div class=\"lightbox\" id=\"lightbox\">\n  <span class=\"lb-x\">&times;</span>\n  <img id=\"lb-img\" src=\"\" alt=\"\">\n</div>\n",
+        );
+    }
+}
 
 /// Unified image feature slice providing image lightbox modal viewing, zoom styling, and print formatting.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -86,5 +103,26 @@ mod tests {
         assert!(css.contains(".lightbox"));
         assert!(css.contains(".doc-body img"));
         assert!(css.contains(".img-item"));
+    }
+
+    #[test]
+    fn test_render_image_item() {
+        let mut buf = String::new();
+        render_image_item(&mut buf, "<img src=\"foo.png\">");
+        assert_eq!(
+            buf,
+            "<div class=\"img-item\">\n  <img src=\"foo.png\">\n</div>\n"
+        );
+    }
+
+    #[test]
+    fn test_render_lightbox() {
+        let mut buf_true = String::new();
+        render_lightbox(&mut buf_true, true);
+        assert!(buf_true.contains("<div class=\"lightbox\" id=\"lightbox\">"));
+
+        let mut buf_false = String::new();
+        render_lightbox(&mut buf_false, false);
+        assert_eq!(buf_false, "");
     }
 }

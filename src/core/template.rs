@@ -1,6 +1,7 @@
 use crate::components;
 use crate::converter::{DocumentFeatures, Frontmatter};
 use crate::error::{Doc2FlowError, Result};
+use crate::features;
 use crate::locales::{Locale, validate_locale_coverage};
 use std::collections::HashMap;
 use std::fmt::Write;
@@ -90,14 +91,14 @@ pub fn render_scripts(out: &mut String, features: &DocumentFeatures) {
 /// Renders the image lightbox modal markup if the document contains images.
 #[inline]
 pub fn render_lightbox(out: &mut impl Write, features: &DocumentFeatures) {
-    components::render_lightbox(out, features.has_images);
+    features::image::render_lightbox(out, features.has_images);
 }
 
 /// Renders the top process progress bar component if the document contains tasks.
 #[inline]
 pub fn render_progress_bar(out: &mut impl Write, features: &DocumentFeatures, locale: &Locale) {
     let loading = locale.get_ignore_ascii_case("LOADING").unwrap_or("");
-    components::render_progress_bar(out, features.has_tasks, loading);
+    features::tasks::render_progress_bar(out, features.has_tasks, loading);
 }
 
 /// Renders the bottom finish box component if the document contains tasks.
@@ -108,7 +109,7 @@ pub fn render_finish_box(out: &mut impl Write, features: &DocumentFeatures, loca
     let date_placeholder = locale.get_ignore_ascii_case("DATE_PLACEHOLDER").unwrap_or("");
     let signature_date = locale.get_ignore_ascii_case("SIGNATURE_DATE").unwrap_or("");
 
-    components::render_finish_box(
+    features::tasks::render_finish_box(
         out,
         features.has_tasks,
         setup_completed,
@@ -178,15 +179,7 @@ pub fn render_section_header(
     has_checklist: bool,
     callout_type: Option<&str>,
 ) {
-    components::render_section_header(
-        out,
-        section_count,
-        heading_text,
-        is_h1,
-        is_empty,
-        has_checklist,
-        callout_type,
-    );
+    components::render_section_header(out, section_count, heading_text, is_h1, is_empty, has_checklist, callout_type);
 }
 
 /// Renders section container closing tags directly into the output buffer.
@@ -220,7 +213,7 @@ pub fn render_code_block(
     escaped_code: &str,
     copy_label: &str,
 ) {
-    components::render_code_block(out, lang_opt, escaped_code, copy_label);
+    features::code::render_code_block(out, lang_opt, escaped_code, copy_label);
 }
 
 /// Renders a task list checkbox item directly into the output buffer.
@@ -233,14 +226,7 @@ pub fn render_task_item(
     clean_label: &str,
     indent_depth: usize,
 ) {
-    components::render_task_item(
-        out,
-        sec_num,
-        cb_count,
-        is_checked,
-        clean_label,
-        indent_depth,
-    );
+    features::tasks::render_task_item(out, sec_num, cb_count, is_checked, clean_label, indent_depth);
 }
 
 /// Renders a simple list item component directly into the output buffer.
@@ -271,7 +257,7 @@ pub fn render_text_item(
 /// Renders an image container block directly into the output buffer.
 #[inline]
 pub fn render_image_item(out: &mut impl Write, clean_content: &str) {
-    components::render_image_item(out, clean_content);
+    features::image::render_image_item(out, clean_content);
 }
 
 /// Returns the pre-populated default starter Markdown template string.
