@@ -12,6 +12,7 @@ Triggers: build (standard/optimized), cross-compile (Win/Linux), run cargo tests
 Execute in project root: `./MAKE.sh [FLAGS]`
 
 **Flags:**
+- `-h`, `--help`: Show help.
 - `--release`: Optimized build (LTO/size).
 - `--release-windows`: Build Windows executable.
 - `--release-linux`: Build Linux executable.

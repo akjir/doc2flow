@@ -5,26 +5,59 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+show_help() {
+    cat << 'EOF'
+Usage: ./MAKE.sh [FLAGS]
+
+Build workflows for Doc2Flow.
+
+Flags:
+  -h, --help            Show this help message and exit
+  --release             Optimized build (release mode)
+  --release-windows     Build Windows executable (x86_64-pc-windows-gnu)
+  --release-linux       Build Linux executable (x86_64-unknown-linux-gnu)
+  --tests               Run cargo tests
+  --examples            Build project and generate HTML examples
+  --examples-only       Generate HTML examples only (skip TypeScript & Cargo builds)
+EOF
+}
+
 BUILD_EXAMPLES=false
 EXAMPLES_ONLY=false
 RUN_TESTS=false
 CARGO_ARGS=()
 
 for arg in "$@"; do
-    if [ "$arg" = "--examples-only" ]; then
-        BUILD_EXAMPLES=true
-        EXAMPLES_ONLY=true
-    elif [ "$arg" = "--examples" ]; then
-        BUILD_EXAMPLES=true
-    elif [ "$arg" = "--tests" ]; then
-        RUN_TESTS=true
-    elif [ "$arg" = "--release-windows" ]; then
-        CARGO_ARGS+=("--release" "--target" "x86_64-pc-windows-gnu")
-    elif [ "$arg" = "--release-linux" ]; then
-        CARGO_ARGS+=("--release" "--target" "x86_64-unknown-linux-gnu")
-    else
-        CARGO_ARGS+=("$arg")
-    fi
+    case "$arg" in
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        --examples-only)
+            BUILD_EXAMPLES=true
+            EXAMPLES_ONLY=true
+            ;;
+        --examples)
+            BUILD_EXAMPLES=true
+            ;;
+        --tests)
+            RUN_TESTS=true
+            ;;
+        --release)
+            CARGO_ARGS+=("--release")
+            ;;
+        --release-windows)
+            CARGO_ARGS+=("--release" "--target" "x86_64-pc-windows-gnu")
+            ;;
+        --release-linux)
+            CARGO_ARGS+=("--release" "--target" "x86_64-unknown-linux-gnu")
+            ;;
+        *)
+            echo "Error: Unknown argument '$arg'" >&2
+            echo "Run './MAKE.sh --help' for usage information." >&2
+            exit 1
+            ;;
+    esac
 done
 
 if [ "$EXAMPLES_ONLY" = false ]; then
