@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+140.0b653f4.dev">
-  <meta name="version" content="0.9.4+140.0b653f4.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+141.a4cfbc7.dev">
+  <meta name="version" content="0.9.4+141.a4cfbc7.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-07T20:31:41Z">
+  <meta name="dcterms.created" content="2026-08-07T20:35:31Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, code, tasks, images, table">
   <title>Doc2Flow English Showcase</title>
@@ -1138,7 +1138,7 @@ mark.d2f-highlight {
 }
 
 /* ==========================================================================
-   Image & Lightbox Feature Styles
+   Image Container, Lightbox & Print Feature Styles
    ========================================================================== */
 
 .img-item {
@@ -1153,8 +1153,8 @@ mark.d2f-highlight {
   max-width: 100%;
   height: auto;
   margin: 0 auto;
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl, 10px);
+  border: 1px solid var(--border-color, #d0d7de);
   cursor: zoom-in;
 }
 
@@ -1176,7 +1176,7 @@ mark.d2f-highlight {
 .lightbox img {
   max-width: 94vw;
   max-height: 94vh;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-lg, 8px);
   border: none;
   margin: 0;
   box-shadow: 0 4px 32px rgba(0, 0, 0, 0.5);
@@ -1186,13 +1186,15 @@ mark.d2f-highlight {
   position: fixed;
   top: 14px;
   right: 18px;
-  color: white;
+  color: #ffffff;
   font-size: 32px;
   cursor: pointer;
   line-height: 1;
   font-weight: bold;
+  user-select: none;
 }
 
+/* Print Rules for Images and Lightbox */
 @media print {
   .doc-body img {
     -webkit-print-color-adjust: exact;
@@ -1201,6 +1203,10 @@ mark.d2f-highlight {
     max-height: 8cm;
     width: auto;
     margin: 10px auto;
+  }
+
+  .lightbox {
+    display: none !important;
   }
 }
 
@@ -1713,7 +1719,7 @@ mark.d2f-highlight {
     window.d2f.document = window.d2f.document || {};
     window.d2f.document.id = 'd2f_id_c9c539743b5bb460';
     window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {"date_placeholder":"MM/DD/YYYY","export_pdf":"Export as PDF","callout_important":"Important","date":"Date","setup_completed":"Process Completed","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","save_state":"Save State","setup_in_progress":"Process in Progress","name_placeholder":"Name","sections_visible":"{visible} / {total} sections visible","reset_all":"Reset","progress_template":"{done} of {total} tasks completed ({pct}%)","copy_code":"Copy code","callout_note":"Note","callout_tip":"Tip","callout_caution":"Caution","lang_code":"en","signature_date":"Date","comment_placeholder":"Add a comment...","var_table_title":"Variables","loading":"Loading...","search_placeholder":"Search... (Ctrl+K)","copied":"Copied!","var_table_variable":"Variable","var_table_value":"Value","callout_warning":"Warning"};
+    window.d2f.lang.dictionary = {"name_placeholder":"Name","date_placeholder":"MM/DD/YYYY","callout_important":"Important","copy_code":"Copy code","callout_warning":"Warning","sections_visible":"{visible} / {total} sections visible","signature_date":"Date","var_table_variable":"Variable","var_table_value":"Value","copied":"Copied!","callout_tip":"Tip","search_placeholder":"Search... (Ctrl+K)","date":"Date","callout_caution":"Caution","var_table_title":"Variables","comment_placeholder":"Add a comment...","setup_completed":"Process Completed","reset_all":"Reset","save_state":"Save State","export_pdf":"Export as PDF","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","callout_note":"Note","setup_in_progress":"Process in Progress","loading":"Loading...","progress_template":"{done} of {total} tasks completed ({pct}%)","lang_code":"en"};
     "use strict";
 (() => {
   // src/core/storage.ts
@@ -2799,53 +2805,64 @@ mark.d2f-highlight {
   }
 })();
 
-"use strict";
 (() => {
-  // src/features/images.ts
-  function handleLightboxKeydown(e) {
-    if (e.key === "Escape") {
-      closeLightbox();
+  // ../src/features/image/image.ts
+  (() => {
+    function handleLightboxKeydown(e) {
+      if (e.key === "Escape") {
+        closeLightbox();
+      }
     }
-  }
-  function openLightbox(imgSrc) {
-    const rawLbImg = document.getElementById("lb-img");
-    const lbImg = rawLbImg instanceof HTMLImageElement ? rawLbImg : null;
-    const lightbox = document.getElementById("lightbox");
-    if (lbImg && lightbox) {
-      lbImg.src = imgSrc;
-      lightbox.classList.add("active");
-      document.addEventListener("keydown", handleLightboxKeydown);
+    function openLightbox(imgSrc) {
+      const rawLbImg = document.getElementById("lb-img");
+      const lbImg = rawLbImg instanceof HTMLImageElement ? rawLbImg : null;
+      const lightbox = document.getElementById("lightbox");
+      if (lbImg && lightbox) {
+        lbImg.src = imgSrc;
+        lightbox.classList.add("active");
+        document.addEventListener("keydown", handleLightboxKeydown);
+      }
     }
-  }
-  function closeLightbox() {
-    const lightbox = document.getElementById("lightbox");
-    if (lightbox) {
-      lightbox.classList.remove("active");
+    function closeLightbox() {
+      const lightbox = document.getElementById("lightbox");
+      if (lightbox) {
+        lightbox.classList.remove("active");
+      }
+      document.removeEventListener("keydown", handleLightboxKeydown);
     }
-    document.removeEventListener("keydown", handleLightboxKeydown);
-  }
-  if (typeof window !== "undefined") {
-    document.addEventListener("DOMContentLoaded", () => {
-      document.addEventListener("click", (e) => {
-        const target = e.target;
-        if (target instanceof Element) {
-          const lb = target.closest("#lightbox");
-          if (lb) {
-            const lbImg = target.closest("#lb-img");
-            if (!lbImg) {
-              closeLightbox();
-            }
-            return;
+    function handleDocumentClick(e) {
+      const target = e.target;
+      if (target instanceof Element) {
+        const lb = target.closest("#lightbox");
+        if (lb) {
+          const lbImg = target.closest("#lb-img");
+          if (!lbImg) {
+            closeLightbox();
           }
-          const img = target.closest(".doc-body img");
-          if (img) {
-            e.stopPropagation();
-            openLightbox(img.src);
-          }
+          return;
         }
-      });
-    });
-  }
+        const imgEl = target.closest(".doc-body img");
+        if (imgEl instanceof HTMLImageElement) {
+          e.stopPropagation();
+          openLightbox(imgEl.src);
+        }
+      }
+    }
+    const feature = {
+      open: openLightbox,
+      close: closeLightbox
+    };
+    window.d2f = window.d2f ?? {};
+    window.d2f.image = feature;
+    function init() {
+      document.addEventListener("click", handleDocumentClick);
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", init);
+    } else {
+      init();
+    }
+  })();
 })();
 
 "use strict";

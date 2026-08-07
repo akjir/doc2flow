@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+140.0b653f4.dev">
-  <meta name="version" content="0.9.4+140.0b653f4.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+141.a4cfbc7.dev">
+  <meta name="version" content="0.9.4+141.a4cfbc7.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-07T20:31:41Z">
+  <meta name="dcterms.created" content="2026-08-07T20:35:31Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, code, tasks, images, table">
   <title>Doc2Flow Deutscher Showcase</title>
@@ -1138,7 +1138,7 @@ mark.d2f-highlight {
 }
 
 /* ==========================================================================
-   Image & Lightbox Feature Styles
+   Image Container, Lightbox & Print Feature Styles
    ========================================================================== */
 
 .img-item {
@@ -1153,8 +1153,8 @@ mark.d2f-highlight {
   max-width: 100%;
   height: auto;
   margin: 0 auto;
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl, 10px);
+  border: 1px solid var(--border-color, #d0d7de);
   cursor: zoom-in;
 }
 
@@ -1176,7 +1176,7 @@ mark.d2f-highlight {
 .lightbox img {
   max-width: 94vw;
   max-height: 94vh;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-lg, 8px);
   border: none;
   margin: 0;
   box-shadow: 0 4px 32px rgba(0, 0, 0, 0.5);
@@ -1186,13 +1186,15 @@ mark.d2f-highlight {
   position: fixed;
   top: 14px;
   right: 18px;
-  color: white;
+  color: #ffffff;
   font-size: 32px;
   cursor: pointer;
   line-height: 1;
   font-weight: bold;
+  user-select: none;
 }
 
+/* Print Rules for Images and Lightbox */
 @media print {
   .doc-body img {
     -webkit-print-color-adjust: exact;
@@ -1201,6 +1203,10 @@ mark.d2f-highlight {
     max-height: 8cm;
     width: auto;
     margin: 10px auto;
+  }
+
+  .lightbox {
+    display: none !important;
   }
 }
 
@@ -1713,7 +1719,7 @@ mark.d2f-highlight {
     window.d2f.document = window.d2f.document || {};
     window.d2f.document.id = 'd2f_id_468e65bc2ccf89b4';
     window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {"copy_code":"Code kopieren","save_state":"Stand sichern","lang_code":"de","date":"Datum","setup_in_progress":"Vorgang in Bearbeitung","loading":"Lade...","search_placeholder":"Suchen... (Ctrl+K)","var_table_variable":"Variable","var_table_value":"Wert","callout_warning":"Warnung","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","export_pdf":"Als PDF exportieren","callout_important":"Wichtig","callout_caution":"Achtung","sections_visible":"{visible} / {total} Abschnitte sichtbar","date_placeholder":"TT.MM.JJJJ","var_table_title":"Variablen","callout_note":"Hinweis","copied":"Kopiert!","callout_tip":"Tipp","setup_completed":"Vorgang abgeschlossen","reset_all":"Zurücksetzen","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","comment_placeholder":"Kommentar hinzufügen...","signature_date":"Datum","name_placeholder":"Name"};
+    window.d2f.lang.dictionary = {"name_placeholder":"Name","date_placeholder":"TT.MM.JJJJ","loading":"Lade...","var_table_value":"Wert","signature_date":"Datum","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","callout_note":"Hinweis","reset_all":"Zurücksetzen","copied":"Kopiert!","callout_tip":"Tipp","comment_placeholder":"Kommentar hinzufügen...","search_placeholder":"Suchen... (Ctrl+K)","sections_visible":"{visible} / {total} Abschnitte sichtbar","save_state":"Stand sichern","setup_completed":"Vorgang abgeschlossen","copy_code":"Code kopieren","var_table_variable":"Variable","lang_code":"de","export_pdf":"Als PDF exportieren","date":"Datum","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","callout_important":"Wichtig","callout_caution":"Achtung","setup_in_progress":"Vorgang in Bearbeitung","var_table_title":"Variablen","callout_warning":"Warnung"};
     "use strict";
 (() => {
   // src/core/storage.ts
@@ -2799,53 +2805,64 @@ mark.d2f-highlight {
   }
 })();
 
-"use strict";
 (() => {
-  // src/features/images.ts
-  function handleLightboxKeydown(e) {
-    if (e.key === "Escape") {
-      closeLightbox();
+  // ../src/features/image/image.ts
+  (() => {
+    function handleLightboxKeydown(e) {
+      if (e.key === "Escape") {
+        closeLightbox();
+      }
     }
-  }
-  function openLightbox(imgSrc) {
-    const rawLbImg = document.getElementById("lb-img");
-    const lbImg = rawLbImg instanceof HTMLImageElement ? rawLbImg : null;
-    const lightbox = document.getElementById("lightbox");
-    if (lbImg && lightbox) {
-      lbImg.src = imgSrc;
-      lightbox.classList.add("active");
-      document.addEventListener("keydown", handleLightboxKeydown);
+    function openLightbox(imgSrc) {
+      const rawLbImg = document.getElementById("lb-img");
+      const lbImg = rawLbImg instanceof HTMLImageElement ? rawLbImg : null;
+      const lightbox = document.getElementById("lightbox");
+      if (lbImg && lightbox) {
+        lbImg.src = imgSrc;
+        lightbox.classList.add("active");
+        document.addEventListener("keydown", handleLightboxKeydown);
+      }
     }
-  }
-  function closeLightbox() {
-    const lightbox = document.getElementById("lightbox");
-    if (lightbox) {
-      lightbox.classList.remove("active");
+    function closeLightbox() {
+      const lightbox = document.getElementById("lightbox");
+      if (lightbox) {
+        lightbox.classList.remove("active");
+      }
+      document.removeEventListener("keydown", handleLightboxKeydown);
     }
-    document.removeEventListener("keydown", handleLightboxKeydown);
-  }
-  if (typeof window !== "undefined") {
-    document.addEventListener("DOMContentLoaded", () => {
-      document.addEventListener("click", (e) => {
-        const target = e.target;
-        if (target instanceof Element) {
-          const lb = target.closest("#lightbox");
-          if (lb) {
-            const lbImg = target.closest("#lb-img");
-            if (!lbImg) {
-              closeLightbox();
-            }
-            return;
+    function handleDocumentClick(e) {
+      const target = e.target;
+      if (target instanceof Element) {
+        const lb = target.closest("#lightbox");
+        if (lb) {
+          const lbImg = target.closest("#lb-img");
+          if (!lbImg) {
+            closeLightbox();
           }
-          const img = target.closest(".doc-body img");
-          if (img) {
-            e.stopPropagation();
-            openLightbox(img.src);
-          }
+          return;
         }
-      });
-    });
-  }
+        const imgEl = target.closest(".doc-body img");
+        if (imgEl instanceof HTMLImageElement) {
+          e.stopPropagation();
+          openLightbox(imgEl.src);
+        }
+      }
+    }
+    const feature = {
+      open: openLightbox,
+      close: closeLightbox
+    };
+    window.d2f = window.d2f ?? {};
+    window.d2f.image = feature;
+    function init() {
+      document.addEventListener("click", handleDocumentClick);
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", init);
+    } else {
+      init();
+    }
+  })();
 })();
 
 "use strict";

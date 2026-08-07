@@ -15,7 +15,7 @@ pub static STYLE_CODE: &str = include_str!("features/code/code.css");
 pub static STYLE_TASKS: &str = include_str!("../styles/tasks.css");
 
 /// Embedded image lightbox CSS feature styles.
-pub static STYLE_IMAGES: &str = include_str!("../styles/images.css");
+pub static STYLE_IMAGES: &str = include_str!("features/image/image.css");
 
 /// Embedded Table of Contents CSS feature styles.
 pub static STYLE_TOC: &str = include_str!("../styles/toc.css");

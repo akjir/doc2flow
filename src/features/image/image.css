@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Image & Lightbox Feature Styles
+   Image Container, Lightbox & Print Feature Styles
    ========================================================================== */
 
 .img-item {
@@ -14,8 +14,8 @@
   max-width: 100%;
   height: auto;
   margin: 0 auto;
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl, 10px);
+  border: 1px solid var(--border-color, #d0d7de);
   cursor: zoom-in;
 }
 
@@ -37,7 +37,7 @@
 .lightbox img {
   max-width: 94vw;
   max-height: 94vh;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-lg, 8px);
   border: none;
   margin: 0;
   box-shadow: 0 4px 32px rgba(0, 0, 0, 0.5);
@@ -47,13 +47,15 @@
   position: fixed;
   top: 14px;
   right: 18px;
-  color: white;
+  color: #ffffff;
   font-size: 32px;
   cursor: pointer;
   line-height: 1;
   font-weight: bold;
+  user-select: none;
 }
 
+/* Print Rules for Images and Lightbox */
 @media print {
   .doc-body img {
     -webkit-print-color-adjust: exact;
@@ -62,5 +64,9 @@
     max-height: 8cm;
     width: auto;
     margin: 10px auto;
+  }
+
+  .lightbox {
+    display: none !important;
   }
 }
