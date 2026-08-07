@@ -202,6 +202,33 @@ impl Frontmatter {
     pub fn new() -> Self {
         Self::default()
     }
+
+    /// Converts all frontmatter metadata fields into a key-value hash map.
+    pub fn to_hashmap(&self) -> std::collections::HashMap<String, String> {
+        let mut map = std::collections::HashMap::with_capacity(8);
+        if let Some(ref t) = self.title {
+            map.insert("title".to_string(), t.clone());
+        }
+        if let Some(ref s) = self.subtitle {
+            map.insert("subtitle".to_string(), s.clone());
+        }
+        if let Some(ref d) = self.date {
+            map.insert("date".to_string(), d.clone());
+        }
+        if let Some(ref v) = self.version {
+            map.insert("version".to_string(), v.clone());
+        }
+        if let Some(ref l) = self.language {
+            map.insert("language".to_string(), l.clone());
+            map.insert("lang".to_string(), l.clone());
+        }
+        if let Some(ref lg) = self.logo {
+            map.insert("logo".to_string(), lg.clone());
+        }
+        map.insert("numbered_sections".to_string(), self.numbered_sections.to_string());
+        map.insert("table_of_contents".to_string(), self.table_of_contents.to_string());
+        map
+    }
 }
 
 /// Helper struct holding byte ranges and line info for frontmatter block.
@@ -342,6 +369,22 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
     }
 
     (Frontmatter::new(), md_content)
+}
+
+/// Parses YAML frontmatter into a key-value hash map and returns remaining markdown body.
+pub fn parse_frontmatter_map(md_content: &str) -> (std::collections::HashMap<String, String>, &str) {
+    let (fm, body) = parse_frontmatter(md_content);
+    let mut map = fm.to_hashmap();
+    if let Some(bounds) = find_frontmatter_bounds(md_content) {
+        for line in bounds.frontmatter_text.lines() {
+            if let Some((key, val)) = line.split_once(':') {
+                let key = key.trim();
+                let val_trimmed = trim_matching_quotes(val);
+                map.insert(key.to_string(), val_trimmed.to_string());
+            }
+        }
+    }
+    (map, body)
 }
 
 /// Validates frontmatter metadata for required fields.

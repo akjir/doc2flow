@@ -192,18 +192,31 @@ doc2flow/
 │       ├── script-tasks.js   # Compiled tasks feature JavaScript bundle
 │       └── script-toc.js     # Compiled Table of Contents feature JavaScript bundle
 ├── src/                      # Rust CLI backend
+│   ├── main.rs               # CLI entry point and argument parsing
+│   ├── lib.rs                # Module declarations and library interface
 │   ├── components.rs         # HTML UI component generators
-│   ├── converter.rs          # Markdown AST parser and feature detector
+│   ├── converter.rs          # Markdown AST parser and feature detector interface
 │   ├── error.rs              # Diagnostic error types and reporting
 │   ├── hasher.rs             # SHA-256 hash generator
 │   ├── locales.rs            # Locale loader and translation engine
 │   ├── id.rs                 # Document identifier generation
 │   ├── image.rs              # Image optimization, WebP scaling and Base64 embedding
 │   ├── io.rs                 # Central filesystem and asset IO
-│   ├── lib.rs                # Module declarations and exports
-│   ├── main.rs               # CLI entry point and argument parsing
 │   ├── template.rs           # HTML page orchestrator
-│   └── utils.rs              # MIME type guessing and CLI argument parsing
+│   ├── utils.rs              # MIME type guessing and CLI argument parsing
+│   ├── core/                 # Core architecture and feature traits
+│   │   ├── mod.rs            # Core module exports
+│   │   ├── feature.rs        # Feature trait and DocumentContext detection
+│   │   ├── parser.rs         # Core Frontmatter and Markdown parser
+│   │   ├── generator.rs      # HTML Assembler and template engine
+│   │   ├── core.css          # Base layout and styles
+│   │   └── core.ts           # Core JS state, storage and helpers
+│   └── features/             # Vertical slice feature modules
+│       ├── mod.rs            # Central feature registry (get_all_features)
+│       └── code/             # Unified code block and copy feature vertical slice
+│           ├── module.rs     # Rust Feature struct and trait implementation
+│           ├── code.ts       # TypeScript client script for variables and copy button
+│           └── code.css      # Isolated CSS for code blocks, variables table and copy button
 ├── tests/
 │   ├── example_onboarding.html # Compiled onboarding showcase HTML fixture
 │   ├── example_onboarding.md # Onboarding Markdown showcase source

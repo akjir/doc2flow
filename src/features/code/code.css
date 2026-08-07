@@ -1,0 +1,162 @@
+/* ==========================================================================
+   Code Block & Variable Substitution Feature Styles
+   ========================================================================== */
+
+.code-block-wrap {
+  position: relative;
+  margin: 8px 0 12px;
+}
+
+.code-block-wrap .code-block {
+  margin: 0;
+}
+
+.code-header {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 2;
+}
+
+.code-lang {
+  font-size: 10px;
+  font-weight: bold;
+  font-family: var(--font-sans, Arial, sans-serif);
+  color: var(--gray-muted, #8c959f);
+  user-select: none;
+}
+
+.copy-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--gray-muted, #8c959f);
+  padding: 2px 4px;
+  border-radius: var(--radius-sm, 4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.copy-btn:hover {
+  color: var(--bd, #163a5c);
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.copy-btn.copied {
+  color: #2da44e;
+}
+
+.code-block {
+  background: #f0f2f5;
+  color: #24292f;
+  border: 1px solid var(--border-color, #d0d7de);
+  font-family: var(--font-mono, 'Courier New', monospace);
+  font-size: 11.5px;
+  padding: 12px 16px;
+  border-radius: var(--radius-xl, 10px);
+  margin: 8px 0 12px;
+  white-space: pre;
+  overflow-x: auto;
+  line-height: 1.6;
+}
+
+.code-block .c {
+  color: #6a9955;
+}
+
+.code-block .s {
+  color: #ce9178;
+}
+
+/* Print Rules for Code Blocks & Variables Table */
+@media print {
+  .code-block {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .copy-btn {
+    display: none !important;
+  }
+
+  .item-table-var-wrap {
+    display: none !important;
+  }
+}
+
+/* ==========================================================================
+   Code Variables Table Feature Styles (Darker Gray theme, hidden from print)
+   ========================================================================== */
+
+.item-table-var-wrap {
+  margin: 12px 0 16px;
+  border: 1px solid #94a3b8;
+  border-radius: var(--radius-xl, 10px);
+  overflow: hidden;
+  background: #e2e8f0;
+}
+
+.item-table-var {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-family: var(--font-sans, Arial, sans-serif);
+}
+
+.item-table-var th,
+.item-table-var td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid #cbd5e1;
+}
+
+.item-table-var th {
+  background: #cbd5e1;
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.item-table-var tr:last-child td {
+  border-bottom: none;
+}
+
+.item-table-var td:first-child {
+  font-family: var(--font-mono, 'Courier New', monospace);
+  font-weight: 600;
+  color: #0f172a;
+  width: 35%;
+}
+
+.item-table-var td:nth-child(2) {
+  font-family: var(--font-mono, 'Courier New', monospace);
+  color: #334155;
+  padding: 4px 8px;
+}
+
+.item-table-var-input {
+  width: 100%;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-sm, 4px);
+  padding: 4px 8px;
+  font-family: var(--font-mono, 'Courier New', monospace);
+  font-size: 11.5px;
+  color: #0f172a;
+  box-sizing: border-box;
+  transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+}
+
+.item-table-var-input:focus {
+  outline: none;
+  background: #f1f5f9;
+  border-color: var(--bm, #2e75b6);
+  box-shadow: 0 0 0 2px rgba(46, 117, 182, 0.2);
+}
