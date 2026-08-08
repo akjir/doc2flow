@@ -1,9 +1,9 @@
 //! Base64 Data-URI formatting and file conversion utilities.
 
-use super::base64::base64_encode_into;
-use super::mime::guess_mime_type;
+use crate::base64::base64_encode_into;
 use crate::error::Result;
 use crate::io;
+use crate::mime::guess_mime_type;
 use std::path::Path;
 
 /// Formats binary data as a Base64 `data:` URI directly into the provided [`String`] buffer.
@@ -85,8 +85,8 @@ pub fn file_to_data_uri(path: &Path) -> Result<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::base64::base64_encode;
+    use super::*;
     use crate::error::Doc2FlowError;
 
     #[test]
