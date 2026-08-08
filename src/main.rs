@@ -44,11 +44,19 @@ fn run() -> Result<()> {
     let language_code = frontmatter.language.as_deref().unwrap_or("en");
     let locale = Locale::from_lang_code(language_code);
 
-    let (html_content, features) = converter::convert_markdown_to_html_with_options(
+    let (html_content, mut features) = converter::convert_markdown_to_html_with_options(
         markdown_body,
         &locale,
         frontmatter.numbered_sections,
     )?;
+
+    if frontmatter
+        .header
+        .as_deref()
+        .map_or(false, |v| v.trim().trim_matches('"').trim_matches('\'').eq_ignore_ascii_case("flex"))
+    {
+        features.has_header = true;
+    }
 
     let base_dir = input_path.parent();
 

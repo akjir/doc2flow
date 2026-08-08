@@ -3,6 +3,7 @@ title: "Microservice Deployment & Infrastructure Setup"
 version: "1.0.0"
 date: "2026-08-02"
 language: "en"
+header: flex
 ---
 
 [Variables]

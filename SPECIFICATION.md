@@ -73,6 +73,7 @@ d2f.exe --version
   * `version`: Document version string.
   * `language` / `lang`: Locale code (`en`, `de`) for static UI translations.
   * `logo`: Path to custom logo image (overridden by CLI `-l` / `--logo`).
+  * `header`: Header layout (`"flex"`, `"none"`). Default: `"none"`. When `"flex"`, renders section-style header card containing logo, title, and subtitle before Section 1 and variable table.
   * `numbered_sections`: Enables section numbering (`1. `, `1.1 `). Default: `true`.
 * **Callout / Note Box Annotations:** Blockquotes converted to alert panels via prefixes:
   * `>` / `> Note`: Standard Note box (`.note`, neutral styling).
@@ -122,7 +123,7 @@ d2f.exe --version
 * **Filesystem & I/O Isolation (`src/io.rs`):** Exclusive module for filesystem interactions, file reading/writing, path resolution (`Path`, `PathBuf`), and asset retrieval. Direct `std::fs`/`std::io` calls prohibited in processing modules.
 * **Pure In-Memory Processing Core:** Core modules (`src/converter.rs`, `src/template.rs`, `src/components.rs`, `src/locales.rs`, `src/hasher.rs`, `src/id.rs`) perform pure in-memory string/AST data transformations decoupled from disk I/O.
 * **Strict Modular Feature Isolation (HTML, CSS, TS/JS):**
-  * Extension features (`code`, `image`, `table`, `tasks`) are fully decoupled and zero-knowledge of each other.
+  * Extension features (`code`, `header`, `image`, `table`, `tasks`) are fully decoupled and zero-knowledge of each other.
   * Each feature maintains dedicated HTML components, TypeScript and CSS modules within its vertical slice directory (`src/features/<name>/`).
   * If a feature is omitted/disabled (`DocumentFeatures`), zero HTML elements, zero CSS rules, and zero JS/TS code for that feature are emitted in the rendered document.
 * **HTML UI Components & Templating (`src/components.rs` & `src/template.rs`):**
@@ -207,6 +208,9 @@ doc2flow/
 │       │   ├── module.rs     # Rust Feature struct, trait implementation, and HTML components
 │       │   ├── code.ts       # TypeScript client script for variables and copy button
 │       │   └── code.css      # Isolated CSS for code blocks, variables table and copy button
+│       ├── header/           # Unified document header and flexible banner vertical slice
+│       │   ├── module.rs     # Rust Feature struct, trait implementation, and HTML components
+│       │   └── header.css    # Isolated CSS for flexible header card and print styles
 │       ├── image/            # Unified image container and lightbox vertical slice
 │       │   ├── module.rs     # Rust Feature struct, trait implementation, and HTML components
 │       │   ├── image.ts      # TypeScript client script for lightbox modal

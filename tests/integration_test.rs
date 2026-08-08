@@ -747,3 +747,103 @@ fn test_section_table_feature_detection() {
     let (_var_html, var_features) = doc2flow::converter::convert_markdown_to_html(var_table_md).unwrap();
     assert!(!var_features.has_tables);
 }
+
+#[test]
+fn test_header_flex_feature_integration() {
+    let input_flex = r#"---
+title: "Server Configuration"
+subtitle: "Standard Operating Manual"
+header: "flex"
+---
+
+[Variables]
+| Variable | Value |
+| --- | --- |
+| HOST | prod-01 |
+
+## Section 1: Initialization
+
+- [ ] Run basic health check
+"#;
+
+    let (fm, body) =
+        doc2flow::converter::parse_and_validate_frontmatter(input_flex, Some("test_flex.md")).unwrap();
+    assert_eq!(fm.header.as_deref(), Some("flex"));
+
+    let locale = doc2flow::locales::Locale::from_lang_code("en");
+    let (html_body, mut features) = doc2flow::converter::convert_markdown_to_html(&body).unwrap();
+    if fm.header.as_deref().map_or(false, |v| v.eq_ignore_ascii_case("flex")) {
+        features.has_header = true;
+    }
+
+    assert!(features.has_header);
+    assert!(features.has_tasks);
+
+    let full_doc = doc2flow::template::render(
+        &fm,
+        &locale,
+        &html_body,
+        "doc_header_flex",
+        Some("<svg class=\"custom-logo\"></svg>"),
+        &features,
+    ).unwrap();
+
+    // Verify flex header card is rendered
+    assert!(full_doc.contains(r#"<section class="section header-flex" id="header-flex">"#));
+    assert!(full_doc.contains(r#"<h1 class="header-flex-title">Server Configuration</h1>"#));
+    assert!(full_doc.contains(r#"<div class="header-flex-sub">Standard Operating Manual</div>"#));
+    assert!(full_doc.contains(r#"<svg class="custom-logo"></svg>"#));
+
+    // Verify placement: header-flex appears BEFORE variable table and BEFORE Section 1
+    let flex_pos = full_doc.find(r#"id="header-flex""#).expect("header-flex must exist");
+    let var_pos = full_doc.find(r#"class="item-table-var-wrap""#).expect("var table must exist");
+    let sec_pos = full_doc.find(r#"<!-- S1 -->"#).expect("section 1 must exist");
+
+    assert!(flex_pos < var_pos, "header-flex must precede variable table");
+    assert!(var_pos < sec_pos, "variable table must precede section 1");
+
+    // Verify CSS is included
+    assert!(full_doc.contains(".header-flex {"));
+    assert!(full_doc.contains(".doc-header .header-top"));
+
+    // Verify features meta contains header
+    assert!(full_doc.contains(r#"<meta name="features" content="core, code, tasks, header">"#));
+}
+
+#[test]
+fn test_header_none_or_missing_feature_integration() {
+    let input_none = r#"---
+title: "Default Guide"
+subtitle: "Default Subtitle"
+header: "none"
+---
+
+## Section 1: Steps
+
+- Normal text
+"#;
+
+    let (fm, body) =
+        doc2flow::converter::parse_and_validate_frontmatter(input_none, Some("test_none.md")).unwrap();
+    let locale = doc2flow::locales::Locale::from_lang_code("en");
+    let (html_body, mut features) = doc2flow::converter::convert_markdown_to_html(&body).unwrap();
+    if fm.header.as_deref().map_or(false, |v| v.eq_ignore_ascii_case("flex")) {
+        features.has_header = true;
+    }
+
+    assert!(!features.has_header);
+
+    let full_doc = doc2flow::template::render(
+        &fm,
+        &locale,
+        &html_body,
+        "doc_header_none",
+        None,
+        &features,
+    ).unwrap();
+
+    // Verify flex header card is NOT rendered
+    assert!(!full_doc.contains(r#"id="header-flex""#));
+    assert!(!full_doc.contains("header-flex-title"));
+    assert!(!full_doc.contains(".header-flex {"));
+}

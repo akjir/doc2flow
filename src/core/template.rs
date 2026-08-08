@@ -21,6 +21,9 @@ pub static STYLE_IMAGES: &str = include_str!("../features/image/image.css");
 /// Embedded section table CSS feature styles.
 pub static STYLE_TABLE: &str = include_str!("../features/table/table.css");
 
+/// Embedded header flex CSS feature styles.
+pub static STYLE_HEADER: &str = include_str!("../features/header/header.css");
+
 /// Embedded core JavaScript bundle.
 pub static SCRIPT_CORE: &str = include_str!("../../web/dist/script-core.js");
 
@@ -40,6 +43,11 @@ pub static SCRIPT_TABLE: &str = include_str!("../../web/dist/script-table.js");
 pub fn render_styles(out: &mut String, features: &DocumentFeatures) {
     out.push_str(STYLE_CORE);
     out.push('\n');
+
+    if features.has_header {
+        out.push_str(STYLE_HEADER);
+        out.push('\n');
+    }
 
     if features.has_code {
         out.push_str(STYLE_CODE);
@@ -378,6 +386,17 @@ pub fn render(
 
     let features_str = features.to_features_string();
 
+    let mut full_content = String::with_capacity(html_content.len() + 512);
+    if features.has_header {
+        features::header::render_flex_header(
+            &mut full_content,
+            frontmatter.title.as_deref().unwrap_or(""),
+            frontmatter.subtitle.as_deref(),
+            logo,
+        );
+    }
+    full_content.push_str(html_content);
+
     let mut vars = HashMap::with_capacity(22);
     vars.insert("APP_VERSION", APP_VERSION);
     vars.insert("APP_VERSION_RAW", app_version_raw);
@@ -395,7 +414,7 @@ pub fn render(
     vars.insert("LIGHTBOX_HTML", lightbox_html.as_str());
     vars.insert("PROGRESS_BAR_HTML", progress_bar_html.as_str());
     vars.insert("FINISH_BOX_HTML", finish_box_html.as_str());
-    vars.insert("CONTENT", html_content);
+    vars.insert("CONTENT", full_content.as_str());
     vars.insert("DOC_ID", doc_id);
     vars.insert("LOGO", logo);
     vars.insert("FEATURES", features_str.as_str());
@@ -537,6 +556,7 @@ mod tests {
         let mut features = DocumentFeatures::default();
         features.has_tasks = true;
         features.has_images = false;
+        features.has_header = true;
 
         let mut script_out = String::new();
         render_scripts(&mut script_out, &features);
@@ -547,19 +567,22 @@ mod tests {
 
         let mut style_out = String::new();
         render_styles(&mut style_out, &features);
+        assert!(style_out.contains(".header-flex"));
         assert!(!style_out.contains(".lightbox"));
     }
 
     #[test]
     fn test_render_feature_isolation_full() {
-        let fm = Frontmatter::new();
+        let mut fm = Frontmatter::new();
+        fm.title = Some("Isolated Title".to_string());
         let locale = Locale::from_lang_code("en");
 
-        // Case 1: No images, code, or tasks feature
+        // Case 1: No images, code, tasks, or header feature
         let mut features_none = DocumentFeatures::default();
         features_none.has_images = false;
         features_none.has_code = false;
         features_none.has_tasks = false;
+        features_none.has_header = false;
         let html_no_img = render(&fm, &locale, "<p>No images</p>", "doc_no_img", None, &features_none)
             .expect("Render failed");
 
@@ -571,12 +594,14 @@ mod tests {
         assert!(!html_no_img.contains("d2f_code"));
         assert!(!html_no_img.contains("id=\"finish-box\""));
         assert!(!html_no_img.contains("<div class=\"pb-col\">"));
+        assert!(!html_no_img.contains("<section class=\"section header-flex\""));
 
-        // Case 2: Images, Code & Tasks feature active
+        // Case 2: Images, Code, Tasks & Header feature active
         let mut features_all = DocumentFeatures::default();
         features_all.has_images = true;
         features_all.has_code = true;
         features_all.has_tasks = true;
+        features_all.has_header = true;
         let html_img = render(&fm, &locale, "<p>Has image</p>", "doc_img", None, &features_all)
             .expect("Render failed");
 
@@ -588,6 +613,8 @@ mod tests {
         assert!(html_img.contains("d2f_code"));
         assert!(html_img.contains("id=\"finish-box\""));
         assert!(html_img.contains("<div class=\"pb-col\">"));
+        assert!(html_img.contains("<section class=\"section header-flex\" id=\"header-flex\">"));
+        assert!(html_img.contains("<h1 class=\"header-flex-title\">Isolated Title</h1>"));
     }
 
     #[test]

@@ -1,0 +1,109 @@
+/* ==========================================================================
+   Header Feature Styles (header: "flex")
+   ========================================================================== */
+
+/* 1. Base & Layout: Hide sticky top bar title/logo when flex header is active */
+.doc-header .header-top {
+  display: none;
+}
+
+/* 2. Components: Flex Header Container */
+.header-flex {
+  background: var(--bd);
+  color: white;
+  border-radius: var(--radius-xl);
+  margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.header-flex-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px;
+  gap: 16px;
+}
+
+.header-flex-titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.header-flex-title {
+  font-size: 22px;
+  font-weight: bold;
+  color: white;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.header-flex-sub {
+  font-size: 13px;
+  color: var(--header-sub-color);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.header-flex-logo {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  max-height: 56px;
+}
+
+.header-flex-logo svg,
+.header-flex-logo img {
+  max-height: 56px;
+  max-width: 180px;
+  width: auto;
+  height: auto;
+  display: block;
+}
+
+/* 3. Print Styles */
+@media print {
+  .header-flex {
+    background: var(--bd) !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    box-shadow: none;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 16px;
+  }
+
+  .header-flex-title {
+    color: white !important;
+  }
+
+  .header-flex-sub {
+    color: var(--header-sub-color) !important;
+  }
+}
+
+/* 4. Responsive Styles */
+@media (max-width: 600px) {
+  .header-flex-top {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .header-flex-logo {
+    max-height: 40px;
+  }
+
+  .header-flex-logo svg,
+  .header-flex-logo img {
+    max-height: 40px;
+    max-width: 140px;
+  }
+
+  .header-flex-title {
+    font-size: 18px;
+  }
+}

@@ -128,6 +128,7 @@ pub struct Frontmatter {
     pub version: Option<String>,
     pub language: Option<String>,
     pub logo: Option<String>,
+    pub header: Option<String>,
     pub numbered_sections: bool,
     pub custom: std::collections::HashMap<String, String>,
 }
@@ -139,6 +140,7 @@ pub struct DocumentFeatures {
     pub has_tasks: bool,
     pub has_images: bool,
     pub has_tables: bool,
+    pub has_header: bool,
 }
 
 impl DocumentFeatures {
@@ -173,6 +175,9 @@ impl DocumentFeatures {
         if self.has_tables {
             out.push_str(", table");
         }
+        if self.has_header {
+            out.push_str(", header");
+        }
         out
     }
 }
@@ -186,6 +191,7 @@ impl Default for Frontmatter {
             version: None,
             language: None,
             logo: None,
+            header: None,
             numbered_sections: true,
             custom: std::collections::HashMap::new(),
         }
@@ -219,6 +225,9 @@ impl Frontmatter {
         }
         if let Some(ref lg) = self.logo {
             map.insert("logo".to_string(), lg.clone());
+        }
+        if let Some(ref h) = self.header {
+            map.insert("header".to_string(), h.clone());
         }
         map.insert("numbered_sections".to_string(), self.numbered_sections.to_string());
         for (k, v) in &self.custom {
@@ -335,6 +344,7 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
                     "version" => fm.version = Some(val_trimmed.to_string()),
                     "language" | "lang" => fm.language = Some(val_trimmed.to_string()),
                     "logo" => fm.logo = Some(val_trimmed.to_string()),
+                    "header" => fm.header = Some(val_trimmed.to_string()),
                     "numbered_sections" => {
                         fm.numbered_sections = val_trimmed.eq_ignore_ascii_case("true");
                     }
@@ -1633,5 +1643,8 @@ curl https://{{BLOCK}}.local:{{PORT}}/api
         features.has_code = true;
         features.has_images = true;
         assert_eq!(features.to_features_string(), "core, code, tasks, images, table");
+
+        features.has_header = true;
+        assert_eq!(features.to_features_string(), "core, code, tasks, images, table, header");
     }
 }
