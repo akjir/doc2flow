@@ -27,6 +27,7 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 - **Borrowing:** Prefer `&str`, `&[u8]`, `Cow<'a, str>`. Avoid `String` parameters/statics.
 - **No Waste:** Eliminate unnecessary `.to_string()`, `.to_owned()`, `PathBuf::from()`.
 - **Zero-Copy:** Use `.split_once()`, `.strip_prefix()`. AVOID intermediate collections (`.collect::<Vec<_>>()`).
+- **Safe Slicing:** Use safe subslice manipulation (`.split_once()`, `.strip_prefix()`, cursor offsets). Prohibit raw pointer arithmetic (`as_ptr` diffs) for string bounds.
 - **Pre-allocate:** ALWAYS use `.with_capacity()` for dynamic collections in loops.
 
 ### 2: Parsing & Loops
@@ -45,7 +46,7 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 - **Safety:** ZERO `unsafe` blocks.
 - **Logic:** Prefer `match` or lookup tables over `if-else` chains.
 - **CLI Parsing:** Enforce identical validation for space-separated vs equals-separated flags; reject empty values uniformly (`val.as_ref().is_empty()`).
-- **Attributes:** Reserve `#[inline]` strictly for hot-path inner loops/rendering. NEVER apply `#[inline]` to single-call setup, init, or CLI parsing logic.
+- **Attributes:** Reserve `#[inline]` strictly for trivial getters/wrappers and hot-path inner loops/rendering. NEVER apply `#[inline]` to single-call setup, init, parser helpers, or CLI parsing logic.
 
 ### 5: HTML, XML & Asset Processing
 - **Scanners:** Zero-alloc single-pass tokenizers (O(N) forward cursor). Avoid redundant scanning passes over attribute names/values.

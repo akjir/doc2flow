@@ -65,11 +65,14 @@ fn to_alpha(mut n: u64) -> Cow<'static, str> {
         n /= 26;
     }
     let s = std::str::from_utf8(&buf[pos..]).expect("valid ASCII bytes");
-    Cow::Owned(s.to_string())
+    Cow::Owned(String::from(s))
 }
 
 /// Converts a 1-based number to lowercase Roman numerals (1 -> i, 2 -> ii, 3 -> iii...).
 fn to_roman(n: u64) -> Cow<'static, str> {
+    if n == 0 {
+        return Cow::Borrowed("i");
+    }
     if (1..=10).contains(&n) {
         const ROMANS: &[&str; 10] = &["i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"];
         return Cow::Borrowed(ROMANS[(n - 1) as usize]);
@@ -97,11 +100,7 @@ fn to_roman(n: u64) -> Cow<'static, str> {
             num -= val;
         }
     }
-    if result.is_empty() {
-        Cow::Borrowed("i")
-    } else {
-        Cow::Owned(result)
-    }
+    Cow::Owned(result)
 }
 
 /// Formats bullet symbol or ordered number based on list kind and nesting depth.
@@ -130,6 +129,7 @@ pub struct Frontmatter {
     pub language: Option<String>,
     pub logo: Option<String>,
     pub numbered_sections: bool,
+    pub custom: std::collections::HashMap<String, String>,
 }
 
 /// Detected interactive features present in a Markdown document.
@@ -187,6 +187,7 @@ impl Default for Frontmatter {
             language: None,
             logo: None,
             numbered_sections: true,
+            custom: std::collections::HashMap::new(),
         }
     }
 }
@@ -199,7 +200,7 @@ impl Frontmatter {
 
     /// Converts all frontmatter metadata fields into a key-value hash map.
     pub fn to_hashmap(&self) -> std::collections::HashMap<String, String> {
-        let mut map = std::collections::HashMap::with_capacity(8);
+        let mut map = std::collections::HashMap::with_capacity(8 + self.custom.len());
         if let Some(ref t) = self.title {
             map.insert("title".to_string(), t.clone());
         }
@@ -220,6 +221,9 @@ impl Frontmatter {
             map.insert("logo".to_string(), lg.clone());
         }
         map.insert("numbered_sections".to_string(), self.numbered_sections.to_string());
+        for (k, v) in &self.custom {
+            map.insert(k.clone(), v.clone());
+        }
         map
     }
 }
@@ -231,80 +235,69 @@ struct FrontmatterBounds<'a> {
     body_text: &'a str,
 }
 
-/// Finds frontmatter bounds robustly using line-based iteration.
+/// Finds frontmatter bounds robustly using safe subslice indexing.
 fn find_frontmatter_bounds(md_content: &str) -> Option<FrontmatterBounds<'_>> {
+    let mut remaining = md_content;
     let mut in_leading_comment = false;
-    let mut content_start_offset = None;
 
-    for line in md_content.lines() {
+    // Scan for opening ---
+    loop {
+        let (line, next_remaining) = match remaining.split_once('\n') {
+            Some((l, r)) => (l.strip_suffix('\r').unwrap_or(l), r),
+            None => (remaining.strip_suffix('\r').unwrap_or(remaining), ""),
+        };
         let trimmed = line.trim();
         if in_leading_comment {
             if trimmed.contains("-->") {
                 in_leading_comment = false;
             }
-            continue;
-        }
-
-        if trimmed.starts_with("<!--") {
+        } else if trimmed.starts_with("<!--") {
             if !trimmed.contains("-->") {
                 in_leading_comment = true;
             }
-            continue;
-        }
-
-        if trimmed.is_empty() {
-            continue;
-        }
-
-        if trimmed == "---" {
-            let line_offset = line.as_ptr() as usize - md_content.as_ptr() as usize;
-            let after_first = line_offset + line.len();
-            let content_start = md_content[after_first..]
-                .strip_prefix("\r\n")
-                .or_else(|| md_content[after_first..].strip_prefix("\n"))
-                .map(|s| md_content.len() - s.len())
-                .unwrap_or(after_first);
-
-            content_start_offset = Some(content_start);
+        } else if trimmed.is_empty() {
+            // empty lines allowed before frontmatter
+        } else if trimmed == "---" {
+            remaining = next_remaining;
             break;
         } else {
             return None;
         }
+
+        if next_remaining.is_empty() && trimmed != "---" {
+            return None;
+        }
+        remaining = next_remaining;
     }
 
-    let content_start = content_start_offset?;
-    let rest = &md_content[content_start..];
-    let mut close_start_offset = None;
-    let mut body_start_offset = None;
+    let frontmatter_start = remaining;
+    let mut current = remaining;
+    let mut frontmatter_len = 0;
 
-    for line in rest.lines() {
+    loop {
+        let (line, next_remaining) = match current.split_once('\n') {
+            Some((l, r)) => (l.strip_suffix('\r').unwrap_or(l), r),
+            None => (current.strip_suffix('\r').unwrap_or(current), ""),
+        };
         let trimmed = line.trim();
         if trimmed == "---" {
-            let line_offset = line.as_ptr() as usize - md_content.as_ptr() as usize;
-            close_start_offset = Some(line_offset);
-
-            let after_close = line_offset + line.len();
-            let body_start = md_content[after_close..]
-                .strip_prefix("\r\n")
-                .or_else(|| md_content[after_close..].strip_prefix("\n"))
-                .map(|s| md_content.len() - s.len())
-                .unwrap_or(after_close);
-
-            body_start_offset = Some(body_start);
-            break;
+            let frontmatter_text = &frontmatter_start[..frontmatter_len];
+            let body_text = next_remaining;
+            return Some(FrontmatterBounds {
+                frontmatter_text,
+                body_text,
+            });
+        }
+        if current.is_empty() {
+            return None;
+        }
+        let consumed = current.len() - next_remaining.len();
+        frontmatter_len += consumed;
+        current = next_remaining;
+        if next_remaining.is_empty() && trimmed != "---" {
+            return None;
         }
     }
-
-    let close_offset = close_start_offset?;
-    let body_offset = body_start_offset?;
-
-    let frontmatter_text = &md_content[content_start..close_offset];
-    let body_text = &md_content[body_offset..];
-
-    Some(FrontmatterBounds {
-        frontmatter_text,
-        body_text,
-    })
 }
 
 /// Trims surrounding quotes only if enclosed by identical matching single or double quotes.
@@ -349,6 +342,7 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
                         crate::error::print_warning(&format!(
                             "Unknown frontmatter option '{key}'. Refer to starter template ('d2f --init') for supported options."
                         ));
+                        fm.custom.insert(key.to_string(), val_trimmed.to_string());
                     }
                 }
             }
@@ -363,17 +357,7 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
 /// Parses YAML frontmatter into a key-value hash map and returns remaining markdown body.
 pub fn parse_frontmatter_map(md_content: &str) -> (std::collections::HashMap<String, String>, &str) {
     let (fm, body) = parse_frontmatter(md_content);
-    let mut map = fm.to_hashmap();
-    if let Some(bounds) = find_frontmatter_bounds(md_content) {
-        for line in bounds.frontmatter_text.lines() {
-            if let Some((key, val)) = line.split_once(':') {
-                let key = key.trim();
-                let val_trimmed = trim_matching_quotes(val);
-                map.insert(key.to_string(), val_trimmed.to_string());
-            }
-        }
-    }
-    (map, body)
+    (fm.to_hashmap(), body)
 }
 
 /// Validates frontmatter metadata for required fields.
@@ -395,14 +379,10 @@ pub fn parse_and_validate_frontmatter<'a>(
     Ok((fm, body))
 }
 
-const CALLOUT_TABLE: &[(&str, &str, &str, &str)] = &[
-    ("!!! ", "note note-caution", "callout_caution", "caution"),
+const CALLOUT_KINDS: &[(&str, &str, &str, &str)] = &[
     ("!!!", "note note-caution", "callout_caution", "caution"),
-    ("!! ", "note note-warning", "callout_warning", "warning"),
     ("!!", "note note-warning", "callout_warning", "warning"),
-    ("! ", "note note-important", "callout_important", "important"),
     ("!", "note note-important", "callout_important", "important"),
-    ("? ", "note note-tip", "callout_tip", "tip"),
     ("?", "note note-tip", "callout_tip", "tip"),
 ];
 
@@ -411,9 +391,10 @@ fn parse_callout<'a>(
     inner: &'a str,
     locale: &'a Locale,
 ) -> (&'static str, &'a str, &'a str, &'static str) {
-    for &(prefix, css_class, key, ctype) in CALLOUT_TABLE {
+    for &(prefix, css_class, key, ctype) in CALLOUT_KINDS {
         if let Some(stripped) = inner.strip_prefix(prefix) {
-            return (css_class, stripped, locale.get(key), ctype);
+            let content = stripped.strip_prefix(' ').unwrap_or(stripped);
+            return (css_class, content, locale.get(key), ctype);
         }
     }
 
@@ -495,7 +476,6 @@ where
 }
 
 /// Strips enclosing `<p>` and `</p>` HTML tags if present.
-#[inline]
 fn strip_paragraph_tags(input: &str) -> &str {
     input
         .strip_prefix("<p>")
@@ -566,8 +546,6 @@ pub fn convert_markdown_to_html_with_options(
     let mut var_event_ranges: Vec<(usize, usize)> = Vec::new();
 
     let mut scan_i = 0;
-    let mut temp_scan_html = String::with_capacity(512);
-
     while scan_i < events.len() {
         if let Event::Start(Tag::Paragraph) = &events[scan_i] {
             let p_start = scan_i;
@@ -589,11 +567,7 @@ pub fn convert_markdown_to_html_with_options(
                 scan_i += 1;
             }
 
-            temp_scan_html.clear();
-            html::push_html(&mut temp_scan_html, events[p_start + 1..p_end].iter().cloned());
-            let clean_p = strip_paragraph_tags(temp_scan_html.trim()).trim();
-
-            if clean_p.eq_ignore_ascii_case("[Variables]") {
+            if is_variables_marker(&events[p_start + 1..p_end]) {
                 let mut next_t = p_end + 1;
                 while next_t < events.len() {
                     match &events[next_t] {
@@ -1053,7 +1027,6 @@ pub fn convert_markdown_to_html_with_options(
 }
 
 /// Finds the index of the matching [`Event::End(TagEnd::Table)`] event for a table starting at `start_idx`.
-#[inline]
 fn find_table_end(events: &[Event], start_idx: usize) -> usize {
     let mut table_depth = 1usize;
     for (i, ev) in events.iter().enumerate().skip(start_idx + 1) {
@@ -1069,6 +1042,21 @@ fn find_table_end(events: &[Event], start_idx: usize) -> usize {
         }
     }
     start_idx
+}
+
+fn is_variables_marker(events: &[Event]) -> bool {
+    let mut combined = String::with_capacity(16);
+    for ev in events {
+        match ev {
+            Event::Text(t) | Event::Code(t) => {
+                combined.push_str(t.trim());
+            }
+            Event::Start(Tag::Link { .. }) | Event::End(TagEnd::Link) => continue,
+            Event::Html(_) | Event::InlineHtml(_) => continue,
+            _ => return false,
+        }
+    }
+    combined.eq_ignore_ascii_case("[Variables]") || combined.eq_ignore_ascii_case("Variables")
 }
 
 fn is_section_empty(events: &[Event]) -> bool {
@@ -1406,23 +1394,64 @@ mod tests {
 
     #[test]
     fn test_to_alpha_and_to_roman() {
+        // to_alpha boundaries
         assert_eq!(to_alpha(0), "a");
         assert_eq!(to_alpha(1), "a");
         assert_eq!(to_alpha(2), "b");
         assert_eq!(to_alpha(26), "z");
         assert_eq!(to_alpha(27), "aa");
+        assert_eq!(to_alpha(28), "ab");
+        assert_eq!(to_alpha(52), "az");
+        assert_eq!(to_alpha(53), "ba");
+        assert_eq!(to_alpha(702), "zz");
+        assert_eq!(to_alpha(703), "aaa");
 
+        // to_roman boundaries
         assert_eq!(to_roman(0), "i");
         assert_eq!(to_roman(1), "i");
         assert_eq!(to_roman(2), "ii");
+        assert_eq!(to_roman(3), "iii");
         assert_eq!(to_roman(4), "iv");
+        assert_eq!(to_roman(5), "v");
         assert_eq!(to_roman(9), "ix");
+        assert_eq!(to_roman(10), "x");
+        assert_eq!(to_roman(11), "xi");
         assert_eq!(to_roman(14), "xiv");
         assert_eq!(to_roman(40), "xl");
+        assert_eq!(to_roman(50), "l");
         assert_eq!(to_roman(90), "xc");
+        assert_eq!(to_roman(100), "c");
         assert_eq!(to_roman(400), "cd");
+        assert_eq!(to_roman(500), "d");
         assert_eq!(to_roman(900), "cm");
+        assert_eq!(to_roman(1000), "m");
         assert_eq!(to_roman(1984), "mcmlxxxiv");
+        assert_eq!(to_roman(3999), "mmmcmxcix");
+    }
+
+    #[test]
+    fn test_parse_frontmatter_map() {
+        let input = "---\ntitle: \"Architecture Guide\"\nsubtitle: \"V2\"\ndate: \"2026-08-08\"\nversion: \"2.0.0\"\nlanguage: \"en\"\nlogo: \"brand.svg\"\nnumbered_sections: true\ncustom_key_1: \"custom_val_1\"\nframework: \"doc2flow\"\n---\n## Main Content\nHello world";
+        let (map, body) = parse_frontmatter_map(input);
+
+        assert_eq!(map.get("title").map(|s| s.as_str()), Some("Architecture Guide"));
+        assert_eq!(map.get("subtitle").map(|s| s.as_str()), Some("V2"));
+        assert_eq!(map.get("date").map(|s| s.as_str()), Some("2026-08-08"));
+        assert_eq!(map.get("version").map(|s| s.as_str()), Some("2.0.0"));
+        assert_eq!(map.get("language").map(|s| s.as_str()), Some("en"));
+        assert_eq!(map.get("lang").map(|s| s.as_str()), Some("en"));
+        assert_eq!(map.get("logo").map(|s| s.as_str()), Some("brand.svg"));
+        assert_eq!(map.get("numbered_sections").map(|s| s.as_str()), Some("true"));
+        assert_eq!(map.get("custom_key_1").map(|s| s.as_str()), Some("custom_val_1"));
+        assert_eq!(map.get("framework").map(|s| s.as_str()), Some("doc2flow"));
+        assert_eq!(body, "## Main Content\nHello world");
+
+        // Without frontmatter
+        let no_fm = "## Pure Markdown\nJust body text";
+        let (empty_map, no_fm_body) = parse_frontmatter_map(no_fm);
+        assert_eq!(empty_map.get("numbered_sections").map(|s| s.as_str()), Some("true"));
+        assert_eq!(empty_map.get("title"), None);
+        assert_eq!(no_fm_body, no_fm);
     }
 
     #[test]
