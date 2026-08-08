@@ -6,7 +6,7 @@ use crate::locales::{Locale, validate_locale_coverage};
 use std::collections::HashMap;
 
 /// Embedded core CSS styles for layout and components.
-pub static STYLE_CORE: &str = include_str!("css/core.css");
+pub static STYLE_CORE: &str = include_str!("web/core.css");
 
 /// Embedded core JavaScript bundle for client runtime.
 pub static SCRIPT_CORE: &str = include_str!("../../web/dist/script-core.js");

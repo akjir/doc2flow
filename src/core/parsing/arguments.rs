@@ -26,6 +26,24 @@ pub struct Args {
     pub show_version: bool,
 }
 
+/// Parses a non-empty path value for a CLI option flag.
+fn parse_required_path(flag_name: &str, raw_val: &str) -> Result<PathBuf, String> {
+    if raw_val.is_empty() {
+        Err(format!("Option '{flag_name}' requires a non-empty path value"))
+    } else {
+        Ok(PathBuf::from(raw_val))
+    }
+}
+
+/// Parses an optional template path value for `--init`.
+fn parse_init_path(raw_val: &str) -> PathBuf {
+    if raw_val.is_empty() {
+        PathBuf::from(DEFAULT_TEMPLATE_NAME)
+    } else {
+        PathBuf::from(raw_val)
+    }
+}
+
 /// Parses raw command-line arguments into a structured [`Args`] struct.
 ///
 /// # Examples
@@ -62,19 +80,13 @@ where
                 let val = iter
                     .next()
                     .ok_or_else(|| String::from("Option '--output' requires a path value"))?;
-                if val.as_ref().is_empty() {
-                    return Err(String::from("Option '--output' requires a non-empty path value"));
-                }
-                parsed.output = Some(PathBuf::from(val.as_ref()));
+                parsed.output = Some(parse_required_path("--output", val.as_ref())?);
             }
             "-l" | "--logo" => {
                 let val = iter
                     .next()
                     .ok_or_else(|| String::from("Option '--logo' requires a path value"))?;
-                if val.as_ref().is_empty() {
-                    return Err(String::from("Option '--logo' requires a non-empty path value"));
-                }
-                parsed.logo = Some(PathBuf::from(val.as_ref()));
+                parsed.logo = Some(parse_required_path("--logo", val.as_ref())?);
             }
             "-i" | "--init" => {
                 if let Some(next_arg) = iter.peek() {
@@ -83,11 +95,7 @@ where
                         parsed.init = Some(PathBuf::from(DEFAULT_TEMPLATE_NAME));
                     } else {
                         let val = iter.next().expect("peeked value must be present");
-                        if val.as_ref().is_empty() {
-                            parsed.init = Some(PathBuf::from(DEFAULT_TEMPLATE_NAME));
-                        } else {
-                            parsed.init = Some(PathBuf::from(val.as_ref()));
-                        }
+                        parsed.init = Some(parse_init_path(val.as_ref()));
                     }
                 } else {
                     parsed.init = Some(PathBuf::from(DEFAULT_TEMPLATE_NAME));
@@ -97,27 +105,13 @@ where
                 if let Some((key, val)) = opt.split_once('=') {
                     match key {
                         "-o" | "--output" => {
-                            if val.is_empty() {
-                                return Err(String::from(
-                                    "Option '--output' requires a non-empty path value",
-                                ));
-                            }
-                            parsed.output = Some(PathBuf::from(val));
+                            parsed.output = Some(parse_required_path("--output", val)?);
                         }
                         "-l" | "--logo" => {
-                            if val.is_empty() {
-                                return Err(String::from(
-                                    "Option '--logo' requires a non-empty path value",
-                                ));
-                            }
-                            parsed.logo = Some(PathBuf::from(val));
+                            parsed.logo = Some(parse_required_path("--logo", val)?);
                         }
                         "-i" | "--init" => {
-                            if val.is_empty() {
-                                parsed.init = Some(PathBuf::from(DEFAULT_TEMPLATE_NAME));
-                            } else {
-                                parsed.init = Some(PathBuf::from(val));
-                            }
+                            parsed.init = Some(parse_init_path(val));
                         }
                         _ => return Err(format!("Unrecognized option '{arg_str}'")),
                     }

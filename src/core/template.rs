@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::fmt::Write;
 
 /// Embedded core CSS styles.
-pub static STYLE_CORE: &str = include_str!("css/core.css");
+pub static STYLE_CORE: &str = include_str!("web/core.css");
 
 /// Embedded code block CSS feature styles.
 pub static STYLE_CODE: &str = include_str!("../features/code/code.css");

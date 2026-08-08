@@ -1,5 +1,5 @@
 (() => {
-  // ../src/core/ts/storage.ts
+  // ../src/core/web/storage.ts
   var saveHandlers = /* @__PURE__ */ new Set();
   var loadHandlers = /* @__PURE__ */ new Set();
   window.d2f = window.d2f || {};
@@ -71,7 +71,7 @@
     }
   }
 
-  // ../src/core/ts/utils.ts
+  // ../src/core/web/utils.ts
   function debounce(func, wait) {
     let timeout;
     return function(...args) {
@@ -90,7 +90,7 @@
     isRecord
   };
 
-  // ../src/core/ts/export.ts
+  // ../src/core/web/export.ts
   var exportHandlers = /* @__PURE__ */ new Set();
   window.d2f = window.d2f || {};
   window.d2f.export = {
@@ -150,7 +150,7 @@
     }
   }
 
-  // ../src/core/ts/sections.ts
+  // ../src/core/web/sections.ts
   function setSectionCollapseState(sec, isCollapsed) {
     const body = sec.querySelector(".sb");
     const sh = sec.querySelector(".sh");
@@ -258,7 +258,7 @@
     });
   }
 
-  // ../src/core/ts/comments.ts
+  // ../src/core/web/comments.ts
   function autoExpandTextarea(el) {
     if (!el)
       return;
@@ -375,7 +375,7 @@
     document.addEventListener("change", handleCommentInput);
   }
 
-  // ../src/core/ts/items.ts
+  // ../src/core/web/items.ts
   function saveItems() {
     const texts = {};
     document.querySelectorAll(".doc-item.text-item, .doc-item.simple-item").forEach((item, index) => {
@@ -425,7 +425,7 @@
     });
   }
 
-  // ../src/core/ts/fields.ts
+  // ../src/core/web/fields.ts
   function formatDateFromTemplate(now, template) {
     if (!template || typeof template !== "string")
       return null;
@@ -538,7 +538,7 @@
     document.addEventListener("change", handleInputOrChange);
   }
 
-  // ../src/core/ts/search.ts
+  // ../src/core/web/search.ts
   var preSearchCollapsedState = null;
   var lastMatchedSectionIds = /* @__PURE__ */ new Set();
   function removeHighlights(container) {
@@ -775,7 +775,7 @@
     });
   }
 
-  // ../src/core/ts/core.ts
+  // ../src/core/web/core.ts
   var resetHandlers = /* @__PURE__ */ new Set();
   function registerResetHandler(handler) {
     resetHandlers.add(handler);

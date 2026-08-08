@@ -1,6 +1,5 @@
 //! Core architecture abstractions and engine for Doc2Flow.
 
-pub mod args;
 pub mod components;
 pub mod converter;
 pub mod error;
@@ -11,6 +10,8 @@ pub mod id;
 pub mod image;
 pub mod io;
 pub mod locales;
+#[path = "parsing/arguments.rs"]
+pub mod args;
 pub mod template;
 pub mod utils;
 

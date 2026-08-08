@@ -175,7 +175,6 @@ doc2flow/
 │   ├── lib.rs                # Module declarations and library interface
 │   ├── core/                 # Core architecture, engine, stylesheets and TS runtime
 │   │   ├── mod.rs            # Core module exports
-│   │   ├── args.rs           # Zero-dependency CLI argument parsing and validation
 │   │   ├── components.rs     # Core-universal HTML UI component generators
 │   │   ├── converter.rs      # Markdown AST parser and feature detector interface
 │   │   ├── error.rs          # Diagnostic error types and reporting
@@ -186,11 +185,12 @@ doc2flow/
 │   │   ├── image.rs          # Image optimization, WebP scaling and Base64 embedding
 │   │   ├── io.rs             # Central filesystem and asset IO
 │   │   ├── locales.rs        # Locale loader and translation engine
+│   │   ├── parsing/          # CLI argument parsing and grammar
+│   │   │   └── arguments.rs  # Zero-dependency CLI argument parsing and validation
 │   │   ├── template.rs       # HTML page orchestrator
 │   │   ├── utils.rs          # Base64 encoding, MIME type guessing, and Data-URI conversion
-│   │   ├── css/              # Core stylesheets
-│   │   │   └── core.css      # Base layout and styles
-│   │   └── ts/               # Core TypeScript client runtime
+│   │   └── web/              # Core web frontend runtime and stylesheets
+│   │       ├── core.css      # Base layout and styles
 │   │       ├── comments.ts   # Inline check-item comment boxes and persistence
 │   │       ├── core.ts       # Central core module, bundle entry point, and reset handler registry
 │   │       ├── export.ts     # Document export operations (PDF export and HTML state download)
