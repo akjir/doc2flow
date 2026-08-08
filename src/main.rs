@@ -3,7 +3,7 @@ use doc2flow::error::{Doc2FlowError, Result};
 use doc2flow::io;
 use doc2flow::locales::Locale;
 use doc2flow::template;
-use doc2flow::utils::{help_message, parse_args};
+use doc2flow::args::{help_message, parse_args};
 use std::env;
 use std::process::ExitCode;
 

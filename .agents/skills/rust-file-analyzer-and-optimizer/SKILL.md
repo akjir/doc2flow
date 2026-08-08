@@ -37,9 +37,12 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 - **Static:** `out.write_str("...")` STRICTLY for static literals (no variables).
 - **Dynamic:** `write!(out, "...", vars)` for HTML fragments with variables.
 - **Anti-Pattern:** NEVER fragment single HTML strings into multiple `write_str` calls solely to avoid `write!`. Maintain readability.
+- **Error Paths:** Do NOT micro-optimize error paths with manual buffer allocs/`write!`. Use `format!` or static strings for clarity.
 
 ### 4: Idioms & Architecture
-- **Errors:** Use `anyhow`/`eyre` with `.context(...)`. Avoid complex custom `Enum`s for basic app errors.
+- **Errors:** Stdlib + `Doc2FlowError`. Avoid complex custom `Enum`s for basic app errors.
 - **Panics:** `unwrap()`/`expect()` ONLY for true invariants with descriptive msgs. NEVER for runtime/user I/O.
 - **Safety:** ZERO `unsafe` blocks.
-- **Logic:** Prefer `match` or lookup tables over `if-else` chains
+- **Logic:** Prefer `match` or lookup tables over `if-else` chains.
+- **CLI Parsing:** Enforce identical validation for space-separated vs equals-separated flags; reject empty values uniformly (`val.as_ref().is_empty()`).
+- **Attributes:** Reserve `#[inline]` strictly for hot-path inner loops/rendering. NEVER apply `#[inline]` to single-call setup, init, or CLI parsing logic.

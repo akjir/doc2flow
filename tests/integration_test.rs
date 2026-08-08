@@ -432,7 +432,7 @@ date: "2026-07-26"
 
 #[test]
 fn test_cli_parse_args_error_handling() {
-    use doc2flow::utils::parse_args;
+    use doc2flow::args::parse_args;
 
     // Unknown option
     let err = parse_args(&["d2f", "--unknown-flag"]).unwrap_err();
@@ -453,7 +453,7 @@ fn test_cli_parse_args_error_handling() {
 
 #[test]
 fn test_cli_version_output_formatting() {
-    use doc2flow::utils::parse_args;
+    use doc2flow::args::parse_args;
 
     let args = parse_args(&["d2f", "--version"]).unwrap();
     assert!(args.show_version);
