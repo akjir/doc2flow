@@ -20,7 +20,7 @@ pub use converter::*;
 pub use error::{
     DiagnosticError, Doc2FlowError, IoResultExt, Result, build_caret_annotation, print_warning,
 };
-pub use feature::{DocumentContext, Feature};
+pub use feature::{DocumentContext, Feature, resolve_enabled_features};
 pub use generator::{SCRIPT_CORE, STYLE_CORE, assemble_html, assemble_scripts, assemble_styles};
 pub use hasher::{generate_doc_id, sha256, sha256_bytes};
 pub use id::generate_d2f_id;
