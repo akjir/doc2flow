@@ -1,14 +1,14 @@
 use crate::error::{DiagnosticError, Doc2FlowError, Result, print_warning};
 use crate::io;
 use crate::template::DEFAULT_LOGO_SVG;
-use crate::utils::{guess_mime_type, to_base64_data_uri};
+use crate::{guess_mime_type, to_base64_data_uri};
 use image::{GenericImageView, ImageFormat, imageops::FilterType};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
 
-pub use crate::utils::to_base64_data_uri_into;
+pub use crate::to_base64_data_uri_into;
 
 /// Maximum allowed size in bytes for a local image embedded into HTML (250 KB).
 pub const MAX_IMAGE_SIZE_BYTES: u64 = 250 * 1024;
@@ -77,7 +77,7 @@ pub fn load_logo(logo_path: Option<&Path>, base_dir: Option<&Path>) -> String {
             }
         }
     } else {
-        match crate::utils::file_to_data_uri(&resolved_path) {
+        match crate::file_to_data_uri(&resolved_path) {
             Ok(data_uri) => {
                 format!("<img src=\"{data_uri}\" alt=\"Logo\">")
             }

@@ -53,7 +53,7 @@ fn run() -> Result<()> {
     if frontmatter
         .header
         .as_deref()
-        .map_or(false, |v| v.trim().trim_matches('"').trim_matches('\'').eq_ignore_ascii_case("flex"))
+        .is_some_and(|v| v.trim().trim_matches('"').trim_matches('\'').eq_ignore_ascii_case("flex"))
     {
         features.has_header = true;
     }

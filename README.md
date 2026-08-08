@@ -241,7 +241,7 @@ doc2flow/
 │   ├── image.rs          # Base64 embedding & WebP auto-scaling
 │   ├── io.rs             # Centralized filesystem I/O operations
 │   ├── template.rs       # HTML page orchestrator & feature assembler
-│   └── utils.rs          # MIME type detection & CLI utilities
+│   └── utils/            # MIME detection, Base64 & Data-URI utilities
 ├── tests/                # Integration test suite & showcase fixtures
 ├── build.rs              # TypeScript build integration & version metadata
 ├── CHANGELOG.md          # Keep a Changelog documentation

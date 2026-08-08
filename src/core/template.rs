@@ -135,16 +135,16 @@ pub const DEFAULT_LOGO_SVG: &str = components::DEFAULT_LOGO_SVG;
 pub const COMMENT_ICON_SVG: &str = components::COMMENT_ICON_SVG;
 
 /// Application version with SemVer 2.0.0 build metadata dynamically generated at compile time.
-pub const APP_VERSION: &str = env!("D2F_FULL_VERSION");
+pub const APP_VERSION: &str = crate::core::constants::APP_VERSION;
 
 /// Official application repository URL.
-pub const REPOSITORY_URL: &str = "https://github.com/akjir/doc2flow";
+pub const REPOSITORY_URL: &str = crate::core::constants::REPOSITORY_URL;
 
 /// Application license terms.
-pub const LICENSE_TERMS: &str = "GPL-3.0-or-later";
+pub const LICENSE_TERMS: &str = crate::core::constants::LICENSE_TERMS;
 
 /// Official application license URL.
-pub const LICENSE_URL: &str = "https://github.com/akjir/doc2flow/blob/main/LICENSE";
+pub const LICENSE_URL: &str = crate::core::constants::LICENSE_URL;
 
 /// Formats a [`std::time::SystemTime`] as an ISO 8601 UTC timestamp (`YYYY-MM-DDTHH:MM:SSZ`).
 pub fn format_iso8601_utc(time: std::time::SystemTime) -> String {

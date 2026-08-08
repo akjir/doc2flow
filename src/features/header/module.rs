@@ -27,13 +27,13 @@ pub fn render_flex_header(
     let _ = out.write_str(&escaped_title);
     let _ = out.write_str("</h1>\n");
 
-    if let Some(sub) = subtitle {
-        if !sub.trim().is_empty() {
-            let escaped_sub = crate::converter::html_escape(sub);
-            let _ = out.write_str("      <div class=\"header-flex-sub\">");
-            let _ = out.write_str(&escaped_sub);
-            let _ = out.write_str("</div>\n");
-        }
+    if let Some(sub) = subtitle
+        && !sub.trim().is_empty()
+    {
+        let escaped_sub = crate::converter::html_escape(sub);
+        let _ = out.write_str("      <div class=\"header-flex-sub\">");
+        let _ = out.write_str(&escaped_sub);
+        let _ = out.write_str("</div>\n");
     }
 
     let _ = out.write_str("    </div>\n    <div class=\"header-flex-logo\">\n      ");
@@ -71,12 +71,10 @@ impl Feature for HeaderFeature {
     /// Evaluates if the header feature is enabled based on frontmatter option `header: "flex"`.
     #[inline]
     fn is_enabled(&self, ctx: &DocumentContext) -> bool {
-        ctx.frontmatter
-            .get("header")
-            .map_or(false, |val| {
-                let trimmed = val.trim().trim_matches('"').trim_matches('\'');
-                trimmed.eq_ignore_ascii_case("flex")
-            })
+        ctx.frontmatter.get("header").is_some_and(|val| {
+            let trimmed = val.trim().trim_matches('"').trim_matches('\'');
+            trimmed.eq_ignore_ascii_case("flex")
+        })
     }
 
     /// Returns optional CSS stylesheet rules for flexible header layout.

@@ -1,6 +1,7 @@
 //! Core architecture abstractions and engine for Doc2Flow.
 
 pub mod components;
+pub mod constants;
 pub mod converter;
 pub mod error;
 pub mod feature;
@@ -13,10 +14,17 @@ pub mod locales;
 #[path = "parsing/arguments.rs"]
 pub mod args;
 pub mod template;
-pub mod utils;
+#[path = "utils/base64.rs"]
+pub mod base64;
+#[path = "utils/mime.rs"]
+pub mod mime;
+#[path = "utils/uri.rs"]
+pub mod uri;
 
 pub use args::{Args, help_message, parse_args};
+pub use base64::{base64_encode, base64_encode_into};
 pub use components::*;
+pub use constants::*;
 pub use converter::*;
 pub use error::{
     DiagnosticError, Doc2FlowError, IoResultExt, Result, build_caret_annotation, print_warning,
@@ -33,11 +41,8 @@ pub use io::{
     resolve_logo_path, resolve_relative_path, write_file,
 };
 pub use locales::{Locale, validate_locale_coverage};
+pub use mime::guess_mime_type;
 pub use template::{
-    APP_VERSION, LICENSE_TERMS, LICENSE_URL, REPOSITORY_URL, format_iso8601_utc,
-    generate_template_markdown, render, render_scripts, substitute_template,
+    format_iso8601_utc, generate_template_markdown, render, render_scripts, substitute_template,
 };
-pub use utils::{
-    base64_encode, base64_encode_into, file_to_data_uri, guess_mime_type, to_base64_data_uri,
-    to_base64_data_uri_into,
-};
+pub use uri::{file_to_data_uri, to_base64_data_uri, to_base64_data_uri_into};

@@ -129,6 +129,9 @@ d2f.exe --version
 * **HTML UI Components & Templating (`src/components.rs` & `src/template.rs`):**
   * `src/components.rs`: Core-universal zero-allocation HTML UI building blocks (`out: &mut impl Write`). Feature-specific HTML components reside in their respective feature modules.
   * `src/template.rs`: Central HTML page orchestrator, feature style assembler (`render_styles`), and script bundle assembler (`render_scripts`).
+* **Constants Architecture & Encapsulation Rules:**
+  * **Feature-Specific Constants (Strict Encapsulation):** Constants used exclusively by an individual feature (e.g. CSS class names, frontmatter keys, selector strings, feature-internal default values) MUST be defined directly in the respective `src/features/<feature_name>/module.rs` (or private submodules). Distributing feature constants across central files or dumpsters is strictly prohibited to eliminate tight coupling.
+  * **Global System Constants (`src/core/constants.rs`):** Reserved exclusively for application-wide, feature-independent system metadata and global core defaults (e.g. `APP_NAME`, `CLI_BANNER`, `APP_VERSION`, `REPOSITORY_URL`, `LICENSE_TERMS`, `LICENSE_URL`, global system/I/O limits).
 * **Centralized Diagnostic Error Handling (`src/error.rs`):** Runtime, I/O, and syntax errors map to domain error types (`Doc2FlowError`) with compiler-style `stderr` warnings (`print_warning`).
 
 ---
@@ -176,6 +179,7 @@ doc2flow/
 │   ├── core/                 # Core architecture, engine, stylesheets and TS runtime
 │   │   ├── mod.rs            # Core module exports
 │   │   ├── components.rs     # Core-universal HTML UI component generators
+│   │   ├── constants.rs      # Global system metadata, CLI branding, and core defaults
 │   │   ├── converter.rs      # Markdown AST parser and feature detector interface
 │   │   ├── error.rs          # Diagnostic error types and reporting
 │   │   ├── feature.rs        # Feature trait and DocumentContext detection
@@ -187,8 +191,10 @@ doc2flow/
 │   │   ├── locales.rs        # Locale loader and translation engine
 │   │   ├── parsing/          # CLI argument parsing and grammar
 │   │   │   └── arguments.rs  # Zero-dependency CLI argument parsing and validation
-│   │   ├── template.rs       # HTML page orchestrator
-│   │   ├── utils.rs          # Base64 encoding, MIME type guessing, and Data-URI conversion
+│   │   ├── utils/            # Base64 encoding, MIME type guessing, and Data-URI conversion
+│   │   │   ├── base64.rs     # RFC 4648 Base64 encoding routines
+│   │   │   ├── mime.rs       # Extension-based MIME type inference
+│   │   │   └── uri.rs        # Base64 Data URI formatting and file conversion
 │   │   └── web/              # Core web frontend runtime and stylesheets
 │   │       ├── core.css      # Base layout and styles
 │   │       ├── comments.ts   # Inline check-item comment boxes and persistence

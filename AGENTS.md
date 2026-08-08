@@ -4,7 +4,7 @@
 - **Spec:** `SPECIFICATION.md` (sync structure on central file changes)
 - **CLI:** `std::env::args()`
 - **MD:** `pulldown-cmark`+GFM
-- **Assets:** Custom Base64/MIME (`src/utils.rs`), WebP/compress (`src/image.rs`)
+- **Assets:** Custom Base64/MIME (`src/core/utils/`), WebP/compress (`src/image.rs`)
 - **i18n:** `HashMap` via embedded JSON (`build.rs`)
 - **UI/HTML:** Zero-alloc buffers (`src/components.rs`, `src/template.rs`), compile-time embeds (`include_str!`)
 - **Flow:** CLI > MD > Img > UI
@@ -12,6 +12,7 @@
 ## 2. Rust
 - **Core:** Idiomatic, newtypes, 1-path exports, NO `unsafe`
 - **Clean:** Remove dead/obsolete code when adding new code.
+- **Consts:** Feature constants local in `src/features/<name>/module.rs` (NO central dumpster). App metadata/limits ONLY in `src/core/constants.rs`.
 - **CLI:** Identical validation for space (`-o ""`) vs equals (`-o=`) syntax. Reject empty values uniformly (`val.as_ref().is_empty()`).
 - **Errors:** Stdlib+`Doc2FlowError` (NO `anyhow`/`eyre`). `Result`=expected. `panic!`=bugs/stop (detailed msgs). NO `catch_unwind`. Safe bounds/slicing on diagnostic buffers. `From` conversions (NO `.to_<domain>()`). NO manual buffer micro-allocs on error paths; use `format!` or static strings.
 - **Attributes:** Reserve `#[inline]` exclusively for trivial getters/wrappers and hot-path inner loops/rendering. NO `#[inline]` on single-call init, setup, CLI parsing, parser helpers, or simple `const` fns.

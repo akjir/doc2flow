@@ -44,6 +44,7 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 - **Errors:** Stdlib + `Doc2FlowError`. Avoid complex custom `Enum`s for basic app errors.
 - **Panics:** `unwrap()`/`expect()` ONLY for true invariants with descriptive msgs. NEVER for runtime/user I/O.
 - **Safety:** ZERO `unsafe` blocks.
+- **Consts:** Feature constants local in `src/features/<name>/module.rs` (NO central dumpster). App metadata/limits ONLY in `src/core/constants.rs`.
 - **Logic:** Prefer `match` or lookup tables over `if-else` chains.
 - **CLI Parsing:** Enforce identical validation for space-separated vs equals-separated flags; reject empty values uniformly (`val.as_ref().is_empty()`).
 - **Attributes:** Reserve `#[inline]` strictly for trivial getters/wrappers and hot-path inner loops/rendering. NEVER apply `#[inline]` to single-call setup, init, parser helpers, or CLI parsing logic.
