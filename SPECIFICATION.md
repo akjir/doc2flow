@@ -121,7 +121,7 @@ d2f.exe --version
 ## 5. Module Architecture & Subsystem Decoupling
 
 * **Filesystem & I/O Isolation (`src/io.rs`):** Exclusive module for filesystem interactions, file reading/writing, path resolution (`Path`, `PathBuf`), and asset retrieval. Direct `std::fs`/`std::io` calls prohibited in processing modules.
-* **Pure In-Memory Processing Core:** Core modules (`src/converter.rs`, `src/template.rs`, `src/components.rs`, `src/locales.rs`, `src/hasher.rs`, `src/id.rs`) perform pure in-memory string/AST data transformations decoupled from disk I/O.
+* **Pure In-Memory Processing Core:** Core modules (`src/core/converter.rs`, `src/core/template.rs`, `src/core/components.rs`, `src/core/locales.rs`, `src/core/utils/hasher.rs`, `src/core/id.rs`) perform pure in-memory string/AST data transformations decoupled from disk I/O.
 * **Strict Modular Feature Isolation (HTML, CSS, TS/JS):**
   * Extension features (`code`, `header`, `image`, `table`, `tasks`) are fully decoupled and zero-knowledge of each other.
   * Each feature maintains dedicated HTML components, TypeScript and CSS modules within its vertical slice directory (`src/features/<name>/`).
@@ -184,7 +184,6 @@ doc2flow/
 │   │   ├── error.rs          # Diagnostic error types and reporting
 │   │   ├── feature.rs        # Feature trait and DocumentContext detection
 │   │   ├── generator.rs      # HTML Assembler and template engine
-│   │   ├── hasher.rs         # SHA-256 hash generator
 │   │   ├── id.rs             # Document identifier generation
 │   │   ├── image.rs          # Image optimization, WebP scaling and Base64 embedding
 │   │   ├── io.rs             # Central filesystem and asset IO
@@ -193,6 +192,7 @@ doc2flow/
 │   │   │   └── arguments.rs  # Zero-dependency CLI argument parsing and validation
 │   │   ├── utils/            # Base64 encoding, MIME type guessing, and Data-URI conversion
 │   │   │   ├── base64.rs     # RFC 4648 Base64 encoding routines
+│   │   │   ├── hasher.rs     # SHA-256 cryptographic hash generator
 │   │   │   ├── mime.rs       # Extension-based MIME type inference
 │   │   │   └── uri.rs        # Base64 Data URI formatting and file conversion
 │   │   └── web/              # Core web frontend runtime and stylesheets

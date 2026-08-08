@@ -1,23 +1,24 @@
 //! Core architecture abstractions and engine for Doc2Flow.
 
+#[path = "parsing/arguments.rs"]
+pub mod args;
+#[path = "utils/base64.rs"]
+pub mod base64;
 pub mod components;
 pub mod constants;
 pub mod converter;
 pub mod error;
 pub mod feature;
 pub mod generator;
+#[path = "utils/hasher.rs"]
 pub mod hasher;
 pub mod id;
 pub mod image;
 pub mod io;
 pub mod locales;
-#[path = "parsing/arguments.rs"]
-pub mod args;
-pub mod template;
-#[path = "utils/base64.rs"]
-pub mod base64;
 #[path = "utils/mime.rs"]
 pub mod mime;
+pub mod template;
 #[path = "utils/uri.rs"]
 pub mod uri;
 

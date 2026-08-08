@@ -232,16 +232,22 @@ doc2flow/
 ├── src/                  # Rust CLI backend engine
 │   ├── main.rs           # CLI entrypoint & argument parsing
 │   ├── lib.rs            # Module declarations & exports
-│   ├── components.rs     # Zero-allocation HTML UI generators
-│   ├── converter.rs      # Markdown AST parser & feature detector
-│   ├── error.rs          # Compiler-style diagnostic reporting
-│   ├── hasher.rs         # SHA-256 hash generator
-│   ├── locales.rs        # Locale loader & translation engine
-│   ├── id.rs             # Document identifier (d2f_id) generator
-│   ├── image.rs          # Base64 embedding & WebP auto-scaling
-│   ├── io.rs             # Centralized filesystem I/O operations
-│   ├── template.rs       # HTML page orchestrator & feature assembler
-│   └── utils/            # MIME detection, Base64 & Data-URI utilities
+│   ├── core/             # Core architecture, engine, stylesheets and TS runtime
+│   │   ├── mod.rs        # Core module exports
+│   │   ├── components.rs # Zero-allocation HTML UI generators
+│   │   ├── constants.rs  # Global system metadata and core defaults
+│   │   ├── converter.rs  # Markdown AST parser & feature detector
+│   │   ├── error.rs      # Compiler-style diagnostic reporting
+│   │   ├── feature.rs    # Feature trait and DocumentContext detection
+│   │   ├── generator.rs  # HTML Assembler and template engine
+│   │   ├── id.rs         # Document identifier (d2f_id) generator
+│   │   ├── image.rs      # Base64 embedding & WebP auto-scaling
+│   │   ├── io.rs         # Centralized filesystem I/O operations
+│   │   ├── locales.rs    # Locale loader & translation engine
+│   │   ├── parsing/      # CLI argument parsing and grammar
+│   │   ├── utils/        # Base64, hasher, MIME & Data-URI utilities
+│   │   └── web/          # Core web frontend runtime and stylesheets
+│   └── features/         # Vertical slice feature modules
 ├── tests/                # Integration test suite & showcase fixtures
 ├── build.rs              # TypeScript build integration & version metadata
 ├── CHANGELOG.md          # Keep a Changelog documentation
