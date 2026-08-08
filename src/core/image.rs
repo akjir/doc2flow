@@ -1,12 +1,14 @@
 use crate::error::{DiagnosticError, Doc2FlowError, Result, print_warning};
 use crate::io;
 use crate::template::DEFAULT_LOGO_SVG;
-use crate::utils::{base64_encode_into, file_to_data_uri, guess_mime_type};
+use crate::utils::{guess_mime_type, to_base64_data_uri};
 use image::{GenericImageView, ImageFormat, imageops::FilterType};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
+
+pub use crate::utils::to_base64_data_uri_into;
 
 /// Maximum allowed size in bytes for a local image embedded into HTML (250 KB).
 pub const MAX_IMAGE_SIZE_BYTES: u64 = 250 * 1024;
@@ -75,7 +77,7 @@ pub fn load_logo(logo_path: Option<&Path>, base_dir: Option<&Path>) -> String {
             }
         }
     } else {
-        match file_to_data_uri(&resolved_path) {
+        match crate::utils::file_to_data_uri(&resolved_path) {
             Ok(data_uri) => {
                 format!("<img src=\"{data_uri}\" alt=\"Logo\">")
             }
@@ -126,131 +128,53 @@ pub fn embed_images_as_base64_with_source(
     let mut cache: HashMap<PathBuf, String> = HashMap::new();
     let mut cursor = 0;
 
-    while let Some(img_start_rel) = html[cursor..].find("<img") {
-        let img_start = cursor + img_start_rel;
+    while let Some((img_start, img_end)) = find_next_img_tag(html, cursor) {
         out.push_str(&html[cursor..img_start]);
+        let tag_slice = &html[img_start..img_end];
 
-        let img_end = match html[img_start..].find('>') {
-            Some(rel_end) => img_start + rel_end + 1,
-            None => {
-                out.push_str(&html[img_start..]);
-                cursor = html.len();
-                break;
+        let Some((attr_start, attr_end, src_val)) = extract_attribute(tag_slice, "src") else {
+            out.push_str(tag_slice);
+            cursor = img_end;
+            continue;
+        };
+
+        if !is_image_source(src_val, base_dir) {
+            let alt_text = extract_attribute(tag_slice, "alt")
+                .map(|(_, _, val)| val)
+                .unwrap_or(src_val);
+            cursor = render_non_image_link(&mut out, html, img_end, src_val, alt_text);
+            continue;
+        }
+
+        if is_remote_or_data_uri(src_val) {
+            out.push_str(tag_slice);
+            cursor = img_end;
+            continue;
+        }
+
+        let path = Path::new(src_val);
+        let Some(resolved_path) = resolve_image_path(path, base_dir) else {
+            out.push_str(tag_slice);
+            cursor = img_end;
+            continue;
+        };
+
+        let data_uri = match cache.entry(resolved_path.clone()) {
+            Entry::Occupied(entry) => entry.get().clone(),
+            Entry::Vacant(entry) => {
+                let uri = resolve_or_encode_image(
+                    &resolved_path,
+                    src_val,
+                    auto_scale,
+                    md_content,
+                    file_name,
+                )?;
+                entry.insert(uri).clone()
             }
         };
 
-        let tag_slice = &html[img_start..img_end];
-
-        if let Some((attr_start, attr_end, src_val)) = extract_attribute(tag_slice, "src") {
-            if !is_image_source(src_val, base_dir) {
-                let alt_text = extract_attribute(tag_slice, "alt")
-                    .map(|(_, _, val)| val)
-                    .unwrap_or(src_val);
-
-                if let Some(next_cursor) = strip_img_item_wrapper(&mut out, html, img_end) {
-                    let comment_icon = crate::template::COMMENT_ICON_SVG;
-                    out.push_str("<div class=\"doc-item text-item\">\n  <span class=\"text-content\"><a href=\"");
-                    out.push_str(src_val);
-                    out.push_str("\" target=\"_blank\" rel=\"noopener noreferrer\">");
-                    out.push_str(alt_text);
-                    out.push_str("</a></span>\n  ");
-                    out.push_str(comment_icon);
-                    out.push_str("\n</div>\n");
-                    cursor = next_cursor;
-                } else {
-                    out.push_str("<a href=\"");
-                    out.push_str(src_val);
-                    out.push_str("\" target=\"_blank\" rel=\"noopener noreferrer\">");
-                    out.push_str(alt_text);
-                    out.push_str("</a>");
-                    cursor = img_end;
-                }
-                continue;
-            }
-
-            let is_remote_or_data = src_val.starts_with("data:")
-                || src_val.starts_with("http://")
-                || src_val.starts_with("https://");
-
-            if !is_remote_or_data {
-                let path = Path::new(src_val);
-                if let Some(resolved_path) = resolve_image_path(path, base_dir) {
-                    let data_uri = match cache.entry(resolved_path) {
-                        Entry::Occupied(entry) => entry.into_mut(),
-                        Entry::Vacant(entry) => {
-                            let resolved = entry.key();
-                            let uri = match io::read_file_bytes(resolved) {
-                                Ok(bytes) => {
-                                    let size = bytes.len() as u64;
-                                    if size > MAX_IMAGE_SIZE_BYTES {
-                                        let should_scale = auto_scale
-                                            || prompt_user_for_resizing(src_val, size);
-
-                                        let scaled_uri = if should_scale {
-                                            process_and_encode_image_as_webp(resolved).ok()
-                                        } else {
-                                            None
-                                        };
-
-                                        if let Some(u) = scaled_uri {
-                                            u
-                                        } else {
-                                            let (line_no, col_no, line_snippet) =
-                                                find_markdown_location(md_content, src_val);
-                                            let f_name = file_name.unwrap_or("input.md");
-                                            return Err(DiagnosticError::image_too_large(
-                                                f_name,
-                                                line_no,
-                                                col_no,
-                                                line_snippet,
-                                                src_val,
-                                                size,
-                                            ));
-                                        }
-                                    } else {
-                                        let mime = guess_mime_type(resolved);
-                                        let bytes_to_encode = if mime == "image/svg+xml" {
-                                            if let Ok(utf8_str) = std::str::from_utf8(&bytes) {
-                                                clean_svg(utf8_str).into_bytes()
-                                            } else {
-                                                bytes
-                                            }
-                                        } else {
-                                            bytes
-                                        };
-
-                                        let b64_len = bytes_to_encode.len().div_ceil(3) * 4;
-                                        let prefix = "data:";
-                                        let suffix = ";base64,";
-                                        let capacity =
-                                            prefix.len() + mime.len() + suffix.len() + b64_len;
-                                        let mut uri_buf = String::with_capacity(capacity);
-                                        uri_buf.push_str(prefix);
-                                        uri_buf.push_str(mime);
-                                        uri_buf.push_str(suffix);
-                                        base64_encode_into(&bytes_to_encode, &mut uri_buf);
-                                        uri_buf
-                                    }
-                                }
-                                Err(_) => src_val.to_string(),
-                            };
-                            entry.insert(uri)
-                        }
-                    };
-
-                    if data_uri != src_val {
-                        out.push_str(&tag_slice[..attr_start]);
-                        out.push_str("src=\"");
-                        out.push_str(data_uri);
-                        out.push('"');
-                        out.push_str(&tag_slice[attr_end..]);
-                        cursor = img_end;
-                        continue;
-                    }
-                }
-            }
-
-            out.push_str(tag_slice);
+        if data_uri != src_val {
+            replace_img_src(&mut out, tag_slice, attr_start, attr_end, &data_uri);
         } else {
             out.push_str(tag_slice);
         }
@@ -260,6 +184,118 @@ pub fn embed_images_as_base64_with_source(
 
     out.push_str(&html[cursor..]);
     Ok(out)
+}
+
+/// Finds start and end byte offsets of the next `<img` tag in `html` from `cursor`.
+#[inline]
+fn find_next_img_tag(html: &str, cursor: usize) -> Option<(usize, usize)> {
+    let img_start_rel = html[cursor..].find("<img")?;
+    let img_start = cursor + img_start_rel;
+    let rel_end = html[img_start..].find('>')?;
+    let img_end = img_start + rel_end + 1;
+    Some((img_start, img_end))
+}
+
+/// Checks if an image source is a remote URL or existing Base64 Data URI.
+#[inline]
+fn is_remote_or_data_uri(src: &str) -> bool {
+    src.starts_with("data:") || src.starts_with("http://") || src.starts_with("https://")
+}
+
+/// Renders a non-image attachment link into the buffer.
+fn render_non_image_link(
+    out: &mut String,
+    html: &str,
+    img_end: usize,
+    src_val: &str,
+    alt_text: &str,
+) -> usize {
+    if let Some(next_cursor) = strip_img_item_wrapper(out, html, img_end) {
+        let comment_icon = crate::template::COMMENT_ICON_SVG;
+        out.push_str("<div class=\"doc-item text-item\">\n  <span class=\"text-content\"><a href=\"");
+        out.push_str(src_val);
+        out.push_str("\" target=\"_blank\" rel=\"noopener noreferrer\">");
+        out.push_str(alt_text);
+        out.push_str("</a></span>\n  ");
+        out.push_str(comment_icon);
+        out.push_str("\n</div>\n");
+        next_cursor
+    } else {
+        out.push_str("<a href=\"");
+        out.push_str(src_val);
+        out.push_str("\" target=\"_blank\" rel=\"noopener noreferrer\">");
+        out.push_str(alt_text);
+        out.push_str("</a>");
+        img_end
+    }
+}
+
+/// Reads, validates size, and encodes a local image file to a Base64 Data URI.
+fn resolve_or_encode_image(
+    resolved: &Path,
+    src_val: &str,
+    auto_scale: bool,
+    md_content: Option<&str>,
+    file_name: Option<&str>,
+) -> Result<String> {
+    let bytes = match io::read_file_bytes(resolved) {
+        Ok(b) => b,
+        Err(_) => return Ok(src_val.to_string()),
+    };
+
+    let size = bytes.len() as u64;
+    if size > MAX_IMAGE_SIZE_BYTES {
+        let should_scale = auto_scale || prompt_user_for_resizing(src_val, size);
+        let scaled_uri = if should_scale {
+            process_and_encode_image_as_webp(resolved).ok()
+        } else {
+            None
+        };
+
+        if let Some(u) = scaled_uri {
+            Ok(u)
+        } else {
+            let (line_no, col_no, line_snippet) = find_markdown_location(md_content, src_val);
+            let f_name = file_name.unwrap_or("input.md");
+            Err(DiagnosticError::image_too_large(
+                f_name,
+                line_no,
+                col_no,
+                line_snippet,
+                src_val,
+                size,
+            ))
+        }
+    } else {
+        let mime = guess_mime_type(resolved);
+        let bytes_to_encode = if mime == "image/svg+xml" {
+            if let Ok(utf8_str) = std::str::from_utf8(&bytes) {
+                clean_svg(utf8_str).into_bytes()
+            } else {
+                bytes
+            }
+        } else {
+            bytes
+        };
+
+        Ok(to_base64_data_uri(mime, &bytes_to_encode))
+    }
+}
+
+/// Replaces the `src="..."` attribute within a tag slice and writes the result to `out`.
+#[inline]
+fn replace_img_src(
+    out: &mut String,
+    tag_slice: &str,
+    attr_start: usize,
+    attr_end: usize,
+    data_uri: &str,
+) {
+    out.push_str(&tag_slice[..attr_start]);
+    out.push_str("src=\"");
+    out.push_str(data_uri);
+    out.push('"');
+    out.push_str(&tag_slice[attr_end..]);
 }
 
 /// Resizes a local image file and converts it to WebP format until its size is within 250 KB.
@@ -315,7 +351,7 @@ pub fn process_and_encode_image_as_webp(image_path: &Path) -> Result<String> {
 
     let orig_kb = file_size as f64 / 1024.0;
     let new_kb = buffer.len() as f64 / 1024.0;
-    println!(
+    eprintln!(
         "Resized image '{}': {}x{} ({orig_kb:.1} KB) -> {}x{} WebP ({new_kb:.1} KB)",
         image_path.display(),
         orig_w,
@@ -324,12 +360,7 @@ pub fn process_and_encode_image_as_webp(image_path: &Path) -> Result<String> {
         final_h
     );
 
-    let b64_len = buffer.len().div_ceil(3) * 4;
-    let prefix = "data:image/webp;base64,";
-    let mut data_uri = String::with_capacity(prefix.len() + b64_len);
-    data_uri.push_str(prefix);
-    base64_encode_into(&buffer, &mut data_uri);
-    Ok(data_uri)
+    Ok(to_base64_data_uri("image/webp", &buffer))
 }
 
 /// Asks user interactively via stderr/stdin whether to resize/convert an image that exceeds 250 KB.
@@ -383,38 +414,127 @@ fn strip_img_item_wrapper(out: &mut String, html: &str, img_end: usize) -> Optio
     Some(img_end + suffix_len)
 }
 
-/// Extracts attribute bounds and value from an HTML tag slice without heap allocations.
-fn extract_attribute<'a>(tag: &'a str, attr_name: &str) -> Option<(usize, usize, &'a str)> {
+/// Extracts attribute bounds and unquoted value from an HTML/XML tag slice without heap allocations.
+///
+/// Returns `Some((attr_start, attr_end, attr_value))` where:
+/// - `attr_start`: byte offset in `tag` where the attribute begins.
+/// - `attr_end`: byte offset in `tag` immediately following the attribute definition.
+/// - `attr_value`: unquoted value slice of the attribute.
+///
+/// Supports double quotes, single quotes, whitespace around `=`, unquoted values, boolean
+/// attributes, multiline attributes, and escaped quotes. Loop bounds advance systematically
+/// without redundant scanning passes.
+///
+/// # Examples
+///
+/// ```
+/// use doc2flow::image::extract_attribute;
+///
+/// let tag = r#"<img src="photo.png" alt="Demo">"#;
+/// let (start, end, val) = extract_attribute(tag, "src").unwrap();
+/// assert_eq!(&tag[start..end], r#"src="photo.png""#);
+/// assert_eq!(val, "photo.png");
+/// ```
+#[inline]
+pub fn extract_attribute<'a>(tag: &'a str, attr_name: &str) -> Option<(usize, usize, &'a str)> {
     let bytes = tag.as_bytes();
-    let attr_bytes = attr_name.as_bytes();
-    let attr_len = attr_bytes.len();
-    let mut i = 0;
+    let mut cursor = 0;
 
-    while i + attr_len < bytes.len() {
-        if bytes[i..i + attr_len].eq_ignore_ascii_case(attr_bytes) && bytes[i + attr_len] == b'=' {
-            if i > 0 && bytes[i - 1].is_ascii_alphanumeric() {
-                i += 1;
-                continue;
-            }
-
-            let abs_pos = i;
-            let val_search_start = abs_pos + attr_len + 1;
-            let rest = &tag[val_search_start..];
-            let rest_trimmed = rest.trim_start();
-            let quote = rest_trimmed.as_bytes().first().copied()?;
-
-            if quote == b'"' || quote == b'\'' {
-                let quote_offset = rest.len() - rest_trimmed.len();
-                let val_start = val_search_start + quote_offset + 1;
-                if let Some(val_end_rel) = tag.as_bytes()[val_start..].iter().position(|&b| b == quote) {
-                    let val_end = val_start + val_end_rel;
-                    let attr_end = val_end + 1;
-                    return Some((abs_pos, attr_end, &tag[val_start..val_end]));
-                }
-            }
+    if cursor < bytes.len() && bytes[cursor] == b'<' {
+        cursor += 1;
+        if cursor < bytes.len() && bytes[cursor] == b'/' {
+            cursor += 1;
         }
-        i += 1;
+        while cursor < bytes.len()
+            && !bytes[cursor].is_ascii_whitespace()
+            && bytes[cursor] != b'/'
+            && bytes[cursor] != b'>'
+        {
+            cursor += 1;
+        }
     }
+
+    while cursor < bytes.len() {
+        while cursor < bytes.len() && bytes[cursor].is_ascii_whitespace() {
+            cursor += 1;
+        }
+        if cursor >= bytes.len() || bytes[cursor] == b'/' || bytes[cursor] == b'>' {
+            break;
+        }
+
+        let attr_start = cursor;
+        while cursor < bytes.len()
+            && !bytes[cursor].is_ascii_whitespace()
+            && bytes[cursor] != b'='
+            && bytes[cursor] != b'/'
+            && bytes[cursor] != b'>'
+        {
+            cursor += 1;
+        }
+
+        let name = &tag[attr_start..cursor];
+        if name.is_empty() {
+            cursor += 1;
+            continue;
+        }
+
+        while cursor < bytes.len() && bytes[cursor].is_ascii_whitespace() {
+            cursor += 1;
+        }
+
+        let is_target = name.eq_ignore_ascii_case(attr_name);
+
+        if cursor < bytes.len() && bytes[cursor] == b'=' {
+            cursor += 1;
+            while cursor < bytes.len() && bytes[cursor].is_ascii_whitespace() {
+                cursor += 1;
+            }
+
+            if cursor < bytes.len() {
+                let quote = bytes[cursor];
+                if quote == b'"' || quote == b'\'' {
+                    cursor += 1;
+                    let val_start = cursor;
+                    while cursor < bytes.len() {
+                        if bytes[cursor] == b'\\' && cursor + 1 < bytes.len() {
+                            cursor += 2;
+                        } else if bytes[cursor] == quote {
+                            break;
+                        } else {
+                            cursor += 1;
+                        }
+                    }
+                    let val_end = cursor;
+                    if cursor < bytes.len() && bytes[cursor] == quote {
+                        cursor += 1;
+                    }
+                    let attr_end = cursor;
+                    if is_target {
+                        return Some((attr_start, attr_end, &tag[val_start..val_end]));
+                    }
+                } else {
+                    let val_start = cursor;
+                    while cursor < bytes.len()
+                        && !bytes[cursor].is_ascii_whitespace()
+                        && bytes[cursor] != b'/'
+                        && bytes[cursor] != b'>'
+                    {
+                        cursor += 1;
+                    }
+                    let val_end = cursor;
+                    let attr_end = cursor;
+                    if is_target {
+                        return Some((attr_start, attr_end, &tag[val_start..val_end]));
+                    }
+                }
+            } else if is_target {
+                return Some((attr_start, cursor, ""));
+            }
+        } else if is_target {
+            return Some((attr_start, cursor, ""));
+        }
+    }
+
     None
 }
 
@@ -484,31 +604,144 @@ fn resolve_image_path(path: &Path, base_dir: Option<&Path>) -> Option<PathBuf> {
     io::resolve_image_path(path, base_dir)
 }
 
+/// Skips XML processing instructions (`<? ... ?>`).
+#[inline]
+fn skip_processing_instruction(input: &str) -> Option<&str> {
+    if input.starts_with("<?") {
+        let end = input.find("?>")?;
+        Some(&input[end + 2..])
+    } else {
+        None
+    }
+}
+
+/// Skips DOCTYPE declarations (`<!DOCTYPE ... >` or `<!doctype ... >`).
+#[inline]
+fn skip_doctype(input: &str) -> Option<&str> {
+    if input.starts_with("<!DOCTYPE") || input.starts_with("<!doctype") {
+        let end = input.find('>')?;
+        Some(&input[end + 1..])
+    } else {
+        None
+    }
+}
+
+/// Skips XML comments (`<!-- ... -->`).
+#[inline]
+fn skip_comment(input: &str) -> Option<&str> {
+    if input.starts_with("<!--") {
+        let end = input.find("-->")?;
+        Some(&input[end + 3..])
+    } else {
+        None
+    }
+}
+
+/// Parses CDATA sections (`<![CDATA[ ... ]]>`), returning the section content and the remainder.
+#[inline]
+fn parse_cdata(input: &str) -> Option<(&str, &str)> {
+    if input.starts_with("<![CDATA[") {
+        let end = input.find("]]>")?;
+        Some((&input[..end + 3], &input[end + 3..]))
+    } else {
+        None
+    }
+}
+
+/// Skips editor-specific metadata tags like `<sodipodi:namedview>`, `<metadata>`, or self-closing `<defs/>`.
+fn skip_editor_metadata_tag<'a>(full_tag: &str, rest: &'a str) -> Option<&'a str> {
+    let is_closing = full_tag.starts_with("</");
+    let is_self_closing = full_tag.ends_with("/>");
+    let tag_inner = match (is_closing, is_self_closing) {
+        (true, _) => full_tag.get(2..full_tag.len().saturating_sub(1))?.trim(),
+        (false, true) => full_tag.get(1..full_tag.len().saturating_sub(2))?.trim(),
+        (false, false) => full_tag.get(1..full_tag.len().saturating_sub(1))?.trim(),
+    };
+
+    let tag_name = tag_inner
+        .split_whitespace()
+        .next()
+        .unwrap_or("")
+        .trim_end_matches('/');
+
+    let is_editor_tag = tag_name.starts_with("sodipodi:") || tag_name == "metadata";
+
+    if is_editor_tag {
+        if !is_closing && !is_self_closing
+            && let Some(pos) = rest.find("</")
+        {
+            let after = &rest[pos + 2..];
+            if let Some(close_tag_end) = after.find('>') {
+                let inside = after[..close_tag_end].trim();
+                if inside == tag_name {
+                    return Some(&after[close_tag_end + 1..]);
+                }
+            }
+        }
+        return Some(rest);
+    }
+
+    if !is_closing && tag_name == "defs" && is_self_closing {
+        return Some(rest);
+    }
+
+    None
+}
+
+/// Writes a cleaned tag and its filtered attributes into the output buffer.
+fn write_cleaned_tag(out: &mut String, full_tag: &str) {
+    let is_closing = full_tag.starts_with("</");
+    let is_self_closing = full_tag.ends_with("/>");
+    let tag_inner = match (is_closing, is_self_closing) {
+        (true, _) => full_tag[2..full_tag.len() - 1].trim(),
+        (false, true) => full_tag[1..full_tag.len() - 2].trim(),
+        (false, false) => full_tag[1..full_tag.len() - 1].trim(),
+    };
+
+    let tag_name = tag_inner
+        .split_whitespace()
+        .next()
+        .unwrap_or("")
+        .trim_end_matches('/');
+
+    if is_closing {
+        out.push_str("</");
+        out.push_str(tag_name);
+        out.push('>');
+    } else {
+        out.push('<');
+        out.push_str(tag_name);
+        write_cleaned_tag_attributes(out, tag_name, tag_inner);
+        if is_self_closing {
+            out.push_str("/>");
+        } else {
+            out.push('>');
+        }
+    }
+}
+
 /// Cleans and minifies SVG content by stripping declarations, comments, and editor metadata.
 pub fn clean_svg(input: &str) -> String {
     let mut result = String::with_capacity(input.len());
     let mut rest = input.trim_start();
 
     while !rest.is_empty() {
-        if rest.starts_with("<?")
-            && let Some(end) = rest.find("?>")
-        {
-            rest = rest[end + 2..].trim_start();
+        if let Some(next) = skip_processing_instruction(rest) {
+            rest = next.trim_start();
             continue;
         }
-        if (rest.starts_with("<!DOCTYPE") || rest.starts_with("<!doctype"))
-            && let Some(end) = rest.find('>')
-        {
-            rest = rest[end + 1..].trim_start();
+        if let Some(next) = skip_doctype(rest) {
+            rest = next.trim_start();
             continue;
         }
-        if rest.starts_with("<!--") {
-            if let Some(end) = rest.find("-->") {
-                rest = &rest[end + 3..];
-                continue;
-            } else {
-                break;
-            }
+        if let Some(next) = skip_comment(rest) {
+            rest = next;
+            continue;
+        }
+        if let Some((cdata, next)) = parse_cdata(rest) {
+            result.push_str(cdata);
+            rest = next;
+            continue;
         }
 
         if let Some(tag_start) = rest.find('<') {
@@ -522,6 +755,7 @@ pub fn clean_svg(input: &str) -> String {
                 || tag_rest.starts_with("<?")
                 || tag_rest.starts_with("<!DOCTYPE")
                 || tag_rest.starts_with("<!doctype")
+                || tag_rest.starts_with("<![CDATA[")
             {
                 rest = tag_rest;
                 continue;
@@ -531,57 +765,12 @@ pub fn clean_svg(input: &str) -> String {
                 let full_tag = &tag_rest[..=tag_end];
                 rest = &tag_rest[tag_end + 1..];
 
-                let is_closing = full_tag.starts_with("</");
-                let is_self_closing = full_tag.ends_with("/>");
-                let tag_inner = match (is_closing, is_self_closing) {
-                    (true, _) => full_tag[2..full_tag.len() - 1].trim(),
-                    (false, true) => full_tag[1..full_tag.len() - 2].trim(),
-                    (false, false) => full_tag[1..full_tag.len() - 1].trim(),
-                };
-
-                let tag_name = tag_inner
-                    .split_whitespace()
-                    .next()
-                    .unwrap_or("")
-                    .trim_end_matches('/');
-
-                if tag_name.starts_with("sodipodi:") || tag_name == "metadata" {
-                    if !is_closing && !is_self_closing
-                        && let Some(pos) = rest.find("</")
-                    {
-                        let after = &rest[pos + 2..];
-                        if let Some(close_tag_end) = after.find('>') {
-                            let inside = after[..close_tag_end].trim();
-                            if inside == tag_name {
-                                rest = &after[close_tag_end + 1..];
-                            }
-                        }
-                    }
+                if let Some(after_skip) = skip_editor_metadata_tag(full_tag, rest) {
+                    rest = after_skip;
                     continue;
                 }
 
-                if is_closing && (tag_name.starts_with("sodipodi:") || tag_name == "metadata") {
-                    continue;
-                }
-
-                if !is_closing && tag_name == "defs" && is_self_closing {
-                    continue;
-                }
-
-                if is_closing {
-                    result.push_str("</");
-                    result.push_str(tag_name);
-                    result.push('>');
-                } else {
-                    result.push('<');
-                    result.push_str(tag_name);
-                    write_cleaned_tag_attributes(&mut result, tag_name, tag_inner);
-                    if is_self_closing {
-                        result.push_str("/>");
-                    } else {
-                        result.push('>');
-                    }
-                }
+                write_cleaned_tag(&mut result, full_tag);
             } else {
                 result.push_str(tag_rest);
                 break;
@@ -598,23 +787,23 @@ pub fn clean_svg(input: &str) -> String {
     result
 }
 
-/// Helper function to clean attributes of an XML tag, streaming valid attributes into buffer.
+/// Helper function to clean attributes of an XML tag, streaming valid attributes into buffer without allocations.
 fn write_cleaned_tag_attributes(out: &mut String, tag_name: &str, tag_inner: &str) {
     let tag_name_len = tag_name.len();
     let attr_str = if tag_inner.len() > tag_name_len {
-        tag_inner[tag_name_len..].trim()
+        tag_inner[tag_name_len..].trim_start()
     } else {
         ""
     };
 
-    let mut cursor = 0;
     let bytes = attr_str.as_bytes();
+    let mut cursor = 0;
 
     while cursor < bytes.len() {
         while cursor < bytes.len() && bytes[cursor].is_ascii_whitespace() {
             cursor += 1;
         }
-        if cursor >= bytes.len() {
+        if cursor >= bytes.len() || bytes[cursor] == b'/' || bytes[cursor] == b'>' {
             break;
         }
 
@@ -623,12 +812,14 @@ fn write_cleaned_tag_attributes(out: &mut String, tag_name: &str, tag_inner: &st
             && !bytes[cursor].is_ascii_whitespace()
             && bytes[cursor] != b'='
             && bytes[cursor] != b'/'
+            && bytes[cursor] != b'>'
         {
             cursor += 1;
         }
         let name = &attr_str[name_start..cursor];
         if name.is_empty() {
-            break;
+            cursor += 1;
+            continue;
         }
 
         while cursor < bytes.len() && bytes[cursor].is_ascii_whitespace() {
@@ -649,11 +840,17 @@ fn write_cleaned_tag_attributes(out: &mut String, tag_name: &str, tag_inner: &st
                 if quote == b'"' || quote == b'\'' {
                     cursor += 1;
                     let val_start = cursor;
-                    while cursor < bytes.len() && bytes[cursor] != quote {
-                        cursor += 1;
+                    while cursor < bytes.len() {
+                        if bytes[cursor] == b'\\' && cursor + 1 < bytes.len() {
+                            cursor += 2;
+                        } else if bytes[cursor] == quote {
+                            break;
+                        } else {
+                            cursor += 1;
+                        }
                     }
                     val = &attr_str[val_start..cursor];
-                    if cursor < bytes.len() {
+                    if cursor < bytes.len() && bytes[cursor] == quote {
                         cursor += 1;
                     }
                 } else {
@@ -661,6 +858,7 @@ fn write_cleaned_tag_attributes(out: &mut String, tag_name: &str, tag_inner: &st
                     while cursor < bytes.len()
                         && !bytes[cursor].is_ascii_whitespace()
                         && bytes[cursor] != b'/'
+                        && bytes[cursor] != b'>'
                     {
                         cursor += 1;
                     }
@@ -707,6 +905,43 @@ mod tests {
 
         let (_, _, alt_val) = extract_attribute(tag, "alt").unwrap();
         assert_eq!(alt_val, "System Diagram");
+    }
+
+    #[test]
+    fn test_extract_attribute_single_quotes() {
+        let tag = "<img src='images/pic.png' alt='System Diagram'>";
+        let (start, end, val) = extract_attribute(tag, "src").unwrap();
+        assert_eq!(&tag[start..end], "src='images/pic.png'");
+        assert_eq!(val, "images/pic.png");
+    }
+
+    #[test]
+    fn test_extract_attribute_quotes_whitespace_and_escapes() {
+        let tag = r#"<img src="  images/pic.png  " alt="A \"complex\" diagram" data-extra='val\'s test' checked>"#;
+
+        let (_, _, src_val) = extract_attribute(tag, "src").unwrap();
+        assert_eq!(src_val, "  images/pic.png  ");
+
+        let (_, _, alt_val) = extract_attribute(tag, "alt").unwrap();
+        assert_eq!(alt_val, r#"A \"complex\" diagram"#);
+
+        let (_, _, extra_val) = extract_attribute(tag, "data-extra").unwrap();
+        assert_eq!(extra_val, r#"val\'s test"#);
+
+        let (chk_start, chk_end, chk_val) = extract_attribute(tag, "checked").unwrap();
+        assert_eq!(&tag[chk_start..chk_end], "checked");
+        assert_eq!(chk_val, "");
+    }
+
+    #[test]
+    fn test_extract_attribute_multiline_and_newlines_in_tag() {
+        let tag = "<img\n  src=\"images/multiline.png\"\n  alt=\"System\nDiagram with Newlines\"\n/>";
+        let (start, end, src_val) = extract_attribute(tag, "src").unwrap();
+        assert_eq!(&tag[start..end], "src=\"images/multiline.png\"");
+        assert_eq!(src_val, "images/multiline.png");
+
+        let (_, _, alt_val) = extract_attribute(tag, "alt").unwrap();
+        assert_eq!(alt_val, "System\nDiagram with Newlines");
     }
 
     #[test]
@@ -808,14 +1043,6 @@ mod tests {
     }
 
     #[test]
-    fn test_extract_attribute_single_quotes() {
-        let tag = "<img src='images/pic.png' alt='System Diagram'>";
-        let (start, end, val) = extract_attribute(tag, "src").unwrap();
-        assert_eq!(&tag[start..end], "src='images/pic.png'");
-        assert_eq!(val, "images/pic.png");
-    }
-
-    #[test]
     fn test_find_markdown_location() {
         let md = "Line 1\nLine 2\n![Alt](images/photo.png)\nLine 4";
         let (line_no, col_no, snippet) = find_markdown_location(Some(md), "images/photo.png");
@@ -910,5 +1137,37 @@ mod tests {
         assert!(cleaned.contains("viewBox=\"0 0 175 100\""));
         assert!(cleaned.contains("fill=\"#ffffff\""));
         assert!(cleaned.contains("path"));
+    }
+
+    #[test]
+    fn test_clean_svg_complex_cdata_multiline_and_escaped_quotes() {
+        let complex_svg = r##"<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Multi-line SVG with CDATA and escaped quotes -->
+<svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+  <style type="text/css">
+    <![CDATA[
+      .st0 { fill: #ff0000; stroke: #000000; }
+    ]]>
+  </style>
+  <path
+     d="M 10 10
+        L 100 100
+        Z"
+     fill="#ff0000"
+     aria-label="Escaped \"Quote\" Shape"
+  />
+  <text font-family='Arial, "Helvetica Neue", sans-serif'>Sample Text</text>
+</svg>"##;
+
+        let cleaned = clean_svg(complex_svg);
+        assert!(!cleaned.contains("<?xml"));
+        assert!(!cleaned.contains("<!DOCTYPE"));
+        assert!(!cleaned.contains("<!-- Multi-line"));
+        assert!(cleaned.contains("<![CDATA["));
+        assert!(cleaned.contains(".st0 { fill: #ff0000; stroke: #000000; }"));
+        assert!(cleaned.contains("]]>"));
+        assert!(cleaned.contains("aria-label=\"Escaped \\\"Quote\\\" Shape\""));
+        assert!(cleaned.contains("Sample Text"));
     }
 }

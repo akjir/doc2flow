@@ -36,4 +36,7 @@ pub use template::{
     APP_VERSION, LICENSE_TERMS, LICENSE_URL, REPOSITORY_URL, format_iso8601_utc,
     generate_template_markdown, render, render_scripts, substitute_template,
 };
-pub use utils::{base64_encode, base64_encode_into, file_to_data_uri, guess_mime_type};
+pub use utils::{
+    base64_encode, base64_encode_into, file_to_data_uri, guess_mime_type, to_base64_data_uri,
+    to_base64_data_uri_into,
+};

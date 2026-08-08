@@ -123,6 +123,59 @@ pub fn guess_mime_type(path: &Path) -> &'static str {
     }
 }
 
+/// Formats binary data as a Base64 `data:` URI directly into the provided [`String`] buffer.
+///
+/// Pre-allocates buffer capacity for the `data:<mime>;base64,<encoded>` payload without
+/// intermediate string allocations.
+///
+/// # Examples
+///
+/// ```
+/// use doc2flow::utils::to_base64_data_uri_into;
+///
+/// let mut buf = String::new();
+/// to_base64_data_uri_into("image/png", b"foo", &mut buf);
+/// assert_eq!(buf, "data:image/png;base64,Zm9v");
+/// ```
+#[inline]
+pub fn to_base64_data_uri_into(mime: &str, bytes: &[u8], out: &mut String) {
+    let b64_len = bytes.len().div_ceil(3) * 4;
+    let prefix = "data:";
+    let suffix = ";base64,";
+    let capacity = prefix.len() + mime.len() + suffix.len() + b64_len;
+    out.reserve(capacity);
+    out.push_str(prefix);
+    out.push_str(mime);
+    out.push_str(suffix);
+    base64_encode_into(bytes, out);
+}
+
+/// Formats binary data as a Base64 `data:<mime>;base64,<encoded>` URI string.
+///
+/// Allocates a single `String` buffer sized exactly to hold the Data URI header and Base64 body.
+///
+/// # Examples
+///
+/// ```
+/// use doc2flow::utils::to_base64_data_uri;
+///
+/// let uri = to_base64_data_uri("image/png", b"foo");
+/// assert_eq!(uri, "data:image/png;base64,Zm9v");
+/// ```
+#[inline]
+pub fn to_base64_data_uri(mime: &str, bytes: &[u8]) -> String {
+    let b64_len = bytes.len().div_ceil(3) * 4;
+    let prefix = "data:";
+    let suffix = ";base64,";
+    let capacity = prefix.len() + mime.len() + suffix.len() + b64_len;
+    let mut out = String::with_capacity(capacity);
+    out.push_str(prefix);
+    out.push_str(mime);
+    out.push_str(suffix);
+    base64_encode_into(bytes, &mut out);
+    out
+}
+
 /// Reads a local file and encodes its content into a Base64 Data URI string.
 ///
 /// Allocates a single `String` buffer sized exactly to hold the Data URI header
@@ -144,18 +197,7 @@ pub fn guess_mime_type(path: &Path) -> &'static str {
 pub fn file_to_data_uri(path: &Path) -> Result<String> {
     let mime = guess_mime_type(path);
     let bytes = io::read_file_bytes(path)?;
-
-    let b64_len = bytes.len().div_ceil(3) * 4;
-    let prefix = "data:";
-    let suffix = ";base64,";
-    let capacity = prefix.len() + mime.len() + suffix.len() + b64_len;
-
-    let mut out = String::with_capacity(capacity);
-    out.push_str(prefix);
-    out.push_str(mime);
-    out.push_str(suffix);
-    base64_encode_into(&bytes, &mut out);
-    Ok(out)
+    Ok(to_base64_data_uri(mime, &bytes))
 }
 
 #[cfg(test)]
@@ -246,5 +288,25 @@ mod tests {
         }
 
         let _ = io::remove_dir_all(&temp_dir);
+    }
+
+    #[test]
+    fn test_to_base64_data_uri_preallocation_and_formatting() {
+        let payload = b"Hello, World!";
+        let mime = "image/svg+xml";
+        let uri = to_base64_data_uri(mime, payload);
+
+        let expected_b64 = base64_encode(payload);
+        assert_eq!(uri, format!("data:{mime};base64,{expected_b64}"));
+
+        // Verify exact capacity pre-allocation
+        let expected_b64_len = payload.len().div_ceil(3) * 4;
+        let expected_cap = "data:".len() + mime.len() + ";base64,".len() + expected_b64_len;
+        assert_eq!(uri.capacity(), expected_cap);
+
+        // Test appending into existing buffer
+        let mut buf = String::from("prefix_");
+        to_base64_data_uri_into("text/plain", b"abc", &mut buf);
+        assert_eq!(buf, "prefix_data:text/plain;base64,YWJj");
     }
 }

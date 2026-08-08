@@ -17,6 +17,8 @@
 - **Attributes:** Reserve `#[inline]` exclusively for hot-path inner loops/rendering. NO `#[inline]` on single-call init, setup, CLI parsing, or simple `const` fns.
 - **Docs:** English ONLY (all inline docs & comments). 15-word max start, canonical headers (Examples/Errors/Panics), NO meta/journals
 - **Perf:** Min-alloc (borrow>owned), `with_capacity`, O(N) 1-pass, zero-copy (`split_once`,`strip_prefix`), `Cow`
+- **String/Buffer:** Exact `with_capacity` pre-alloc. Direct buffer streaming (`write_str`/`push_str`). NO intermediate `Vec`/strings on hot paths.
+- **HTML/XML/SVG:** Zero-alloc tokenizers (O(N) 1-pass forward cursor). Quote-aware (single `'`, double `"`, multiline, escaped `\"`/`\'`). Sub-parsers for declarations (`<?`), DOCTYPE, comments (`<!--`), CDATA (`<![CDATA[`), tags. NO redundant scanning passes over attribute names/values. NO `println!` in core processing routines.
 - **Flow:** `match`/tables > `if-else`. Iterators > loops. `write_str`(static)/`write!`(dynamic) > `format!` (hot-path buffers).
 - **Build:** `lto=true`, `opt=z|s`, `codegen-units=1`, strip. Favor stdlib over deps.
 

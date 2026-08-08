@@ -46,3 +46,10 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 - **Logic:** Prefer `match` or lookup tables over `if-else` chains.
 - **CLI Parsing:** Enforce identical validation for space-separated vs equals-separated flags; reject empty values uniformly (`val.as_ref().is_empty()`).
 - **Attributes:** Reserve `#[inline]` strictly for hot-path inner loops/rendering. NEVER apply `#[inline]` to single-call setup, init, or CLI parsing logic.
+
+### 5: HTML, XML & Asset Processing
+- **Scanners:** Zero-alloc single-pass tokenizers (O(N) forward cursor). Avoid redundant scanning passes over attribute names/values.
+- **Quote-Aware:** Robustly handle single quotes (`'`), double quotes (`"`), multiline values, and escaped quotes (`\"`/`\'`).
+- **Sub-parsers:** Decompose complex parsers into single-responsibility sub-parsers (processing instructions `<?`, DOCTYPE, comments `<!--`, CDATA `<![CDATA[`, tags).
+- **Base64 Data URIs:** Standardize with unified `to_base64_data_uri`/`to_base64_data_uri_into` with exact pre-allocation.
+- **No println!:** Never use `println!` in core processing routines; reserve `stdout` for CLI output and route progress/warnings to `stderr`/`eprintln!`.
