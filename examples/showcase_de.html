@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+154.2e3f9e5.dev">
-  <meta name="version" content="0.9.4+154.2e3f9e5.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+156.86f7dbd.dev">
+  <meta name="version" content="0.9.4+156.86f7dbd.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-08T09:23:44Z">
+  <meta name="dcterms.created" content="2026-08-08T09:40:43Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, code, tasks, images, table">
   <title>Doc2Flow Deutscher Showcase</title>
@@ -1716,7 +1716,7 @@ mark.d2f-highlight {
     window.d2f.document = window.d2f.document || {};
     window.d2f.document.id = 'd2f_id_468e65bc2ccf89b4';
     window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {"save_state":"Stand sichern","copied":"Kopiert!","copy_code":"Code kopieren","loading":"Lade...","callout_note":"Hinweis","signature_date":"Datum","callout_important":"Wichtig","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","lang_code":"de","setup_completed":"Vorgang abgeschlossen","setup_in_progress":"Vorgang in Bearbeitung","callout_tip":"Tipp","date":"Datum","var_table_title":"Variablen","date_placeholder":"TT.MM.JJJJ","var_table_variable":"Variable","callout_warning":"Warnung","var_table_value":"Wert","reset_all":"Zurücksetzen","name_placeholder":"Name","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","comment_placeholder":"Kommentar hinzufügen...","sections_visible":"{visible} / {total} Abschnitte sichtbar","export_pdf":"Als PDF exportieren","callout_caution":"Achtung","search_placeholder":"Suchen... (Ctrl+K)"};
+    window.d2f.lang.dictionary = {"setup_in_progress":"Vorgang in Bearbeitung","export_pdf":"Als PDF exportieren","copy_code":"Code kopieren","callout_note":"Hinweis","reset_all":"Zurücksetzen","date":"Datum","callout_caution":"Achtung","sections_visible":"{visible} / {total} Abschnitte sichtbar","copied":"Kopiert!","setup_completed":"Vorgang abgeschlossen","date_placeholder":"TT.MM.JJJJ","lang_code":"de","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","name_placeholder":"Name","var_table_title":"Variablen","loading":"Lade...","callout_warning":"Warnung","search_placeholder":"Suchen... (Ctrl+K)","var_table_variable":"Variable","signature_date":"Datum","callout_tip":"Tipp","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","callout_important":"Wichtig","comment_placeholder":"Kommentar hinzufügen...","save_state":"Stand sichern","var_table_value":"Wert"};
     (() => {
   // ../src/core/ts/storage.ts
   var saveHandlers = /* @__PURE__ */ new Set();
@@ -1808,6 +1808,66 @@ mark.d2f-highlight {
     debounce,
     isRecord
   };
+
+  // ../src/core/ts/export.ts
+  var exportHandlers = /* @__PURE__ */ new Set();
+  window.d2f = window.d2f || {};
+  window.d2f.export = {
+    export: performExport,
+    registerExportHandler
+  };
+  function registerExportHandler(handler) {
+    exportHandlers.add(handler);
+  }
+  function performExport(type) {
+    for (const handler of exportHandlers) {
+      try {
+        handler(type);
+      } catch (e) {
+        console.warn("Failed to execute export handler", e);
+      }
+    }
+    if (type === "PDF") {
+      const collapsed = Array.from(document.querySelectorAll(".sb.collapsed"));
+      collapsed.forEach((el) => el.classList.remove("collapsed"));
+      const restore = () => {
+        collapsed.forEach((el) => el.classList.add("collapsed"));
+        window.removeEventListener("afterprint", restore);
+      };
+      window.addEventListener("afterprint", restore);
+      setTimeout(() => window.print(), 100);
+      return;
+    }
+    if (type === "DOCUMENT") {
+      window.d2f.storage.saveState();
+      document.querySelectorAll('input.persistent-field, input[type="text"]').forEach((input) => {
+        input.setAttribute("value", input.value);
+      });
+      document.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+        if (cb.checked) {
+          cb.setAttribute("checked", "");
+        } else {
+          cb.removeAttribute("checked");
+        }
+      });
+      document.querySelectorAll("textarea").forEach((ta) => {
+        ta.textContent = ta.value;
+        ta.setAttribute("value", ta.value);
+      });
+      const rawFilename = window.location.pathname.split("/").pop() || "index.html";
+      const filename = decodeURIComponent(rawFilename || "index.html");
+      const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  }
 
   // ../src/core/ts/sections.ts
   function setSectionCollapseState(sec, isCollapsed) {
@@ -1975,11 +2035,10 @@ mark.d2f-highlight {
   }
   function loadComments(state) {
     const comments = state["comments"];
-    if (typeof comments === "object" && comments !== null && !Array.isArray(comments)) {
-      const commentsRecord = comments;
+    if (window.d2f.utils.isRecord(comments)) {
       document.querySelectorAll(".doc-item").forEach((item, index) => {
         const key = item.id || "item_" + String(index);
-        const val = commentsRecord[key];
+        const val = comments[key];
         if (val !== void 0 && typeof val === "string") {
           getOrCreateCommentBox(item, val);
         }

@@ -1,6 +1,6 @@
 import './storage.js';
 import './utils.js';
-import { ExportType } from './export.js';
+import './export.js';
 import './sections.js';
 import './comments.js';
 import './items.js';

@@ -67,11 +67,10 @@ function saveComments(): Record<string, unknown> {
 
 function loadComments(state: Record<string, unknown>): boolean {
     const comments = state['comments'];
-    if (typeof comments === 'object' && comments !== null && !Array.isArray(comments)) {
-        const commentsRecord = comments as Record<string, string>;
+    if (window.d2f.utils.isRecord(comments)) {
         document.querySelectorAll<HTMLElement>('.doc-item').forEach((item, index) => {
             const key = item.id || ('item_' + String(index));
-            const val = commentsRecord[key];
+            const val = comments[key];
             if (val !== undefined && typeof val === 'string') {
                 getOrCreateCommentBox(item, val);
             }

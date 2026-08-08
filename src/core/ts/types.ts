@@ -9,7 +9,7 @@ declare global {
         d2f: {
             core: Core;
             document: {
-                id: String;
+                id: string;
             };
             storage: Storage;
             export: Export;

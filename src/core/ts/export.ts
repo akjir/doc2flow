@@ -1,9 +1,4 @@
-export const ExportType = {
-    PDF: "PDF",
-    DOCUMENT: "DOCUMENT",
-} as const;
-
-export type ExportType = typeof ExportType[keyof typeof ExportType];
+export type ExportType = 'PDF' | 'DOCUMENT';
 export type ExportHandler = (type: ExportType) => void;
 
 export interface Export {
@@ -32,7 +27,7 @@ function performExport(type: ExportType): void {
         }
     }
 
-    if (type === ExportType.PDF) {
+    if (type === 'PDF') {
         const collapsed = Array.from(document.querySelectorAll<HTMLElement>('.sb.collapsed'));
         collapsed.forEach((el) => el.classList.remove('collapsed'));
 
@@ -46,7 +41,7 @@ function performExport(type: ExportType): void {
         return;
     }
 
-    if (type === ExportType.DOCUMENT) {
+    if (type === 'DOCUMENT') {
         window.d2f.storage.saveState();
 
         document.querySelectorAll<HTMLInputElement>('input.persistent-field, input[type="text"]').forEach((input) => {

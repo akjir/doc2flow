@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+154.2e3f9e5.dev">
-  <meta name="version" content="0.9.4+154.2e3f9e5.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+156.86f7dbd.dev">
+  <meta name="version" content="0.9.4+156.86f7dbd.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-08T09:23:44Z">
+  <meta name="dcterms.created" content="2026-08-08T09:40:43Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, code">
   <title>Microservice Deployment & Infrastructure Setup</title>
@@ -1063,7 +1063,7 @@ mark.d2f-highlight {
     window.d2f.document = window.d2f.document || {};
     window.d2f.document.id = 'd2f_id_fe4acdd7616c7913';
     window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {"export_pdf":"Export as PDF","setup_completed":"Process Completed","reset_all":"Reset","callout_note":"Note","name_placeholder":"Name","loading":"Loading...","callout_tip":"Tip","date":"Date","search_placeholder":"Search... (Ctrl+K)","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","signature_date":"Date","save_state":"Save State","comment_placeholder":"Add a comment...","sections_visible":"{visible} / {total} sections visible","var_table_title":"Variables","var_table_value":"Value","date_placeholder":"MM/DD/YYYY","lang_code":"en","callout_important":"Important","callout_caution":"Caution","var_table_variable":"Variable","callout_warning":"Warning","copy_code":"Copy code","progress_template":"{done} of {total} tasks completed ({pct}%)","copied":"Copied!","setup_in_progress":"Process in Progress"};
+    window.d2f.lang.dictionary = {"callout_note":"Note","sections_visible":"{visible} / {total} sections visible","var_table_variable":"Variable","var_table_value":"Value","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","loading":"Loading...","date_placeholder":"MM/DD/YYYY","date":"Date","setup_completed":"Process Completed","setup_in_progress":"Process in Progress","lang_code":"en","export_pdf":"Export as PDF","name_placeholder":"Name","callout_tip":"Tip","callout_warning":"Warning","comment_placeholder":"Add a comment...","var_table_title":"Variables","callout_caution":"Caution","signature_date":"Date","copied":"Copied!","search_placeholder":"Search... (Ctrl+K)","progress_template":"{done} of {total} tasks completed ({pct}%)","reset_all":"Reset","copy_code":"Copy code","callout_important":"Important","save_state":"Save State"};
     (() => {
   // ../src/core/ts/storage.ts
   var saveHandlers = /* @__PURE__ */ new Set();
@@ -1155,6 +1155,66 @@ mark.d2f-highlight {
     debounce,
     isRecord
   };
+
+  // ../src/core/ts/export.ts
+  var exportHandlers = /* @__PURE__ */ new Set();
+  window.d2f = window.d2f || {};
+  window.d2f.export = {
+    export: performExport,
+    registerExportHandler
+  };
+  function registerExportHandler(handler) {
+    exportHandlers.add(handler);
+  }
+  function performExport(type) {
+    for (const handler of exportHandlers) {
+      try {
+        handler(type);
+      } catch (e) {
+        console.warn("Failed to execute export handler", e);
+      }
+    }
+    if (type === "PDF") {
+      const collapsed = Array.from(document.querySelectorAll(".sb.collapsed"));
+      collapsed.forEach((el) => el.classList.remove("collapsed"));
+      const restore = () => {
+        collapsed.forEach((el) => el.classList.add("collapsed"));
+        window.removeEventListener("afterprint", restore);
+      };
+      window.addEventListener("afterprint", restore);
+      setTimeout(() => window.print(), 100);
+      return;
+    }
+    if (type === "DOCUMENT") {
+      window.d2f.storage.saveState();
+      document.querySelectorAll('input.persistent-field, input[type="text"]').forEach((input) => {
+        input.setAttribute("value", input.value);
+      });
+      document.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+        if (cb.checked) {
+          cb.setAttribute("checked", "");
+        } else {
+          cb.removeAttribute("checked");
+        }
+      });
+      document.querySelectorAll("textarea").forEach((ta) => {
+        ta.textContent = ta.value;
+        ta.setAttribute("value", ta.value);
+      });
+      const rawFilename = window.location.pathname.split("/").pop() || "index.html";
+      const filename = decodeURIComponent(rawFilename || "index.html");
+      const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  }
 
   // ../src/core/ts/sections.ts
   function setSectionCollapseState(sec, isCollapsed) {
@@ -1322,11 +1382,10 @@ mark.d2f-highlight {
   }
   function loadComments(state) {
     const comments = state["comments"];
-    if (typeof comments === "object" && comments !== null && !Array.isArray(comments)) {
-      const commentsRecord = comments;
+    if (window.d2f.utils.isRecord(comments)) {
       document.querySelectorAll(".doc-item").forEach((item, index) => {
         const key = item.id || "item_" + String(index);
-        const val = commentsRecord[key];
+        const val = comments[key];
         if (val !== void 0 && typeof val === "string") {
           getOrCreateCommentBox(item, val);
         }

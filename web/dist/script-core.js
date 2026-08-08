@@ -90,6 +90,66 @@
     isRecord
   };
 
+  // ../src/core/ts/export.ts
+  var exportHandlers = /* @__PURE__ */ new Set();
+  window.d2f = window.d2f || {};
+  window.d2f.export = {
+    export: performExport,
+    registerExportHandler
+  };
+  function registerExportHandler(handler) {
+    exportHandlers.add(handler);
+  }
+  function performExport(type) {
+    for (const handler of exportHandlers) {
+      try {
+        handler(type);
+      } catch (e) {
+        console.warn("Failed to execute export handler", e);
+      }
+    }
+    if (type === "PDF") {
+      const collapsed = Array.from(document.querySelectorAll(".sb.collapsed"));
+      collapsed.forEach((el) => el.classList.remove("collapsed"));
+      const restore = () => {
+        collapsed.forEach((el) => el.classList.add("collapsed"));
+        window.removeEventListener("afterprint", restore);
+      };
+      window.addEventListener("afterprint", restore);
+      setTimeout(() => window.print(), 100);
+      return;
+    }
+    if (type === "DOCUMENT") {
+      window.d2f.storage.saveState();
+      document.querySelectorAll('input.persistent-field, input[type="text"]').forEach((input) => {
+        input.setAttribute("value", input.value);
+      });
+      document.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+        if (cb.checked) {
+          cb.setAttribute("checked", "");
+        } else {
+          cb.removeAttribute("checked");
+        }
+      });
+      document.querySelectorAll("textarea").forEach((ta) => {
+        ta.textContent = ta.value;
+        ta.setAttribute("value", ta.value);
+      });
+      const rawFilename = window.location.pathname.split("/").pop() || "index.html";
+      const filename = decodeURIComponent(rawFilename || "index.html");
+      const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  }
+
   // ../src/core/ts/sections.ts
   function setSectionCollapseState(sec, isCollapsed) {
     const body = sec.querySelector(".sb");
@@ -256,11 +316,10 @@
   }
   function loadComments(state) {
     const comments = state["comments"];
-    if (typeof comments === "object" && comments !== null && !Array.isArray(comments)) {
-      const commentsRecord = comments;
+    if (window.d2f.utils.isRecord(comments)) {
       document.querySelectorAll(".doc-item").forEach((item, index) => {
         const key = item.id || "item_" + String(index);
-        const val = commentsRecord[key];
+        const val = comments[key];
         if (val !== void 0 && typeof val === "string") {
           getOrCreateCommentBox(item, val);
         }
