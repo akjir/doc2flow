@@ -717,11 +717,11 @@ pub fn convert_markdown_to_html_with_options(
 
     let mut idx = 0;
     while idx < events.len() {
-        if !var_event_ranges.is_empty() {
-            if let Some(&(_, end_idx)) = var_event_ranges.iter().find(|(s, e)| idx >= *s && idx <= *e) {
-                idx = end_idx + 1;
-                continue;
-            }
+        if !var_event_ranges.is_empty()
+            && let Some(&(_, end_idx)) = var_event_ranges.iter().find(|(s, e)| idx >= *s && idx <= *e)
+        {
+            idx = end_idx + 1;
+            continue;
         }
 
         match &events[idx] {

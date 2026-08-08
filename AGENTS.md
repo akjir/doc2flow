@@ -13,9 +13,9 @@
 - **Core:** Idiomatic, newtypes, 1-path exports, NO `unsafe`
 - **Clean:** Remove dead/obsolete code when adding new code.
 - **CLI:** Identical validation for space (`-o ""`) vs equals (`-o=`) syntax. Reject empty values uniformly (`val.as_ref().is_empty()`).
-- **Errors:** Stdlib+`Doc2FlowError` (NO `anyhow`/`eyre`). `Result`=expected. `panic!`=bugs/stop (detailed msgs). NO `catch_unwind`. NO manual buffer micro-allocs on error paths; use `format!` or static strings.
-- **Attributes:** Reserve `#[inline]` exclusively for hot-path inner loops/rendering. NO `#[inline]` on single-call init, setup, or CLI parsing.
-- **Docs:** 15-word max start, canonical headers (Examples/Errors/Panics), NO meta/journals
+- **Errors:** Stdlib+`Doc2FlowError` (NO `anyhow`/`eyre`). `Result`=expected. `panic!`=bugs/stop (detailed msgs). NO `catch_unwind`. Safe bounds/slicing on diagnostic buffers. `From` conversions (NO `.to_<domain>()`). NO manual buffer micro-allocs on error paths; use `format!` or static strings.
+- **Attributes:** Reserve `#[inline]` exclusively for hot-path inner loops/rendering. NO `#[inline]` on single-call init, setup, CLI parsing, or simple `const` fns.
+- **Docs:** English ONLY (all inline docs & comments). 15-word max start, canonical headers (Examples/Errors/Panics), NO meta/journals
 - **Perf:** Min-alloc (borrow>owned), `with_capacity`, O(N) 1-pass, zero-copy (`split_once`,`strip_prefix`), `Cow`
 - **Flow:** `match`/tables > `if-else`. Iterators > loops. `write_str`(static)/`write!`(dynamic) > `format!` (hot-path buffers).
 - **Build:** `lto=true`, `opt=z|s`, `codegen-units=1`, strip. Favor stdlib over deps.

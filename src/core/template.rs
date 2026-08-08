@@ -39,52 +39,52 @@ pub static SCRIPT_TABLE: &str = include_str!("../../web/dist/script-table.js");
 /// Assembles active CSS feature styles into the provided output string based on detected document features.
 pub fn render_styles(out: &mut String, features: &DocumentFeatures) {
     out.push_str(STYLE_CORE);
-    out.push_str("\n");
+    out.push('\n');
 
     if features.has_code {
         out.push_str(STYLE_CODE);
-        out.push_str("\n");
+        out.push('\n');
     }
 
     if features.has_tasks {
         out.push_str(STYLE_TASKS);
-        out.push_str("\n");
+        out.push('\n');
     }
 
     if features.has_images {
         out.push_str(STYLE_IMAGES);
-        out.push_str("\n");
+        out.push('\n');
     }
 
     if features.has_tables {
         out.push_str(STYLE_TABLE);
-        out.push_str("\n");
+        out.push('\n');
     }
 }
 
 /// Assembles active JavaScript feature bundles into the provided output string based on detected document features.
 pub fn render_scripts(out: &mut String, features: &DocumentFeatures) {
     out.push_str(SCRIPT_CORE);
-    out.push_str("\n");
+    out.push('\n');
 
     if features.has_code {
         out.push_str(SCRIPT_CODE);
-        out.push_str("\n");
+        out.push('\n');
     }
 
     if features.has_tasks {
         out.push_str(SCRIPT_TASKS);
-        out.push_str("\n");
+        out.push('\n');
     }
 
     if features.has_images {
         out.push_str(SCRIPT_IMAGES);
-        out.push_str("\n");
+        out.push('\n');
     }
 
     if features.has_tables {
         out.push_str(SCRIPT_TABLE);
-        out.push_str("\n");
+        out.push('\n');
     }
 }
 

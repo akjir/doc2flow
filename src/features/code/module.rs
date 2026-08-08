@@ -48,9 +48,9 @@ pub fn render_variable_table<K: AsRef<str>, V: AsRef<str>>(
     for (k, v) in rows {
         let escaped_k = crate::converter::html_escape(k.as_ref());
         let escaped_v = crate::converter::html_escape(v.as_ref());
-        let _ = write!(
+        let _ = writeln!(
             out,
-            "<tr><td>{escaped_k}</td><td><input type=\"text\" class=\"item-table-var-input persistent-field\" id=\"f_var_{escaped_k}\" data-var-key=\"{escaped_k}\" data-default-value=\"{escaped_v}\" value=\"{escaped_v}\"></td></tr>\n"
+            "<tr><td>{escaped_k}</td><td><input type=\"text\" class=\"item-table-var-input persistent-field\" id=\"f_var_{escaped_k}\" data-var-key=\"{escaped_k}\" data-default-value=\"{escaped_v}\" value=\"{escaped_v}\"></td></tr>"
         );
     }
     let _ = out.write_str("</tbody></table></div>\n");

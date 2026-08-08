@@ -17,11 +17,11 @@ pub fn assemble_styles(ctx: &DocumentContext, features: &[Box<dyn Feature>], out
     out.push('\n');
 
     for feature in features {
-        if feature.is_enabled(ctx) {
-            if let Some(css) = feature.css() {
-                out.push_str(css);
-                out.push('\n');
-            }
+        if feature.is_enabled(ctx)
+            && let Some(css) = feature.css()
+        {
+            out.push_str(css);
+            out.push('\n');
         }
     }
 }
@@ -32,11 +32,11 @@ pub fn assemble_scripts(ctx: &DocumentContext, features: &[Box<dyn Feature>], ou
     out.push('\n');
 
     for feature in features {
-        if feature.is_enabled(ctx) {
-            if let Some(js) = feature.javascript() {
-                out.push_str(js);
-                out.push('\n');
-            }
+        if feature.is_enabled(ctx)
+            && let Some(js) = feature.javascript()
+        {
+            out.push_str(js);
+            out.push('\n');
         }
     }
 }

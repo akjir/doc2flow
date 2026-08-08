@@ -186,14 +186,11 @@ pub fn embed_images_as_base64_with_source(
                                         let should_scale = auto_scale
                                             || prompt_user_for_resizing(src_val, size);
 
-                                        let mut scaled_uri = None;
-                                        if should_scale {
-                                            if let Ok(u) =
-                                                process_and_encode_image_as_webp(resolved)
-                                            {
-                                                scaled_uri = Some(u);
-                                            }
-                                        }
+                                        let scaled_uri = if should_scale {
+                                            process_and_encode_image_as_webp(resolved).ok()
+                                        } else {
+                                            None
+                                        };
 
                                         if let Some(u) = scaled_uri {
                                             u
@@ -409,7 +406,7 @@ fn extract_attribute<'a>(tag: &'a str, attr_name: &str) -> Option<(usize, usize,
             if quote == b'"' || quote == b'\'' {
                 let quote_offset = rest.len() - rest_trimmed.len();
                 let val_start = val_search_start + quote_offset + 1;
-                if let Some(val_end_rel) = tag[val_start..].as_bytes().iter().position(|&b| b == quote) {
+                if let Some(val_end_rel) = tag.as_bytes()[val_start..].iter().position(|&b| b == quote) {
                     let val_end = val_start + val_end_rel;
                     let attr_end = val_end + 1;
                     return Some((abs_pos, attr_end, &tag[val_start..val_end]));
@@ -493,17 +490,17 @@ pub fn clean_svg(input: &str) -> String {
     let mut rest = input.trim_start();
 
     while !rest.is_empty() {
-        if rest.starts_with("<?") {
-            if let Some(end) = rest.find("?>") {
-                rest = rest[end + 2..].trim_start();
-                continue;
-            }
+        if rest.starts_with("<?")
+            && let Some(end) = rest.find("?>")
+        {
+            rest = rest[end + 2..].trim_start();
+            continue;
         }
-        if rest.starts_with("<!DOCTYPE") || rest.starts_with("<!doctype") {
-            if let Some(end) = rest.find('>') {
-                rest = rest[end + 1..].trim_start();
-                continue;
-            }
+        if (rest.starts_with("<!DOCTYPE") || rest.starts_with("<!doctype"))
+            && let Some(end) = rest.find('>')
+        {
+            rest = rest[end + 1..].trim_start();
+            continue;
         }
         if rest.starts_with("<!--") {
             if let Some(end) = rest.find("-->") {
@@ -549,14 +546,14 @@ pub fn clean_svg(input: &str) -> String {
                     .trim_end_matches('/');
 
                 if tag_name.starts_with("sodipodi:") || tag_name == "metadata" {
-                    if !is_closing && !is_self_closing {
-                        if let Some(pos) = rest.find("</") {
-                            let after = &rest[pos + 2..];
-                            if let Some(close_tag_end) = after.find('>') {
-                                let inside = after[..close_tag_end].trim();
-                                if inside == tag_name {
-                                    rest = &after[close_tag_end + 1..];
-                                }
+                    if !is_closing && !is_self_closing
+                        && let Some(pos) = rest.find("</")
+                    {
+                        let after = &rest[pos + 2..];
+                        if let Some(close_tag_end) = after.find('>') {
+                            let inside = after[..close_tag_end].trim();
+                            if inside == tag_name {
+                                rest = &after[close_tag_end + 1..];
                             }
                         }
                     }

@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed Table of Contents (TOC) feature and table_of_contents frontmatter option.
 
 ### Fixed
+- Fixed potential panic during diagnostic error caret rendering for long source lines and zero-column offsets.
 - Fixed print styles to preserve table background colors and alternating row colors.
 - Fixed header margin in print mode to match spacing between sections.
 - Fixed table header background clipping and top corner rounding in print mode.

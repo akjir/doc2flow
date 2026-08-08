@@ -34,9 +34,6 @@
         }
       });
     }
-    window.d2f_table = {
-      init: initSectionTables
-    };
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", initSectionTables);
     } else {

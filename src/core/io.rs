@@ -1,6 +1,6 @@
 //! Centralized filesystem and I/O abstraction module for Doc2Flow.
 
-use crate::error::{Doc2FlowError, Result};
+use crate::error::{IoResultExt, Result};
 use std::fs;
 use std::io::{IsTerminal, Write};
 use std::path::{Path, PathBuf};
@@ -20,10 +20,7 @@ use std::path::{Path, PathBuf};
 /// Returns [`Doc2FlowError::Io`] if the file cannot be opened or read.
 pub fn read_file_to_string(path: impl AsRef<Path>) -> Result<String> {
     let path = path.as_ref();
-    fs::read_to_string(path).map_err(|source| Doc2FlowError::Io {
-        path: Some(path.to_path_buf()),
-        source,
-    })
+    fs::read_to_string(path).with_path(path)
 }
 
 /// Reads the raw binary bytes of a file from disk into a `Vec<u8>`.
@@ -41,10 +38,7 @@ pub fn read_file_to_string(path: impl AsRef<Path>) -> Result<String> {
 /// Returns [`Doc2FlowError::Io`] if the file cannot be opened or read.
 pub fn read_file_bytes(path: impl AsRef<Path>) -> Result<Vec<u8>> {
     let path = path.as_ref();
-    fs::read(path).map_err(|source| Doc2FlowError::Io {
-        path: Some(path.to_path_buf()),
-        source,
-    })
+    fs::read(path).with_path(path)
 }
 
 /// Writes byte sequence or string data to a file on disk, creating or truncating it.
@@ -62,10 +56,7 @@ pub fn read_file_bytes(path: impl AsRef<Path>) -> Result<Vec<u8>> {
 /// Returns [`Doc2FlowError::Io`] if the file cannot be created or written to.
 pub fn write_file(path: impl AsRef<Path>, content: impl AsRef<[u8]>) -> Result<()> {
     let path = path.as_ref();
-    fs::write(path, content).map_err(|source| Doc2FlowError::Io {
-        path: Some(path.to_path_buf()),
-        source,
-    })
+    fs::write(path, content).with_path(path)
 }
 
 /// Retrieves the size in bytes of a target file.
@@ -85,10 +76,7 @@ pub fn get_file_size(path: impl AsRef<Path>) -> Result<u64> {
     let path = path.as_ref();
     fs::metadata(path)
         .map(|m| m.len())
-        .map_err(|source| Doc2FlowError::Io {
-            path: Some(path.to_path_buf()),
-            source,
-        })
+        .with_path(path)
 }
 
 /// Checks whether a given filesystem path exists on disk.
@@ -193,13 +181,9 @@ pub fn resolve_logo_path(
 /// # Errors
 ///
 /// Returns [`Doc2FlowError::Io`] if directory creation fails.
-#[inline]
 pub fn create_dir_all(path: impl AsRef<Path>) -> Result<()> {
     let path = path.as_ref();
-    fs::create_dir_all(path).map_err(|source| Doc2FlowError::Io {
-        path: Some(path.to_path_buf()),
-        source,
-    })
+    fs::create_dir_all(path).with_path(path)
 }
 
 /// Recursively deletes a directory and all of its contents.
@@ -207,13 +191,9 @@ pub fn create_dir_all(path: impl AsRef<Path>) -> Result<()> {
 /// # Errors
 ///
 /// Returns [`Doc2FlowError::Io`] if directory deletion fails.
-#[inline]
 pub fn remove_dir_all(path: impl AsRef<Path>) -> Result<()> {
     let path = path.as_ref();
-    fs::remove_dir_all(path).map_err(|source| Doc2FlowError::Io {
-        path: Some(path.to_path_buf()),
-        source,
-    })
+    fs::remove_dir_all(path).with_path(path)
 }
 
 /// Interactively prompts the user via stderr/stdin with a yes/no question.
@@ -238,6 +218,7 @@ pub fn prompt_user_yes_no(prompt_msg: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::error::Doc2FlowError;
 
     struct TestTempDir {
         path: PathBuf,
