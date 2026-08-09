@@ -1,6 +1,7 @@
 //! doc2flow library interface.
 
 pub mod core;
+pub mod exp;
 pub mod features;
 pub mod utils;
 

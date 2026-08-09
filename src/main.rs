@@ -38,42 +38,46 @@ fn run() -> Result<()> {
 
     let md_content = io::read_file_to_string(&input_path)?;
 
-    let file_name = input_path.to_str();
-    let (frontmatter, markdown_body) =
-        converter::parse_and_validate_frontmatter(&md_content, file_name)?;
-    let language_code = frontmatter.language.as_deref().unwrap_or("en");
-    let locale = Locale::from_lang_code(language_code);
+    let final_html = if args.experimental_building {
+        doc2flow::exp::parser::parse(&md_content)?
+    } else {
+        let file_name = input_path.to_str();
+        let (frontmatter, markdown_body) =
+            converter::parse_and_validate_frontmatter(&md_content, file_name)?;
+        let language_code = frontmatter.language.as_deref().unwrap_or("en");
+        let locale = Locale::from_lang_code(language_code);
 
-    let frontmatter_map = frontmatter.to_hashmap();
-    let ctx = doc2flow::feature::DocumentContext::new(&frontmatter_map, markdown_body);
-    let all_features = doc2flow::features::get_all_features();
-    let features = doc2flow::converter::DocumentFeatures::resolve(&all_features, &ctx);
+        let frontmatter_map = frontmatter.to_hashmap();
+        let ctx = doc2flow::feature::DocumentContext::new(&frontmatter_map, markdown_body);
+        let all_features = doc2flow::features::get_all_features();
+        let features = doc2flow::converter::DocumentFeatures::resolve(&all_features, &ctx);
 
-    let (html_content, _) = converter::convert_markdown_to_html_with_options(
-        markdown_body,
-        &locale,
-        frontmatter.numbered_sections,
-    )?;
+        let (html_content, _) = converter::convert_markdown_to_html_with_options(
+            markdown_body,
+            &locale,
+            frontmatter.numbered_sections,
+        )?;
 
-    let base_dir = input_path.parent();
+        let base_dir = input_path.parent();
 
-    let logo_path = args
-        .logo
-        .as_deref()
-        .or_else(|| frontmatter.logo.as_deref().map(std::path::Path::new));
-    let logo_html = doc2flow::image::load_logo(logo_path, base_dir);
+        let logo_path = args
+            .logo
+            .as_deref()
+            .or_else(|| frontmatter.logo.as_deref().map(std::path::Path::new));
+        let logo_html = doc2flow::image::load_logo(logo_path, base_dir);
 
-    let d2f_id = doc2flow::id::generate_d2f_id(&frontmatter)?;
-    let rendered_html =
-        builder::render(&frontmatter, &locale, &html_content, &d2f_id, Some(&logo_html), &features)?;
+        let d2f_id = doc2flow::id::generate_d2f_id(&frontmatter)?;
+        let rendered_html =
+            builder::render(&frontmatter, &locale, &html_content, &d2f_id, Some(&logo_html), &features)?;
 
-    let final_html = doc2flow::image::embed_images_as_base64_with_source(
-        &rendered_html,
-        Some(&md_content),
-        file_name,
-        base_dir,
-        args.auto_scale,
-    )?;
+        doc2flow::image::embed_images_as_base64_with_source(
+            &rendered_html,
+            Some(&md_content),
+            file_name,
+            base_dir,
+            args.auto_scale,
+        )?
+    };
 
     io::write_file(&output_path, final_html)?;
 

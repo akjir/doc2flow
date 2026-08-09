@@ -20,6 +20,8 @@ pub struct Args {
     pub logo: Option<PathBuf>,
     /// Automatically resize local images exceeding 250 KB to WebP.
     pub auto_scale: bool,
+    /// Whether to run the experimental building pipeline.
+    pub experimental_building: bool,
     /// Whether the user requested help information.
     pub show_help: bool,
     /// Whether the user requested version information.
@@ -76,6 +78,7 @@ where
             "-h" | "--help" => parsed.show_help = true,
             "-V" | "--version" => parsed.show_version = true,
             "-s" | "--auto-scale" => parsed.auto_scale = true,
+            "--experimental-building" => parsed.experimental_building = true,
             "-o" | "--output" => {
                 let val = iter
                     .next()
@@ -169,8 +172,15 @@ mod tests {
         assert_eq!(args.output, None);
         assert_eq!(args.init, None);
         assert!(!args.auto_scale);
+        assert!(!args.experimental_building);
         assert!(!args.show_help);
         assert!(!args.show_version);
+    }
+
+    #[test]
+    fn test_parse_args_experimental_building() {
+        let args = parse_args(&["d2f", "input.md", "--experimental-building"]).unwrap();
+        assert!(args.experimental_building);
     }
 
     #[test]
@@ -188,6 +198,7 @@ mod tests {
         assert_eq!(args.output, Some(PathBuf::from("output.html")));
         assert_eq!(args.init, Some(PathBuf::from("custom_tpl.md")));
         assert!(args.auto_scale);
+        assert!(!args.experimental_building);
     }
 
     #[test]

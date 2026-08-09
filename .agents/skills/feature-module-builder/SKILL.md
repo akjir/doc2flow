@@ -37,3 +37,7 @@ Follow these 5 steps sequentially:
 5. **Verify:**
    - `./MAKE.sh --tests` (cargo tests + TypeScript compilation).
    - `./MAKE.sh --examples` (validate generated HTML showcases).
+
+> [!NOTE]
+> **[BRANCH EXPERIMENT: feature/modular-building - REVERT ON MERGE]**
+> Do NOT create/modify `src/features/` slices on this branch. Experimental modules reside strictly under `src/exp/`. Production slices remain frozen. Duplicate logic into `src/exp/` when needed.

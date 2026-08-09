@@ -886,3 +886,10 @@ title: "Image Fallback Test"
     assert!(full_doc.contains("window.d2f_image"));
 }
 
+#[test]
+fn test_experimental_building_parser_integration() {
+    let input = "# Heading\n\nSome text";
+    let output = doc2flow::exp::parser::parse(input).expect("parsing failed");
+    assert_eq!(output, "hello world");
+}
+

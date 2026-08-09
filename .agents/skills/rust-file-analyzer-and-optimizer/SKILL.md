@@ -57,3 +57,7 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 - **Sub-parsers:** Decompose complex parsers into single-responsibility sub-parsers (processing instructions `<?`, DOCTYPE, comments `<!--`, CDATA `<![CDATA[`, tags).
 - **Base64 Data URIs:** Standardize with unified `to_base64_data_uri`/`to_base64_data_uri_into` with exact pre-allocation.
 - **No println!:** Never use `println!` in core processing routines; reserve `stdout` for CLI output and route progress/warnings to `stderr`/`eprintln!`.
+
+> [!NOTE]
+> **[BRANCH EXPERIMENT: feature/modular-building - REVERT ON MERGE]**
+> Optimization work on this branch targets `src/exp/`. Production code (`src/core/`, `src/features/`, `src/utils/`) is frozen. When duplicating functions into `src/exp/`, apply all 5 Pillars immediately.

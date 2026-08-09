@@ -1,5 +1,12 @@
 # Project Specification: Doc2Flow (d2f)
 
+> [!NOTE]
+> **[BRANCH EXPERIMENT: feature/modular-building - REVERT/MIGRATE ON MERGE TO MAIN]**
+> This branch isolates an experimental modular building pipeline under `src/exp/`.
+> - **Isolation Rule:** Production code (`src/core/`, `src/features/`, `src/utils/`) remains frozen. Required helper functions must be copied into `src/exp/` rather than coupled to legacy modules.
+> - **Execution:** Activated solely via `--experimental-building`. Standard invocation remains completely unchanged.
+> - **Merge-Back Revert Checklist:** Upon merging into `main`, revert this experiment banner, integrate or replace the legacy building pipeline with the finalized `src/exp/` implementation, and clean up temporary markers.
+
 ## 1. Overview & Objectives
 Doc2Flow (`d2f`) is a command-line interface (CLI) tool built for Windows that converts Markdown files into fully self-contained HTML files. The generated HTML files serve as interactive guides, manuals, protocols, and checklists for end users.
 
@@ -49,6 +56,7 @@ d2f.exe --version
 | `LOGO` | `-l`, `--logo` | Path to custom logo (SVG, PNG, JPG, WebP) | No | Default embedded SVG logo |
 | `INIT` | `-i`, `--init` | Generates starter template Markdown file | No | `template.md` |
 | `AUTO_SCALE` | `-s`, `--auto-scale` | Auto-resizes local images > 250 KB to WebP | No | `false` |
+| `EXP_BUILD` *(branch experiment)* | `--experimental-building` | Activates experimental isolated modular pipeline | No | `false` |
 
 ---
 
@@ -136,6 +144,11 @@ d2f.exe --version
   * **Feature-Specific Constants (Strict Encapsulation):** Constants used exclusively by an individual feature (e.g. CSS class names, frontmatter keys, selector strings, feature-internal default values) MUST be defined directly in the respective `src/features/<feature_name>/module.rs` (or private submodules). Distributing feature constants across central files or dumpsters is strictly prohibited to eliminate tight coupling.
   * **Global System Constants (`src/core/constants.rs`):** Reserved exclusively for application-wide, feature-independent system metadata and global core defaults (e.g. `APP_NAME`, `CLI_BANNER`, `APP_VERSION`, `REPOSITORY_URL`, `LICENSE_TERMS`, `LICENSE_URL`, global system/I/O limits).
 * **Centralized Diagnostic Error Handling (`src/utils/error.rs`):** Runtime, I/O, and syntax errors map to domain error types (`Doc2FlowError`) with compiler-style `stderr` warnings (`print_warning`).
+* **Experimental Modular Pipeline (`src/exp/`) `[BRANCH EXPERIMENT: REVERT/MIGRATE ON MERGE]`:
+  * Dedicated experimental building subsystem rooted at `src/exp/mod.rs` and `src/exp/parser.rs`.
+  * **Strict Isolation & Freeze:** Production files under `src/core/`, `src/features/`, and `src/utils/` remain frozen.
+  * **Zero-Coupling Duplication Rule:** Functions needed from core/features are copied into `src/exp/` rather than coupled to legacy modules.
+  * **Conditional Routing:** Invoked exclusively when `--experimental-building` is passed to the CLI.
 
 ---
 
@@ -174,6 +187,9 @@ doc2flow/
 ├── src/                      # Rust CLI backend
 │   ├── main.rs               # CLI entry point and argument parsing
 │   ├── lib.rs                # Module declarations and library interface
+│   ├── exp/                  # [BRANCH EXPERIMENT] Experimental building pipeline
+│   │   ├── mod.rs            # Experimental module root
+│   │   └── parser.rs         # Experimental Markdown parser & builder
 │   ├── utils/                # Generic, project-agnostic library subsystem
 │   │   ├── mod.rs            # Library module root and clean API exports
 │   │   ├── base64.rs         # RFC 4648 Base64 encoding routines

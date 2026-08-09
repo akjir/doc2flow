@@ -25,6 +25,7 @@ EOF
 BUILD_EXAMPLES=false
 EXAMPLES_ONLY=false
 RUN_TESTS=false
+EXPERIMENTAL_BUILDING=false
 CARGO_ARGS=()
 
 for arg in "$@"; do
@@ -32,6 +33,9 @@ for arg in "$@"; do
         -h|--help)
             show_help
             exit 0
+            ;;
+        --experimental-building)
+            EXPERIMENTAL_BUILDING=true
             ;;
         --examples-only)
             BUILD_EXAMPLES=true
@@ -59,6 +63,27 @@ for arg in "$@"; do
             ;;
     esac
 done
+
+if [ "$EXPERIMENTAL_BUILDING" = true ]; then
+    if [ "$#" -ne 1 ]; then
+        echo "Error: '--experimental-building' cannot be combined with other flags" >&2
+        exit 1
+    fi
+
+    echo "==> Building TypeScript..."
+    (cd web && npm run build)
+
+    echo "==> Running Cargo build..."
+    cargo build
+
+    echo "==> Running tests..."
+    cargo test
+
+    echo "==> Running experimental building on examples/showcase_en.md..."
+    ./target/debug/d2f --experimental-building examples/showcase_en.md -o examples/showcase_en_exp.html
+
+    exit 0
+fi
 
 if [ "$EXAMPLES_ONLY" = false ]; then
     echo "==> Building TypeScript..."
