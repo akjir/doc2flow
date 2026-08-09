@@ -218,6 +218,9 @@ fn test_showcase_en_fixture_conversion() {
     assert!(html.contains("<input type=\"checkbox\" id=\"cb_s3_2\">"));
     assert!(!html.contains("Test comment: This comment must not appear"));
     assert!(html.contains("<div class=\"logo-wrap\">"));
+    assert!(html.contains("https://invalid-host-doc2flow.test/broken-image.jpg"));
+    assert!(html.contains(".doc-body img.img-fallback"));
+    assert!(html.contains("data:image/svg+xml;base64,"));
 }
 
 #[test]
@@ -252,6 +255,9 @@ fn test_showcase_de_fixture_conversion() {
     assert!(html.contains("<input type=\"checkbox\" id=\"cb_s3_2\">"));
     assert!(!html.contains("Test-Kommentar: Dieser Hinweis darf nicht"));
     assert!(html.contains("<div class=\"logo-wrap\">"));
+    assert!(html.contains("https://invalid-host-doc2flow.test/broken-image.jpg"));
+    assert!(html.contains(".doc-body img.img-fallback"));
+    assert!(html.contains("data:image/svg+xml;base64,"));
 }
 
 #[test]
@@ -847,3 +853,36 @@ header: "none"
     assert!(!full_doc.contains("header-flex-title"));
     assert!(!full_doc.contains(".header-flex {"));
 }
+
+#[test]
+fn test_image_fallback_placeholder_integration() {
+    let input = r#"---
+title: "Image Fallback Test"
+---
+
+## Section 1: Images
+
+![Remote Missing](https://invalid-host-doc2flow.test/missing.png)
+"#;
+
+    let (fm, body) =
+        doc2flow::converter::parse_and_validate_frontmatter(input, Some("test_img.md")).unwrap();
+    let locale = doc2flow::locales::Locale::from_lang_code("en");
+    let (html_body, features) = doc2flow::converter::convert_markdown_to_html(&body).unwrap();
+    assert!(features.has_images);
+
+    let full_doc = doc2flow::builder::render(
+        &fm,
+        &locale,
+        &html_body,
+        "doc_img_fallback",
+        None,
+        &features,
+    ).unwrap();
+
+    assert!(full_doc.contains("https://invalid-host-doc2flow.test/missing.png"));
+    assert!(full_doc.contains(".doc-body img.img-fallback"));
+    assert!(full_doc.contains("data:image/svg+xml;base64,"));
+    assert!(full_doc.contains("window.d2f_image"));
+}
+

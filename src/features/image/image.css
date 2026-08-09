@@ -19,6 +19,13 @@
   cursor: zoom-in;
 }
 
+.doc-body img.img-fallback {
+  cursor: default;
+  border: 1px dashed var(--border-color, #d0d7de);
+  background-color: var(--bg-surface, #ffffff);
+  max-width: 400px;
+}
+
 .lightbox {
   display: none;
   position: fixed;

@@ -28,6 +28,8 @@ This is an arbitrary text paragraph in the section body. It provides general ins
 
 ![External Remote Image](https://picsum.photos/600/300)
 
+![Broken External Image](https://invalid-host-doc2flow.test/broken-image.jpg)
+
 <!-- Test comment: This comment must not appear in the generated HTML -->
 
 > This is a neutral Note callout box providing standard context.

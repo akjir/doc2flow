@@ -28,6 +28,8 @@ Dies ist ein beliebiger Textabsatz im Abschnitts-Hauptteil. Er liefert allgemein
 
 ![Externes Remote-Bild](https://picsum.photos/600/300)
 
+![Fehlerhaftes externes Bild](https://invalid-host-doc2flow.test/broken-image.jpg)
+
 <!-- Test-Kommentar: Dieser Hinweis darf nicht im HTML erscheinen -->
 
 > Dies ist eine neutrale Hinweis-Box mit Standard-Kontext.

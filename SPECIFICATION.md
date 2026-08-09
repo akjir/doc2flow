@@ -98,6 +98,7 @@ d2f.exe --version
 * **Image & Link Handling:**
   * Relative local images converted to embedded Base64 `data:image/...;base64,...` URIs.
   * Remote image URLs (`http://`, `https://`) preserved as `<img>` tags.
+  * Broken or unreachable images gracefully display an embedded fallback placeholder SVG (`placeholder.svg`).
   * Non-image resources (e.g. `.pdf`, `.zip`) rendered as external link elements (`<a>`).
 
 ---
@@ -159,7 +160,8 @@ doc2flow/
 │   └── config.toml           # Cargo Aliases and Cross-Compile configuration
 ├── resources/                # Embedded static resources
 │   ├── images/               # Built-in vector icons and logos
-│   │   └── logo.svg          # Default document header logo
+│   │   ├── logo.svg          # Default document header logo
+│   │   └── placeholder.svg   # Default fallback image placeholder
 │   ├── locales/              # Internationalization JSON translations
 │   │   ├── de.json           # German static UI translations
 │   │   └── en.json           # English static UI translations
