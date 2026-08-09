@@ -58,4 +58,14 @@ mod tests {
         assert!(result.contains("\"subkind\": \"tip\""));
         assert!(result.contains("\"content\": \"Helpful tip\""));
     }
+
+    #[test]
+    fn test_parse_with_bullet_list() {
+        let result = parse("---\ntitle: \"Bullet List Doc\"\n---\n- Root item\n  - Nested item").unwrap();
+        assert!(result.contains("\"kind\": \"bullet_list_item\""));
+        assert!(result.contains("\"depth\": 0"));
+        assert!(result.contains("\"content\": \"Root item\""));
+        assert!(result.contains("\"depth\": 1"));
+        assert!(result.contains("\"content\": \"Nested item\""));
+    }
 }

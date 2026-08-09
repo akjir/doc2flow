@@ -42,6 +42,13 @@ impl Document {
 /// Hierarchical document element representation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DocumentElement {
+    /// Bullet list item element with indentation depth.
+    BulletListItem {
+        /// Nesting depth level based on leading spaces.
+        depth: usize,
+        /// List item text content.
+        content: String,
+    },
     /// Collapsible or structured section containing nested child elements.
     Section {
         /// Section heading or title.
@@ -63,6 +70,14 @@ pub enum DocumentElement {
 }
 
 impl DocumentElement {
+    /// Creates a new bullet list item document element with depth.
+    pub fn bullet_list_item(depth: usize, content: impl Into<String>) -> Self {
+        Self::BulletListItem {
+            depth,
+            content: content.into(),
+        }
+    }
+
     /// Appends a child element if this element is a section container.
     pub fn push_child(&mut self, child: Self) {
         if let Self::Section { children, .. } = self {
@@ -182,5 +197,17 @@ mod tests {
                 }
             );
         }
+    }
+
+    #[test]
+    fn test_bullet_list_item_creation() {
+        let elem = DocumentElement::bullet_list_item(2, "Nested item");
+        assert_eq!(
+            elem,
+            DocumentElement::BulletListItem {
+                depth: 2,
+                content: "Nested item".into(),
+            }
+        );
     }
 }

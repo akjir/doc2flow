@@ -78,6 +78,23 @@ fn trim_matching_quotes(input: &str) -> &str {
     }
 }
 
+/// Parses a bullet list item into its nesting depth and inner content.
+fn parse_bullet_list_item(line: &str) -> Option<(usize, &str)> {
+    let leading_spaces = line.bytes().take_while(|&b| b == b' ').count();
+    let rest = &line[leading_spaces..];
+
+    let after_dash = rest.strip_prefix('-')?;
+    if after_dash.is_empty() {
+        let depth = (leading_spaces + 1) / 2;
+        Some((depth, ""))
+    } else if let Some(content) = after_dash.strip_prefix(' ') {
+        let depth = (leading_spaces + 1) / 2;
+        Some((depth, content.trim()))
+    } else {
+        None
+    }
+}
+
 /// Parses a shoutout line starting with `>` into its element kind and inner content.
 fn parse_shoutout_line(line: &str) -> (ShoutoutElementKind, &str) {
     debug_assert!(line.starts_with('>'));
@@ -147,11 +164,10 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
             continue;
         };
 
-        let trimmed = effective_line.trim();
-
         // 3. Frontmatter start detection or document body classification
         match phase {
             FrontmatterPhase::SeekingStart => {
+                let trimmed = effective_line.trim();
                 if trimmed.is_empty() {
                     continue;
                 }
@@ -165,8 +181,11 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
             }
             FrontmatterPhase::Inside => unreachable!(),
             FrontmatterPhase::Complete => {
+                let trimmed = effective_line.trim();
                 if !trimmed.is_empty() {
-                    if trimmed.starts_with('>') {
+                    if let Some((depth, content)) = parse_bullet_list_item(effective_line) {
+                        doc.push_body(DocumentElement::bullet_list_item(depth, content));
+                    } else if trimmed.starts_with('>') {
                         let (shoutout_kind, content) = parse_shoutout_line(trimmed);
                         doc.push_body(DocumentElement::shoutout(shoutout_kind, content));
                     } else if is_plain_text(trimmed) {
@@ -420,5 +439,60 @@ mod tests {
                 }
             );
         }
+    }
+
+    #[test]
+    fn test_parse_bullet_list_item_depths() {
+        let cases = [
+            ("- Root item", Some((0, "Root item"))),
+            ("-NoSpace", None),
+            ("-- Not a bullet", None),
+            ("---", None),
+            ("-", Some((0, ""))),
+            ("- ", Some((0, ""))),
+            (" - Depth 1 (1 space)", Some((1, "Depth 1 (1 space)"))),
+            ("  - Depth 1 (2 spaces)", Some((1, "Depth 1 (2 spaces)"))),
+            ("   - Depth 2 (3 spaces)", Some((2, "Depth 2 (3 spaces)"))),
+            ("    - Depth 2 (4 spaces)", Some((2, "Depth 2 (4 spaces)"))),
+            ("     - Depth 3 (5 spaces)", Some((3, "Depth 3 (5 spaces)"))),
+            ("      - Depth 3 (6 spaces)", Some((3, "Depth 3 (6 spaces)"))),
+            ("       - Depth 4 (7 spaces)", Some((4, "Depth 4 (7 spaces)"))),
+            ("        - Depth 4 (8 spaces)", Some((4, "Depth 4 (8 spaces)"))),
+            ("  -   Spaced content   ", Some((1, "Spaced content"))),
+            ("  -", Some((1, ""))),
+        ];
+
+        for (input, expected) in cases {
+            assert_eq!(
+                parse_bullet_list_item(input),
+                expected,
+                "Mismatch for input: {input:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_bullet_lists() {
+        let md = "---\ntitle: \"List Doc\"\n---\n- Level 0\n - Level 1a\n  - Level 1b\n   - Level 2a\n    - Level 2b\nRegular text\n- Another root";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 7);
+        assert_eq!(doc.body[0], DocumentElement::bullet_list_item(0, "Level 0"));
+        assert_eq!(doc.body[1], DocumentElement::bullet_list_item(1, "Level 1a"));
+        assert_eq!(doc.body[2], DocumentElement::bullet_list_item(1, "Level 1b"));
+        assert_eq!(doc.body[3], DocumentElement::bullet_list_item(2, "Level 2a"));
+        assert_eq!(doc.body[4], DocumentElement::bullet_list_item(2, "Level 2b"));
+        assert_eq!(doc.body[5], DocumentElement::text("Regular text"));
+        assert_eq!(doc.body[6], DocumentElement::bullet_list_item(0, "Another root"));
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_bullet_list_with_comments() {
+        let md = "---\ntitle: \"Comments in List\"\n---\n  - Item 1 <!-- inline comment -->\n<!-- multiline\ncomment -->\n    - Item 2";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 2);
+        assert_eq!(doc.body[0], DocumentElement::bullet_list_item(1, "Item 1"));
+        assert_eq!(doc.body[1], DocumentElement::bullet_list_item(2, "Item 2"));
     }
 }

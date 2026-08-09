@@ -54,6 +54,13 @@ fn format_element(out: &mut String, elem: &DocumentElement, indent_level: usize)
 
     let _ = write!(out, "{indent}{{\n");
     match elem {
+        DocumentElement::BulletListItem { depth, content } => {
+            let _ = write!(out, "{child_indent}\"kind\": \"bullet_list_item\",\n");
+            let _ = write!(out, "{child_indent}\"depth\": {depth},\n");
+            let _ = write!(out, "{child_indent}\"content\": \"");
+            escape_json_string(out, content);
+            let _ = write!(out, "\"\n");
+        }
         DocumentElement::Text(content) => {
             let _ = write!(out, "{child_indent}\"kind\": \"text\",\n");
             let _ = write!(out, "{child_indent}\"content\": \"");
@@ -181,5 +188,19 @@ mod tests {
         assert!(json.contains("\"content\": \"Check this out\""));
         assert!(json.contains("\"subkind\": \"caution\""));
         assert!(json.contains("\"content\": \"Watch out\""));
+    }
+
+    #[test]
+    fn test_document_to_json_with_bullet_list_items() {
+        let mut doc = Document::new();
+        doc.push_body(DocumentElement::bullet_list_item(0, "Root item"));
+        doc.push_body(DocumentElement::bullet_list_item(1, "Child item"));
+
+        let json = document_to_json(&doc);
+        assert!(json.contains("\"kind\": \"bullet_list_item\""));
+        assert!(json.contains("\"depth\": 0"));
+        assert!(json.contains("\"content\": \"Root item\""));
+        assert!(json.contains("\"depth\": 1"));
+        assert!(json.contains("\"content\": \"Child item\""));
     }
 }
