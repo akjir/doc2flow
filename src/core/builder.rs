@@ -3,7 +3,7 @@
 pub use crate::components::DEFAULT_LOGO_SVG;
 pub use crate::constants::{APP_VERSION, LICENSE_TERMS, LICENSE_URL, REPOSITORY_URL};
 use crate::converter::{DocumentFeatures, Frontmatter};
-use crate::lib::error::{Doc2FlowError, Result};
+use crate::utils::error::{Doc2FlowError, Result};
 use crate::feature::{DocumentContext, Feature};
 use crate::features;
 use crate::locales::{Locale, validate_locale_coverage};

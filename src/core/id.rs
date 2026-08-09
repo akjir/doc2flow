@@ -1,8 +1,8 @@
 //! Dynamic `d2f_id` generator module for Doc2Flow.
 
 use crate::converter::Frontmatter;
-use crate::lib::error::{Doc2FlowError, Result, print_warning};
-use crate::lib::hasher::sha256_bytes;
+use crate::utils::error::{Doc2FlowError, Result, print_warning};
+use crate::utils::hasher::sha256_bytes;
 use std::borrow::Cow;
 
 const HEX_CHARS: &[u8; 16] = b"0123456789abcdef";

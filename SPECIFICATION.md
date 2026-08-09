@@ -120,8 +120,8 @@ d2f.exe --version
 
 ## 5. Module Architecture & Subsystem Decoupling
 
-* **Project-Agnostic Library Layer (`src/lib/`):** Dedicated generic subsystem (`base64`, `error`, `hasher`, `io`, `mime`, `uri`) completely decoupled from Doc2Flow domain logic. Reusable across arbitrary projects. `src/core/` and `src/features/` consume it through the centralized API exported by `src/lib/mod.rs`.
-* **Filesystem & I/O Isolation (`src/lib/io.rs`):** Exclusive module for generic filesystem interactions, file reading/writing, path resolution (`resolve_path`), and asset retrieval. Direct `std::fs`/`std::io` calls prohibited in processing modules.
+* **Project-Agnostic Library Layer (`src/utils/`):** Dedicated generic subsystem (`base64`, `error`, `hasher`, `io`, `mime`, `uri`) completely decoupled from Doc2Flow domain logic. Reusable across arbitrary projects. `src/core/` and `src/features/` consume it through the centralized API exported by `src/utils/mod.rs`.
+* **Filesystem & I/O Isolation (`src/utils/io.rs`):** Exclusive module for generic filesystem interactions, file reading/writing, path resolution (`resolve_path`), and asset retrieval. Direct `std::fs`/`std::io` calls prohibited in processing modules.
 * **Pure In-Memory Processing Core:** Core modules (`src/core/converter.rs`, `src/core/builder.rs`, `src/core/components.rs`, `src/core/locales.rs`, `src/core/id.rs`) perform pure in-memory string/AST data transformations decoupled from disk I/O.
 * **Domain Image & Logo Processing (`src/core/image.rs`):** Image optimization, SVG sanitization, WebP downscaling, and domain-specific logo path resolution (`resolve_logo_path`).
 * **Strict Modular Feature Isolation (HTML, CSS, TS/JS):**
@@ -134,7 +134,7 @@ d2f.exe --version
 * **Constants Architecture & Encapsulation Rules:**
   * **Feature-Specific Constants (Strict Encapsulation):** Constants used exclusively by an individual feature (e.g. CSS class names, frontmatter keys, selector strings, feature-internal default values) MUST be defined directly in the respective `src/features/<feature_name>/module.rs` (or private submodules). Distributing feature constants across central files or dumpsters is strictly prohibited to eliminate tight coupling.
   * **Global System Constants (`src/core/constants.rs`):** Reserved exclusively for application-wide, feature-independent system metadata and global core defaults (e.g. `APP_NAME`, `CLI_BANNER`, `APP_VERSION`, `REPOSITORY_URL`, `LICENSE_TERMS`, `LICENSE_URL`, global system/I/O limits).
-* **Centralized Diagnostic Error Handling (`src/lib/error.rs`):** Runtime, I/O, and syntax errors map to domain error types (`Doc2FlowError`) with compiler-style `stderr` warnings (`print_warning`).
+* **Centralized Diagnostic Error Handling (`src/utils/error.rs`):** Runtime, I/O, and syntax errors map to domain error types (`Doc2FlowError`) with compiler-style `stderr` warnings (`print_warning`).
 
 ---
 
@@ -146,7 +146,7 @@ d2f.exe --version
   * Format: `v<MAJOR>.<MINOR>.<PATCH>+<COMMIT_COUNT>.<COMMIT_HASH>[.dev]`
   * Exported as `D2F_FULL_VERSION` compiler env var; embedded in `d2f --version` output, HTML `<meta name="generator">` tags, and header comments.
 * **Binary Size:** Executable size target `< 10 MB` using stripping, LTO, and release optimizations.
-* **Core Dependencies:** `pulldown-cmark`, `serde`, `serde_json`, `image` (custom Base64/MIME helpers in `src/lib/`).
+* **Core Dependencies:** `pulldown-cmark`, `serde`, `serde_json`, `image` (custom Base64/MIME helpers in `src/utils/`).
 * **Error Handling & Testing:** Zero panics on invalid paths/inputs; human-readable diagnostic error messages on `stderr`. Unit and integration test suite coverage.
 
 ---
@@ -172,7 +172,7 @@ doc2flow/
 ├── src/                      # Rust CLI backend
 │   ├── main.rs               # CLI entry point and argument parsing
 │   ├── lib.rs                # Module declarations and library interface
-│   ├── lib/                  # Generic, project-agnostic library subsystem
+│   ├── utils/                # Generic, project-agnostic library subsystem
 │   │   ├── mod.rs            # Library module root and clean API exports
 │   │   ├── base64.rs         # RFC 4648 Base64 encoding routines
 │   │   ├── error.rs          # Diagnostic error types and reporting

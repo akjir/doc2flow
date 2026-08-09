@@ -10,7 +10,7 @@ use std::path::Path;
 ///
 /// ```
 /// use std::path::Path;
-/// use doc2flow::lib::mime::guess_mime_type;
+/// use doc2flow::utils::mime::guess_mime_type;
 ///
 /// assert_eq!(guess_mime_type(Path::new("image.png")), "image/png");
 /// assert_eq!(guess_mime_type(Path::new("file.unknown")), "application/octet-stream");

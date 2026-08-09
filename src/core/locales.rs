@@ -1,6 +1,6 @@
 //! Internationalization module for Doc2Flow static UI terms.
 
-use crate::lib::error::{Doc2FlowError, Result};
+use crate::utils::error::{Doc2FlowError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

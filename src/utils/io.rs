@@ -10,14 +10,14 @@ use std::path::{Path, PathBuf};
 /// # Examples
 ///
 /// ```no_run
-/// use doc2flow::lib::io::read_file_to_string;
+/// use doc2flow::utils::io::read_file_to_string;
 ///
 /// let content = read_file_to_string("document.md").unwrap();
 /// ```
 ///
 /// # Errors
 ///
-/// Returns [`Doc2FlowError::Io`](crate::lib::error::Doc2FlowError::Io) if the file cannot be opened or read.
+/// Returns [`Doc2FlowError::Io`](crate::utils::error::Doc2FlowError::Io) if the file cannot be opened or read.
 pub fn read_file_to_string(path: impl AsRef<Path>) -> Result<String> {
     let path = path.as_ref();
     fs::read_to_string(path).with_path(path)
@@ -28,14 +28,14 @@ pub fn read_file_to_string(path: impl AsRef<Path>) -> Result<String> {
 /// # Examples
 ///
 /// ```no_run
-/// use doc2flow::lib::io::read_file_bytes;
+/// use doc2flow::utils::io::read_file_bytes;
 ///
 /// let bytes = read_file_bytes("image.png").unwrap();
 /// ```
 ///
 /// # Errors
 ///
-/// Returns [`Doc2FlowError::Io`](crate::lib::error::Doc2FlowError::Io) if the file cannot be opened or read.
+/// Returns [`Doc2FlowError::Io`](crate::utils::error::Doc2FlowError::Io) if the file cannot be opened or read.
 pub fn read_file_bytes(path: impl AsRef<Path>) -> Result<Vec<u8>> {
     let path = path.as_ref();
     fs::read(path).with_path(path)
@@ -46,14 +46,14 @@ pub fn read_file_bytes(path: impl AsRef<Path>) -> Result<Vec<u8>> {
 /// # Examples
 ///
 /// ```no_run
-/// use doc2flow::lib::io::write_file;
+/// use doc2flow::utils::io::write_file;
 ///
 /// write_file("output.html", "<h1>Header</h1>").unwrap();
 /// ```
 ///
 /// # Errors
 ///
-/// Returns [`Doc2FlowError::Io`](crate::lib::error::Doc2FlowError::Io) if the file cannot be created or written to.
+/// Returns [`Doc2FlowError::Io`](crate::utils::error::Doc2FlowError::Io) if the file cannot be created or written to.
 pub fn write_file(path: impl AsRef<Path>, content: impl AsRef<[u8]>) -> Result<()> {
     let path = path.as_ref();
     fs::write(path, content).with_path(path)
@@ -64,14 +64,14 @@ pub fn write_file(path: impl AsRef<Path>, content: impl AsRef<[u8]>) -> Result<(
 /// # Examples
 ///
 /// ```no_run
-/// use doc2flow::lib::io::get_file_size;
+/// use doc2flow::utils::io::get_file_size;
 ///
 /// let size = get_file_size("large_image.png").unwrap();
 /// ```
 ///
 /// # Errors
 ///
-/// Returns [`Doc2FlowError::Io`](crate::lib::error::Doc2FlowError::Io) if metadata cannot be queried for the target path.
+/// Returns [`Doc2FlowError::Io`](crate::utils::error::Doc2FlowError::Io) if metadata cannot be queried for the target path.
 pub fn get_file_size(path: impl AsRef<Path>) -> Result<u64> {
     let path = path.as_ref();
     fs::metadata(path)
@@ -84,7 +84,7 @@ pub fn get_file_size(path: impl AsRef<Path>) -> Result<u64> {
 /// # Examples
 ///
 /// ```
-/// use doc2flow::lib::io::path_exists;
+/// use doc2flow::utils::io::path_exists;
 ///
 /// assert!(!path_exists("non_existent_file_xyz.txt"));
 /// ```
@@ -102,7 +102,7 @@ pub fn path_exists(path: impl AsRef<Path>) -> bool {
 /// # Examples
 ///
 /// ```
-/// use doc2flow::lib::io::resolve_path;
+/// use doc2flow::utils::io::resolve_path;
 ///
 /// assert_eq!(resolve_path("non_existent_file_xyz.txt", None::<&str>), None);
 /// ```
@@ -131,7 +131,7 @@ pub fn resolve_path(
 ///
 /// # Errors
 ///
-/// Returns [`Doc2FlowError::Io`](crate::lib::error::Doc2FlowError::Io) if directory creation fails.
+/// Returns [`Doc2FlowError::Io`](crate::utils::error::Doc2FlowError::Io) if directory creation fails.
 pub fn create_dir_all(path: impl AsRef<Path>) -> Result<()> {
     let path = path.as_ref();
     fs::create_dir_all(path).with_path(path)
@@ -141,7 +141,7 @@ pub fn create_dir_all(path: impl AsRef<Path>) -> Result<()> {
 ///
 /// # Errors
 ///
-/// Returns [`Doc2FlowError::Io`](crate::lib::error::Doc2FlowError::Io) if directory deletion fails.
+/// Returns [`Doc2FlowError::Io`](crate::utils::error::Doc2FlowError::Io) if directory deletion fails.
 pub fn remove_dir_all(path: impl AsRef<Path>) -> Result<()> {
     let path = path.as_ref();
     fs::remove_dir_all(path).with_path(path)
@@ -169,7 +169,7 @@ pub fn prompt_user_yes_no(prompt_msg: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::lib::error::Doc2FlowError;
+    use crate::utils::error::Doc2FlowError;
 
     struct TestTempDir {
         path: PathBuf,

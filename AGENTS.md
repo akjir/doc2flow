@@ -2,10 +2,10 @@
 
 ## 1. Arch & Stack
 - **Spec:** `SPECIFICATION.md` (sync structure on central file changes)
-- **Layering:** `src/lib/` (generic library), `src/core/` (domain engine), `src/features/` (vertical slices). Core/features access `lib` through `src/lib/mod.rs` API.
+- **Layering:** `src/utils/` (generic library), `src/core/` (domain engine), `src/features/` (vertical slices). Core/features access `utils` through `src/utils/mod.rs` API.
 - **CLI:** `std::env::args()`
 - **MD:** `pulldown-cmark`+GFM
-- **Assets:** Custom Base64/MIME (`src/lib/`), WebP/compress (`src/core/image.rs`)
+- **Assets:** Custom Base64/MIME (`src/utils/`), WebP/compress (`src/core/image.rs`)
 - **i18n:** `HashMap` via embedded JSON (`build.rs`)
 - **UI/HTML:** Zero-alloc buffers (`src/core/components.rs`, `src/core/builder.rs`), compile-time embeds (`include_str!`)
 - **Pipelines:** DRY template contexts (`build_template_vars`), parity across entry points (identical conditional components; NO hardcoded blanks). Single predicate feature dispatch (`is_feature_active`).

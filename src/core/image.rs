@@ -1,8 +1,8 @@
 use crate::components::DEFAULT_LOGO_SVG;
-use crate::lib::error::{DiagnosticError, Doc2FlowError, Result, build_caret_annotation, print_warning};
-use crate::lib::io;
-use crate::lib::mime::guess_mime_type;
-use crate::lib::uri::{file_to_data_uri, to_base64_data_uri};
+use crate::utils::error::{DiagnosticError, Doc2FlowError, Result, build_caret_annotation, print_warning};
+use crate::utils::io;
+use crate::utils::mime::guess_mime_type;
+use crate::utils::uri::{file_to_data_uri, to_base64_data_uri};
 use image::{GenericImageView, ImageFormat, imageops::FilterType};
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -10,7 +10,7 @@ use std::collections::hash_map::Entry;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
 
-pub use crate::lib::uri::to_base64_data_uri_into;
+pub use crate::utils::uri::to_base64_data_uri_into;
 
 /// Maximum allowed size in bytes for a local image embedded into HTML (250 KB).
 pub const MAX_IMAGE_SIZE_BYTES: u64 = 250 * 1024;
