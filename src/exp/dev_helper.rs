@@ -61,6 +61,18 @@ fn format_element(out: &mut String, elem: &DocumentElement, indent_level: usize)
             escape_json_string(out, content);
             let _ = write!(out, "\"\n");
         }
+        DocumentElement::CheckBoxItem {
+            depth,
+            checked,
+            content,
+        } => {
+            let _ = write!(out, "{child_indent}\"kind\": \"check_box_item\",\n");
+            let _ = write!(out, "{child_indent}\"depth\": {depth},\n");
+            let _ = write!(out, "{child_indent}\"checked\": {checked},\n");
+            let _ = write!(out, "{child_indent}\"content\": \"");
+            escape_json_string(out, content);
+            let _ = write!(out, "\"\n");
+        }
         DocumentElement::CodeBlock { language, content } => {
             let _ = write!(out, "{child_indent}\"kind\": \"code_block\",\n");
             if let Some(lang) = language {
@@ -215,6 +227,22 @@ mod tests {
         assert!(json.contains("\"content\": \"Root item\""));
         assert!(json.contains("\"depth\": 1"));
         assert!(json.contains("\"content\": \"Child item\""));
+    }
+
+    #[test]
+    fn test_document_to_json_with_check_box_items() {
+        let mut doc = Document::new();
+        doc.push_body(DocumentElement::check_box_item(0, false, "Todo item"));
+        doc.push_body(DocumentElement::check_box_item(2, true, "Done item"));
+
+        let json = document_to_json(&doc);
+        assert!(json.contains("\"kind\": \"check_box_item\""));
+        assert!(json.contains("\"depth\": 0"));
+        assert!(json.contains("\"checked\": false"));
+        assert!(json.contains("\"content\": \"Todo item\""));
+        assert!(json.contains("\"depth\": 2"));
+        assert!(json.contains("\"checked\": true"));
+        assert!(json.contains("\"content\": \"Done item\""));
     }
 
     #[test]

@@ -70,6 +70,18 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_with_check_box_item() {
+        let result = parse("---\ntitle: \"Check Box Doc\"\n---\n- [ ] Pending item\n  - [x] Completed item").unwrap();
+        assert!(result.contains("\"kind\": \"check_box_item\""));
+        assert!(result.contains("\"depth\": 0"));
+        assert!(result.contains("\"checked\": false"));
+        assert!(result.contains("\"content\": \"Pending item\""));
+        assert!(result.contains("\"depth\": 1"));
+        assert!(result.contains("\"checked\": true"));
+        assert!(result.contains("\"content\": \"Completed item\""));
+    }
+
+    #[test]
     fn test_parse_with_code_block() {
         let result = parse("---\ntitle: \"Code Block Doc\"\n---\n```bash\n\n\necho \"test\"\n\n\n```").unwrap();
         assert!(result.contains("\"kind\": \"code_block\""));

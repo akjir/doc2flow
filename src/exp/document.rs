@@ -49,6 +49,15 @@ pub enum DocumentElement {
         /// List item text content.
         content: String,
     },
+    /// Checkbox list item element with indentation depth and checked status.
+    CheckBoxItem {
+        /// Nesting depth level based on leading spaces.
+        depth: usize,
+        /// Indicates whether the checkbox is checked.
+        checked: bool,
+        /// Checkbox item text content.
+        content: String,
+    },
     /// Fenced code block with optional language specifier and content.
     CodeBlock {
         /// Optional programming or markup language identifier (info string).
@@ -81,6 +90,15 @@ impl DocumentElement {
     pub fn bullet_list_item(depth: usize, content: impl Into<String>) -> Self {
         Self::BulletListItem {
             depth,
+            content: content.into(),
+        }
+    }
+
+    /// Creates a new checkbox list item document element with depth and checked state.
+    pub fn check_box_item(depth: usize, checked: bool, content: impl Into<String>) -> Self {
+        Self::CheckBoxItem {
+            depth,
+            checked,
             content: content.into(),
         }
     }
@@ -222,6 +240,29 @@ mod tests {
             DocumentElement::BulletListItem {
                 depth: 2,
                 content: "Nested item".into(),
+            }
+        );
+    }
+
+    #[test]
+    fn test_check_box_item_creation() {
+        let unchecked = DocumentElement::check_box_item(0, false, "Pending task");
+        assert_eq!(
+            unchecked,
+            DocumentElement::CheckBoxItem {
+                depth: 0,
+                checked: false,
+                content: "Pending task".into(),
+            }
+        );
+
+        let checked = DocumentElement::check_box_item(2, true, "Completed subtask");
+        assert_eq!(
+            checked,
+            DocumentElement::CheckBoxItem {
+                depth: 2,
+                checked: true,
+                content: "Completed subtask".into(),
             }
         );
     }

@@ -78,6 +78,35 @@ fn trim_matching_quotes(input: &str) -> &str {
     }
 }
 
+/// Parses a checkbox list item into its nesting depth, checked status, and inner content.
+fn parse_check_box_item(line: &str) -> Option<(usize, bool, &str)> {
+    let leading_spaces = line.bytes().take_while(|&b| b == b' ').count();
+    let rest = &line[leading_spaces..];
+
+    let after_dash = rest.strip_prefix('-')?;
+    let after_space = after_dash.strip_prefix(' ')?;
+    let depth = (leading_spaces + 1) / 2;
+
+    let (checked, after_box) = if let Some(after_box) = after_space.strip_prefix("[ ]") {
+        (false, after_box)
+    } else if let Some(after_box) = after_space
+        .strip_prefix("[x]")
+        .or_else(|| after_space.strip_prefix("[X]"))
+    {
+        (true, after_box)
+    } else {
+        return None;
+    };
+
+    if after_box.is_empty() {
+        Some((depth, checked, ""))
+    } else if let Some(content) = after_box.strip_prefix(' ') {
+        Some((depth, checked, content.trim()))
+    } else {
+        None
+    }
+}
+
 /// Parses a bullet list item into its nesting depth and inner content.
 fn parse_bullet_list_item(line: &str) -> Option<(usize, &str)> {
     let leading_spaces = line.bytes().take_while(|&b| b == b' ').count();
@@ -237,7 +266,9 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
 
                 let trimmed = effective_line.trim();
                 if !trimmed.is_empty() {
-                    if let Some((depth, content)) = parse_bullet_list_item(effective_line) {
+                    if let Some((depth, checked, content)) = parse_check_box_item(effective_line) {
+                        doc.push_body(DocumentElement::check_box_item(depth, checked, content));
+                    } else if let Some((depth, content)) = parse_bullet_list_item(effective_line) {
                         doc.push_body(DocumentElement::bullet_list_item(depth, content));
                     } else if trimmed.starts_with('>') {
                         let (shoutout_kind, content) = parse_shoutout_line(trimmed);
@@ -622,5 +653,69 @@ mod tests {
                 "fn main() {\n    println!(\"hi\");\n}"
             )
         );
+    }
+
+    #[test]
+    fn test_parse_check_box_item_depths_and_checked() {
+        let cases = [
+            ("- [ ] Root unchecked", Some((0, false, "Root unchecked"))),
+            ("- [x] Root checked", Some((0, true, "Root checked"))),
+            ("- [X] Root checked upper", Some((0, true, "Root checked upper"))),
+            ("- [ ]", Some((0, false, ""))),
+            ("- [ ] ", Some((0, false, ""))),
+            ("- [x]", Some((0, true, ""))),
+            ("- [x] ", Some((0, true, ""))),
+            ("- [X]", Some((0, true, ""))),
+            (" - [ ] Depth 1 (1 space)", Some((1, false, "Depth 1 (1 space)"))),
+            ("  - [ ] Depth 1 (2 spaces)", Some((1, false, "Depth 1 (2 spaces)"))),
+            ("   - [x] Depth 2 (3 spaces)", Some((2, true, "Depth 2 (3 spaces)"))),
+            ("    - [x] Depth 2 (4 spaces)", Some((2, true, "Depth 2 (4 spaces)"))),
+            ("     - [X] Depth 3 (5 spaces)", Some((3, true, "Depth 3 (5 spaces)"))),
+            ("      - [X] Depth 3 (6 spaces)", Some((3, true, "Depth 3 (6 spaces)"))),
+            ("       - [ ] Depth 4 (7 spaces)", Some((4, false, "Depth 4 (7 spaces)"))),
+            ("        - [x] Depth 4 (8 spaces)", Some((4, true, "Depth 4 (8 spaces)"))),
+            ("  - [ ]   Spaced task content   ", Some((1, false, "Spaced task content"))),
+            ("- [ ]NoSpace", None),
+            ("- [x]NoSpace", None),
+            ("- [y] Invalid char", None),
+            ("- [] Empty brackets", None),
+            ("- Plain bullet", None),
+            ("-- [ ] Invalid dash", None),
+        ];
+
+        for (input, expected) in cases {
+            assert_eq!(
+                parse_check_box_item(input),
+                expected,
+                "Mismatch for input: {input:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_check_box_items() {
+        let md = "---\ntitle: \"Checkboxes\"\n---\n- [ ] Task 1\n - [x] Subtask 1.1\n  - [X] Subtask 1.2\n   - [ ] Sub-subtask\n- [x] Task 2\n- [ ]";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 6);
+        assert_eq!(doc.body[0], DocumentElement::check_box_item(0, false, "Task 1"));
+        assert_eq!(doc.body[1], DocumentElement::check_box_item(1, true, "Subtask 1.1"));
+        assert_eq!(doc.body[2], DocumentElement::check_box_item(1, true, "Subtask 1.2"));
+        assert_eq!(doc.body[3], DocumentElement::check_box_item(2, false, "Sub-subtask"));
+        assert_eq!(doc.body[4], DocumentElement::check_box_item(0, true, "Task 2"));
+        assert_eq!(doc.body[5], DocumentElement::check_box_item(0, false, ""));
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_mixed_lists() {
+        let md = "---\ntitle: \"Mixed\"\n---\n- Bullet 1\n- [ ] Task 1\n  - Bullet nested\n  - [x] Task nested\n- Bullet 2";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 5);
+        assert_eq!(doc.body[0], DocumentElement::bullet_list_item(0, "Bullet 1"));
+        assert_eq!(doc.body[1], DocumentElement::check_box_item(0, false, "Task 1"));
+        assert_eq!(doc.body[2], DocumentElement::bullet_list_item(1, "Bullet nested"));
+        assert_eq!(doc.body[3], DocumentElement::check_box_item(1, true, "Task nested"));
+        assert_eq!(doc.body[4], DocumentElement::bullet_list_item(0, "Bullet 2"));
     }
 }
