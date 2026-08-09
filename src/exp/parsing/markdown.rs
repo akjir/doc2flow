@@ -1,8 +1,6 @@
 //! Markdown parser without external dependencies.
 
-use crate::exp::document::{
-    Document, DocumentElement, DocumentElementKind, ShoutoutElementKind,
-};
+use crate::exp::document::{Document, DocumentElement, ShoutoutElementKind};
 use crate::exp::error::{build_caret_annotation, DiagnosticError};
 use crate::exp::{Error, Result};
 
@@ -172,9 +170,9 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
                         let (shoutout_kind, content) = parse_shoutout_line(trimmed);
                         doc.push_body(DocumentElement::shoutout(shoutout_kind, content));
                     } else if is_plain_text(trimmed) {
-                        doc.push_body(DocumentElement::new(DocumentElementKind::Text, trimmed));
+                        doc.push_body(DocumentElement::text(trimmed));
                     } else {
-                        doc.push_body(DocumentElement::new(DocumentElementKind::Unknown, trimmed));
+                        doc.push_body(DocumentElement::unknown(trimmed));
                     }
                 }
             }
@@ -254,22 +252,19 @@ mod tests {
         );
         assert_eq!(doc.body.len(), 4);
 
-        assert_eq!(doc.body[0].kind, DocumentElementKind::Unknown);
-        assert_eq!(doc.body[0].content, "# Heading 1");
-
-        assert_eq!(doc.body[1].kind, DocumentElementKind::Text);
-        assert_eq!(doc.body[1].content, "This is plain text paragraph.");
-
+        assert_eq!(doc.body[0], DocumentElement::Unknown("# Heading 1".into()));
         assert_eq!(
-            doc.body[2].kind,
-            DocumentElementKind::Shoutout(crate::exp::document::ShoutoutElement::new(
-                ShoutoutElementKind::Note
-            ))
+            doc.body[1],
+            DocumentElement::Text("This is plain text paragraph.".into())
         );
-        assert_eq!(doc.body[2].content, "Callout note");
-
-        assert_eq!(doc.body[3].kind, DocumentElementKind::Text);
-        assert_eq!(doc.body[3].content, "Another text.");
+        assert_eq!(
+            doc.body[2],
+            DocumentElement::Shoutout {
+                kind: ShoutoutElementKind::Note,
+                content: "Callout note".into(),
+            }
+        );
+        assert_eq!(doc.body[3], DocumentElement::Text("Another text.".into()));
     }
 
     #[test]
@@ -279,10 +274,8 @@ mod tests {
 
         assert_eq!(doc.parameters.get("title").map(|s| s.as_str()), Some("Doc"));
         assert_eq!(doc.body.len(), 2);
-        assert_eq!(doc.body[0].kind, DocumentElementKind::Unknown);
-        assert_eq!(doc.body[0].content, "# Heading 1");
-        assert_eq!(doc.body[1].kind, DocumentElementKind::Text);
-        assert_eq!(doc.body[1].content, "Visible text");
+        assert_eq!(doc.body[0], DocumentElement::Unknown("# Heading 1".into()));
+        assert_eq!(doc.body[1], DocumentElement::Text("Visible text".into()));
     }
 
     #[test]
@@ -292,8 +285,7 @@ mod tests {
 
         assert!(doc.parameters.is_empty());
         assert_eq!(doc.body.len(), 1);
-        assert_eq!(doc.body[0].kind, DocumentElementKind::Text);
-        assert_eq!(doc.body[0].content, "Body text");
+        assert_eq!(doc.body[0], DocumentElement::Text("Body text".into()));
     }
 
     #[test]
@@ -303,12 +295,9 @@ mod tests {
 
         assert_eq!(doc.parameters.get("title").map(|s| s.as_str()), Some("Test"));
         assert_eq!(doc.body.len(), 3);
-        assert_eq!(doc.body[0].kind, DocumentElementKind::Text);
-        assert_eq!(doc.body[0].content, "Line 1");
-        assert_eq!(doc.body[1].kind, DocumentElementKind::Unknown);
-        assert_eq!(doc.body[1].content, "---");
-        assert_eq!(doc.body[2].kind, DocumentElementKind::Text);
-        assert_eq!(doc.body[2].content, "Line 2");
+        assert_eq!(doc.body[0], DocumentElement::Text("Line 1".into()));
+        assert_eq!(doc.body[1], DocumentElement::Unknown("---".into()));
+        assert_eq!(doc.body[2], DocumentElement::Text("Line 2".into()));
     }
 
     #[test]
@@ -367,10 +356,8 @@ mod tests {
 
         assert_eq!(doc.parameters.get("title").map(|s| s.as_str()), Some("CRLF"));
         assert_eq!(doc.body.len(), 2);
-        assert_eq!(doc.body[0].kind, DocumentElementKind::Unknown);
-        assert_eq!(doc.body[0].content, "# Heading");
-        assert_eq!(doc.body[1].kind, DocumentElementKind::Text);
-        assert_eq!(doc.body[1].content, "Text");
+        assert_eq!(doc.body[0], DocumentElement::Unknown("# Heading".into()));
+        assert_eq!(doc.body[1], DocumentElement::Text("Text".into()));
     }
 
     #[test]
@@ -426,10 +413,12 @@ mod tests {
 
         for (i, (kind, content)) in expected.into_iter().enumerate() {
             assert_eq!(
-                doc.body[i].kind,
-                DocumentElementKind::Shoutout(crate::exp::document::ShoutoutElement::new(kind))
+                doc.body[i],
+                DocumentElement::Shoutout {
+                    kind,
+                    content: content.into(),
+                }
             );
-            assert_eq!(doc.body[i].content, content);
         }
     }
 }

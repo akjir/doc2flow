@@ -1,6 +1,7 @@
 //! Development helper for AST inspection and JSON formatting.
 
-use crate::exp::document::{Document, DocumentElement, DocumentElementKind};
+use crate::exp::document::Document;
+use crate::exp::document::DocumentElement;
 use std::fmt::Write;
 
 /// Serializes a document model to a formatted JSON string for development inspection.
@@ -52,40 +53,50 @@ fn format_element(out: &mut String, elem: &DocumentElement, indent_level: usize)
     let child_indent = "  ".repeat(indent_level + 1);
 
     let _ = write!(out, "{indent}{{\n");
-    match elem.kind {
-        DocumentElementKind::Text => {
+    match elem {
+        DocumentElement::Text(content) => {
             let _ = write!(out, "{child_indent}\"kind\": \"text\",\n");
+            let _ = write!(out, "{child_indent}\"content\": \"");
+            escape_json_string(out, content);
+            let _ = write!(out, "\"\n");
         }
-        DocumentElementKind::Shoutout(shoutout) => {
+        DocumentElement::Shoutout { kind, content } => {
             let _ = write!(out, "{child_indent}\"kind\": \"shoutout\",\n");
             let _ = write!(
                 out,
                 "{child_indent}\"subkind\": \"{}\",\n",
-                shoutout.kind.as_str()
+                kind.as_str()
             );
+            let _ = write!(out, "{child_indent}\"content\": \"");
+            escape_json_string(out, content);
+            let _ = write!(out, "\"\n");
         }
-        DocumentElementKind::Unknown => {
+        DocumentElement::Unknown(content) => {
             let _ = write!(out, "{child_indent}\"kind\": \"unknown\",\n");
+            let _ = write!(out, "{child_indent}\"content\": \"");
+            escape_json_string(out, content);
+            let _ = write!(out, "\"\n");
         }
-    }
-
-    let _ = write!(out, "{child_indent}\"content\": \"");
-    escape_json_string(out, &elem.content);
-    let _ = write!(out, "\",\n");
-
-    let _ = write!(out, "{child_indent}\"children\": [");
-    if elem.children.is_empty() {
-        out.push_str("]\n");
-    } else {
-        out.push('\n');
-        for (j, child) in elem.children.iter().enumerate() {
-            format_element(out, child, indent_level + 2);
-            if j + 1 < elem.children.len() {
-                out.push(',');
+        DocumentElement::Section { title, children } => {
+            let _ = write!(out, "{child_indent}\"kind\": \"section\",\n");
+            let _ = write!(out, "{child_indent}\"title\": \"");
+            escape_json_string(out, title);
+            let _ = write!(out, "\",\n");
+            let _ = write!(out, "{child_indent}\"children\": [");
+            if children.is_empty() {
+                out.push_str("]\n");
+            } else {
+                out.push('\n');
+                for (j, child) in children.iter().enumerate() {
+                    format_element(out, child, indent_level + 2);
+                    if j + 1 < children.len() {
+                        out.push(',');
+                    }
+                    out.push('\n');
+                }
+                let _ = write!(out, "{child_indent}]\n");
             }
-            out.push('\n');
         }
-        let _ = write!(out, "{child_indent}]\n");
     }
 
     let _ = write!(out, "{indent}}}");
@@ -128,11 +139,13 @@ mod tests {
     fn test_document_to_json_with_elements() {
         let mut doc = Document::new();
         doc.insert_parameter("title", "Test");
-        let mut text_elem =
-            DocumentElement::new(DocumentElementKind::Text, "Hello \"world\"\nNew line");
-        let child_elem = DocumentElement::new(DocumentElementKind::Unknown, "Child");
-        text_elem.push_child(child_elem);
+        let text_elem = DocumentElement::text("Hello \"world\"\nNew line");
+        let section_elem = DocumentElement::section(
+            "Section Title",
+            vec![DocumentElement::unknown("Child")],
+        );
         doc.push_body(text_elem);
+        doc.push_body(section_elem);
 
         let json = document_to_json(&doc);
         assert!(json.contains("\"parameters\": {"));
@@ -141,6 +154,9 @@ mod tests {
         assert!(json.contains("\"body\": ["));
         assert!(json.contains("\"kind\": \"text\""));
         assert!(json.contains("\"content\": \"Hello \\\"world\\\"\\nNew line\""));
+        assert!(json.contains("\"kind\": \"section\""));
+        assert!(json.contains("\"title\": \"Section Title\""));
+        assert!(json.contains("\"children\": ["));
         assert!(json.contains("\"kind\": \"unknown\""));
         assert!(json.contains("\"content\": \"Child\""));
     }
