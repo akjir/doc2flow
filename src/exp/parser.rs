@@ -68,4 +68,12 @@ mod tests {
         assert!(result.contains("\"depth\": 1"));
         assert!(result.contains("\"content\": \"Nested item\""));
     }
+
+    #[test]
+    fn test_parse_with_code_block() {
+        let result = parse("---\ntitle: \"Code Block Doc\"\n---\n```bash\n\n\necho \"test\"\n\n\n```").unwrap();
+        assert!(result.contains("\"kind\": \"code_block\""));
+        assert!(result.contains("\"language\": \"bash\""));
+        assert!(result.contains("\"content\": \"echo \\\"test\\\"\""));
+    }
 }

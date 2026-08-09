@@ -49,6 +49,13 @@ pub enum DocumentElement {
         /// List item text content.
         content: String,
     },
+    /// Fenced code block with optional language specifier and content.
+    CodeBlock {
+        /// Optional programming or markup language identifier (info string).
+        language: Option<String>,
+        /// Code block text content.
+        content: String,
+    },
     /// Collapsible or structured section containing nested child elements.
     Section {
         /// Section heading or title.
@@ -74,6 +81,14 @@ impl DocumentElement {
     pub fn bullet_list_item(depth: usize, content: impl Into<String>) -> Self {
         Self::BulletListItem {
             depth,
+            content: content.into(),
+        }
+    }
+
+    /// Creates a new code block document element.
+    pub fn code_block(language: Option<impl Into<String>>, content: impl Into<String>) -> Self {
+        Self::CodeBlock {
+            language: language.map(Into::into),
             content: content.into(),
         }
     }
@@ -207,6 +222,27 @@ mod tests {
             DocumentElement::BulletListItem {
                 depth: 2,
                 content: "Nested item".into(),
+            }
+        );
+    }
+
+    #[test]
+    fn test_code_block_creation() {
+        let elem_with_lang = DocumentElement::code_block(Some("bash"), "echo 'hi'");
+        assert_eq!(
+            elem_with_lang,
+            DocumentElement::CodeBlock {
+                language: Some("bash".into()),
+                content: "echo 'hi'".into(),
+            }
+        );
+
+        let elem_without_lang = DocumentElement::code_block(None::<String>, "plain code");
+        assert_eq!(
+            elem_without_lang,
+            DocumentElement::CodeBlock {
+                language: None,
+                content: "plain code".into(),
             }
         );
     }

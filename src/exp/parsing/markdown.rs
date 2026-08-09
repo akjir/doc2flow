@@ -125,6 +125,29 @@ fn parse_shoutout_line(line: &str) -> (ShoutoutElementKind, &str) {
     }
 }
 
+/// Trims leading and trailing empty lines from a slice of code lines.
+fn trim_code_block_lines(lines: &[&str]) -> String {
+    let start = lines.iter().position(|line| !line.trim().is_empty());
+    let end = lines.iter().rposition(|line| !line.trim().is_empty());
+
+    match (start, end) {
+        (Some(start_idx), Some(end_idx)) if start_idx <= end_idx => {
+            let slice = &lines[start_idx..=end_idx];
+            let total_len =
+                slice.iter().map(|l| l.len()).sum::<usize>() + slice.len().saturating_sub(1);
+            let mut result = String::with_capacity(total_len);
+            for (i, line) in slice.iter().enumerate() {
+                if i > 0 {
+                    result.push('\n');
+                }
+                result.push_str(line);
+            }
+            result
+        }
+        _ => String::new(),
+    }
+}
+
 /// Parses Markdown content into a structured document model.
 ///
 /// # Errors
@@ -134,6 +157,10 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
     let mut doc = Document::new();
     let mut phase = FrontmatterPhase::SeekingStart;
     let mut comment_filter = CommentFilterState::new();
+
+    let mut in_code_block = false;
+    let mut code_block_lang: Option<String> = None;
+    let mut code_block_lines: Vec<&str> = Vec::new();
 
     let mut fm_start_line = 0;
     let mut fm_start_snippet = "";
@@ -159,12 +186,26 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
             continue;
         }
 
-        // 2. HTML comment filtering
+        // 2. Active code block collection phase (verbatim lines, no comment filtering)
+        if in_code_block {
+            let trimmed = line.trim_start();
+            if trimmed.starts_with("```") {
+                let content = trim_code_block_lines(&code_block_lines);
+                doc.push_body(DocumentElement::code_block(code_block_lang.take(), content));
+                code_block_lines.clear();
+                in_code_block = false;
+            } else {
+                code_block_lines.push(line);
+            }
+            continue;
+        }
+
+        // 3. HTML comment filtering
         let Some(effective_line) = comment_filter.process_line(line, &mut line_buf) else {
             continue;
         };
 
-        // 3. Frontmatter start detection or document body classification
+        // 4. Frontmatter start detection or document body classification
         match phase {
             FrontmatterPhase::SeekingStart => {
                 let trimmed = effective_line.trim();
@@ -181,6 +222,19 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
             }
             FrontmatterPhase::Inside => unreachable!(),
             FrontmatterPhase::Complete => {
+                let trimmed_start = effective_line.trim_start();
+                if trimmed_start.starts_with("```") {
+                    let info = trimmed_start.strip_prefix("```").unwrap_or("").trim();
+                    code_block_lang = if info.is_empty() {
+                        None
+                    } else {
+                        Some(info.to_string())
+                    };
+                    code_block_lines.clear();
+                    in_code_block = true;
+                    continue;
+                }
+
                 let trimmed = effective_line.trim();
                 if !trimmed.is_empty() {
                     if let Some((depth, content)) = parse_bullet_list_item(effective_line) {
@@ -196,6 +250,11 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
                 }
             }
         }
+    }
+
+    if in_code_block {
+        let content = trim_code_block_lines(&code_block_lines);
+        doc.push_body(DocumentElement::code_block(code_block_lang.take(), content));
     }
 
     // Final state validation
@@ -494,5 +553,74 @@ mod tests {
         assert_eq!(doc.body.len(), 2);
         assert_eq!(doc.body[0], DocumentElement::bullet_list_item(1, "Item 1"));
         assert_eq!(doc.body[1], DocumentElement::bullet_list_item(2, "Item 2"));
+    }
+
+    #[test]
+    fn test_trim_code_block_lines() {
+        let lines1 = ["", "", "Test", "", "Test 2", "", ""];
+        assert_eq!(trim_code_block_lines(&lines1), "Test\n\nTest 2");
+
+        let lines2 = ["   ", "\t", ""];
+        assert_eq!(trim_code_block_lines(&lines2), "");
+
+        let lines3 = ["", "  let x = 1;", "    let y = 2;", ""];
+        assert_eq!(
+            trim_code_block_lines(&lines3),
+            "  let x = 1;\n    let y = 2;"
+        );
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_code_block_with_language() {
+        let md = "---\ntitle: \"Code Doc\"\n---\n```bash\n# Init script\nd2f --init\n```";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 1);
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::code_block(Some("bash"), "# Init script\nd2f --init")
+        );
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_code_block_without_language() {
+        let md = "---\ntitle: \"Code Doc\"\n---\n```\n\nTest\n\nTest 2\n\n\n```";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 1);
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::code_block(None::<String>, "Test\n\nTest 2")
+        );
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_code_block_preserves_comments_and_formatting() {
+        let md = "---\ntitle: \"Code Doc\"\n---\n```html\n<!-- Inside code block -->\n<div>\n  <p>Hello</p>\n</div>\n```";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 1);
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::code_block(
+                Some("html"),
+                "<!-- Inside code block -->\n<div>\n  <p>Hello</p>\n</div>"
+            )
+        );
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_unclosed_code_block_at_eof() {
+        let md = "---\ntitle: \"Unclosed Code\"\n---\n```rust\nfn main() {\n    println!(\"hi\");\n}";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 1);
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::code_block(
+                Some("rust"),
+                "fn main() {\n    println!(\"hi\");\n}"
+            )
+        );
     }
 }

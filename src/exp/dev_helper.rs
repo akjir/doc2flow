@@ -61,25 +61,15 @@ fn format_element(out: &mut String, elem: &DocumentElement, indent_level: usize)
             escape_json_string(out, content);
             let _ = write!(out, "\"\n");
         }
-        DocumentElement::Text(content) => {
-            let _ = write!(out, "{child_indent}\"kind\": \"text\",\n");
-            let _ = write!(out, "{child_indent}\"content\": \"");
-            escape_json_string(out, content);
-            let _ = write!(out, "\"\n");
-        }
-        DocumentElement::Shoutout { kind, content } => {
-            let _ = write!(out, "{child_indent}\"kind\": \"shoutout\",\n");
-            let _ = write!(
-                out,
-                "{child_indent}\"subkind\": \"{}\",\n",
-                kind.as_str()
-            );
-            let _ = write!(out, "{child_indent}\"content\": \"");
-            escape_json_string(out, content);
-            let _ = write!(out, "\"\n");
-        }
-        DocumentElement::Unknown(content) => {
-            let _ = write!(out, "{child_indent}\"kind\": \"unknown\",\n");
+        DocumentElement::CodeBlock { language, content } => {
+            let _ = write!(out, "{child_indent}\"kind\": \"code_block\",\n");
+            if let Some(lang) = language {
+                let _ = write!(out, "{child_indent}\"language\": \"");
+                escape_json_string(out, lang);
+                let _ = write!(out, "\",\n");
+            } else {
+                let _ = write!(out, "{child_indent}\"language\": null,\n");
+            }
             let _ = write!(out, "{child_indent}\"content\": \"");
             escape_json_string(out, content);
             let _ = write!(out, "\"\n");
@@ -103,6 +93,29 @@ fn format_element(out: &mut String, elem: &DocumentElement, indent_level: usize)
                 }
                 let _ = write!(out, "{child_indent}]\n");
             }
+        }
+        DocumentElement::Shoutout { kind, content } => {
+            let _ = write!(out, "{child_indent}\"kind\": \"shoutout\",\n");
+            let _ = write!(
+                out,
+                "{child_indent}\"subkind\": \"{}\",\n",
+                kind.as_str()
+            );
+            let _ = write!(out, "{child_indent}\"content\": \"");
+            escape_json_string(out, content);
+            let _ = write!(out, "\"\n");
+        }
+        DocumentElement::Text(content) => {
+            let _ = write!(out, "{child_indent}\"kind\": \"text\",\n");
+            let _ = write!(out, "{child_indent}\"content\": \"");
+            escape_json_string(out, content);
+            let _ = write!(out, "\"\n");
+        }
+        DocumentElement::Unknown(content) => {
+            let _ = write!(out, "{child_indent}\"kind\": \"unknown\",\n");
+            let _ = write!(out, "{child_indent}\"content\": \"");
+            escape_json_string(out, content);
+            let _ = write!(out, "\"\n");
         }
     }
 
@@ -202,5 +215,25 @@ mod tests {
         assert!(json.contains("\"content\": \"Root item\""));
         assert!(json.contains("\"depth\": 1"));
         assert!(json.contains("\"content\": \"Child item\""));
+    }
+
+    #[test]
+    fn test_document_to_json_with_code_blocks() {
+        let mut doc = Document::new();
+        doc.push_body(DocumentElement::code_block(
+            Some("bash"),
+            "echo \"Hello world\"",
+        ));
+        doc.push_body(DocumentElement::code_block(
+            None::<String>,
+            "plain text block",
+        ));
+
+        let json = document_to_json(&doc);
+        assert!(json.contains("\"kind\": \"code_block\""));
+        assert!(json.contains("\"language\": \"bash\""));
+        assert!(json.contains("\"content\": \"echo \\\"Hello world\\\"\""));
+        assert!(json.contains("\"language\": null"));
+        assert!(json.contains("\"content\": \"plain text block\""));
     }
 }
