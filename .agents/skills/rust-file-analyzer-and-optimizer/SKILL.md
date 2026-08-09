@@ -41,7 +41,8 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 - **Error Paths:** Do NOT micro-optimize error paths with manual buffer allocs/`write!`. Use `format!` or static strings for clarity.
 
 ### 4: Idioms & Architecture
-- **Errors:** Stdlib + `Doc2FlowError`. Avoid complex custom `Enum`s for basic app errors.
+- **Layering:** `src/lib/` = generic project-agnostic library (NO domain logic). `src/core/` & `src/features/` consume it via `src/lib/mod.rs` API.
+- **Errors:** Stdlib + `Doc2FlowError` (`src/lib/error.rs`). Avoid complex custom `Enum`s for basic app errors.
 - **Panics:** `unwrap()`/`expect()` ONLY for true invariants with descriptive msgs. NEVER for runtime/user I/O.
 - **Safety:** ZERO `unsafe` blocks.
 - **Consts:** Feature constants local in `src/features/<name>/module.rs` (NO central dumpster). App metadata/limits ONLY in `src/core/constants.rs`.

@@ -1,6 +1,6 @@
 use crate::components;
-use crate::error::Result;
 use crate::features;
+use crate::lib::error::{Result, print_warning};
 use crate::locales::Locale;
 use pulldown_cmark::{
     html, CodeBlockKind, Event, HeadingLevel, Options, Parser as MarkdownParser, Tag, TagEnd,
@@ -372,7 +372,7 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
                         fm.numbered_sections = val_trimmed.eq_ignore_ascii_case("true");
                     }
                     _ => {
-                        crate::error::print_warning(&format!(
+                        print_warning(&format!(
                             "Unknown frontmatter option '{key}'. Refer to starter template ('d2f --init') for supported options."
                         ));
                         fm.custom.insert(key.to_string(), val_trimmed.to_string());

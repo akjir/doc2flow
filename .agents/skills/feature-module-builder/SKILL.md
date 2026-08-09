@@ -30,7 +30,7 @@ Follow these 5 steps sequentially:
    - Update `DocumentFeatures::is_feature_active` and `DocumentFeatures::to_features_string` if mapped to AST parser flags.
    - Update `tests::test_feature_registry_*` with updated count and feature name.
 4. **Enforce Directives (`AGENTS.md`):**
-   - **Rust:** Zero `unsafe`, zero-alloc hot path, canonical doc headers, Stdlib+`Doc2FlowError`, local constants in `module.rs`. DRY template contexts (`build_template_vars`), assembly pipeline parity (conditional components identical across pathways), NO `#[inline]` on heap allocs/IO.
+   - **Rust:** Zero `unsafe`, zero-alloc hot path, canonical doc headers, Stdlib+`Doc2FlowError` (`src/lib/error.rs`), local constants in `module.rs`. DRY template contexts (`build_template_vars`), assembly pipeline parity (conditional components identical across pathways), NO `#[inline]` on heap allocs/IO.
    - **TS:** Strict config, `window.d2f` namespace, `readonly`, discriminated unions, `satisfies`. BANNED: `export`/`import`, `any`, `as`, `!`, `enum`, `{}`/`Object`.
    - **CSS:** BEM classes, `:root` vars, ZERO external fonts/assets, print styles (`display:block!important`, natural page breaks, exact colors).
    - **Spec:** Sync `SPECIFICATION.md` tree and module description.

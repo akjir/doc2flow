@@ -1,7 +1,8 @@
 //! Dynamic `d2f_id` generator module for Doc2Flow.
 
 use crate::converter::Frontmatter;
-use crate::error::{Doc2FlowError, Result, print_warning};
+use crate::lib::error::{Doc2FlowError, Result, print_warning};
+use crate::lib::hasher::sha256_bytes;
 use std::borrow::Cow;
 
 const HEX_CHARS: &[u8; 16] = b"0123456789abcdef";
@@ -64,7 +65,7 @@ pub fn generate_d2f_id(frontmatter: &Frontmatter) -> Result<String> {
     composite_key.push(':');
     composite_key.push_str(&norm_date);
 
-    let digest = crate::hasher::sha256_bytes(composite_key.as_bytes());
+    let digest = sha256_bytes(composite_key.as_bytes());
 
     let mut result = String::with_capacity(23);
     result.push_str("d2f_id_");

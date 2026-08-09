@@ -1,21 +1,26 @@
 use crate::components::DEFAULT_LOGO_SVG;
-use crate::error::{DiagnosticError, Doc2FlowError, Result, print_warning};
-use crate::io;
-use crate::{guess_mime_type, to_base64_data_uri};
+use crate::lib::error::{DiagnosticError, Doc2FlowError, Result, build_caret_annotation, print_warning};
+use crate::lib::io;
+use crate::lib::mime::guess_mime_type;
+use crate::lib::uri::{file_to_data_uri, to_base64_data_uri};
 use image::{GenericImageView, ImageFormat, imageops::FilterType};
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
 
-pub use crate::to_base64_data_uri_into;
+pub use crate::lib::uri::to_base64_data_uri_into;
 
 /// Maximum allowed size in bytes for a local image embedded into HTML (250 KB).
 pub const MAX_IMAGE_SIZE_BYTES: u64 = 250 * 1024;
 
 /// Resolves a logo image file path relative to `base_dir` if specified and relative.
 pub fn resolve_logo_path(path: &Path, base_dir: Option<&Path>) -> PathBuf {
-    io::resolve_logo_path(path, base_dir)
+    io::resolve_path(path, base_dir).unwrap_or_else(|| match base_dir {
+        Some(base) if !path.is_absolute() => base.join(path),
+        _ => path.to_path_buf(),
+    })
 }
 
 /// Loads and processes a custom logo image (SVG or raster), or falls back to default.
@@ -77,7 +82,7 @@ pub fn load_logo(logo_path: Option<&Path>, base_dir: Option<&Path>) -> String {
             }
         }
     } else {
-        match crate::file_to_data_uri(&resolved_path) {
+        match file_to_data_uri(&resolved_path) {
             Ok(data_uri) => {
                 format!("<img src=\"{data_uri}\" alt=\"Logo\">")
             }
@@ -153,7 +158,7 @@ pub fn embed_images_as_base64_with_source(
         }
 
         let path = Path::new(src_val);
-        let Some(resolved_path) = resolve_image_path(path, base_dir) else {
+        let Some(resolved_path) = io::resolve_path(path, base_dir) else {
             out.push_str(tag_slice);
             cursor = img_end;
             continue;
@@ -257,7 +262,7 @@ fn resolve_or_encode_image(
         } else {
             let (line_no, col_no, line_snippet) = find_markdown_location(md_content, src_val);
             let f_name = file_name.unwrap_or("input.md");
-            Err(DiagnosticError::image_too_large(
+            Err(make_image_too_large_error(
                 f_name,
                 line_no,
                 col_no,
@@ -586,7 +591,7 @@ fn is_image_source(src: &str, base_dir: Option<&Path>) -> bool {
 
     if !src.starts_with("http://") && !src.starts_with("https://") && !src.starts_with("data:") {
         let path = Path::new(src);
-        let resolved = resolve_image_path(path, base_dir);
+        let resolved = io::resolve_path(path, base_dir);
         let is_img = resolved
             .as_deref()
             .map(guess_mime_type)
@@ -599,9 +604,36 @@ fn is_image_source(src: &str, base_dir: Option<&Path>) -> bool {
     true
 }
 
-/// Resolves an image path relative to base_dir or current working directory.
-fn resolve_image_path(path: &Path, base_dir: Option<&Path>) -> Option<PathBuf> {
-    io::resolve_image_path(path, base_dir)
+/// Constructs a compiler-style `DiagnosticError` for local images exceeding the size limit.
+fn make_image_too_large_error<'a>(
+    file_path: &'a str,
+    line_no: usize,
+    col_no: usize,
+    line_snippet: &'a str,
+    src_val: &'a str,
+    size_bytes: u64,
+) -> Doc2FlowError {
+    let size_kb = size_bytes as f64 / 1024.0;
+    let line_len = line_snippet.len().max(1);
+    let carets = build_caret_annotation(col_no, src_val.len(), line_len);
+
+    DiagnosticError {
+        message: Cow::Owned(format!(
+            "image '{src_val}' exceeds maximum allowed size of 250 KB ({size_kb:.1} KB)"
+        )),
+        file_path: Cow::Borrowed(file_path),
+        line_number: line_no,
+        col_number: col_no,
+        line_snippet: Cow::Borrowed(line_snippet),
+        annotation_carets: carets,
+        annotation_text: Cow::Owned(format!(
+            "local image size ({size_kb:.1} KB) exceeds 250 KB limit"
+        )),
+        help_text: Cow::Owned(format!(
+            "reduce image resolution or compress '{src_val}' below 250 KB before embedding."
+        )),
+    }
+    .into()
 }
 
 /// Skips XML processing instructions (`<? ... ?>`).
@@ -1169,5 +1201,23 @@ mod tests {
         assert!(cleaned.contains("]]>"));
         assert!(cleaned.contains("aria-label=\"Escaped \\\"Quote\\\" Shape\""));
         assert!(cleaned.contains("Sample Text"));
+    }
+
+    #[test]
+    fn test_make_image_too_large_error() {
+        let err = make_image_too_large_error(
+            "doc.md",
+            12,
+            16,
+            "![Diagram](images/large_photo.png)",
+            "images/large_photo.png",
+            300 * 1024,
+        );
+        let err_str = err.to_string();
+        assert!(err_str.contains("error: image 'images/large_photo.png' exceeds maximum allowed size of 250 KB (300.0 KB)"));
+        assert!(err_str.contains("--> doc.md:12:16"));
+        assert!(err_str.contains("12 | ![Diagram](images/large_photo.png)"));
+        assert!(err_str.contains("^^^^^^^^^^^^^^^^^^^ local image size (300.0 KB) exceeds 250 KB limit"));
+        assert!(err_str.contains("= help: reduce image resolution or compress 'images/large_photo.png' below 250 KB before embedding."));
     }
 }

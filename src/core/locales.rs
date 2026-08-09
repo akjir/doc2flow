@@ -1,5 +1,6 @@
 //! Internationalization module for Doc2Flow static UI terms.
 
+use crate::lib::error::{Doc2FlowError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -23,21 +24,18 @@ impl Locale {
     /// ```
     /// use doc2flow::locales::Locale;
     ///
-    /// let json = r#"{"lang_code": "en", "agent": "Agent"}"#;
+    /// let json = r#"{"lang_code": "en", "search": "Search"}"#;
     /// let locale = Locale::from_json(json);
-    /// assert_eq!(locale.get("agent"), "Agent");
+    /// assert_eq!(locale.get("search"), "Search");
     /// ```
     pub fn from_json(json_str: &str) -> Self {
-        Self::try_from_json(json_str).unwrap_or_else(|_| Locale {
-            lang_code: "en".to_string(),
-            entries: HashMap::new(),
-        })
+        Self::try_from_json(json_str).unwrap_or_default()
     }
 
     /// Fallibly parses a `Locale` from a JSON string.
-    pub fn try_from_json(json_str: &str) -> crate::error::Result<Self> {
+    pub fn try_from_json(json_str: &str) -> Result<Self> {
         let entries: HashMap<String, String> = serde_json::from_str(json_str)
-            .map_err(|e| crate::error::Doc2FlowError::Json(e.to_string()))?;
+            .map_err(|e| Doc2FlowError::Json(e.to_string()))?;
         let lang_code = entries
             .get("lang_code")
             .cloned()

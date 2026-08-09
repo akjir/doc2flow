@@ -1,10 +1,10 @@
-//! Error handling and diagnostic reporting module for Doc2Flow.
+//! Error handling and diagnostic reporting module.
 
 use std::borrow::Cow;
 use std::fmt::{self, Display, Formatter, Write};
 use std::path::PathBuf;
 
-/// Result type alias for Doc2Flow operations.
+/// Result type alias for library and application operations.
 pub type Result<T, E = Doc2FlowError> = std::result::Result<T, E>;
 
 /// Centralized domain error type for all Doc2Flow operations.
@@ -85,7 +85,7 @@ impl From<&DiagnosticError<'_>> for Doc2FlowError {
 ///
 /// ```no_run
 /// use std::fs::File;
-/// use doc2flow::core::error::IoResultExt;
+/// use doc2flow::lib::error::IoResultExt;
 ///
 /// let res = File::open("missing_file.txt").with_path("missing_file.txt");
 /// assert!(res.is_err());
@@ -113,7 +113,7 @@ const STATIC_CARETS: &str =
 /// # Examples
 ///
 /// ```
-/// use doc2flow::core::error::build_caret_annotation;
+/// use doc2flow::lib::error::build_caret_annotation;
 ///
 /// let carets = build_caret_annotation(1, 3, 10);
 /// assert_eq!(carets, "^^^");
@@ -184,7 +184,7 @@ impl Display for DiagnosticError<'_> {
 
 impl std::error::Error for DiagnosticError<'_> {}
 
-impl<'a> DiagnosticError<'a> {
+impl DiagnosticError<'_> {
     /// Formats the diagnostic error into a rustc-style string.
     pub fn render(&self) -> String {
         let line_len = self.line_number.checked_ilog10().unwrap_or(0) as usize + 1;
@@ -223,38 +223,6 @@ impl<'a> DiagnosticError<'a> {
 
         out
     }
-
-    /// Builder for local image size exceeding maximum limit errors.
-    pub fn image_too_large(
-        file_path: &'a str,
-        line_no: usize,
-        col_no: usize,
-        line_snippet: &'a str,
-        src_val: &'a str,
-        size_bytes: u64,
-    ) -> Doc2FlowError {
-        let size_kb = size_bytes as f64 / 1024.0;
-        let line_len = line_snippet.len().max(1);
-        let carets = build_caret_annotation(col_no, src_val.len(), line_len);
-
-        DiagnosticError {
-            message: Cow::Owned(format!(
-                "image '{src_val}' exceeds maximum allowed size of 250 KB ({size_kb:.1} KB)"
-            )),
-            file_path: Cow::Borrowed(file_path),
-            line_number: line_no,
-            col_number: col_no,
-            line_snippet: Cow::Borrowed(line_snippet),
-            annotation_carets: carets,
-            annotation_text: Cow::Owned(format!(
-                "local image size ({size_kb:.1} KB) exceeds 250 KB limit"
-            )),
-            help_text: Cow::Owned(format!(
-                "reduce image resolution or compress '{src_val}' below 250 KB before embedding."
-            )),
-        }
-        .into()
-    }
 }
 
 /// Prints a standardized warning message to stderr.
@@ -285,24 +253,6 @@ mod tests {
         assert!(rendered.contains("5 | test line"));
         assert!(rendered.contains("^^^ annotation text"));
         assert!(rendered.contains("= help: help text"));
-    }
-
-    #[test]
-    fn test_image_too_large_builder() {
-        let err = DiagnosticError::image_too_large(
-            "doc.md",
-            12,
-            16,
-            "![Diagram](images/large_photo.png)",
-            "images/large_photo.png",
-            300 * 1024,
-        );
-        let err_str = err.to_string();
-        assert!(err_str.contains("error: image 'images/large_photo.png' exceeds maximum allowed size of 250 KB (300.0 KB)"));
-        assert!(err_str.contains("--> doc.md:12:16"));
-        assert!(err_str.contains("12 | ![Diagram](images/large_photo.png)"));
-        assert!(err_str.contains("^^^^^^^^^^^^^^^^^^^ local image size (300.0 KB) exceeds 250 KB limit"));
-        assert!(err_str.contains("= help: reduce image resolution or compress 'images/large_photo.png' below 250 KB before embedding."));
     }
 
     #[test]
@@ -384,23 +334,6 @@ mod tests {
         assert_eq!(col_over_max.len(), 199 + 1);
         assert_eq!(&col_over_max[..199], " ".repeat(199));
         assert_eq!(&col_over_max[199..], "^");
-    }
-
-    #[test]
-    fn test_image_too_large_long_snippet_does_not_panic() {
-        let src_val = "a".repeat(150);
-        let long_snippet = format!("![Photo]({src_val})");
-        let err = DiagnosticError::image_too_large(
-            "doc.md",
-            100,
-            130,
-            &long_snippet,
-            &src_val,
-            500 * 1024,
-        );
-        let err_str = err.to_string();
-        assert!(err_str.contains("--> doc.md:100:130"));
-        assert!(err_str.contains("100 | "));
     }
 
     #[test]

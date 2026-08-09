@@ -110,7 +110,7 @@ pub fn sha256_bytes(data: &[u8]) -> [u8; 32] {
 /// # Examples
 ///
 /// ```
-/// use doc2flow::hasher::sha256;
+/// use doc2flow::lib::hasher::sha256;
 ///
 /// let digest = sha256(b"abc");
 /// assert_eq!(digest, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
@@ -123,31 +123,6 @@ pub fn sha256(data: &[u8]) -> String {
         s.push(HEX_CHARS[(b & 0x0f) as usize] as char);
     }
     s
-}
-
-/// Generates a compact `doc_id` for browser `localStorage` in the format `"doc_<HEX_PREFIX>"`.
-///
-/// Computes the SHA-256 hash of the input string and returns the prefix `"doc_"`
-/// followed by the first 16 hexadecimal characters of the hash.
-///
-/// # Examples
-///
-/// ```
-/// use doc2flow::hasher::generate_doc_id;
-///
-/// let doc_id = generate_doc_id("test_input");
-/// assert!(doc_id.starts_with("doc_"));
-/// assert_eq!(doc_id.len(), 20);
-/// ```
-pub fn generate_doc_id(input: &str) -> String {
-    let digest = sha256_bytes(input.as_bytes());
-    let mut doc_id = String::with_capacity(20);
-    doc_id.push_str("doc_");
-    for b in &digest[..8] {
-        doc_id.push(HEX_CHARS[(b >> 4) as usize] as char);
-        doc_id.push(HEX_CHARS[(b & 0x0f) as usize] as char);
-    }
-    doc_id
 }
 
 #[cfg(test)]
@@ -182,16 +157,6 @@ mod tests {
     }
 
     #[test]
-    fn test_generate_doc_id() {
-        let doc_id = generate_doc_id("sample_document");
-        assert!(doc_id.starts_with("doc_"));
-        assert_eq!(doc_id.len(), 20);
-        // Verify exact 16-hex suffix matches sha256("sample_document")[..16]
-        let full_hash = sha256(b"sample_document");
-        assert_eq!(doc_id, format!("doc_{}", &full_hash[..16]));
-    }
-
-    #[test]
     fn test_sha256_padding_boundary_55_bytes() {
         let data = b"1234567890123456789012345678901234567890123456789012345";
         assert_eq!(data.len(), 55);
@@ -201,7 +166,6 @@ mod tests {
 
     #[test]
     fn test_sha256_padding_overflow_56_bytes() {
-        // 56 bytes + 1 byte (0x80) + 8 bytes (len) = 65 bytes > 64 -> forces second 64-byte block
         let data = b"12345678901234567890123456789012345678901234567890123456";
         assert_eq!(data.len(), 56);
         let digest = sha256(data);
@@ -221,16 +185,6 @@ mod tests {
         let data = vec![b'a'; 1000];
         let digest = sha256(&data);
         assert_eq!(digest.len(), 64);
-        // Multi-call determinism check
         assert_eq!(sha256(&data), digest);
     }
-
-    #[test]
-    fn test_generate_doc_id_determinism() {
-        let id1 = generate_doc_id("test_doc_id_input");
-        let id2 = generate_doc_id("test_doc_id_input");
-        assert_eq!(id1, id2);
-        assert_ne!(id1, generate_doc_id("different_input"));
-    }
 }
-

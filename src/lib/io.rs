@@ -1,6 +1,6 @@
-//! Centralized filesystem and I/O abstraction module for Doc2Flow.
+//! Centralized filesystem and I/O abstraction module.
 
-use crate::error::{IoResultExt, Result};
+use super::error::{IoResultExt, Result};
 use std::fs;
 use std::io::{IsTerminal, Write};
 use std::path::{Path, PathBuf};
@@ -10,14 +10,14 @@ use std::path::{Path, PathBuf};
 /// # Examples
 ///
 /// ```no_run
-/// use doc2flow::io::read_file_to_string;
+/// use doc2flow::lib::io::read_file_to_string;
 ///
 /// let content = read_file_to_string("document.md").unwrap();
 /// ```
 ///
 /// # Errors
 ///
-/// Returns [`Doc2FlowError::Io`] if the file cannot be opened or read.
+/// Returns [`Doc2FlowError::Io`](crate::lib::error::Doc2FlowError::Io) if the file cannot be opened or read.
 pub fn read_file_to_string(path: impl AsRef<Path>) -> Result<String> {
     let path = path.as_ref();
     fs::read_to_string(path).with_path(path)
@@ -28,14 +28,14 @@ pub fn read_file_to_string(path: impl AsRef<Path>) -> Result<String> {
 /// # Examples
 ///
 /// ```no_run
-/// use doc2flow::io::read_file_bytes;
+/// use doc2flow::lib::io::read_file_bytes;
 ///
 /// let bytes = read_file_bytes("image.png").unwrap();
 /// ```
 ///
 /// # Errors
 ///
-/// Returns [`Doc2FlowError::Io`] if the file cannot be opened or read.
+/// Returns [`Doc2FlowError::Io`](crate::lib::error::Doc2FlowError::Io) if the file cannot be opened or read.
 pub fn read_file_bytes(path: impl AsRef<Path>) -> Result<Vec<u8>> {
     let path = path.as_ref();
     fs::read(path).with_path(path)
@@ -46,14 +46,14 @@ pub fn read_file_bytes(path: impl AsRef<Path>) -> Result<Vec<u8>> {
 /// # Examples
 ///
 /// ```no_run
-/// use doc2flow::io::write_file;
+/// use doc2flow::lib::io::write_file;
 ///
 /// write_file("output.html", "<h1>Header</h1>").unwrap();
 /// ```
 ///
 /// # Errors
 ///
-/// Returns [`Doc2FlowError::Io`] if the file cannot be created or written to.
+/// Returns [`Doc2FlowError::Io`](crate::lib::error::Doc2FlowError::Io) if the file cannot be created or written to.
 pub fn write_file(path: impl AsRef<Path>, content: impl AsRef<[u8]>) -> Result<()> {
     let path = path.as_ref();
     fs::write(path, content).with_path(path)
@@ -64,14 +64,14 @@ pub fn write_file(path: impl AsRef<Path>, content: impl AsRef<[u8]>) -> Result<(
 /// # Examples
 ///
 /// ```no_run
-/// use doc2flow::io::get_file_size;
+/// use doc2flow::lib::io::get_file_size;
 ///
 /// let size = get_file_size("large_image.png").unwrap();
 /// ```
 ///
 /// # Errors
 ///
-/// Returns [`Doc2FlowError::Io`] if metadata cannot be queried for the target path.
+/// Returns [`Doc2FlowError::Io`](crate::lib::error::Doc2FlowError::Io) if metadata cannot be queried for the target path.
 pub fn get_file_size(path: impl AsRef<Path>) -> Result<u64> {
     let path = path.as_ref();
     fs::metadata(path)
@@ -84,7 +84,7 @@ pub fn get_file_size(path: impl AsRef<Path>) -> Result<u64> {
 /// # Examples
 ///
 /// ```
-/// use doc2flow::io::path_exists;
+/// use doc2flow::lib::io::path_exists;
 ///
 /// assert!(!path_exists("non_existent_file_xyz.txt"));
 /// ```
@@ -93,44 +93,20 @@ pub fn path_exists(path: impl AsRef<Path>) -> bool {
     path.as_ref().exists()
 }
 
-/// Resolves a relative path against an optional base directory using platform-native `PathBuf`.
+/// Resolves a file path against an optional base directory, returning `Some(PathBuf)` if the file exists.
+///
+/// If `path` is absolute, checks if it exists.
+/// If `path` is relative, first checks `base_dir.join(path)` if `base_dir` is provided,
+/// then falls back to checking `path` relative to the current working directory.
 ///
 /// # Examples
 ///
 /// ```
-/// use std::path::Path;
-/// use doc2flow::io::resolve_relative_path;
+/// use doc2flow::lib::io::resolve_path;
 ///
-/// let resolved = resolve_relative_path("img.png", Some("docs"));
-/// assert_eq!(resolved, Path::new("docs").join("img.png"));
+/// assert_eq!(resolve_path("non_existent_file_xyz.txt", None::<&str>), None);
 /// ```
-#[inline]
-pub fn resolve_relative_path(
-    path: impl AsRef<Path>,
-    base_dir: Option<impl AsRef<Path>>,
-) -> PathBuf {
-    let path = path.as_ref();
-    if path.is_absolute() {
-        path.to_path_buf()
-    } else {
-        match base_dir {
-            Some(base) => base.as_ref().join(path),
-            None => path.to_path_buf(),
-        }
-    }
-}
-
-/// Resolves an image path relative to an optional base directory, returning `Some` if the file exists.
-///
-/// # Examples
-///
-/// ```
-/// use doc2flow::io::resolve_image_path;
-///
-/// assert_eq!(resolve_image_path("non_existent.png", None::<&str>), None);
-/// ```
-#[inline]
-pub fn resolve_image_path(
+pub fn resolve_path(
     path: impl AsRef<Path>,
     base_dir: Option<impl AsRef<Path>>,
 ) -> Option<PathBuf> {
@@ -151,36 +127,11 @@ pub fn resolve_image_path(
     path_exists(path).then(|| path.to_path_buf())
 }
 
-/// Resolves a logo file path against `base_dir` or working directory, checking file existence.
-///
-/// Returns the prioritized existing path combination or defaults to joining with `base_dir`.
-///
-/// # Examples
-///
-/// ```
-/// use std::path::Path;
-/// use doc2flow::io::resolve_logo_path;
-///
-/// let resolved = resolve_logo_path("logo.svg", None::<&str>);
-/// assert_eq!(resolved, Path::new("logo.svg"));
-/// ```
-#[inline]
-pub fn resolve_logo_path(
-    path: impl AsRef<Path>,
-    base_dir: Option<impl AsRef<Path>>,
-) -> PathBuf {
-    let path = path.as_ref();
-    let base_dir = base_dir.as_ref().map(|b| b.as_ref());
-
-    resolve_image_path(path, base_dir)
-        .unwrap_or_else(|| resolve_relative_path(path, base_dir))
-}
-
 /// Recursively creates a directory and all missing parent directories.
 ///
 /// # Errors
 ///
-/// Returns [`Doc2FlowError::Io`] if directory creation fails.
+/// Returns [`Doc2FlowError::Io`](crate::lib::error::Doc2FlowError::Io) if directory creation fails.
 pub fn create_dir_all(path: impl AsRef<Path>) -> Result<()> {
     let path = path.as_ref();
     fs::create_dir_all(path).with_path(path)
@@ -190,7 +141,7 @@ pub fn create_dir_all(path: impl AsRef<Path>) -> Result<()> {
 ///
 /// # Errors
 ///
-/// Returns [`Doc2FlowError::Io`] if directory deletion fails.
+/// Returns [`Doc2FlowError::Io`](crate::lib::error::Doc2FlowError::Io) if directory deletion fails.
 pub fn remove_dir_all(path: impl AsRef<Path>) -> Result<()> {
     let path = path.as_ref();
     fs::remove_dir_all(path).with_path(path)
@@ -218,7 +169,7 @@ pub fn prompt_user_yes_no(prompt_msg: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::error::Doc2FlowError;
+    use crate::lib::error::Doc2FlowError;
 
     struct TestTempDir {
         path: PathBuf,
@@ -286,20 +237,17 @@ mod tests {
     }
 
     #[test]
-    fn test_resolve_relative_and_logo_path() {
+    fn test_resolve_path() {
         let temp_dir = TestTempDir::new("path_res");
-        let target_file = temp_dir.path().join("sub/logo.svg");
+        let target_file = temp_dir.path().join("sub/resource.svg");
         create_dir_all(target_file.parent().unwrap()).unwrap();
         write_file(&target_file, "<svg></svg>").unwrap();
 
-        let rel_path = "sub/logo.svg";
-        let resolved_logo = resolve_logo_path(rel_path, Some(temp_dir.path()));
-        assert_eq!(resolved_logo, target_file);
+        let rel_path = "sub/resource.svg";
+        let resolved = resolve_path(rel_path, Some(temp_dir.path()));
+        assert_eq!(resolved, Some(target_file));
 
-        let resolved_img = resolve_image_path(rel_path, Some(temp_dir.path()));
-        assert_eq!(resolved_img, Some(target_file));
-
-        let non_existent_img = resolve_image_path("missing.png", Some(temp_dir.path()));
-        assert_eq!(non_existent_img, None);
+        let non_existent = resolve_path("missing.png", Some(temp_dir.path()));
+        assert_eq!(non_existent, None);
     }
 }

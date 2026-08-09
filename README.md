@@ -229,23 +229,21 @@ doc2flow/
 │   ├── tsconfig.json     # TypeScript configuration
 │   └── src/
 │       └── core/         # Storage, items, sections, fields, export, search
-├── src/                  # Rust CLI backend engine
-│   ├── main.rs           # CLI entrypoint & argument parsing
-│   ├── lib.rs            # Module declarations & exports
+├── src/                  # Rust CLI backend
+│   ├── main.rs           # CLI entry point and argument parsing
+│   ├── lib.rs            # Library root interface
+│   ├── lib/              # Generic project-agnostic library subsystem (I/O, Error, Base64, Hasher, MIME, URI)
 │   ├── core/             # Core architecture, engine, stylesheets and TS runtime
 │   │   ├── mod.rs        # Core module exports
+│   │   ├── builder.rs    # HTML Assembler and template engine
 │   │   ├── components.rs # Zero-allocation HTML UI generators
 │   │   ├── constants.rs  # Global system metadata and core defaults
 │   │   ├── converter.rs  # Markdown AST parser & feature detector
-│   │   ├── error.rs      # Compiler-style diagnostic reporting
 │   │   ├── feature.rs    # Feature trait and DocumentContext detection
-│   │   ├── generator.rs  # HTML Assembler and template engine
 │   │   ├── id.rs         # Document identifier (d2f_id) generator
 │   │   ├── image.rs      # Base64 embedding & WebP auto-scaling
-│   │   ├── io.rs         # Centralized filesystem I/O operations
 │   │   ├── locales.rs    # Locale loader & translation engine
 │   │   ├── parsing/      # CLI argument parsing and grammar
-│   │   ├── utils/        # Base64, hasher, MIME & Data-URI utilities
 │   │   └── web/          # Core web frontend runtime and stylesheets
 │   └── features/         # Vertical slice feature modules
 ├── tests/                # Integration test suite & showcase fixtures

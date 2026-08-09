@@ -120,8 +120,10 @@ d2f.exe --version
 
 ## 5. Module Architecture & Subsystem Decoupling
 
-* **Filesystem & I/O Isolation (`src/io.rs`):** Exclusive module for filesystem interactions, file reading/writing, path resolution (`Path`, `PathBuf`), and asset retrieval. Direct `std::fs`/`std::io` calls prohibited in processing modules.
-* **Pure In-Memory Processing Core:** Core modules (`src/core/converter.rs`, `src/core/builder.rs`, `src/core/components.rs`, `src/core/locales.rs`, `src/core/utils/hasher.rs`, `src/core/id.rs`) perform pure in-memory string/AST data transformations decoupled from disk I/O.
+* **Project-Agnostic Library Layer (`src/lib/`):** Dedicated generic subsystem (`base64`, `error`, `hasher`, `io`, `mime`, `uri`) completely decoupled from Doc2Flow domain logic. Reusable across arbitrary projects. `src/core/` and `src/features/` consume it through the centralized API exported by `src/lib/mod.rs`.
+* **Filesystem & I/O Isolation (`src/lib/io.rs`):** Exclusive module for generic filesystem interactions, file reading/writing, path resolution (`resolve_path`), and asset retrieval. Direct `std::fs`/`std::io` calls prohibited in processing modules.
+* **Pure In-Memory Processing Core:** Core modules (`src/core/converter.rs`, `src/core/builder.rs`, `src/core/components.rs`, `src/core/locales.rs`, `src/core/id.rs`) perform pure in-memory string/AST data transformations decoupled from disk I/O.
+* **Domain Image & Logo Processing (`src/core/image.rs`):** Image optimization, SVG sanitization, WebP downscaling, and domain-specific logo path resolution (`resolve_logo_path`).
 * **Strict Modular Feature Isolation (HTML, CSS, TS/JS):**
   * Extension features (`code`, `header`, `image`, `table`, `tasks`) are fully decoupled and zero-knowledge of each other.
   * Each feature maintains dedicated HTML components, TypeScript and CSS modules within its vertical slice directory (`src/features/<name>/`). Compiled JS resides directly in `src/features/<name>/<name>.js`.
@@ -132,7 +134,7 @@ d2f.exe --version
 * **Constants Architecture & Encapsulation Rules:**
   * **Feature-Specific Constants (Strict Encapsulation):** Constants used exclusively by an individual feature (e.g. CSS class names, frontmatter keys, selector strings, feature-internal default values) MUST be defined directly in the respective `src/features/<feature_name>/module.rs` (or private submodules). Distributing feature constants across central files or dumpsters is strictly prohibited to eliminate tight coupling.
   * **Global System Constants (`src/core/constants.rs`):** Reserved exclusively for application-wide, feature-independent system metadata and global core defaults (e.g. `APP_NAME`, `CLI_BANNER`, `APP_VERSION`, `REPOSITORY_URL`, `LICENSE_TERMS`, `LICENSE_URL`, global system/I/O limits).
-* **Centralized Diagnostic Error Handling (`src/error.rs`):** Runtime, I/O, and syntax errors map to domain error types (`Doc2FlowError`) with compiler-style `stderr` warnings (`print_warning`).
+* **Centralized Diagnostic Error Handling (`src/lib/error.rs`):** Runtime, I/O, and syntax errors map to domain error types (`Doc2FlowError`) with compiler-style `stderr` warnings (`print_warning`).
 
 ---
 
@@ -144,7 +146,7 @@ d2f.exe --version
   * Format: `v<MAJOR>.<MINOR>.<PATCH>+<COMMIT_COUNT>.<COMMIT_HASH>[.dev]`
   * Exported as `D2F_FULL_VERSION` compiler env var; embedded in `d2f --version` output, HTML `<meta name="generator">` tags, and header comments.
 * **Binary Size:** Executable size target `< 10 MB` using stripping, LTO, and release optimizations.
-* **Core Dependencies:** `pulldown-cmark`, `serde`, `serde_json`, `image` (custom Base64/MIME helpers in `src/utils.rs`).
+* **Core Dependencies:** `pulldown-cmark`, `serde`, `serde_json`, `image` (custom Base64/MIME helpers in `src/lib/`).
 * **Error Handling & Testing:** Zero panics on invalid paths/inputs; human-readable diagnostic error messages on `stderr`. Unit and integration test suite coverage.
 
 ---
@@ -170,25 +172,26 @@ doc2flow/
 ├── src/                      # Rust CLI backend
 │   ├── main.rs               # CLI entry point and argument parsing
 │   ├── lib.rs                # Module declarations and library interface
+│   ├── lib/                  # Generic, project-agnostic library subsystem
+│   │   ├── mod.rs            # Library module root and clean API exports
+│   │   ├── base64.rs         # RFC 4648 Base64 encoding routines
+│   │   ├── error.rs          # Diagnostic error types and reporting
+│   │   ├── hasher.rs         # SHA-256 cryptographic hash generator
+│   │   ├── io.rs             # Central filesystem and asset IO
+│   │   ├── mime.rs           # Extension-based MIME type inference
+│   │   └── uri.rs            # Base64 Data URI formatting and file conversion
 │   ├── core/                 # Core architecture, engine, stylesheets and TS runtime
 │   │   ├── mod.rs            # Core module exports
 │   │   ├── builder.rs        # HTML Assembler and template engine
 │   │   ├── components.rs     # Core-universal HTML UI component generators
 │   │   ├── constants.rs      # Global system metadata, CLI branding, and core defaults
 │   │   ├── converter.rs      # Markdown AST parser and feature detector interface
-│   │   ├── error.rs          # Diagnostic error types and reporting
 │   │   ├── feature.rs        # Feature trait and DocumentContext detection
 │   │   ├── id.rs             # Document identifier generation
 │   │   ├── image.rs          # Image optimization, WebP scaling and Base64 embedding
-│   │   ├── io.rs             # Central filesystem and asset IO
 │   │   ├── locales.rs        # Locale loader and translation engine
 │   │   ├── parsing/          # CLI argument parsing and grammar
 │   │   │   └── arguments.rs  # Zero-dependency CLI argument parsing and validation
-│   │   ├── utils/            # Base64 encoding, MIME type guessing, and Data-URI conversion
-│   │   │   ├── base64.rs     # RFC 4648 Base64 encoding routines
-│   │   │   ├── hasher.rs     # SHA-256 cryptographic hash generator
-│   │   │   ├── mime.rs       # Extension-based MIME type inference
-│   │   │   └── uri.rs        # Base64 Data URI formatting and file conversion
 │   │   └── web/              # Core web frontend runtime and stylesheets
 │   │       ├── comments.ts   # Inline check-item comment boxes and persistence
 │   │       ├── core.ts       # Central core module, bundle entry point, and reset handler registry
