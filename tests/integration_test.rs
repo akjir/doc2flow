@@ -813,7 +813,7 @@ header: "flex"
     assert!(full_doc.contains(".doc-header .header-top"));
 
     // Verify features meta contains header
-    assert!(full_doc.contains(r#"<meta name="features" content="core, code, tasks, header">"#));
+    assert!(full_doc.contains(r#"<meta name="features" content="core, code, fields, header, tasks">"#));
 }
 
 #[test]

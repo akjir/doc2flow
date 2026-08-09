@@ -4,13 +4,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+167.a4a7f6f.dev">
-  <meta name="version" content="0.9.4+167.a4a7f6f.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+168.20a045f.dev">
+  <meta name="version" content="0.9.4+168.20a045f.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-09T13:54:21Z">
+  <meta name="dcterms.created" content="2026-08-09T15:37:55Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
-  <meta name="features" content="core, code, tasks, images, tables">
+  <meta name="features" content="core, code, fields, images, tables, tasks">
   <title>Doc2Flow English Showcase</title>
   <style>
     /* ==========================================================================
@@ -1726,7 +1726,7 @@ mark.d2f-highlight {
     window.d2f.document = window.d2f.document || {};
     window.d2f.document.id = 'd2f_id_c9c539743b5bb460';
     window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {"callout_caution":"Caution","name_placeholder":"Name","export_pdf":"Export as PDF","var_table_variable":"Variable","callout_warning":"Warning","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","var_table_value":"Value","date":"Date","progress_template":"{done} of {total} tasks completed ({pct}%)","callout_note":"Note","callout_tip":"Tip","copy_code":"Copy code","save_state":"Save State","var_table_title":"Variables","reset_all":"Reset","setup_in_progress":"Process in Progress","copied":"Copied!","date_placeholder":"MM/DD/YYYY","sections_visible":"{visible} / {total} sections visible","setup_completed":"Process Completed","callout_important":"Important","lang_code":"en","signature_date":"Date","comment_placeholder":"Add a comment...","search_placeholder":"Search... (Ctrl+K)","loading":"Loading..."};
+    window.d2f.lang.dictionary = {"callout_note":"Note","callout_warning":"Warning","export_pdf":"Export as PDF","callout_caution":"Caution","date":"Date","lang_code":"en","progress_template":"{done} of {total} tasks completed ({pct}%)","comment_placeholder":"Add a comment...","search_placeholder":"Search... (Ctrl+K)","sections_visible":"{visible} / {total} sections visible","var_table_value":"Value","name_placeholder":"Name","var_table_variable":"Variable","loading":"Loading...","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","reset_all":"Reset","callout_important":"Important","date_placeholder":"MM/DD/YYYY","setup_in_progress":"Process in Progress","signature_date":"Date","copy_code":"Copy code","setup_completed":"Process Completed","var_table_title":"Variables","copied":"Copied!","callout_tip":"Tip","save_state":"Save State"};
     (() => {
   // ../src/core/web/storage.ts
   var saveHandlers = /* @__PURE__ */ new Set();
@@ -2154,119 +2154,6 @@ mark.d2f-highlight {
     });
   }
 
-  // ../src/core/web/fields.ts
-  function formatDateFromTemplate(now, template) {
-    if (!template || typeof template !== "string")
-      return null;
-    const tokenMap = {
-      "YYYY": String(now.getFullYear()),
-      "YY": String(now.getFullYear()).slice(-2),
-      "MM": String(now.getMonth() + 1).padStart(2, "0"),
-      "DD": String(now.getDate()).padStart(2, "0"),
-      "M": String(now.getMonth() + 1),
-      "D": String(now.getDate())
-    };
-    const regex = /YYYY|YY|MM|DD|M|D/gi;
-    let hasMatches = false;
-    const formatted = template.replace(regex, (match) => {
-      hasMatches = true;
-      const key = match.toUpperCase();
-      const value = tokenMap[key];
-      return value ?? match;
-    });
-    return hasMatches && !/[A-Za-z]/.test(formatted) ? formatted : null;
-  }
-  function getTodayFormatted() {
-    const i18n = window.d2f.lang.dictionary;
-    const now = /* @__PURE__ */ new Date();
-    try {
-      const fromTemplate = formatDateFromTemplate(now, i18n.date_placeholder);
-      if (fromTemplate)
-        return fromTemplate;
-    } catch (e) {
-      console.warn("Failed to format date", e);
-    }
-    return now.toLocaleDateString(navigator.language || void 0);
-  }
-  function checkDateShortcut(input) {
-    if (typeof input.value !== "string")
-      return false;
-    if (input.value.trim().toLowerCase() === "today") {
-      input.value = getTodayFormatted();
-      return true;
-    }
-    return false;
-  }
-  function saveFields() {
-    const fields = {};
-    document.querySelectorAll("input.persistent-field").forEach((input, index) => {
-      const key = input.id || "f_" + String(index);
-      fields[key] = input.value;
-    });
-    return { fields };
-  }
-  function loadFields(state) {
-    const fieldsData = state["fields"];
-    if (window.d2f.utils.isRecord(fieldsData)) {
-      document.querySelectorAll("input.persistent-field").forEach((input, index) => {
-        const key = input.id || "f_" + String(index);
-        const val = fieldsData[key];
-        if (typeof val === "string") {
-          input.value = val;
-          input.setAttribute("value", val);
-        }
-      });
-    }
-    return false;
-  }
-  function resetFields() {
-    document.querySelectorAll(
-      "input, textarea, select"
-    ).forEach((el) => {
-      if (el.id === "search-input" || el.classList.contains("search-input"))
-        return;
-      if (el instanceof HTMLInputElement) {
-        if (el.type === "checkbox" || el.type === "radio") {
-          el.checked = false;
-          el.removeAttribute("checked");
-        } else {
-          el.value = "";
-          el.removeAttribute("value");
-        }
-      } else if (el instanceof HTMLTextAreaElement) {
-        el.value = "";
-        el.textContent = "";
-        el.removeAttribute("value");
-      } else if (el instanceof HTMLSelectElement) {
-        el.selectedIndex = 0;
-      }
-    });
-  }
-  if (typeof window !== "undefined") {
-    window.d2f.storage.registerSaveHandler(saveFields);
-    window.d2f.storage.registerLoadHandler(loadFields);
-    document.addEventListener("DOMContentLoaded", () => {
-      window.d2f.core.registerResetHandler(resetFields);
-    });
-    const saveStateDebounced = window.d2f.utils.debounce(() => window.d2f.storage.saveState(), 300);
-    const handleInputOrChange = (e) => {
-      const target = e.target;
-      if (!(target instanceof HTMLInputElement))
-        return;
-      if (target.classList.contains("persistent-field")) {
-        target.setAttribute("value", target.value);
-        saveStateDebounced();
-      }
-      if (target.matches('input[id*="date"], input[name*="date"], input.date-field')) {
-        checkDateShortcut(target);
-        target.setAttribute("value", target.value);
-        saveStateDebounced();
-      }
-    };
-    document.addEventListener("input", handleInputOrChange);
-    document.addEventListener("change", handleInputOrChange);
-  }
-
   // ../src/core/web/search.ts
   var preSearchCollapsedState = null;
   var lastMatchedSectionIds = /* @__PURE__ */ new Set();
@@ -2675,6 +2562,79 @@ mark.d2f-highlight {
       initCopyButtons();
       setupVariableInputAutoSelect();
       setupVariableInputListeners();
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", init);
+    } else {
+      init();
+    }
+  })();
+})();
+
+(() => {
+  // ../src/features/fields/fields.ts
+  (() => {
+    function saveFields() {
+      const fields = {};
+      document.querySelectorAll("input.persistent-field").forEach((input, index) => {
+        const key = input.id || "f_" + String(index);
+        fields[key] = input.value;
+      });
+      return { fields };
+    }
+    function loadFields(state) {
+      const fieldsData = state["fields"];
+      if (window.d2f.utils.isRecord(fieldsData)) {
+        document.querySelectorAll("input.persistent-field").forEach((input, index) => {
+          const key = input.id || "f_" + String(index);
+          const val = fieldsData[key];
+          if (typeof val === "string") {
+            input.value = val;
+            input.setAttribute("value", val);
+          }
+        });
+      }
+      return false;
+    }
+    function resetFields() {
+      document.querySelectorAll(
+        "input, textarea, select"
+      ).forEach((el) => {
+        if (el.id === "search-input" || el.classList.contains("search-input"))
+          return;
+        if (el instanceof HTMLInputElement) {
+          if (el.type === "checkbox" || el.type === "radio") {
+            el.checked = false;
+            el.removeAttribute("checked");
+          } else {
+            el.value = "";
+            el.removeAttribute("value");
+          }
+        } else if (el instanceof HTMLTextAreaElement) {
+          el.value = "";
+          el.textContent = "";
+          el.removeAttribute("value");
+        } else if (el instanceof HTMLSelectElement) {
+          el.selectedIndex = 0;
+        }
+      });
+    }
+    window.d2f.storage.registerSaveHandler(saveFields);
+    window.d2f.storage.registerLoadHandler(loadFields);
+    const saveStateDebounced = window.d2f.utils.debounce(() => window.d2f.storage.saveState(), 300);
+    function handleInputOrChange(e) {
+      const target = e.target;
+      if (!(target instanceof HTMLInputElement))
+        return;
+      if (target.classList.contains("persistent-field")) {
+        target.setAttribute("value", target.value);
+        saveStateDebounced();
+      }
+    }
+    function init() {
+      window.d2f.core.registerResetHandler(resetFields);
+      document.addEventListener("input", handleInputOrChange);
+      document.addEventListener("change", handleInputOrChange);
     }
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", init);

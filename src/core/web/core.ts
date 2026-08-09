@@ -4,7 +4,6 @@ import './export.js';
 import './sections.js';
 import './comments.js';
 import './items.js';
-import './fields.js';
 import './search.js';
 
 export type ResetHandler = () => void;

@@ -835,7 +835,7 @@ mod tests {
         custom_features.has_tasks = true;
         custom_features.has_tables = true;
         let html_custom = render(&fm, &locale, "<p>Content</p>", "doc_meta2", None, &custom_features).expect("Render failed");
-        assert!(html_custom.contains("<meta name=\"features\" content=\"core, tasks, tables\">"));
+        assert!(html_custom.contains("<meta name=\"features\" content=\"core, tables, tasks\">"));
     }
 
     #[test]
@@ -1095,10 +1095,11 @@ mod tests {
             assert!(html.contains(expected_feat));
         }
 
-        // Case 2: Code feature active
+        // Case 2: Code feature active (with transitive fields dependency)
         let ctx_code = DocumentContext::new(&fm_map_empty, "```rust\nfn main() {}\n```");
         let mut df_code = DocumentFeatures::default();
         df_code.has_code = true;
+        df_code.has_fields = true;
 
         let html_asm_code = assemble_html(
             &ctx_code,
@@ -1120,7 +1121,7 @@ mod tests {
         )
         .unwrap();
 
-        let expected_feat_code = "<meta name=\"features\" content=\"core, code\">";
+        let expected_feat_code = "<meta name=\"features\" content=\"core, code, fields\">";
         assert!(html_asm_code.contains(expected_feat_code));
         assert!(html_rnd_code.contains(expected_feat_code));
     }
@@ -1186,5 +1187,15 @@ mod tests {
         assert!(s_hdr.contains(".header-flex"));
         assert!(!s_hdr.contains(".code-block"));
         assert!(!s_hdr.contains(".item-table"));
+
+        // 6. Fields
+        let mut df_fld = DocumentFeatures::default();
+        df_fld.has_fields = true;
+        let mut s_fld = String::new();
+        let mut j_fld = String::new();
+        render_styles(&mut s_fld, &df_fld);
+        render_scripts(&mut j_fld, &df_fld);
+        assert_eq!(s_fld.trim(), STYLE_CORE.trim());
+        assert!(j_fld.contains("saveFields") || j_fld.contains("loadFields"));
     }
 }

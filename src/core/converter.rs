@@ -137,6 +137,7 @@ pub struct Frontmatter {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct DocumentFeatures {
     pub has_code: bool,
+    pub has_fields: bool,
     pub has_tasks: bool,
     pub has_images: bool,
     pub has_tables: bool,
@@ -159,7 +160,9 @@ impl DocumentFeatures {
     /// let features = get_all_features();
     /// let df = DocumentFeatures::resolve(&features, &ctx);
     /// assert!(df.has_code);
+    /// assert!(df.has_fields);
     /// assert!(df.is_feature_active("code"));
+    /// assert!(df.is_feature_active("fields"));
     /// ```
     pub fn resolve(features: &[Box<dyn crate::core::feature::Feature>], ctx: &crate::core::feature::DocumentContext) -> Self {
         let active = crate::core::feature::resolve_enabled_features(features, ctx);
@@ -176,15 +179,18 @@ impl DocumentFeatures {
     ///
     /// let mut active = HashSet::new();
     /// active.insert("code");
+    /// active.insert("fields");
     /// active.insert("tables");
     /// let df = DocumentFeatures::from_active_set(&active);
     /// assert!(df.has_code);
+    /// assert!(df.has_fields);
     /// assert!(df.has_tables);
     /// assert!(!df.has_tasks);
     /// ```
     pub fn from_active_set(active: &std::collections::HashSet<&str>) -> Self {
         Self {
             has_code: active.contains("code"),
+            has_fields: active.contains("fields"),
             has_tasks: active.contains("tasks"),
             has_images: active.contains("images"),
             has_tables: active.contains("tables"),
@@ -201,12 +207,15 @@ impl DocumentFeatures {
     ///
     /// let mut features = DocumentFeatures::default();
     /// features.has_code = true;
+    /// features.has_fields = true;
     /// assert!(features.is_feature_active("code"));
+    /// assert!(features.is_feature_active("fields"));
     /// assert!(!features.is_feature_active("tasks"));
     /// ```
     pub fn is_feature_active(&self, name: &str) -> bool {
         match name {
             "code" => self.has_code,
+            "fields" => self.has_fields,
             "tasks" => self.has_tasks,
             "images" => self.has_images,
             "tables" => self.has_tables,
@@ -229,7 +238,7 @@ impl DocumentFeatures {
     /// assert_eq!(features.to_features_string(), "core, tasks");
     ///
     /// features.has_tables = true;
-    /// assert_eq!(features.to_features_string(), "core, tasks, tables");
+    /// assert_eq!(features.to_features_string(), "core, tables, tasks");
     /// ```
     pub fn to_features_string(&self) -> String {
         let mut out = String::with_capacity(32);
@@ -237,8 +246,11 @@ impl DocumentFeatures {
         if self.has_code {
             out.push_str(", code");
         }
-        if self.has_tasks {
-            out.push_str(", tasks");
+        if self.has_fields {
+            out.push_str(", fields");
+        }
+        if self.has_header {
+            out.push_str(", header");
         }
         if self.has_images {
             out.push_str(", images");
@@ -246,8 +258,8 @@ impl DocumentFeatures {
         if self.has_tables {
             out.push_str(", tables");
         }
-        if self.has_header {
-            out.push_str(", header");
+        if self.has_tasks {
+            out.push_str(", tasks");
         }
         out
     }
@@ -756,6 +768,7 @@ pub fn convert_markdown_to_html_with_options(
 
     if !var_table_html.is_empty() {
         features.has_code = true;
+        features.has_fields = true;
     }
 
     let mut var_table_emitted = false;
@@ -899,6 +912,7 @@ pub fn convert_markdown_to_html_with_options(
             // Code Blocks (e.g. ```ini ... ```)
             Event::Start(Tag::CodeBlock(kind)) => {
                 features.has_code = true;
+                features.has_fields = true;
                 let lang_str = match kind {
                     CodeBlockKind::Fenced(lang) if !lang.is_empty() => Some(lang.as_ref()),
                     _ => None,
@@ -1689,6 +1703,7 @@ curl https://{{BLOCK}}.local:{{PORT}}/api
         let (html, features) = convert_markdown_to_html(input).expect("conversion failed");
 
         assert!(features.has_code);
+        assert!(features.has_fields);
         assert!(html.contains(r#"<div class="item-table-var-wrap">"#));
         assert!(html.contains(r#"<th>Variable</th><th>Value</th>"#));
         assert!(html.contains(r#"data-variables="{&quot;BLOCK&quot;:&quot;prod-server&quot;,&quot;PORT&quot;:&quot;8080&quot;}""#));
@@ -1709,13 +1724,14 @@ curl https://{{BLOCK}}.local:{{PORT}}/api
         assert_eq!(features.to_features_string(), "core, tasks");
 
         features.has_tables = true;
-        assert_eq!(features.to_features_string(), "core, tasks, tables");
+        assert_eq!(features.to_features_string(), "core, tables, tasks");
 
         features.has_code = true;
+        features.has_fields = true;
         features.has_images = true;
-        assert_eq!(features.to_features_string(), "core, code, tasks, images, tables");
+        assert_eq!(features.to_features_string(), "core, code, fields, images, tables, tasks");
 
         features.has_header = true;
-        assert_eq!(features.to_features_string(), "core, code, tasks, images, tables, header");
+        assert_eq!(features.to_features_string(), "core, code, fields, header, images, tables, tasks");
     }
 }

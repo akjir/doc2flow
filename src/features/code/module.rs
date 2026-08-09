@@ -89,6 +89,12 @@ impl Feature for CodeFeature {
         ctx.raw_markdown.contains("```")
     }
 
+    /// Returns static slice of dependent features required by code blocks.
+    #[inline]
+    fn dependencies(&self) -> &'static [&'static str] {
+        &["fields"]
+    }
+
     /// Returns embedded JavaScript client script for code block variables and clipboard copying.
     #[inline]
     fn javascript(&self) -> Option<&'static str> {
@@ -125,6 +131,12 @@ mod tests {
 
         let ctx_empty = DocumentContext::new(&fm, "");
         assert!(!feature.is_enabled(&ctx_empty));
+    }
+
+    #[test]
+    fn test_code_dependencies() {
+        let feature = CodeFeature::new();
+        assert_eq!(feature.dependencies(), &["fields"]);
     }
 
     #[test]

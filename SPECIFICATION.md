@@ -198,7 +198,6 @@ doc2flow/
 │   │       ├── comments.ts   # Inline check-item comment boxes and persistence
 │   │       ├── core.ts       # Central core module, bundle entry point, and reset handler registry
 │   │       ├── export.ts     # Document export operations (PDF export and HTML state download)
-│   │       ├── fields.ts     # Persistent inputs, date shortcuts and field synchronization
 │   │       ├── items.ts      # Interactive document text and list item click handlers and persistence
 │   │       ├── lang.ts       # Dynamic localization dictionary
 │   │       ├── search.ts     # Search toolbar and text filtering
@@ -211,11 +210,15 @@ doc2flow/
 │   │           └── core.js   # Compiled core JavaScript client runtime
 │   └── features/             # Vertical slice feature modules
 │       ├── mod.rs            # Central feature registry (get_all_features)
-│       ├── code/             # Unified code block and copy feature vertical slice
+│       ├── code/             # Unified code block and copy feature vertical slice (depends on fields)
 │       │   ├── module.rs     # Rust Feature struct, trait implementation, and HTML components
 │       │   ├── code.ts       # TypeScript client script for variables and copy button
 │       │   ├── code.js       # Compiled JavaScript bundle for code block features
 │       │   └── code.css      # Isolated CSS for code blocks, variables table and copy button
+│       ├── fields/           # Form input field persistence and date shortcuts vertical slice
+│       │   ├── module.rs     # Rust Feature struct and trait implementation
+│       │   ├── fields.ts     # TypeScript client script for form input persistence and date shortcuts
+│       │   └── fields.js     # Compiled JavaScript bundle for fields feature
 │       ├── header/           # Unified document header and flexible banner vertical slice
 │       │   ├── module.rs     # Rust Feature struct, trait implementation, and HTML components
 │       │   └── header.css    # Isolated CSS for flexible header card and print styles
