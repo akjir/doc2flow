@@ -115,23 +115,15 @@
     }
     function handleDocumentClick(e) {
       const target = e.target;
-      if (!(target instanceof Element))
+      if (!(target instanceof HTMLInputElement) || target.type !== "checkbox") {
         return;
-      const checkItem = target.closest(".check-item");
-      if (checkItem instanceof HTMLElement) {
-        if (target.tagName === "A" || target.tagName === "IMG" || target.closest(".item-comment-box") || target.closest(".item-comment-icon") || target.closest(".item-comment-del")) {
-          return;
-        }
-        const cb = checkItem.querySelector('input[type="checkbox"]');
-        if (cb) {
-          if (target !== cb && !target.closest("label")) {
-            cb.checked = !cb.checked;
-          }
-          styleItem(cb);
-          updateProgress();
-          window.d2f.storage.saveState();
-        }
       }
+      const checkItem = target.closest(".check-item");
+      if (!checkItem)
+        return;
+      styleItem(target);
+      updateProgress();
+      window.d2f.storage.saveState();
     }
     window.d2f.storage.registerSaveHandler(saveTasks);
     window.d2f.storage.registerLoadHandler(loadTasks);

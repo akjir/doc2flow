@@ -164,6 +164,7 @@ interface Window {
     };
 
     function init(): void {
+        window.d2f.core.registerResetHandler(updateAllCodeVariables);
         updateAllCodeVariables();
         initCopyButtons();
         setupVariableInputAutoSelect();

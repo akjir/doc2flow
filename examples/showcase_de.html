@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+163.a35a393.dev">
-  <meta name="version" content="0.9.4+163.a35a393.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+165.1014a63.dev">
+  <meta name="version" content="0.9.4+165.1014a63.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-09T10:05:45Z">
+  <meta name="dcterms.created" content="2026-08-09T11:01:43Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, code, tasks, images, table">
   <title>Doc2Flow Deutscher Showcase</title>
@@ -1716,7 +1716,7 @@ mark.d2f-highlight {
     window.d2f.document = window.d2f.document || {};
     window.d2f.document.id = 'd2f_id_468e65bc2ccf89b4';
     window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {"var_table_title":"Variablen","copy_code":"Code kopieren","lang_code":"de","date":"Datum","sections_visible":"{visible} / {total} Abschnitte sichtbar","var_table_value":"Wert","date_placeholder":"TT.MM.JJJJ","search_placeholder":"Suchen... (Ctrl+K)","setup_in_progress":"Vorgang in Bearbeitung","name_placeholder":"Name","callout_tip":"Tipp","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","reset_all":"Zurücksetzen","callout_warning":"Warnung","callout_caution":"Achtung","setup_completed":"Vorgang abgeschlossen","callout_important":"Wichtig","var_table_variable":"Variable","copied":"Kopiert!","export_pdf":"Als PDF exportieren","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","comment_placeholder":"Kommentar hinzufügen...","signature_date":"Datum","save_state":"Stand sichern","callout_note":"Hinweis","loading":"Lade..."};
+    window.d2f.lang.dictionary = {"progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","date_placeholder":"TT.MM.JJJJ","save_state":"Stand sichern","var_table_variable":"Variable","var_table_value":"Wert","comment_placeholder":"Kommentar hinzufügen...","search_placeholder":"Suchen... (Ctrl+K)","callout_warning":"Warnung","lang_code":"de","loading":"Lade...","callout_note":"Hinweis","date":"Datum","var_table_title":"Variablen","export_pdf":"Als PDF exportieren","reset_all":"Zurücksetzen","copy_code":"Code kopieren","name_placeholder":"Name","callout_important":"Wichtig","callout_caution":"Achtung","sections_visible":"{visible} / {total} Abschnitte sichtbar","copied":"Kopiert!","callout_tip":"Tipp","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","signature_date":"Datum","setup_in_progress":"Vorgang in Bearbeitung","setup_completed":"Vorgang abgeschlossen"};
     (() => {
   // ../src/core/web/storage.ts
   var saveHandlers = /* @__PURE__ */ new Set();
@@ -1736,6 +1736,7 @@ mark.d2f-highlight {
   }
   function loadState() {
     const key = getStateKey();
+    console.log(`d2f: Load state [key: ${key}]`);
     try {
       const raw = localStorage.getItem(key);
       if (!raw)
@@ -1768,6 +1769,7 @@ mark.d2f-highlight {
       }
     }
     const key = getStateKey();
+    console.log(`d2f: Save state [key: ${key}]`);
     try {
       localStorage.setItem(key, JSON.stringify(combinedState));
     } catch (e) {
@@ -2415,7 +2417,6 @@ mark.d2f-highlight {
       const template = i18n.sections_visible ?? "{visible} / {total} sections visible";
       searchCounter.textContent = template.replace("{visible}", String(visibleCount)).replace("{total}", String(totalCount));
     }
-    window.d2f.storage.saveState();
   }
   function toggleSearchToolbar(show) {
     const toolbar = document.getElementById("search-toolbar");
@@ -2661,6 +2662,7 @@ mark.d2f-highlight {
       updateVariables: updateAllCodeVariables
     };
     function init() {
+      window.d2f.core.registerResetHandler(updateAllCodeVariables);
       updateAllCodeVariables();
       initCopyButtons();
       setupVariableInputAutoSelect();
@@ -2893,23 +2895,15 @@ mark.d2f-highlight {
     }
     function handleDocumentClick(e) {
       const target = e.target;
-      if (!(target instanceof Element))
+      if (!(target instanceof HTMLInputElement) || target.type !== "checkbox") {
         return;
-      const checkItem = target.closest(".check-item");
-      if (checkItem instanceof HTMLElement) {
-        if (target.tagName === "A" || target.tagName === "IMG" || target.closest(".item-comment-box") || target.closest(".item-comment-icon") || target.closest(".item-comment-del")) {
-          return;
-        }
-        const cb = checkItem.querySelector('input[type="checkbox"]');
-        if (cb) {
-          if (target !== cb && !target.closest("label")) {
-            cb.checked = !cb.checked;
-          }
-          styleItem(cb);
-          updateProgress();
-          window.d2f.storage.saveState();
-        }
       }
+      const checkItem = target.closest(".check-item");
+      if (!checkItem)
+        return;
+      styleItem(target);
+      updateProgress();
+      window.d2f.storage.saveState();
     }
     window.d2f.storage.registerSaveHandler(saveTasks);
     window.d2f.storage.registerLoadHandler(loadTasks);

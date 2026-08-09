@@ -17,6 +17,7 @@
   }
   function loadState() {
     const key = getStateKey();
+    console.log(`d2f: Load state [key: ${key}]`);
     try {
       const raw = localStorage.getItem(key);
       if (!raw)
@@ -49,6 +50,7 @@
       }
     }
     const key = getStateKey();
+    console.log(`d2f: Save state [key: ${key}]`);
     try {
       localStorage.setItem(key, JSON.stringify(combinedState));
     } catch (e) {
@@ -696,7 +698,6 @@
       const template = i18n.sections_visible ?? "{visible} / {total} sections visible";
       searchCounter.textContent = template.replace("{visible}", String(visibleCount)).replace("{total}", String(totalCount));
     }
-    window.d2f.storage.saveState();
   }
   function toggleSearchToolbar(show) {
     const toolbar = document.getElementById("search-toolbar");

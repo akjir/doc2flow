@@ -30,6 +30,7 @@ function registerLoadHandler(handler: LoadHandler): void {
 
 function loadState(): void {
     const key = getStateKey();
+    console.log(`d2f: Load state [key: ${key}]`);
     try {
         const raw = localStorage.getItem(key);
         if (!raw) return;
@@ -65,6 +66,7 @@ function saveState(): void {
     }
 
     const key = getStateKey();
+    console.log(`d2f: Save state [key: ${key}]`);
     try {
         localStorage.setItem(key, JSON.stringify(combinedState));
     } catch (e) {

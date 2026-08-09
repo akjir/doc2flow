@@ -135,6 +135,7 @@
       updateVariables: updateAllCodeVariables
     };
     function init() {
+      window.d2f.core.registerResetHandler(updateAllCodeVariables);
       updateAllCodeVariables();
       initCopyButtons();
       setupVariableInputAutoSelect();

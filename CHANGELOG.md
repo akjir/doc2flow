@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed print styles to preserve table background colors and alternating row colors.
 - Fixed header margin in print mode to match spacing between sections.
 - Fixed table header background clipping and top corner rounding in print mode.
+- Fixed excessive state persistence calls during search filtering, task item background clicks, and reset handling.
+- Fixed code block variable placeholders not restoring to initial template values upon resetting document state.
 
 ## [0.9.4] - 2026-08-02
 

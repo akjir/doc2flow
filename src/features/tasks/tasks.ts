@@ -121,30 +121,16 @@
 
     function handleDocumentClick(e: MouseEvent): void {
         const target = e.target;
-        if (!(target instanceof Element)) return;
+        if (!(target instanceof HTMLInputElement) || target.type !== 'checkbox') {
+            return;
+        }
 
         const checkItem = target.closest('.check-item');
-        if (checkItem instanceof HTMLElement) {
-            if (
-                target.tagName === 'A' ||
-                target.tagName === 'IMG' ||
-                target.closest('.item-comment-box') ||
-                target.closest('.item-comment-icon') ||
-                target.closest('.item-comment-del')
-            ) {
-                return;
-            }
+        if (!checkItem) return;
 
-            const cb = checkItem.querySelector<HTMLInputElement>('input[type="checkbox"]');
-            if (cb) {
-                if (target !== cb && !target.closest('label')) {
-                    cb.checked = !cb.checked;
-                }
-                styleItem(cb);
-                updateProgress();
-                window.d2f.storage.saveState();
-            }
-        }
+        styleItem(target);
+        updateProgress();
+        window.d2f.storage.saveState();
     }
 
     window.d2f.storage.registerSaveHandler(saveTasks);

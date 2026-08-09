@@ -171,8 +171,6 @@ function performSearchAndFilter(): void {
             .replace('{visible}', String(visibleCount))
             .replace('{total}', String(totalCount));
     }
-
-    window.d2f.storage.saveState();
 }
 
 function toggleSearchToolbar(show?: boolean): void {
