@@ -19,4 +19,5 @@ Execute in project root: `./MAKE.sh [FLAGS]`
 - `--tests`: Run cargo tests.
 - `--examples`: Build project AND generate HTML examples.
 - `--examples-only`: Generate HTML examples ONLY (no build).
-- `--experimental-building`: [BRANCH EXPERIMENT: REVERT ON MERGE] Full TS/Cargo build, run tests, render `examples/showcase_en_exp.html`. Cannot combine with other flags.
+- `--experimental-building`: [BRANCH EXPERIMENT: REVERT ON MERGE] Full TS/Cargo build, run tests, render `examples/template_exp.html`. Cannot combine with other flags.
+- `--experimental-building-without-tests`: [BRANCH EXPERIMENT: REVERT ON MERGE] TS/Cargo build, render `examples/template_exp.html` (no tests). Cannot combine with other flags.

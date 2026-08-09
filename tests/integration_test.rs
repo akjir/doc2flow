@@ -888,8 +888,15 @@ title: "Image Fallback Test"
 
 #[test]
 fn test_experimental_building_parser_integration() {
-    let input = "# Heading\n\nSome text";
+    let input = "---\ntitle: \"Integration\"\n---\n# Heading\n\nSome text";
     let output = doc2flow::exp::parser::parse(input).expect("parsing failed");
-    assert_eq!(output, "hello world");
+    assert!(output.contains("\"parameters\": {"));
+    assert!(output.contains("\"title\": \"Integration\""));
+    assert!(output.contains("\"header\": ["));
+    assert!(output.contains("\"body\": ["));
+    assert!(output.contains("\"kind\": \"unknown\""));
+    assert!(output.contains("\"content\": \"# Heading\""));
+    assert!(output.contains("\"kind\": \"text\""));
+    assert!(output.contains("\"content\": \"Some text\""));
 }
 

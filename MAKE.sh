@@ -19,6 +19,8 @@ Flags:
   --tests               Run cargo tests
   --examples            Build project and generate HTML examples
   --examples-only       Generate HTML examples only (skip TypeScript & Cargo builds)
+  --experimental-building Full build (TS + Cargo), test, and render experimental template
+  --experimental-building-without-tests Build (TS + Cargo) and render experimental template (no tests)
 EOF
 }
 
@@ -26,6 +28,7 @@ BUILD_EXAMPLES=false
 EXAMPLES_ONLY=false
 RUN_TESTS=false
 EXPERIMENTAL_BUILDING=false
+EXPERIMENTAL_BUILDING_WITHOUT_TESTS=false
 CARGO_ARGS=()
 
 for arg in "$@"; do
@@ -36,6 +39,9 @@ for arg in "$@"; do
             ;;
         --experimental-building)
             EXPERIMENTAL_BUILDING=true
+            ;;
+        --experimental-building-without-tests)
+            EXPERIMENTAL_BUILDING_WITHOUT_TESTS=true
             ;;
         --examples-only)
             BUILD_EXAMPLES=true
@@ -79,8 +85,26 @@ if [ "$EXPERIMENTAL_BUILDING" = true ]; then
     echo "==> Running tests..."
     cargo test
 
-    echo "==> Running experimental building on examples/showcase_en.md..."
-    ./target/debug/d2f --experimental-building examples/showcase_en.md -o examples/showcase_en_exp.html
+    echo "==> Running experimental building on resources/templates/template.md..."
+    ./target/debug/d2f --experimental-building resources/templates/template.md -o examples/template_exp.html
+
+    exit 0
+fi
+
+if [ "$EXPERIMENTAL_BUILDING_WITHOUT_TESTS" = true ]; then
+    if [ "$#" -ne 1 ]; then
+        echo "Error: '--experimental-building-without-tests' cannot be combined with other flags" >&2
+        exit 1
+    fi
+
+    echo "==> Building TypeScript..."
+    (cd web && npm run build)
+
+    echo "==> Running Cargo build..."
+    cargo build
+
+    echo "==> Running experimental building on resources/templates/template.md..."
+    ./target/debug/d2f --experimental-building resources/templates/template.md -o examples/template_exp.html
 
     exit 0
 fi

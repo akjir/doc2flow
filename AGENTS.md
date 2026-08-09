@@ -60,5 +60,5 @@
 ## 7. Branch Experiment (`feature/modular-building`) [REVERT ON MERGE]
 - **Scope:** Edit ONLY under `src/exp/`. Production code (`src/core/`, `src/features/`, `src/utils/`) FROZEN.
 - **Copy:** Duplicate needed funcs into `src/exp/`. ZERO coupling to legacy modules.
-- **Run:** `./MAKE.sh --experimental-building` (builds TS/Cargo, runs tests, renders `examples/showcase_en_exp.html`).
+- **Run:** `./MAKE.sh --experimental-building` (builds TS/Cargo, runs tests, renders `examples/template_exp.html`).
 - **Merge:** Revert this section, sync `SPECIFICATION.md`/skills, migrate `src/exp/` to core/features.
