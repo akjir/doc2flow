@@ -94,10 +94,10 @@ impl Feature for TasksFeature {
             || ctx.raw_markdown.contains("[X]")
     }
 
-    /// Returns embedded TypeScript client script for task checklist progress calculation and state management.
+    /// Returns embedded JavaScript client script for task checklist progress calculation and state management.
     #[inline]
     fn javascript(&self) -> Option<&'static str> {
-        Some(include_str!("tasks.ts"))
+        Some(include_str!("tasks.js"))
     }
 
     /// Returns embedded CSS styles for task items, progress bar, badges, and sign-off finish box.

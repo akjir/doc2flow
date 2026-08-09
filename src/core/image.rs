@@ -1,6 +1,6 @@
+use crate::components::DEFAULT_LOGO_SVG;
 use crate::error::{DiagnosticError, Doc2FlowError, Result, print_warning};
 use crate::io;
-use crate::template::DEFAULT_LOGO_SVG;
 use crate::{guess_mime_type, to_base64_data_uri};
 use image::{GenericImageView, ImageFormat, imageops::FilterType};
 use std::collections::HashMap;
@@ -211,7 +211,7 @@ fn render_non_image_link(
     alt_text: &str,
 ) -> usize {
     if let Some(next_cursor) = strip_img_item_wrapper(out, html, img_end) {
-        let comment_icon = crate::template::COMMENT_ICON_SVG;
+        let comment_icon = crate::components::COMMENT_ICON_SVG;
         out.push_str("<div class=\"doc-item text-item\">\n  <span class=\"text-content\"><a href=\"");
         out.push_str(src_val);
         out.push_str("\" target=\"_blank\" rel=\"noopener noreferrer\">");

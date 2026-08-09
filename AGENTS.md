@@ -6,7 +6,8 @@
 - **MD:** `pulldown-cmark`+GFM
 - **Assets:** Custom Base64/MIME (`src/core/utils/`), WebP/compress (`src/image.rs`)
 - **i18n:** `HashMap` via embedded JSON (`build.rs`)
-- **UI/HTML:** Zero-alloc buffers (`src/components.rs`, `src/template.rs`), compile-time embeds (`include_str!`)
+- **UI/HTML:** Zero-alloc buffers (`src/components.rs`, `src/core/builder.rs`), compile-time embeds (`include_str!`)
+- **Pipelines:** DRY template contexts (`build_template_vars`), parity across entry points (identical conditional components; NO hardcoded blanks). Single predicate feature dispatch (`is_feature_active`).
 - **Flow:** CLI > MD > Img > UI
 
 ## 2. Rust
@@ -15,7 +16,7 @@
 - **Consts:** Feature constants local in `src/features/<name>/module.rs` (NO central dumpster). App metadata/limits ONLY in `src/core/constants.rs`.
 - **CLI:** Identical validation for space (`-o ""`) vs equals (`-o=`) syntax. Reject empty values uniformly (`val.as_ref().is_empty()`).
 - **Errors:** Stdlib+`Doc2FlowError` (NO `anyhow`/`eyre`). `Result`=expected. `panic!`=bugs/stop (detailed msgs). NO `catch_unwind`. Safe bounds/slicing on diagnostic buffers. `From` conversions (NO `.to_<domain>()`). NO manual buffer micro-allocs on error paths; use `format!` or static strings.
-- **Attributes:** Reserve `#[inline]` exclusively for trivial getters/wrappers and hot-path inner loops/rendering. NO `#[inline]` on single-call init, setup, CLI parsing, parser helpers, or simple `const` fns.
+- **Attributes:** Reserve `#[inline]` exclusively for trivial getters/wrappers and hot-path loops. NO `#[inline]` on heap allocs (`String::with_capacity`), I/O, multi-branch, init, setup, CLI parsing, parser helpers, or simple `const` fns.
 - **Docs:** English ONLY (all inline docs & comments). 15-word max start, canonical headers (Examples/Errors/Panics), NO meta/journals
 - **Perf:** Min-alloc (borrow>owned), `with_capacity`, O(N) 1-pass, zero-copy (`split_once`,`strip_prefix`), `Cow`. Safe subslice indexing ONLY; NO raw pointer arithmetic (`as_ptr` diffs) for string bound searches.
 - **String/Buffer:** Exact `with_capacity` pre-alloc. Direct buffer streaming (`write_str`/`push_str`). NO intermediate `Vec`/strings on hot paths.

@@ -35,10 +35,10 @@ impl Feature for TableFeature {
         ctx.raw_markdown.contains('|') || ctx.raw_markdown.contains("<table")
     }
 
-    /// Returns embedded TypeScript client script for section table hover and formatting.
+    /// Returns embedded JavaScript client script for section table hover and formatting.
     #[inline]
     fn javascript(&self) -> Option<&'static str> {
-        Some(include_str!("table.ts"))
+        Some(include_str!("table.js"))
     }
 
     /// Returns embedded CSS styles for section table containers, rows, and print styles.

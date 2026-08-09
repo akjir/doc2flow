@@ -89,10 +89,10 @@ impl Feature for CodeFeature {
         ctx.raw_markdown.contains("```")
     }
 
-    /// Returns embedded TypeScript client script for code block variables and clipboard copying.
+    /// Returns embedded JavaScript client script for code block variables and clipboard copying.
     #[inline]
     fn javascript(&self) -> Option<&'static str> {
-        Some(include_str!("code.ts"))
+        Some(include_str!("code.js"))
     }
 
     /// Returns embedded CSS styles for code blocks, copy button, and variables table.

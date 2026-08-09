@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+160.6ab4594.dev">
-  <meta name="version" content="0.9.4+160.6ab4594.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+162.0d7ce02.dev">
+  <meta name="version" content="0.9.4+162.0d7ce02.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-08T11:40:06Z">
+  <meta name="dcterms.created" content="2026-08-09T09:35:13Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, code, header">
   <title>Microservice Deployment & Infrastructure Setup</title>
@@ -770,116 +770,6 @@ mark.d2f-highlight {
 }
 
 /* ==========================================================================
-   Header Feature Styles (header: "flex")
-   ========================================================================== */
-
-/* 1. Base & Layout: Hide sticky top bar title/logo when flex header is active */
-.doc-header .header-top {
-  display: none;
-}
-
-/* 2. Components: Flex Header Container */
-.header-flex {
-  background: var(--bd);
-  color: white;
-  border-radius: var(--radius-xl);
-  margin-bottom: 14px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-}
-
-.header-flex-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 18px 24px;
-  gap: 16px;
-}
-
-.header-flex-titles {
-  flex: 1;
-  min-width: 0;
-}
-
-.header-flex-title {
-  font-size: 22px;
-  font-weight: bold;
-  color: white;
-  margin: 0;
-  line-height: 1.25;
-}
-
-.header-flex-sub {
-  font-size: 13px;
-  color: var(--header-sub-color);
-  margin-top: 4px;
-  line-height: 1.4;
-}
-
-.header-flex-logo {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  max-height: 56px;
-}
-
-.header-flex-logo svg,
-.header-flex-logo img {
-  max-height: 56px;
-  max-width: 180px;
-  width: auto;
-  height: auto;
-  display: block;
-}
-
-/* 3. Print Styles */
-@media print {
-  .header-flex {
-    background: var(--bd) !important;
-    color: white !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    box-shadow: none;
-    break-inside: avoid;
-    page-break-inside: avoid;
-    margin-bottom: 16px;
-  }
-
-  .header-flex-title {
-    color: white !important;
-  }
-
-  .header-flex-sub {
-    color: var(--header-sub-color) !important;
-  }
-}
-
-/* 4. Responsive Styles */
-@media (max-width: 600px) {
-  .header-flex-top {
-    flex-direction: column-reverse;
-    align-items: flex-start;
-    padding: 14px 16px;
-    gap: 12px;
-  }
-
-  .header-flex-logo {
-    max-height: 40px;
-  }
-
-  .header-flex-logo svg,
-  .header-flex-logo img {
-    max-height: 40px;
-    max-width: 140px;
-  }
-
-  .header-flex-title {
-    font-size: 18px;
-  }
-}
-
-/* ==========================================================================
    Code Block & Variable Substitution Feature Styles
    ========================================================================== */
 
@@ -1042,6 +932,116 @@ mark.d2f-highlight {
   box-shadow: 0 0 0 2px rgba(46, 117, 182, 0.2);
 }
 
+/* ==========================================================================
+   Header Feature Styles (header: "flex")
+   ========================================================================== */
+
+/* 1. Base & Layout: Hide sticky top bar title/logo when flex header is active */
+.doc-header .header-top {
+  display: none;
+}
+
+/* 2. Components: Flex Header Container */
+.header-flex {
+  background: var(--bd);
+  color: white;
+  border-radius: var(--radius-xl);
+  margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.header-flex-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px;
+  gap: 16px;
+}
+
+.header-flex-titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.header-flex-title {
+  font-size: 22px;
+  font-weight: bold;
+  color: white;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.header-flex-sub {
+  font-size: 13px;
+  color: var(--header-sub-color);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.header-flex-logo {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  max-height: 56px;
+}
+
+.header-flex-logo svg,
+.header-flex-logo img {
+  max-height: 56px;
+  max-width: 180px;
+  width: auto;
+  height: auto;
+  display: block;
+}
+
+/* 3. Print Styles */
+@media print {
+  .header-flex {
+    background: var(--bd) !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    box-shadow: none;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 16px;
+  }
+
+  .header-flex-title {
+    color: white !important;
+  }
+
+  .header-flex-sub {
+    color: var(--header-sub-color) !important;
+  }
+}
+
+/* 4. Responsive Styles */
+@media (max-width: 600px) {
+  .header-flex-top {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .header-flex-logo {
+    max-height: 40px;
+  }
+
+  .header-flex-logo svg,
+  .header-flex-logo img {
+    max-height: 40px;
+    max-width: 140px;
+  }
+
+  .header-flex-title {
+    font-size: 18px;
+  }
+}
+
 
   </style>
 </head>
@@ -1185,7 +1185,7 @@ mark.d2f-highlight {
     window.d2f.document = window.d2f.document || {};
     window.d2f.document.id = 'd2f_id_fe4acdd7616c7913';
     window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {"comment_placeholder":"Add a comment...","date":"Date","signature_date":"Date","copy_code":"Copy code","search_placeholder":"Search... (Ctrl+K)","var_table_title":"Variables","progress_template":"{done} of {total} tasks completed ({pct}%)","setup_completed":"Process Completed","save_state":"Save State","callout_important":"Important","date_placeholder":"MM/DD/YYYY","callout_warning":"Warning","sections_visible":"{visible} / {total} sections visible","loading":"Loading...","var_table_value":"Value","var_table_variable":"Variable","export_pdf":"Export as PDF","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","lang_code":"en","callout_tip":"Tip","setup_in_progress":"Process in Progress","reset_all":"Reset","callout_caution":"Caution","name_placeholder":"Name","callout_note":"Note","copied":"Copied!"};
+    window.d2f.lang.dictionary = {"search_placeholder":"Search... (Ctrl+K)","var_table_variable":"Variable","copied":"Copied!","export_pdf":"Export as PDF","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","comment_placeholder":"Add a comment...","copy_code":"Copy code","loading":"Loading...","callout_note":"Note","callout_tip":"Tip","callout_warning":"Warning","sections_visible":"{visible} / {total} sections visible","lang_code":"en","var_table_value":"Value","date":"Date","var_table_title":"Variables","signature_date":"Date","date_placeholder":"MM/DD/YYYY","setup_completed":"Process Completed","reset_all":"Reset","setup_in_progress":"Process in Progress","progress_template":"{done} of {total} tasks completed ({pct}%)","name_placeholder":"Name","save_state":"Save State","callout_important":"Important","callout_caution":"Caution"};
     (() => {
   // ../src/core/web/storage.ts
   var saveHandlers = /* @__PURE__ */ new Set();

@@ -52,10 +52,10 @@ impl Feature for ImageFeature {
         ctx.raw_markdown.contains("![") || ctx.raw_markdown.contains("<img")
     }
 
-    /// Returns embedded TypeScript client script for lightbox modal and zoom viewing.
+    /// Returns embedded JavaScript client script for lightbox modal and zoom viewing.
     #[inline]
     fn javascript(&self) -> Option<&'static str> {
-        Some(include_str!("image.ts"))
+        Some(include_str!("image.js"))
     }
 
     /// Returns embedded CSS styles for image containers, lightbox modal, and print styles.

@@ -47,7 +47,8 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 - **Consts:** Feature constants local in `src/features/<name>/module.rs` (NO central dumpster). App metadata/limits ONLY in `src/core/constants.rs`.
 - **Logic:** Prefer `match` or lookup tables over `if-else` chains.
 - **CLI Parsing:** Enforce identical validation for space-separated vs equals-separated flags; reject empty values uniformly (`val.as_ref().is_empty()`).
-- **Attributes:** Reserve `#[inline]` strictly for trivial getters/wrappers and hot-path inner loops/rendering. NEVER apply `#[inline]` to single-call setup, init, parser helpers, or CLI parsing logic.
+- **Attributes:** Reserve `#[inline]` strictly for trivial getters/wrappers and hot-path inner loops. NEVER apply `#[inline]` to functions performing heap allocs (`String::with_capacity`), I/O, multi-branch logic, setup, init, parser helpers, or CLI parsing logic.
+- **Pipelines & Parity:** DRY template contexts (`build_template_vars`), render conditional components identically across entry points, and single-predicate feature dispatch (`is_feature_active`).
 
 ### 5: HTML, XML & Asset Processing
 - **Scanners:** Zero-alloc single-pass tokenizers (O(N) forward cursor). Avoid redundant scanning passes over attribute names/values.

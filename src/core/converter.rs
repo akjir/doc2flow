@@ -1,7 +1,7 @@
+use crate::components;
 use crate::error::Result;
 use crate::features;
 use crate::locales::Locale;
-use crate::template;
 use pulldown_cmark::{
     html, CodeBlockKind, Event, HeadingLevel, Options, Parser as MarkdownParser, Tag, TagEnd,
 };
@@ -144,6 +144,29 @@ pub struct DocumentFeatures {
 }
 
 impl DocumentFeatures {
+    /// Checks whether a feature is enabled given its feature identifier.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use doc2flow::converter::DocumentFeatures;
+    ///
+    /// let mut features = DocumentFeatures::default();
+    /// features.has_code = true;
+    /// assert!(features.is_feature_active("code"));
+    /// assert!(!features.is_feature_active("tasks"));
+    /// ```
+    pub fn is_feature_active(&self, name: &str) -> bool {
+        match name {
+            "code" => self.has_code,
+            "tasks" => self.has_tasks,
+            "image" | "images" => self.has_images,
+            "table" | "tables" => self.has_tables,
+            "header" => self.has_header,
+            _ => false,
+        }
+    }
+
     /// Renders a comma-separated list of enabled feature identifiers starting with `"core"`.
     ///
     /// # Examples
@@ -716,7 +739,7 @@ pub fn convert_markdown_to_html_with_options(
             }) => {
                 let target_level = *level;
                 if in_section {
-                    template::render_section_close(&mut out);
+                    components::render_section_close(&mut out);
                 }
                 section_count += 1;
                 in_section = true;
@@ -761,7 +784,7 @@ pub fn convert_markdown_to_html_with_options(
                 let (has_checklist, callout_type) =
                     inspect_section_metadata(&events[idx + 1..], locale);
 
-                template::render_section_header(
+                components::render_section_header(
                     &mut out,
                     section_count,
                     final_heading_text,
@@ -792,7 +815,7 @@ pub fn convert_markdown_to_html_with_options(
 
                 temp_html.clear();
                 html::push_html(&mut temp_html, events[start_idx..idx].iter().cloned());
-                template::render_subheading(&mut out, &temp_html);
+                components::render_subheading(&mut out, &temp_html);
             }
 
             // Blockquotes (> Note, >? Tip, >! Important, >!! Warning, >!!! Caution)
@@ -822,7 +845,7 @@ pub fn convert_markdown_to_html_with_options(
                 let (note_cls, note_content, callout_label, _) = parse_callout(inner, locale);
 
                 let escaped_label = html_escape(callout_label);
-                template::render_callout(&mut out, note_cls, &escaped_label, note_content);
+                components::render_callout(&mut out, note_cls, &escaped_label, note_content);
             }
 
             // Code Blocks (e.g. ```ini ... ```)
@@ -863,7 +886,7 @@ pub fn convert_markdown_to_html_with_options(
                 let escaped_lang_opt = lang_str.map(html_escape);
                 let lang_ref = escaped_lang_opt.as_deref();
 
-                template::render_code_block(&mut out, lang_ref, &escaped_code, &copy_label);
+                features::code::render_code_block(&mut out, lang_ref, &escaped_code, &copy_label);
             }
 
             // Task List Items (- [ ] or - [x]) or Simple List Items (-)
@@ -917,7 +940,7 @@ pub fn convert_markdown_to_html_with_options(
                 if is_task {
                     features.has_tasks = true;
                     global_cb_count += 1;
-                    template::render_task_item(
+                    features::tasks::render_task_item(
                         &mut out,
                         sec_num,
                         global_cb_count,
@@ -932,7 +955,7 @@ pub fn convert_markdown_to_html_with_options(
                     };
 
                     global_item_count += 1;
-                    template::render_list_item(
+                    components::render_list_item(
                         &mut out,
                         sec_num,
                         global_item_count,
@@ -978,12 +1001,12 @@ pub fn convert_markdown_to_html_with_options(
                     let is_image_block = clean_content.starts_with("<img");
                     if is_image_block {
                         features.has_images = true;
-                        template::render_image_item(&mut out, clean_content);
+                        features::image::render_image_item(&mut out, clean_content);
                     } else {
                         global_txt_count += 1;
                         let sec_num = if section_count == 0 { 1 } else { section_count };
                         let list_depth = list_stack.len().saturating_sub(1);
-                        template::render_text_item(
+                        components::render_text_item(
                             &mut out,
                             sec_num,
                             global_txt_count,
@@ -1026,7 +1049,7 @@ pub fn convert_markdown_to_html_with_options(
     }
 
     if in_section {
-        template::render_section_close(&mut out);
+        components::render_section_close(&mut out);
     }
 
     if !var_table_emitted && !var_table_html.is_empty() {

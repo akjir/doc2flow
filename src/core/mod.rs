@@ -7,9 +7,9 @@ pub mod base64;
 pub mod components;
 pub mod constants;
 pub mod converter;
+pub mod builder;
 pub mod error;
 pub mod feature;
-pub mod generator;
 #[path = "utils/hasher.rs"]
 pub mod hasher;
 pub mod id;
@@ -18,12 +18,16 @@ pub mod io;
 pub mod locales;
 #[path = "utils/mime.rs"]
 pub mod mime;
-pub mod template;
 #[path = "utils/uri.rs"]
 pub mod uri;
 
 pub use args::{Args, help_message, parse_args};
 pub use base64::{base64_encode, base64_encode_into};
+pub use builder::{
+    SCRIPT_CORE, STYLE_CORE, assemble_html, assemble_scripts, assemble_styles,
+    format_iso8601_utc, generate_template_markdown, render, render_finish_box,
+    render_lightbox, render_progress_bar, render_scripts, render_styles, substitute_template,
+};
 pub use components::*;
 pub use constants::*;
 pub use converter::*;
@@ -31,7 +35,6 @@ pub use error::{
     DiagnosticError, Doc2FlowError, IoResultExt, Result, build_caret_annotation, print_warning,
 };
 pub use feature::{DocumentContext, Feature, resolve_enabled_features};
-pub use generator::{SCRIPT_CORE, STYLE_CORE, assemble_html, assemble_scripts, assemble_styles};
 pub use hasher::{generate_doc_id, sha256, sha256_bytes};
 pub use id::generate_d2f_id;
 pub use image::{
@@ -43,7 +46,4 @@ pub use io::{
 };
 pub use locales::{Locale, validate_locale_coverage};
 pub use mime::guess_mime_type;
-pub use template::{
-    format_iso8601_utc, generate_template_markdown, render, render_scripts, substitute_template,
-};
 pub use uri::{file_to_data_uri, to_base64_data_uri, to_base64_data_uri_into};

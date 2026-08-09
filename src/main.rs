@@ -1,8 +1,8 @@
+use doc2flow::builder;
 use doc2flow::converter;
 use doc2flow::error::{Doc2FlowError, Result};
 use doc2flow::io;
 use doc2flow::locales::Locale;
-use doc2flow::template;
 use doc2flow::args::{help_message, parse_args};
 use std::env;
 use std::process::ExitCode;
@@ -21,7 +21,7 @@ fn run() -> Result<()> {
     }
 
     if let Some(init_path) = args.init {
-        let template_content = template::generate_template_markdown();
+        let template_content = builder::generate_template_markdown();
         io::write_file(&init_path, template_content)?;
         println!("Successfully generated template {}", init_path.display());
         return Ok(());
@@ -68,7 +68,7 @@ fn run() -> Result<()> {
 
     let d2f_id = doc2flow::id::generate_d2f_id(&frontmatter)?;
     let rendered_html =
-        template::render(&frontmatter, &locale, &html_content, &d2f_id, Some(&logo_html), &features)?;
+        builder::render(&frontmatter, &locale, &html_content, &d2f_id, Some(&logo_html), &features)?;
 
     let final_html = doc2flow::image::embed_images_as_base64_with_source(
         &rendered_html,
