@@ -86,6 +86,18 @@ fn format_element(out: &mut String, elem: &DocumentElement, indent_level: usize)
             escape_json_string(out, content);
             let _ = write!(out, "\"\n");
         }
+        DocumentElement::OrderedListItem {
+            depth,
+            position,
+            content,
+        } => {
+            let _ = write!(out, "{child_indent}\"kind\": \"ordered_list_item\",\n");
+            let _ = write!(out, "{child_indent}\"depth\": {depth},\n");
+            let _ = write!(out, "{child_indent}\"position\": {position},\n");
+            let _ = write!(out, "{child_indent}\"content\": \"");
+            escape_json_string(out, content);
+            let _ = write!(out, "\"\n");
+        }
         DocumentElement::Section { title, children } => {
             let _ = write!(out, "{child_indent}\"kind\": \"section\",\n");
             let _ = write!(out, "{child_indent}\"title\": \"");
@@ -263,5 +275,21 @@ mod tests {
         assert!(json.contains("\"content\": \"echo \\\"Hello world\\\"\""));
         assert!(json.contains("\"language\": null"));
         assert!(json.contains("\"content\": \"plain text block\""));
+    }
+
+    #[test]
+    fn test_document_to_json_with_ordered_list_items() {
+        let mut doc = Document::new();
+        doc.push_body(DocumentElement::ordered_list_item(0, 1, "First item"));
+        doc.push_body(DocumentElement::ordered_list_item(2, 3, "Nested item"));
+
+        let json = document_to_json(&doc);
+        assert!(json.contains("\"kind\": \"ordered_list_item\""));
+        assert!(json.contains("\"depth\": 0"));
+        assert!(json.contains("\"position\": 1"));
+        assert!(json.contains("\"content\": \"First item\""));
+        assert!(json.contains("\"depth\": 2"));
+        assert!(json.contains("\"position\": 3"));
+        assert!(json.contains("\"content\": \"Nested item\""));
     }
 }

@@ -65,6 +65,15 @@ pub enum DocumentElement {
         /// Code block text content.
         content: String,
     },
+    /// Ordered list item element with indentation depth and sequential position.
+    OrderedListItem {
+        /// Nesting depth level based on leading spaces.
+        depth: usize,
+        /// 1-based sequential position within the list at this depth.
+        position: usize,
+        /// List item text content.
+        content: String,
+    },
     /// Collapsible or structured section containing nested child elements.
     Section {
         /// Section heading or title.
@@ -107,6 +116,15 @@ impl DocumentElement {
     pub fn code_block(language: Option<impl Into<String>>, content: impl Into<String>) -> Self {
         Self::CodeBlock {
             language: language.map(Into::into),
+            content: content.into(),
+        }
+    }
+
+    /// Creates a new ordered list item document element with depth and position.
+    pub fn ordered_list_item(depth: usize, position: usize, content: impl Into<String>) -> Self {
+        Self::OrderedListItem {
+            depth,
+            position,
             content: content.into(),
         }
     }
@@ -284,6 +302,29 @@ mod tests {
             DocumentElement::CodeBlock {
                 language: None,
                 content: "plain code".into(),
+            }
+        );
+    }
+
+    #[test]
+    fn test_ordered_list_item_creation() {
+        let root_item = DocumentElement::ordered_list_item(0, 1, "First item");
+        assert_eq!(
+            root_item,
+            DocumentElement::OrderedListItem {
+                depth: 0,
+                position: 1,
+                content: "First item".into(),
+            }
+        );
+
+        let nested_item = DocumentElement::ordered_list_item(2, 5, "Deep item");
+        assert_eq!(
+            nested_item,
+            DocumentElement::OrderedListItem {
+                depth: 2,
+                position: 5,
+                content: "Deep item".into(),
             }
         );
     }

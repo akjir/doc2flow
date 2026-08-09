@@ -88,4 +88,18 @@ mod tests {
         assert!(result.contains("\"language\": \"bash\""));
         assert!(result.contains("\"content\": \"echo \\\"test\\\"\""));
     }
+
+    #[test]
+    fn test_parse_with_ordered_list() {
+        let result = parse("---\ntitle: \"Ordered List Doc\"\n---\n1. First item\n  1. Subitem\n2. Second item").unwrap();
+        assert!(result.contains("\"kind\": \"ordered_list_item\""));
+        assert!(result.contains("\"depth\": 0"));
+        assert!(result.contains("\"position\": 1"));
+        assert!(result.contains("\"content\": \"First item\""));
+        assert!(result.contains("\"depth\": 1"));
+        assert!(result.contains("\"position\": 1"));
+        assert!(result.contains("\"content\": \"Subitem\""));
+        assert!(result.contains("\"position\": 2"));
+        assert!(result.contains("\"content\": \"Second item\""));
+    }
 }
