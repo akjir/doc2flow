@@ -144,6 +144,54 @@ pub struct DocumentFeatures {
 }
 
 impl DocumentFeatures {
+    /// Resolves enabled features and their transitive dependencies given registered features and document context.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::collections::HashMap;
+    /// use doc2flow::converter::DocumentFeatures;
+    /// use doc2flow::feature::DocumentContext;
+    /// use doc2flow::features::get_all_features;
+    ///
+    /// let fm = HashMap::new();
+    /// let ctx = DocumentContext::new(&fm, "```rust\nfn main() {}\n```");
+    /// let features = get_all_features();
+    /// let df = DocumentFeatures::resolve(&features, &ctx);
+    /// assert!(df.has_code);
+    /// assert!(df.is_feature_active("code"));
+    /// ```
+    pub fn resolve(features: &[Box<dyn crate::core::feature::Feature>], ctx: &crate::core::feature::DocumentContext) -> Self {
+        let active = crate::core::feature::resolve_enabled_features(features, ctx);
+        Self::from_active_set(&active)
+    }
+
+    /// Creates `DocumentFeatures` from a set of active feature names.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::collections::HashSet;
+    /// use doc2flow::converter::DocumentFeatures;
+    ///
+    /// let mut active = HashSet::new();
+    /// active.insert("code");
+    /// active.insert("tables");
+    /// let df = DocumentFeatures::from_active_set(&active);
+    /// assert!(df.has_code);
+    /// assert!(df.has_tables);
+    /// assert!(!df.has_tasks);
+    /// ```
+    pub fn from_active_set(active: &std::collections::HashSet<&str>) -> Self {
+        Self {
+            has_code: active.contains("code"),
+            has_tasks: active.contains("tasks"),
+            has_images: active.contains("images"),
+            has_tables: active.contains("tables"),
+            has_header: active.contains("header"),
+        }
+    }
+
     /// Checks whether a feature is enabled given its feature identifier.
     ///
     /// # Examples
@@ -160,8 +208,8 @@ impl DocumentFeatures {
         match name {
             "code" => self.has_code,
             "tasks" => self.has_tasks,
-            "image" | "images" => self.has_images,
-            "table" | "tables" => self.has_tables,
+            "images" => self.has_images,
+            "tables" => self.has_tables,
             "header" => self.has_header,
             _ => false,
         }
@@ -181,7 +229,7 @@ impl DocumentFeatures {
     /// assert_eq!(features.to_features_string(), "core, tasks");
     ///
     /// features.has_tables = true;
-    /// assert_eq!(features.to_features_string(), "core, tasks, table");
+    /// assert_eq!(features.to_features_string(), "core, tasks, tables");
     /// ```
     pub fn to_features_string(&self) -> String {
         let mut out = String::with_capacity(32);
@@ -196,7 +244,7 @@ impl DocumentFeatures {
             out.push_str(", images");
         }
         if self.has_tables {
-            out.push_str(", table");
+            out.push_str(", tables");
         }
         if self.has_header {
             out.push_str(", header");
@@ -1661,13 +1709,13 @@ curl https://{{BLOCK}}.local:{{PORT}}/api
         assert_eq!(features.to_features_string(), "core, tasks");
 
         features.has_tables = true;
-        assert_eq!(features.to_features_string(), "core, tasks, table");
+        assert_eq!(features.to_features_string(), "core, tasks, tables");
 
         features.has_code = true;
         features.has_images = true;
-        assert_eq!(features.to_features_string(), "core, code, tasks, images, table");
+        assert_eq!(features.to_features_string(), "core, code, tasks, images, tables");
 
         features.has_header = true;
-        assert_eq!(features.to_features_string(), "core, code, tasks, images, table, header");
+        assert_eq!(features.to_features_string(), "core, code, tasks, images, tables, header");
     }
 }

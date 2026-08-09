@@ -23,10 +23,10 @@ impl TableFeature {
 }
 
 impl Feature for TableFeature {
-    /// Returns the unique feature identifier "table".
+    /// Returns the unique feature identifier "tables".
     #[inline]
     fn name(&self) -> &'static str {
-        "table"
+        "tables"
     }
 
     /// Evaluates if the table feature is enabled based on presence of markdown tables or html table tags.
@@ -80,7 +80,7 @@ mod tests {
     #[test]
     fn test_table_assets_embedded() {
         let feature = TableFeature::new();
-        assert_eq!(feature.name(), "table");
+        assert_eq!(feature.name(), "tables");
         let js = feature.javascript().expect("JavaScript must be embedded");
         let css = feature.css().expect("CSS must be embedded");
 

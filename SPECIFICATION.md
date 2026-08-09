@@ -126,7 +126,7 @@ d2f.exe --version
 * **Pure In-Memory Processing Core:** Core modules (`src/core/converter.rs`, `src/core/builder.rs`, `src/core/components.rs`, `src/core/locales.rs`, `src/core/id.rs`) perform pure in-memory string/AST data transformations decoupled from disk I/O.
 * **Domain Image & Logo Processing (`src/core/image.rs`):** Image optimization, SVG sanitization, WebP downscaling, and domain-specific logo path resolution (`resolve_logo_path`).
 * **Strict Modular Feature Isolation (HTML, CSS, TS/JS):**
-  * Extension features (`code`, `header`, `image`, `table`, `tasks`) are fully decoupled and zero-knowledge of each other.
+  * Extension features (`code`, `header`, `images`, `tables`, `tasks`) are fully decoupled and zero-knowledge of each other.
   * Each feature maintains dedicated HTML components, TypeScript and CSS modules within its vertical slice directory (`src/features/<name>/`). Compiled JS resides directly in `src/features/<name>/<name>.js`.
   * If a feature is omitted/disabled (`DocumentFeatures`), zero HTML elements, zero CSS rules, and zero JS/TS code for that feature are emitted in the rendered document.
 * **HTML UI Components & Builder Engine (`src/components.rs` & `src/core/builder.rs`):**

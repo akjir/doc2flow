@@ -29,8 +29,8 @@ use crate::core::feature::Feature;
 /// assert_eq!(features.len(), 5);
 /// assert_eq!(features[0].name(), "code");
 /// assert_eq!(features[1].name(), "header");
-/// assert_eq!(features[2].name(), "image");
-/// assert_eq!(features[3].name(), "table");
+/// assert_eq!(features[2].name(), "images");
+/// assert_eq!(features[3].name(), "tables");
 /// assert_eq!(features[4].name(), "tasks");
 /// ```
 pub fn get_all_features() -> Vec<Box<dyn Feature>> {
@@ -53,8 +53,8 @@ mod tests {
         assert_eq!(list.len(), 5);
         assert_eq!(list[0].name(), "code");
         assert_eq!(list[1].name(), "header");
-        assert_eq!(list[2].name(), "image");
-        assert_eq!(list[3].name(), "table");
+        assert_eq!(list[2].name(), "images");
+        assert_eq!(list[3].name(), "tables");
         assert_eq!(list[4].name(), "tasks");
     }
 }

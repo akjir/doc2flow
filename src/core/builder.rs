@@ -24,8 +24,9 @@ pub fn assemble_styles(ctx: &DocumentContext, features: &[Box<dyn Feature>], out
     out.push_str(STYLE_CORE);
     out.push('\n');
 
+    let enabled = crate::core::feature::resolve_enabled_features(features, ctx);
     for feature in features {
-        if feature.is_enabled(ctx)
+        if enabled.contains(feature.name())
             && let Some(css) = feature.css()
         {
             out.push_str(css);
@@ -42,8 +43,9 @@ pub fn assemble_scripts(ctx: &DocumentContext, features: &[Box<dyn Feature>], ou
     out.push_str(SCRIPT_CORE);
     out.push('\n');
 
+    let enabled = crate::core::feature::resolve_enabled_features(features, ctx);
     for feature in features {
-        if feature.is_enabled(ctx)
+        if enabled.contains(feature.name())
             && let Some(js) = feature.javascript()
         {
             out.push_str(js);
@@ -415,13 +417,14 @@ pub fn assemble_html(
     let mut active_features_str = String::with_capacity(64);
     active_features_str.push_str("core");
 
+    let enabled = crate::core::feature::resolve_enabled_features(features, ctx);
     for feature in features {
-        if feature.is_enabled(ctx) {
-            let name = feature.name();
+        let name = feature.name();
+        if enabled.contains(name) {
             active_features_str.push_str(", ");
             active_features_str.push_str(name);
             match name {
-                "image" => has_images = true,
+                "images" => has_images = true,
                 "tasks" => has_tasks = true,
                 "header" => has_header = true,
                 _ => {}
@@ -632,8 +635,8 @@ mod tests {
         let mut df = DocumentFeatures::default();
         assert!(!df.is_feature_active("code"));
         assert!(!df.is_feature_active("tasks"));
-        assert!(!df.is_feature_active("image"));
-        assert!(!df.is_feature_active("table"));
+        assert!(!df.is_feature_active("images"));
+        assert!(!df.is_feature_active("tables"));
         assert!(!df.is_feature_active("header"));
         assert!(!df.is_feature_active("unknown_feature"));
 
@@ -644,11 +647,9 @@ mod tests {
         assert!(df.is_feature_active("tasks"));
 
         df.has_images = true;
-        assert!(df.is_feature_active("image"));
         assert!(df.is_feature_active("images"));
 
         df.has_tables = true;
-        assert!(df.is_feature_active("table"));
         assert!(df.is_feature_active("tables"));
 
         df.has_header = true;
@@ -834,7 +835,7 @@ mod tests {
         custom_features.has_tasks = true;
         custom_features.has_tables = true;
         let html_custom = render(&fm, &locale, "<p>Content</p>", "doc_meta2", None, &custom_features).expect("Render failed");
-        assert!(html_custom.contains("<meta name=\"features\" content=\"core, tasks, table\">"));
+        assert!(html_custom.contains("<meta name=\"features\" content=\"core, tasks, tables\">"));
     }
 
     #[test]

@@ -44,19 +44,16 @@ fn run() -> Result<()> {
     let language_code = frontmatter.language.as_deref().unwrap_or("en");
     let locale = Locale::from_lang_code(language_code);
 
-    let (html_content, mut features) = converter::convert_markdown_to_html_with_options(
+    let frontmatter_map = frontmatter.to_hashmap();
+    let ctx = doc2flow::feature::DocumentContext::new(&frontmatter_map, markdown_body);
+    let all_features = doc2flow::features::get_all_features();
+    let features = doc2flow::converter::DocumentFeatures::resolve(&all_features, &ctx);
+
+    let (html_content, _) = converter::convert_markdown_to_html_with_options(
         markdown_body,
         &locale,
         frontmatter.numbered_sections,
     )?;
-
-    if frontmatter
-        .header
-        .as_deref()
-        .is_some_and(|v| v.trim().trim_matches('"').trim_matches('\'').eq_ignore_ascii_case("flex"))
-    {
-        features.has_header = true;
-    }
 
     let base_dir = input_path.parent();
 

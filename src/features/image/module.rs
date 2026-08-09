@@ -40,10 +40,10 @@ impl ImageFeature {
 }
 
 impl Feature for ImageFeature {
-    /// Returns the unique feature identifier "image".
+    /// Returns the unique feature identifier "images".
     #[inline]
     fn name(&self) -> &'static str {
-        "image"
+        "images"
     }
 
     /// Evaluates if the image feature is enabled based on presence of markdown images or html img tags.
@@ -94,7 +94,7 @@ mod tests {
     #[test]
     fn test_image_assets_embedded() {
         let feature = ImageFeature::new();
-        assert_eq!(feature.name(), "image");
+        assert_eq!(feature.name(), "images");
         let js = feature.javascript().expect("JavaScript must be embedded");
         let css = feature.css().expect("CSS must be embedded");
 
