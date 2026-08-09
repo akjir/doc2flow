@@ -996,7 +996,7 @@ mod tests {
 
         // Context with all features active
         let mut fm_map = HashMap::new();
-        fm_map.insert("header".to_string(), "flex".to_string());
+        fm_map.insert("header".to_string(), "true".to_string());
         fm_map.insert("title".to_string(), "Title".to_string());
         fm_map.insert("subtitle".to_string(), "Subtitle".to_string());
 
@@ -1023,7 +1023,7 @@ mod tests {
         let mut fm = Frontmatter::new();
         fm.title = Some("Title".to_string());
         fm.subtitle = Some("Subtitle".to_string());
-        fm.header = Some("flex".to_string());
+        fm.header = true;
 
         let mut doc_features = DocumentFeatures::default();
         doc_features.has_code = true;

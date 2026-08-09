@@ -73,7 +73,7 @@ d2f.exe --version
   * `version`: Document version string.
   * `language` / `lang`: Locale code (`en`, `de`) for static UI translations.
   * `logo`: Path to custom logo image (overridden by CLI `-l` / `--logo`).
-  * `header`: Header layout (`"flex"`, `"none"`). Default: `"none"`. When `"flex"`, renders section-style header card containing logo, title, and subtitle before Section 1 and variable table.
+  * `header`: Header layout (`true`, `false`). Default: `false`. When `true`, renders section-style header card containing logo, title, and subtitle before Section 1 and variable table.
   * `numbered_sections`: Enables section numbering (`1. `, `1.1 `). Default: `true`.
 * **Callout / Note Box Annotations:** Blockquotes converted to alert panels via prefixes:
   * `>` / `> Note`: Standard Note box (`.note`, neutral styling).

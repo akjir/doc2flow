@@ -68,12 +68,12 @@ impl Feature for HeaderFeature {
         "header"
     }
 
-    /// Evaluates if the header feature is enabled based on frontmatter option `header: "flex"`.
+    /// Evaluates if the header feature is enabled based on frontmatter option `header: true`.
     #[inline]
     fn is_enabled(&self, ctx: &DocumentContext) -> bool {
         ctx.frontmatter.get("header").is_some_and(|val| {
             let trimmed = val.trim().trim_matches('"').trim_matches('\'');
-            trimmed.eq_ignore_ascii_case("flex")
+            trimmed.eq_ignore_ascii_case("true")
         })
     }
 
@@ -104,25 +104,34 @@ mod tests {
         let ctx_empty = DocumentContext::new(&fm, "# Heading");
         assert!(!feature.is_enabled(&ctx_empty));
 
-        // 2. Explicit header: "none": disabled
+        // 2. Explicit header: "false": disabled
+        fm.insert("header".to_string(), "false".to_string());
+        let ctx_false = DocumentContext::new(&fm, "# Heading");
+        assert!(!feature.is_enabled(&ctx_false));
+
+        // 3. Explicit header: "true": enabled
+        fm.insert("header".to_string(), "true".to_string());
+        let ctx_true = DocumentContext::new(&fm, "# Heading");
+        assert!(feature.is_enabled(&ctx_true));
+
+        // 4. Quoted header: "\"true\"": enabled
+        fm.insert("header".to_string(), "\"true\"".to_string());
+        let ctx_quoted = DocumentContext::new(&fm, "# Heading");
+        assert!(feature.is_enabled(&ctx_quoted));
+
+        // 5. Uppercase header: "TRUE": enabled
+        fm.insert("header".to_string(), "TRUE".to_string());
+        let ctx_upper = DocumentContext::new(&fm, "# Heading");
+        assert!(feature.is_enabled(&ctx_upper));
+
+        // 6. Legacy / other string values: disabled
         fm.insert("header".to_string(), "none".to_string());
         let ctx_none = DocumentContext::new(&fm, "# Heading");
         assert!(!feature.is_enabled(&ctx_none));
 
-        // 3. Explicit header: "flex": enabled
         fm.insert("header".to_string(), "flex".to_string());
         let ctx_flex = DocumentContext::new(&fm, "# Heading");
-        assert!(feature.is_enabled(&ctx_flex));
-
-        // 4. Quoted header: "\"flex\"": enabled
-        fm.insert("header".to_string(), "\"flex\"".to_string());
-        let ctx_quoted = DocumentContext::new(&fm, "# Heading");
-        assert!(feature.is_enabled(&ctx_quoted));
-
-        // 5. Uppercase header: "FLEX": enabled
-        fm.insert("header".to_string(), "FLEX".to_string());
-        let ctx_upper = DocumentContext::new(&fm, "# Heading");
-        assert!(feature.is_enabled(&ctx_upper));
+        assert!(!feature.is_enabled(&ctx_flex));
     }
 
     #[test]

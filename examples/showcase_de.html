@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+168.20a045f.dev">
-  <meta name="version" content="0.9.4+168.20a045f.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+169.5b83201.dev">
+  <meta name="version" content="0.9.4+169.5b83201.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-09T15:37:55Z">
+  <meta name="dcterms.created" content="2026-08-09T16:59:29Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, code, fields, images, tables, tasks">
   <title>Doc2Flow Deutscher Showcase</title>
@@ -1726,7 +1726,7 @@ mark.d2f-highlight {
     window.d2f.document = window.d2f.document || {};
     window.d2f.document.id = 'd2f_id_468e65bc2ccf89b4';
     window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {"callout_caution":"Achtung","comment_placeholder":"Kommentar hinzufügen...","search_placeholder":"Suchen... (Ctrl+K)","sections_visible":"{visible} / {total} Abschnitte sichtbar","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","date":"Datum","setup_completed":"Vorgang abgeschlossen","date_placeholder":"TT.MM.JJJJ","copied":"Kopiert!","var_table_variable":"Variable","var_table_value":"Wert","callout_tip":"Tipp","callout_important":"Wichtig","signature_date":"Datum","var_table_title":"Variablen","copy_code":"Code kopieren","lang_code":"de","setup_in_progress":"Vorgang in Bearbeitung","export_pdf":"Als PDF exportieren","reset_all":"Zurücksetzen","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","name_placeholder":"Name","loading":"Lade...","save_state":"Stand sichern","callout_note":"Hinweis","callout_warning":"Warnung"};
+    window.d2f.lang.dictionary = {"sections_visible":"{visible} / {total} Abschnitte sichtbar","setup_in_progress":"Vorgang in Bearbeitung","var_table_variable":"Variable","name_placeholder":"Name","save_state":"Stand sichern","callout_tip":"Tipp","var_table_title":"Variablen","copy_code":"Code kopieren","date_placeholder":"TT.MM.JJJJ","export_pdf":"Als PDF exportieren","progress_template":"{done} von {total} Aufgaben erledigt ({pct}%)","loading":"Lade...","reset_all":"Zurücksetzen","setup_completed":"Vorgang abgeschlossen","date":"Datum","confirm_reset":"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?","callout_warning":"Warnung","var_table_value":"Wert","callout_note":"Hinweis","lang_code":"de","signature_date":"Datum","copied":"Kopiert!","callout_important":"Wichtig","callout_caution":"Achtung","comment_placeholder":"Kommentar hinzufügen...","search_placeholder":"Suchen... (Ctrl+K)"};
     (() => {
   // ../src/core/web/storage.ts
   var saveHandlers = /* @__PURE__ */ new Set();
@@ -2598,7 +2598,7 @@ mark.d2f-highlight {
     }
     function resetFields() {
       document.querySelectorAll(
-        "input, textarea, select"
+        "input, textarea"
       ).forEach((el) => {
         if (el.id === "search-input" || el.classList.contains("search-input"))
           return;
@@ -2614,8 +2614,6 @@ mark.d2f-highlight {
           el.value = "";
           el.textContent = "";
           el.removeAttribute("value");
-        } else if (el instanceof HTMLSelectElement) {
-          el.selectedIndex = 0;
         }
       });
     }

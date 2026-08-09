@@ -755,11 +755,11 @@ fn test_section_table_feature_detection() {
 }
 
 #[test]
-fn test_header_flex_feature_integration() {
-    let input_flex = r#"---
+fn test_header_true_feature_integration() {
+    let input_true = r#"---
 title: "Server Configuration"
 subtitle: "Standard Operating Manual"
-header: "flex"
+header: true
 ---
 
 [Variables]
@@ -773,12 +773,12 @@ header: "flex"
 "#;
 
     let (fm, body) =
-        doc2flow::converter::parse_and_validate_frontmatter(input_flex, Some("test_flex.md")).unwrap();
-    assert_eq!(fm.header.as_deref(), Some("flex"));
+        doc2flow::converter::parse_and_validate_frontmatter(input_true, Some("test_true.md")).unwrap();
+    assert!(fm.header);
 
     let locale = doc2flow::locales::Locale::from_lang_code("en");
     let (html_body, mut features) = doc2flow::converter::convert_markdown_to_html(&body).unwrap();
-    if fm.header.as_deref().map_or(false, |v| v.eq_ignore_ascii_case("flex")) {
+    if fm.header {
         features.has_header = true;
     }
 
@@ -789,7 +789,7 @@ header: "flex"
         &fm,
         &locale,
         &html_body,
-        "doc_header_flex",
+        "doc_header_true",
         Some("<svg class=\"custom-logo\"></svg>"),
         &features,
     ).unwrap();
@@ -817,11 +817,11 @@ header: "flex"
 }
 
 #[test]
-fn test_header_none_or_missing_feature_integration() {
-    let input_none = r#"---
+fn test_header_false_or_missing_feature_integration() {
+    let input_false = r#"---
 title: "Default Guide"
 subtitle: "Default Subtitle"
-header: "none"
+header: false
 ---
 
 ## Section 1: Steps
@@ -830,10 +830,12 @@ header: "none"
 "#;
 
     let (fm, body) =
-        doc2flow::converter::parse_and_validate_frontmatter(input_none, Some("test_none.md")).unwrap();
+        doc2flow::converter::parse_and_validate_frontmatter(input_false, Some("test_false.md")).unwrap();
+    assert!(!fm.header);
+
     let locale = doc2flow::locales::Locale::from_lang_code("en");
     let (html_body, mut features) = doc2flow::converter::convert_markdown_to_html(&body).unwrap();
-    if fm.header.as_deref().map_or(false, |v| v.eq_ignore_ascii_case("flex")) {
+    if fm.header {
         features.has_header = true;
     }
 
@@ -843,7 +845,7 @@ header: "none"
         &fm,
         &locale,
         &html_body,
-        "doc_header_none",
+        "doc_header_false",
         None,
         &features,
     ).unwrap();

@@ -128,7 +128,7 @@ pub struct Frontmatter {
     pub version: Option<String>,
     pub language: Option<String>,
     pub logo: Option<String>,
-    pub header: Option<String>,
+    pub header: bool,
     pub numbered_sections: bool,
     pub custom: std::collections::HashMap<String, String>,
 }
@@ -274,7 +274,7 @@ impl Default for Frontmatter {
             version: None,
             language: None,
             logo: None,
-            header: None,
+            header: false,
             numbered_sections: true,
             custom: std::collections::HashMap::new(),
         }
@@ -309,9 +309,7 @@ impl Frontmatter {
         if let Some(ref lg) = self.logo {
             map.insert("logo".to_string(), lg.clone());
         }
-        if let Some(ref h) = self.header {
-            map.insert("header".to_string(), h.clone());
-        }
+        map.insert("header".to_string(), self.header.to_string());
         map.insert("numbered_sections".to_string(), self.numbered_sections.to_string());
         for (k, v) in &self.custom {
             map.insert(k.clone(), v.clone());
@@ -416,6 +414,7 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
 
                 if val_trimmed.is_empty()
                     && key != "numbered_sections"
+                    && key != "header"
                 {
                     continue;
                 }
@@ -427,7 +426,9 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
                     "version" => fm.version = Some(val_trimmed.to_string()),
                     "language" | "lang" => fm.language = Some(val_trimmed.to_string()),
                     "logo" => fm.logo = Some(val_trimmed.to_string()),
-                    "header" => fm.header = Some(val_trimmed.to_string()),
+                    "header" => {
+                        fm.header = val_trimmed.eq_ignore_ascii_case("true");
+                    }
                     "numbered_sections" => {
                         fm.numbered_sections = val_trimmed.eq_ignore_ascii_case("true");
                     }
@@ -1536,6 +1537,7 @@ mod tests {
         assert_eq!(map.get("language").map(|s| s.as_str()), Some("en"));
         assert_eq!(map.get("lang").map(|s| s.as_str()), Some("en"));
         assert_eq!(map.get("logo").map(|s| s.as_str()), Some("brand.svg"));
+        assert_eq!(map.get("header").map(|s| s.as_str()), Some("false"));
         assert_eq!(map.get("numbered_sections").map(|s| s.as_str()), Some("true"));
         assert_eq!(map.get("custom_key_1").map(|s| s.as_str()), Some("custom_val_1"));
         assert_eq!(map.get("framework").map(|s| s.as_str()), Some("doc2flow"));
@@ -1544,6 +1546,7 @@ mod tests {
         // Without frontmatter
         let no_fm = "## Pure Markdown\nJust body text";
         let (empty_map, no_fm_body) = parse_frontmatter_map(no_fm);
+        assert_eq!(empty_map.get("header").map(|s| s.as_str()), Some("false"));
         assert_eq!(empty_map.get("numbered_sections").map(|s| s.as_str()), Some("true"));
         assert_eq!(empty_map.get("title"), None);
         assert_eq!(no_fm_body, no_fm);

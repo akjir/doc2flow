@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+168.20a045f.dev">
-  <meta name="version" content="0.9.4+168.20a045f.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+169.5b83201.dev">
+  <meta name="version" content="0.9.4+169.5b83201.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-09T15:37:55Z">
+  <meta name="dcterms.created" content="2026-08-09T16:59:29Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, code, fields, images, tables, tasks">
   <title>Doc2Flow English Showcase</title>
@@ -1726,7 +1726,7 @@ mark.d2f-highlight {
     window.d2f.document = window.d2f.document || {};
     window.d2f.document.id = 'd2f_id_c9c539743b5bb460';
     window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {"callout_note":"Note","callout_warning":"Warning","export_pdf":"Export as PDF","callout_caution":"Caution","date":"Date","lang_code":"en","progress_template":"{done} of {total} tasks completed ({pct}%)","comment_placeholder":"Add a comment...","search_placeholder":"Search... (Ctrl+K)","sections_visible":"{visible} / {total} sections visible","var_table_value":"Value","name_placeholder":"Name","var_table_variable":"Variable","loading":"Loading...","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","reset_all":"Reset","callout_important":"Important","date_placeholder":"MM/DD/YYYY","setup_in_progress":"Process in Progress","signature_date":"Date","copy_code":"Copy code","setup_completed":"Process Completed","var_table_title":"Variables","copied":"Copied!","callout_tip":"Tip","save_state":"Save State"};
+    window.d2f.lang.dictionary = {"progress_template":"{done} of {total} tasks completed ({pct}%)","signature_date":"Date","search_placeholder":"Search... (Ctrl+K)","setup_completed":"Process Completed","callout_tip":"Tip","var_table_value":"Value","copy_code":"Copy code","export_pdf":"Export as PDF","save_state":"Save State","comment_placeholder":"Add a comment...","callout_important":"Important","callout_warning":"Warning","callout_caution":"Caution","name_placeholder":"Name","reset_all":"Reset","loading":"Loading...","callout_note":"Note","setup_in_progress":"Process in Progress","date":"Date","date_placeholder":"MM/DD/YYYY","copied":"Copied!","var_table_title":"Variables","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","sections_visible":"{visible} / {total} sections visible","var_table_variable":"Variable","lang_code":"en"};
     (() => {
   // ../src/core/web/storage.ts
   var saveHandlers = /* @__PURE__ */ new Set();
@@ -2598,7 +2598,7 @@ mark.d2f-highlight {
     }
     function resetFields() {
       document.querySelectorAll(
-        "input, textarea, select"
+        "input, textarea"
       ).forEach((el) => {
         if (el.id === "search-input" || el.classList.contains("search-input"))
           return;
@@ -2614,8 +2614,6 @@ mark.d2f-highlight {
           el.value = "";
           el.textContent = "";
           el.removeAttribute("value");
-        } else if (el instanceof HTMLSelectElement) {
-          el.selectedIndex = 0;
         }
       });
     }
