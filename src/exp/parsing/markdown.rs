@@ -74,15 +74,170 @@ enum FrontmatterPhase {
     Complete,
 }
 
-/// Trims surrounding quotes only if enclosed by identical matching single or double quotes.
-fn trim_matching_quotes(input: &str) -> &str {
-    let s = input.trim();
-    if (s.starts_with('"') && s.ends_with('"') && s.len() >= 2)
-        || (s.starts_with('\'') && s.ends_with('\'') && s.len() >= 2)
-    {
-        &s[1..s.len() - 1]
+/// Constructs a standardized diagnostic error for invalid block directive names.
+fn build_invalid_block_directive_name_err(line_number: usize, line_snippet: &str) -> Error {
+    let snippet = if line_snippet.is_empty() { "" } else { line_snippet };
+    let carets = build_caret_annotation(1, snippet.len().max(1), snippet.len().max(1));
+    DiagnosticError {
+        message: "invalid block directive name".into(),
+        file_path: "<input>".into(),
+        line_number,
+        col_number: 1,
+        line_snippet: snippet.into(),
+        annotation_carets: carets,
+        annotation_text: "directive name must contain only alphanumeric characters (a-z, 0-9)".into(),
+        help_text: "use only alphanumeric characters for directive names, e.g. ':::variables'.".into(),
+    }
+    .into()
+}
+
+/// Constructs a standardized diagnostic error for missing block directive names.
+fn build_missing_block_directive_name_err(line_number: usize, line_snippet: &str) -> Error {
+    let snippet = if line_snippet.is_empty() { "" } else { line_snippet };
+    let carets = build_caret_annotation(1, snippet.len().max(1), snippet.len().max(1));
+    DiagnosticError {
+        message: "missing block directive name".into(),
+        file_path: "<input>".into(),
+        line_number,
+        col_number: 1,
+        line_snippet: snippet.into(),
+        annotation_carets: carets,
+        annotation_text: "expected directive name after colons".into(),
+        help_text: "provide an alphanumeric name for the block directive, e.g. ':::variables'.".into(),
+    }
+    .into()
+}
+
+/// Constructs a standardized diagnostic error for missing frontmatter delimiters.
+fn build_missing_frontmatter_err(line_number: usize, line_snippet: &str) -> Error {
+    let snippet = if line_snippet.is_empty() { "" } else { line_snippet };
+    let carets = build_caret_annotation(1, snippet.len().max(1), snippet.len().max(1));
+    DiagnosticError {
+        message: "missing frontmatter delimiter '---'".into(),
+        file_path: "<input>".into(),
+        line_number,
+        col_number: 1,
+        line_snippet: snippet.into(),
+        annotation_carets: carets,
+        annotation_text: "expected '---' to begin frontmatter".into(),
+        help_text: "document must begin with frontmatter enclosed by '---' delimiters.".into(),
+    }
+    .into()
+}
+
+/// Constructs a standardized diagnostic error for nested block directives.
+fn build_nested_block_directive_err(line_number: usize, line_snippet: &str) -> Error {
+    let snippet = if line_snippet.is_empty() { "" } else { line_snippet };
+    let carets = build_caret_annotation(1, snippet.len().max(1), snippet.len().max(1));
+    DiagnosticError {
+        message: "nested block directives are not supported".into(),
+        file_path: "<input>".into(),
+        line_number,
+        col_number: 1,
+        line_snippet: snippet.into(),
+        annotation_carets: carets,
+        annotation_text: "nested block directive opening found here".into(),
+        help_text: "close the active block directive with ':::' before starting a new one.".into(),
+    }
+    .into()
+}
+
+/// Constructs a standardized diagnostic error for unclosed block directives.
+fn build_unclosed_block_directive_err(line_number: usize, line_snippet: &str) -> Error {
+    let snippet = if line_snippet.is_empty() { "" } else { line_snippet };
+    let carets = build_caret_annotation(1, snippet.len().max(3), snippet.len().max(3));
+    DiagnosticError {
+        message: "unclosed block directive".into(),
+        file_path: "<input>".into(),
+        line_number,
+        col_number: 1,
+        line_snippet: snippet.into(),
+        annotation_carets: carets,
+        annotation_text: "block directive starting here is never closed".into(),
+        help_text: "close the block directive with a closing ':::' line.".into(),
+    }
+    .into()
+}
+
+/// Classifies a non-table line and appends it to target buffer or document body.
+fn classify_and_push_line(
+    doc: &mut Document,
+    in_block: bool,
+    block_children: &mut Vec<DocumentElement>,
+    effective_line: &str,
+    ordered_list_stack: &mut Vec<(usize, usize)>,
+) {
+    let trimmed = effective_line.trim();
+    if trimmed.is_empty() {
+        ordered_list_stack.clear();
+        return;
+    }
+
+    if let Some((depth, checked, content)) = parse_check_box_item(effective_line) {
+        ordered_list_stack.clear();
+        push_element(
+            doc,
+            in_block,
+            block_children,
+            DocumentElement::check_box_item(depth, checked, content),
+        );
+    } else if let Some((depth, content)) = parse_bullet_list_item(effective_line) {
+        ordered_list_stack.clear();
+        push_element(
+            doc,
+            in_block,
+            block_children,
+            DocumentElement::bullet_list_item(depth, content),
+        );
+    } else if let Some(elem) = try_process_ordered_list_item(effective_line, ordered_list_stack) {
+        push_element(doc, in_block, block_children, elem);
+    } else if trimmed.starts_with('>') {
+        ordered_list_stack.clear();
+        let (shoutout_kind, content) = parse_shoutout_line(trimmed);
+        push_element(
+            doc,
+            in_block,
+            block_children,
+            DocumentElement::shoutout(shoutout_kind, content),
+        );
+    } else if is_plain_text(trimmed) {
+        ordered_list_stack.clear();
+        push_element(
+            doc,
+            in_block,
+            block_children,
+            DocumentElement::text(trimmed),
+        );
     } else {
-        s
+        ordered_list_stack.clear();
+        push_element(
+            doc,
+            in_block,
+            block_children,
+            DocumentElement::unknown(trimmed),
+        );
+    }
+}
+
+/// Checks whether a line represents plain text.
+fn is_plain_text(line: &str) -> bool {
+    !line.starts_with(['#', '>', '-', '*', '`', '|'])
+}
+
+/// Parses a bullet list item into its nesting depth and inner content.
+fn parse_bullet_list_item(line: &str) -> Option<(usize, &str)> {
+    let leading_spaces = line.bytes().take_while(|&b| b == b' ').count();
+    let rest = &line[leading_spaces..];
+
+    let after_dash = rest.strip_prefix('-')?;
+    if after_dash.is_empty() {
+        let depth = (leading_spaces + 1) / 2;
+        Some((depth, ""))
+    } else if let Some(content) = after_dash.strip_prefix(' ') {
+        let depth = (leading_spaces + 1) / 2;
+        Some((depth, content.trim()))
+    } else {
+        None
     }
 }
 
@@ -115,20 +270,298 @@ fn parse_check_box_item(line: &str) -> Option<(usize, bool, &str)> {
     }
 }
 
-/// Parses a bullet list item into its nesting depth and inner content.
-fn parse_bullet_list_item(line: &str) -> Option<(usize, &str)> {
-    let leading_spaces = line.bytes().take_while(|&b| b == b' ').count();
-    let rest = &line[leading_spaces..];
+/// Parses Markdown content into a structured document model.
+///
+/// # Errors
+///
+/// Returns a diagnostic error if frontmatter is missing, unclosed, or improperly placed,
+/// or if block directives are malformed, unclosed, or nested.
+pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
+    let mut doc = Document::new();
+    let mut phase = FrontmatterPhase::SeekingStart;
+    let mut comment_filter = CommentFilterState::new();
+    let mut ordered_list_stack: Vec<(usize, usize)> = Vec::new();
 
-    let after_dash = rest.strip_prefix('-')?;
-    if after_dash.is_empty() {
-        let depth = (leading_spaces + 1) / 2;
-        Some((depth, ""))
-    } else if let Some(content) = after_dash.strip_prefix(' ') {
-        let depth = (leading_spaces + 1) / 2;
-        Some((depth, content.trim()))
-    } else {
-        None
+    let mut in_code_block = false;
+    let mut code_block_lang: Option<String> = None;
+    let mut code_block_lines: Vec<&str> = Vec::new();
+
+    let mut in_block_directive = false;
+    let mut block_name = String::new();
+    let mut block_start_line = 0;
+    let mut block_start_snippet = "";
+    let mut block_children: Vec<DocumentElement> = Vec::new();
+
+    let mut active_table: Option<(Vec<TableAlignment>, Vec<Vec<String>>)> = None;
+    let mut pending_table_header: Option<String> = None;
+
+    let mut fm_start_line = 0;
+    let mut fm_start_snippet = "";
+
+    let mut line_buf = String::new();
+    let mut last_line_info = (1, "");
+
+    for (idx, line) in md_content.lines().enumerate() {
+        let line_no = idx + 1;
+        last_line_info = (line_no, line);
+
+        // 1. Frontmatter collection phase
+        if phase == FrontmatterPhase::Inside {
+            if line.trim() == "---" {
+                phase = FrontmatterPhase::Complete;
+            } else if let Some((key, val)) = line.split_once(':') {
+                let key = key.trim();
+                let val_trimmed = trim_matching_quotes(val);
+                if !key.is_empty() {
+                    doc.insert_parameter(key, val_trimmed);
+                }
+            }
+            continue;
+        }
+
+        // 2. Active code block collection phase (verbatim lines, no comment filtering)
+        if in_code_block {
+            let trimmed = line.trim_start();
+            if trimmed.starts_with("```") {
+                let content = trim_code_block_lines(&code_block_lines);
+                push_element(
+                    &mut doc,
+                    in_block_directive,
+                    &mut block_children,
+                    DocumentElement::code_block(code_block_lang.take(), content),
+                );
+                code_block_lines.clear();
+                in_code_block = false;
+            } else {
+                code_block_lines.push(line);
+            }
+            continue;
+        }
+
+        // 3. HTML comment filtering
+        let Some(effective_line) = comment_filter.process_line(line, &mut line_buf) else {
+            continue;
+        };
+
+        // 4. Frontmatter start detection or document body classification
+        match phase {
+            FrontmatterPhase::SeekingStart => {
+                let trimmed = effective_line.trim();
+                if trimmed.is_empty() {
+                    continue;
+                }
+                if trimmed == "---" {
+                    phase = FrontmatterPhase::Inside;
+                    fm_start_line = line_no;
+                    fm_start_snippet = line;
+                    continue;
+                }
+                return Err(build_missing_frontmatter_err(line_no, line));
+            }
+            FrontmatterPhase::Inside => unreachable!(),
+            FrontmatterPhase::Complete => {
+                let trimmed_start = effective_line.trim_start();
+
+                if trimmed_start.starts_with(":::") {
+                    if let Some((alignments, rows)) = active_table.take() {
+                        push_element(
+                            &mut doc,
+                            in_block_directive,
+                            &mut block_children,
+                            DocumentElement::table(alignments, rows),
+                        );
+                    }
+                    if let Some(pending) = pending_table_header.take() {
+                        classify_and_push_line(
+                            &mut doc,
+                            in_block_directive,
+                            &mut block_children,
+                            &pending,
+                            &mut ordered_list_stack,
+                        );
+                    }
+                    ordered_list_stack.clear();
+
+                    let colon_count = trimmed_start.bytes().take_while(|&b| b == b':').count();
+                    let rest = trimmed_start[colon_count..].trim();
+
+                    if in_block_directive {
+                        if rest.is_empty() {
+                            let children = std::mem::take(&mut block_children);
+                            let name = std::mem::take(&mut block_name);
+                            doc.push_body(DocumentElement::block_directive(name, children));
+                            in_block_directive = false;
+                            continue;
+                        } else {
+                            return Err(build_nested_block_directive_err(line_no, line));
+                        }
+                    } else if rest.is_empty() {
+                        return Err(build_missing_block_directive_name_err(line_no, line));
+                    } else if !rest.chars().all(|c| c.is_ascii_alphanumeric()) {
+                        return Err(build_invalid_block_directive_name_err(line_no, line));
+                    } else {
+                        in_block_directive = true;
+                        block_name = rest.to_string();
+                        block_start_line = line_no;
+                        block_start_snippet = line;
+                        block_children.clear();
+                        continue;
+                    }
+                }
+
+                if trimmed_start.starts_with("```") {
+                    if let Some((alignments, rows)) = active_table.take() {
+                        push_element(
+                            &mut doc,
+                            in_block_directive,
+                            &mut block_children,
+                            DocumentElement::table(alignments, rows),
+                        );
+                    }
+                    if let Some(pending) = pending_table_header.take() {
+                        classify_and_push_line(
+                            &mut doc,
+                            in_block_directive,
+                            &mut block_children,
+                            &pending,
+                            &mut ordered_list_stack,
+                        );
+                    }
+                    ordered_list_stack.clear();
+                    let info = trimmed_start.strip_prefix("```").unwrap_or("").trim();
+                    code_block_lang = if info.is_empty() {
+                        None
+                    } else {
+                        Some(info.to_string())
+                    };
+                    code_block_lines.clear();
+                    in_code_block = true;
+                    continue;
+                }
+
+                if let Some((_, ref mut rows)) = active_table {
+                    let trimmed = effective_line.trim();
+                    if !trimmed.is_empty()
+                        && trimmed.contains('|')
+                        && !trimmed.starts_with(['#', '>'])
+                        && !trimmed.starts_with("```")
+                        && !trimmed.starts_with(":::")
+                    {
+                        rows.push(parse_table_row(effective_line));
+                        continue;
+                    } else {
+                        let (alignments, rows) = active_table.take().unwrap();
+                        push_element(
+                            &mut doc,
+                            in_block_directive,
+                            &mut block_children,
+                            DocumentElement::table(alignments, rows),
+                        );
+                    }
+                }
+
+                if let Some(pending_line) = pending_table_header.take() {
+                    if let Some(alignments) = parse_table_delimiter_row(effective_line) {
+                        let header_row = parse_table_row(&pending_line);
+                        active_table = Some((alignments, vec![header_row]));
+                        continue;
+                    } else {
+                        classify_and_push_line(
+                            &mut doc,
+                            in_block_directive,
+                            &mut block_children,
+                            &pending_line,
+                            &mut ordered_list_stack,
+                        );
+                    }
+                }
+
+                let trimmed = effective_line.trim();
+                if trimmed.is_empty() {
+                    ordered_list_stack.clear();
+                    continue;
+                }
+
+                if trimmed.contains('|')
+                    && !trimmed.starts_with(['#', '>'])
+                    && !trimmed.starts_with("```")
+                    && !trimmed.starts_with(":::")
+                    && !trimmed.starts_with("- ")
+                    && !trimmed.starts_with("- [")
+                {
+                    ordered_list_stack.clear();
+                    pending_table_header = Some(effective_line.to_string());
+                    continue;
+                }
+
+                classify_and_push_line(
+                    &mut doc,
+                    in_block_directive,
+                    &mut block_children,
+                    effective_line,
+                    &mut ordered_list_stack,
+                );
+            }
+        }
+    }
+
+    if in_code_block {
+        let content = trim_code_block_lines(&code_block_lines);
+        push_element(
+            &mut doc,
+            in_block_directive,
+            &mut block_children,
+            DocumentElement::code_block(code_block_lang.take(), content),
+        );
+    }
+
+    if let Some((alignments, rows)) = active_table.take() {
+        push_element(
+            &mut doc,
+            in_block_directive,
+            &mut block_children,
+            DocumentElement::table(alignments, rows),
+        );
+    }
+    if let Some(pending) = pending_table_header.take() {
+        classify_and_push_line(
+            &mut doc,
+            in_block_directive,
+            &mut block_children,
+            &pending,
+            &mut ordered_list_stack,
+        );
+    }
+
+    if in_block_directive {
+        return Err(build_unclosed_block_directive_err(
+            block_start_line,
+            block_start_snippet,
+        ));
+    }
+
+    // Final state validation
+    match phase {
+        FrontmatterPhase::SeekingStart => {
+            let (line_no, snippet) = last_line_info;
+            Err(build_missing_frontmatter_err(line_no, snippet))
+        }
+        FrontmatterPhase::Inside => Err(DiagnosticError {
+            message: "unclosed frontmatter block".into(),
+            file_path: "<input>".into(),
+            line_number: fm_start_line,
+            col_number: 1,
+            line_snippet: fm_start_snippet.into(),
+            annotation_carets: build_caret_annotation(
+                1,
+                fm_start_snippet.len().max(3),
+                fm_start_snippet.len().max(3),
+            ),
+            annotation_text: "frontmatter starting here is never closed".into(),
+            help_text: "close the frontmatter block with a closing '---' line.".into(),
+        }
+        .into()),
+        FrontmatterPhase::Complete => Ok(doc),
     }
 }
 
@@ -153,61 +586,6 @@ fn parse_ordered_list_candidate(line: &str) -> Option<(usize, u64, &str)> {
         Some((depth, parsed_num, content.trim()))
     } else {
         None
-    }
-}
-
-/// Attempts to process an ordered list item line against the active list depth stack.
-fn try_process_ordered_list_item(
-    line: &str,
-    stack: &mut Vec<(usize, usize)>,
-) -> Option<DocumentElement> {
-    let (depth, parsed_num, content) = parse_ordered_list_candidate(line)?;
-
-    if stack.is_empty() {
-        if parsed_num == 1 {
-            stack.push((depth, 1));
-            Some(DocumentElement::ordered_list_item(depth, 1, content))
-        } else {
-            None
-        }
-    } else {
-        let last_depth = stack.last().unwrap().0;
-        if depth > last_depth {
-            stack.push((depth, 1));
-            Some(DocumentElement::ordered_list_item(depth, 1, content))
-        } else if depth == last_depth {
-            let entry = stack.last_mut().unwrap();
-            entry.1 += 1;
-            let position = entry.1;
-            Some(DocumentElement::ordered_list_item(depth, position, content))
-        } else {
-            while let Some(top) = stack.last() {
-                if top.0 > depth {
-                    stack.pop();
-                } else {
-                    break;
-                }
-            }
-
-            if let Some(top) = stack.last_mut() {
-                if top.0 == depth {
-                    top.1 += 1;
-                    let position = top.1;
-                    Some(DocumentElement::ordered_list_item(depth, position, content))
-                } else if parsed_num == 1 {
-                    stack.push((depth, 1));
-                    Some(DocumentElement::ordered_list_item(depth, 1, content))
-                } else {
-                    stack.clear();
-                    None
-                }
-            } else if parsed_num == 1 {
-                stack.push((depth, 1));
-                Some(DocumentElement::ordered_list_item(depth, 1, content))
-            } else {
-                None
-            }
-        }
     }
 }
 
@@ -352,36 +730,17 @@ fn parse_table_row(line: &str) -> Vec<String> {
     cells
 }
 
-/// Classifies a non-table line and appends it to the document body.
-fn classify_and_push_line(
+/// Appends an element either to the active block children buffer or to the document body.
+fn push_element(
     doc: &mut Document,
-    effective_line: &str,
-    ordered_list_stack: &mut Vec<(usize, usize)>,
+    in_block: bool,
+    block_children: &mut Vec<DocumentElement>,
+    elem: DocumentElement,
 ) {
-    let trimmed = effective_line.trim();
-    if trimmed.is_empty() {
-        ordered_list_stack.clear();
-        return;
-    }
-
-    if let Some((depth, checked, content)) = parse_check_box_item(effective_line) {
-        ordered_list_stack.clear();
-        doc.push_body(DocumentElement::check_box_item(depth, checked, content));
-    } else if let Some((depth, content)) = parse_bullet_list_item(effective_line) {
-        ordered_list_stack.clear();
-        doc.push_body(DocumentElement::bullet_list_item(depth, content));
-    } else if let Some(elem) = try_process_ordered_list_item(effective_line, ordered_list_stack) {
-        doc.push_body(elem);
-    } else if trimmed.starts_with('>') {
-        ordered_list_stack.clear();
-        let (shoutout_kind, content) = parse_shoutout_line(trimmed);
-        doc.push_body(DocumentElement::shoutout(shoutout_kind, content));
-    } else if is_plain_text(trimmed) {
-        ordered_list_stack.clear();
-        doc.push_body(DocumentElement::text(trimmed));
+    if in_block {
+        block_children.push(elem);
     } else {
-        ordered_list_stack.clear();
-        doc.push_body(DocumentElement::unknown(trimmed));
+        doc.push_body(elem);
     }
 }
 
@@ -408,208 +767,71 @@ fn trim_code_block_lines(lines: &[&str]) -> String {
     }
 }
 
-/// Parses Markdown content into a structured document model.
-///
-/// # Errors
-///
-/// Returns a diagnostic error if frontmatter is missing, unclosed, or improperly placed.
-pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
-    let mut doc = Document::new();
-    let mut phase = FrontmatterPhase::SeekingStart;
-    let mut comment_filter = CommentFilterState::new();
-    let mut ordered_list_stack: Vec<(usize, usize)> = Vec::new();
+/// Trims surrounding quotes only if enclosed by identical matching single or double quotes.
+fn trim_matching_quotes(input: &str) -> &str {
+    let s = input.trim();
+    if (s.starts_with('"') && s.ends_with('"') && s.len() >= 2)
+        || (s.starts_with('\'') && s.ends_with('\'') && s.len() >= 2)
+    {
+        &s[1..s.len() - 1]
+    } else {
+        s
+    }
+}
 
-    let mut in_code_block = false;
-    let mut code_block_lang: Option<String> = None;
-    let mut code_block_lines: Vec<&str> = Vec::new();
+/// Attempts to process an ordered list item line against the active list depth stack.
+fn try_process_ordered_list_item(
+    line: &str,
+    stack: &mut Vec<(usize, usize)>,
+) -> Option<DocumentElement> {
+    let (depth, parsed_num, content) = parse_ordered_list_candidate(line)?;
 
-    let mut active_table: Option<(Vec<TableAlignment>, Vec<Vec<String>>)> = None;
-    let mut pending_table_header: Option<String> = None;
-
-    let mut fm_start_line = 0;
-    let mut fm_start_snippet = "";
-
-    let mut line_buf = String::new();
-    let mut last_line_info = (1, "");
-
-    for (idx, line) in md_content.lines().enumerate() {
-        let line_no = idx + 1;
-        last_line_info = (line_no, line);
-
-        // 1. Frontmatter collection phase
-        if phase == FrontmatterPhase::Inside {
-            if line.trim() == "---" {
-                phase = FrontmatterPhase::Complete;
-            } else if let Some((key, val)) = line.split_once(':') {
-                let key = key.trim();
-                let val_trimmed = trim_matching_quotes(val);
-                if !key.is_empty() {
-                    doc.insert_parameter(key, val_trimmed);
+    if stack.is_empty() {
+        if parsed_num == 1 {
+            stack.push((depth, 1));
+            Some(DocumentElement::ordered_list_item(depth, 1, content))
+        } else {
+            None
+        }
+    } else {
+        let last_depth = stack.last().unwrap().0;
+        if depth > last_depth {
+            stack.push((depth, 1));
+            Some(DocumentElement::ordered_list_item(depth, 1, content))
+        } else if depth == last_depth {
+            let entry = stack.last_mut().unwrap();
+            entry.1 += 1;
+            let position = entry.1;
+            Some(DocumentElement::ordered_list_item(depth, position, content))
+        } else {
+            while let Some(top) = stack.last() {
+                if top.0 > depth {
+                    stack.pop();
+                } else {
+                    break;
                 }
             }
-            continue;
-        }
 
-        // 2. Active code block collection phase (verbatim lines, no comment filtering)
-        if in_code_block {
-            let trimmed = line.trim_start();
-            if trimmed.starts_with("```") {
-                let content = trim_code_block_lines(&code_block_lines);
-                doc.push_body(DocumentElement::code_block(code_block_lang.take(), content));
-                code_block_lines.clear();
-                in_code_block = false;
+            if let Some(top) = stack.last_mut() {
+                if top.0 == depth {
+                    top.1 += 1;
+                    let position = top.1;
+                    Some(DocumentElement::ordered_list_item(depth, position, content))
+                } else if parsed_num == 1 {
+                    stack.push((depth, 1));
+                    Some(DocumentElement::ordered_list_item(depth, 1, content))
+                } else {
+                    stack.clear();
+                    None
+                }
+            } else if parsed_num == 1 {
+                stack.push((depth, 1));
+                Some(DocumentElement::ordered_list_item(depth, 1, content))
             } else {
-                code_block_lines.push(line);
-            }
-            continue;
-        }
-
-        // 3. HTML comment filtering
-        let Some(effective_line) = comment_filter.process_line(line, &mut line_buf) else {
-            continue;
-        };
-
-        // 4. Frontmatter start detection or document body classification
-        match phase {
-            FrontmatterPhase::SeekingStart => {
-                let trimmed = effective_line.trim();
-                if trimmed.is_empty() {
-                    continue;
-                }
-                if trimmed == "---" {
-                    phase = FrontmatterPhase::Inside;
-                    fm_start_line = line_no;
-                    fm_start_snippet = line;
-                    continue;
-                }
-                return Err(build_missing_frontmatter_err(line_no, line));
-            }
-            FrontmatterPhase::Inside => unreachable!(),
-            FrontmatterPhase::Complete => {
-                let trimmed_start = effective_line.trim_start();
-                if trimmed_start.starts_with("```") {
-                    if let Some((alignments, rows)) = active_table.take() {
-                        doc.push_body(DocumentElement::table(alignments, rows));
-                    }
-                    if let Some(pending) = pending_table_header.take() {
-                        classify_and_push_line(&mut doc, &pending, &mut ordered_list_stack);
-                    }
-                    ordered_list_stack.clear();
-                    let info = trimmed_start.strip_prefix("```").unwrap_or("").trim();
-                    code_block_lang = if info.is_empty() {
-                        None
-                    } else {
-                        Some(info.to_string())
-                    };
-                    code_block_lines.clear();
-                    in_code_block = true;
-                    continue;
-                }
-
-                if let Some((_, ref mut rows)) = active_table {
-                    let trimmed = effective_line.trim();
-                    if !trimmed.is_empty()
-                        && trimmed.contains('|')
-                        && !trimmed.starts_with(['#', '>'])
-                        && !trimmed.starts_with("```")
-                    {
-                        rows.push(parse_table_row(effective_line));
-                        continue;
-                    } else {
-                        let (alignments, rows) = active_table.take().unwrap();
-                        doc.push_body(DocumentElement::table(alignments, rows));
-                    }
-                }
-
-                if let Some(pending_line) = pending_table_header.take() {
-                    if let Some(alignments) = parse_table_delimiter_row(effective_line) {
-                        let header_row = parse_table_row(&pending_line);
-                        active_table = Some((alignments, vec![header_row]));
-                        continue;
-                    } else {
-                        classify_and_push_line(&mut doc, &pending_line, &mut ordered_list_stack);
-                    }
-                }
-
-                let trimmed = effective_line.trim();
-                if trimmed.is_empty() {
-                    ordered_list_stack.clear();
-                    continue;
-                }
-
-                if trimmed.contains('|')
-                    && !trimmed.starts_with(['#', '>'])
-                    && !trimmed.starts_with("```")
-                    && !trimmed.starts_with("- ")
-                    && !trimmed.starts_with("- [")
-                {
-                    ordered_list_stack.clear();
-                    pending_table_header = Some(effective_line.to_string());
-                    continue;
-                }
-
-                classify_and_push_line(&mut doc, effective_line, &mut ordered_list_stack);
+                None
             }
         }
     }
-
-    if in_code_block {
-        let content = trim_code_block_lines(&code_block_lines);
-        doc.push_body(DocumentElement::code_block(code_block_lang.take(), content));
-    }
-
-    if let Some((alignments, rows)) = active_table.take() {
-        doc.push_body(DocumentElement::table(alignments, rows));
-    }
-    if let Some(pending) = pending_table_header.take() {
-        classify_and_push_line(&mut doc, &pending, &mut ordered_list_stack);
-    }
-
-    // Final state validation
-    match phase {
-        FrontmatterPhase::SeekingStart => {
-            let (line_no, snippet) = last_line_info;
-            Err(build_missing_frontmatter_err(line_no, snippet))
-        }
-        FrontmatterPhase::Inside => Err(DiagnosticError {
-            message: "unclosed frontmatter block".into(),
-            file_path: "<input>".into(),
-            line_number: fm_start_line,
-            col_number: 1,
-            line_snippet: fm_start_snippet.into(),
-            annotation_carets: build_caret_annotation(
-                1,
-                fm_start_snippet.len().max(3),
-                fm_start_snippet.len().max(3),
-            ),
-            annotation_text: "frontmatter starting here is never closed".into(),
-            help_text: "close the frontmatter block with a closing '---' line.".into(),
-        }
-        .into()),
-        FrontmatterPhase::Complete => Ok(doc),
-    }
-}
-
-/// Constructs a standardized diagnostic error for missing frontmatter delimiters.
-fn build_missing_frontmatter_err(line_number: usize, line_snippet: &str) -> Error {
-    let snippet = if line_snippet.is_empty() { "" } else { line_snippet };
-    let carets = build_caret_annotation(1, snippet.len().max(1), snippet.len().max(1));
-    DiagnosticError {
-        message: "missing frontmatter delimiter '---'".into(),
-        file_path: "<input>".into(),
-        line_number,
-        col_number: 1,
-        line_snippet: snippet.into(),
-        annotation_carets: carets,
-        annotation_text: "expected '---' to begin frontmatter".into(),
-        help_text: "document must begin with frontmatter enclosed by '---' delimiters.".into(),
-    }
-    .into()
-}
-
-/// Checks whether a line represents plain text.
-fn is_plain_text(line: &str) -> bool {
-    !line.starts_with(['#', '>', '-', '*', '`', '|'])
 }
 
 #[cfg(test)]
@@ -1349,5 +1571,128 @@ mod tests {
             )
         );
     }
+
+    #[test]
+    fn test_parse_d2f_markdown_block_directive_variables_example() {
+        let md = "---\ntitle: \"Block Directive Doc\"\n---\n:::variables\n| Variable | Value |\n| --- | --- |\n| TARGET_HOST | 192.168.1.100 |\n| SERVICE_PORT | 8080 |\nDas ist ein Text.\n\nDas auch.\n:::";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 1);
+        match &doc.body[0] {
+            DocumentElement::BlockDirective { name, children } => {
+                assert_eq!(name, "variables");
+                assert_eq!(children.len(), 3);
+                assert_eq!(
+                    children[0],
+                    DocumentElement::table(
+                        vec![TableAlignment::None, TableAlignment::None],
+                        vec![
+                            vec!["Variable".into(), "Value".into()],
+                            vec!["TARGET_HOST".into(), "192.168.1.100".into()],
+                            vec!["SERVICE_PORT".into(), "8080".into()],
+                        ]
+                    )
+                );
+                assert_eq!(children[1], DocumentElement::text("Das ist ein Text."));
+                assert_eq!(children[2], DocumentElement::text("Das auch."));
+            }
+            other => panic!("Expected BlockDirective, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_block_directive_with_mixed_elements() {
+        let md = "---\ntitle: \"Mixed Block Directive\"\n---\n:::custom123\n- Bullet 1\n- [x] Checkbox\n1. Numbered 1\n>! Important shoutout\n```bash\necho test\n```\n:::";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 1);
+        if let DocumentElement::BlockDirective { name, children } = &doc.body[0] {
+            assert_eq!(name, "custom123");
+            assert_eq!(children.len(), 5);
+            assert_eq!(children[0], DocumentElement::bullet_list_item(0, "Bullet 1"));
+            assert_eq!(children[1], DocumentElement::check_box_item(0, true, "Checkbox"));
+            assert_eq!(children[2], DocumentElement::ordered_list_item(0, 1, "Numbered 1"));
+            assert_eq!(children[3], DocumentElement::shoutout(ShoutoutElementKind::Important, "Important shoutout"));
+            assert_eq!(children[4], DocumentElement::code_block(Some("bash"), "echo test"));
+        } else {
+            panic!("Expected BlockDirective");
+        }
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_block_directive_with_extra_colons() {
+        let md = "---\ntitle: \"Extra Colons\"\n---\n:::::::::config\nConfig text.\n:::::";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 1);
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::block_directive("config", vec![DocumentElement::text("Config text.")])
+        );
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_multiple_block_directives() {
+        let md = "---\ntitle: \"Multiple Directives\"\n---\n:::blockA\nText A\n:::\n\nMiddle text\n\n:::blockB\nText B\n:::";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 3);
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::block_directive("blockA", vec![DocumentElement::text("Text A")])
+        );
+        assert_eq!(doc.body[1], DocumentElement::text("Middle text"));
+        assert_eq!(
+            doc.body[2],
+            DocumentElement::block_directive("blockB", vec![DocumentElement::text("Text B")])
+        );
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_block_directive_unclosed_error() {
+        let md = "---\ntitle: \"Unclosed Directive\"\n---\n:::variables\n| A | B |\n| --- | --- |\n| 1 | 2 |";
+        let err = parse_d2f_markdown(md).unwrap_err();
+        let err_str = err.to_string();
+        assert!(err_str.contains("unclosed block directive"));
+        assert!(err_str.contains("block directive starting here is never closed"));
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_block_directive_missing_name_error() {
+        let md = "---\ntitle: \"Missing Name\"\n---\n:::\nSome text\n:::";
+        let err = parse_d2f_markdown(md).unwrap_err();
+        let err_str = err.to_string();
+        assert!(err_str.contains("missing block directive name"));
+        assert!(err_str.contains("expected directive name after colons"));
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_block_directive_invalid_name_error() {
+        let invalid_names = [
+            ":::var-name\ntext\n:::",
+            ":::var_name\ntext\n:::",
+            ":::var.name\ntext\n:::",
+            ":::var!name\ntext\n:::",
+            ":::var name\ntext\n:::",
+        ];
+
+        for md in invalid_names {
+            let full_md = format!("---\ntitle: \"Invalid Name\"\n---\n{md}");
+            let err = parse_d2f_markdown(&full_md).unwrap_err();
+            let err_str = err.to_string();
+            assert!(err_str.contains("invalid block directive name"));
+            assert!(err_str.contains("directive name must contain only alphanumeric characters"));
+        }
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_block_directive_nested_error() {
+        let md = "---\ntitle: \"Nested Directive\"\n---\n:::outer\nText\n:::inner\nNested text\n:::\n:::";
+        let err = parse_d2f_markdown(md).unwrap_err();
+        let err_str = err.to_string();
+        assert!(err_str.contains("nested block directives are not supported"));
+        assert!(err_str.contains("nested block directive opening found here"));
+    }
 }
+
 

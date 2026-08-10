@@ -52,6 +52,13 @@ impl Document {
 /// Hierarchical document element representation.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DocumentElement {
+    /// Block directive container with a specified name and nested child elements.
+    BlockDirective {
+        /// Nested child elements within this block directive.
+        children: Vec<DocumentElement>,
+        /// Directive name identifier (e.g. `variables`).
+        name: String,
+    },
     /// Bullet list item element with indentation depth.
     BulletListItem {
         /// Nesting depth level based on leading spaces.
@@ -112,6 +119,14 @@ pub enum DocumentElement {
 }
 
 impl DocumentElement {
+    /// Creates a new block directive document element with name and children.
+    pub fn block_directive(name: impl Into<String>, children: Vec<DocumentElement>) -> Self {
+        Self::BlockDirective {
+            children,
+            name: name.into(),
+        }
+    }
+
     /// Creates a new bullet list item document element with depth.
     pub fn bullet_list_item(depth: usize, content: impl Into<String>) -> Self {
         Self::BulletListItem {
@@ -177,10 +192,13 @@ impl DocumentElement {
         Self::Unknown(content.into())
     }
 
-    /// Appends a child element if this element is a section container.
+    /// Appends a child element if this element is a container (section or block directive).
     pub fn push_child(&mut self, child: Self) {
-        if let Self::Section { children, .. } = self {
-            children.push(child);
+        match self {
+            Self::BlockDirective { children, .. } | Self::Section { children, .. } => {
+                children.push(child);
+            }
+            _ => {}
         }
     }
 }
@@ -424,4 +442,30 @@ mod tests {
             }
         );
     }
+
+    #[test]
+    fn test_block_directive_element_creation_and_push_child() {
+        let child1 = DocumentElement::text("Inside block");
+        let mut directive = DocumentElement::block_directive("variables", vec![child1.clone()]);
+
+        assert_eq!(
+            directive,
+            DocumentElement::BlockDirective {
+                name: "variables".into(),
+                children: vec![child1.clone()],
+            }
+        );
+
+        let child2 = DocumentElement::bullet_list_item(0, "List item");
+        directive.push_child(child2.clone());
+
+        assert_eq!(
+            directive,
+            DocumentElement::BlockDirective {
+                name: "variables".into(),
+                children: vec![child1, child2],
+            }
+        );
+    }
 }
+

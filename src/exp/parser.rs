@@ -111,5 +111,18 @@ mod tests {
         assert!(result.contains("[\"Header A\", \"Header B\"]"));
         assert!(result.contains("[\"Cell 1\", \"Cell 2\"]"));
     }
+
+    #[test]
+    fn test_parse_with_block_directive() {
+        let result = parse("---\ntitle: \"Block Directive Test\"\n---\n:::variables\n| Key | Value |\n| --- | --- |\n| HOST | 127.0.0.1 |\nSample text\n:::").unwrap();
+        assert!(result.contains("\"kind\": \"block_directive\""));
+        assert!(result.contains("\"name\": \"variables\""));
+        assert!(result.contains("\"kind\": \"table\""));
+        assert!(result.contains("[\"Key\", \"Value\"]"));
+        assert!(result.contains("[\"HOST\", \"127.0.0.1\"]"));
+        assert!(result.contains("\"kind\": \"text\""));
+        assert!(result.contains("\"content\": \"Sample text\""));
+    }
 }
+
 

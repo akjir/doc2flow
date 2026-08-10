@@ -64,11 +64,12 @@ language: "en"
 numbered_sections: true
 ---
 
-[Variables]
+:::variables
 | Variable | Value |
 | --- | --- |
 | TARGET_HOST | 192.168.1.100 |
 | SERVICE_PORT | 8080 |
+:::
 
 # Part 1: System Setup & Preparation
 

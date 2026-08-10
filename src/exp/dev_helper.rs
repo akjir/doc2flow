@@ -54,6 +54,26 @@ fn format_element(out: &mut String, elem: &DocumentElement, indent_level: usize)
 
     let _ = write!(out, "{indent}{{\n");
     match elem {
+        DocumentElement::BlockDirective { children, name } => {
+            let _ = write!(out, "{child_indent}\"kind\": \"block_directive\",\n");
+            let _ = write!(out, "{child_indent}\"name\": \"");
+            escape_json_string(out, name);
+            let _ = write!(out, "\",\n");
+            let _ = write!(out, "{child_indent}\"children\": [");
+            if children.is_empty() {
+                out.push_str("]\n");
+            } else {
+                out.push('\n');
+                for (j, child) in children.iter().enumerate() {
+                    format_element(out, child, indent_level + 2);
+                    if j + 1 < children.len() {
+                        out.push(',');
+                    }
+                    out.push('\n');
+                }
+                let _ = write!(out, "{child_indent}]\n");
+            }
+        }
         DocumentElement::BulletListItem { depth, content } => {
             let _ = write!(out, "{child_indent}\"kind\": \"bullet_list_item\",\n");
             let _ = write!(out, "{child_indent}\"depth\": {depth},\n");
@@ -351,5 +371,26 @@ mod tests {
         assert!(json.contains("[\"Col 1\", \"Col 2\", \"Col 3\"]"));
         assert!(json.contains("[\"Val 1\", \"Val \\\"2\\\"\", \"Val 3\"]"));
     }
+
+    #[test]
+    fn test_document_to_json_with_block_directive() {
+        let mut doc = Document::new();
+        let table = DocumentElement::table(
+            vec![],
+            vec![vec!["TARGET_HOST".into(), "192.168.1.100".into()]],
+        );
+        let text1 = DocumentElement::text("First text");
+        let block = DocumentElement::block_directive("variables", vec![table, text1]);
+        doc.push_body(block);
+
+        let json = document_to_json(&doc);
+        assert!(json.contains("\"kind\": \"block_directive\""));
+        assert!(json.contains("\"name\": \"variables\""));
+        assert!(json.contains("\"children\": ["));
+        assert!(json.contains("\"kind\": \"table\""));
+        assert!(json.contains("\"kind\": \"text\""));
+        assert!(json.contains("\"content\": \"First text\""));
+    }
 }
+
 
