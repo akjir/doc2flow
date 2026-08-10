@@ -1,31 +1,41 @@
 //! Document model and hierarchical element definitions.
 
 use std::collections::HashMap;
+use std::fmt::{self, Display, Formatter};
 
 /// Represents a parsed document tree.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct Document {
-    /// Frontmatter key-value configuration parameters.
-    pub parameters: HashMap<String, String>,
-    /// Header document elements.
-    pub header: Vec<DocumentElement>,
     /// Main body document elements.
     pub body: Vec<DocumentElement>,
+    /// Header document elements.
+    pub header: Vec<DocumentElement>,
+    /// Frontmatter key-value configuration parameters.
+    pub parameters: HashMap<String, String>,
 }
 
 impl Document {
-    /// Inserts a frontmatter parameter.
-    pub fn insert_parameter(&mut self, key: impl Into<String>, value: impl Into<String>) {
-        self.parameters.insert(key.into(), value.into());
-    }
-
     /// Creates an empty document.
     pub fn new() -> Self {
         Self {
-            parameters: HashMap::new(),
-            header: Vec::new(),
             body: Vec::new(),
+            header: Vec::new(),
+            parameters: HashMap::new(),
         }
+    }
+
+    /// Creates an empty document with pre-allocated capacities.
+    pub fn with_capacity(body_capacity: usize) -> Self {
+        Self {
+            body: Vec::with_capacity(body_capacity),
+            header: Vec::new(),
+            parameters: HashMap::new(),
+        }
+    }
+
+    /// Inserts a frontmatter parameter.
+    pub fn insert_parameter(&mut self, key: impl Into<String>, value: impl Into<String>) {
+        self.parameters.insert(key.into(), value.into());
     }
 
     /// Appends a body element.
@@ -40,7 +50,7 @@ impl Document {
 }
 
 /// Hierarchical document element representation.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DocumentElement {
     /// Bullet list item element with indentation depth.
     BulletListItem {
@@ -136,13 +146,6 @@ impl DocumentElement {
         }
     }
 
-    /// Appends a child element if this element is a section container.
-    pub fn push_child(&mut self, child: Self) {
-        if let Self::Section { children, .. } = self {
-            children.push(child);
-        }
-    }
-
     /// Creates a new section document element with children.
     pub fn section(title: impl Into<String>, children: Vec<DocumentElement>) -> Self {
         Self::Section {
@@ -173,37 +176,17 @@ impl DocumentElement {
     pub fn unknown(content: impl Into<String>) -> Self {
         Self::Unknown(content.into())
     }
-}
 
-/// Text alignment specification for a table column.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum TableAlignment {
-    /// Left-aligned column text (`:---`).
-    Left,
-    /// Center-aligned column text (`:---:`).
-    Center,
-    /// Right-aligned column text (`---:`).
-    Right,
-    /// Default or unspecified alignment (`---`).
-    #[default]
-    None,
-}
-
-impl TableAlignment {
-    /// Returns the static lowercase string identifier.
-    #[inline]
-    pub const fn as_str(self) -> &'static str {
-        match self {
-            Self::Left => "left",
-            Self::Center => "center",
-            Self::Right => "right",
-            Self::None => "none",
+    /// Appends a child element if this element is a section container.
+    pub fn push_child(&mut self, child: Self) {
+        if let Self::Section { children, .. } = self {
+            children.push(child);
         }
     }
 }
 
 /// Classification of a shoutout element kind.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ShoutoutElementKind {
     /// Critical danger or caution alert box.
     Caution,
@@ -219,7 +202,6 @@ pub enum ShoutoutElementKind {
 
 impl ShoutoutElementKind {
     /// Returns the static lowercase string identifier.
-    #[inline]
     pub const fn as_str(self) -> &'static str {
         match self {
             Self::Caution => "caution",
@@ -231,63 +213,47 @@ impl ShoutoutElementKind {
     }
 }
 
+impl Display for ShoutoutElementKind {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+/// Text alignment specification for a table column.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum TableAlignment {
+    /// Center-aligned column text (`:---:`).
+    Center,
+    /// Left-aligned column text (`:---`).
+    Left,
+    /// Default or unspecified alignment (`---`).
+    #[default]
+    None,
+    /// Right-aligned column text (`---:`).
+    Right,
+}
+
+impl TableAlignment {
+    /// Returns the static lowercase string identifier.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Center => "center",
+            Self::Left => "left",
+            Self::None => "none",
+            Self::Right => "right",
+        }
+    }
+}
+
+impl Display for TableAlignment {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_document_push_body() {
-        let mut doc = Document::new();
-        assert!(doc.parameters.is_empty());
-        assert!(doc.header.is_empty());
-        assert!(doc.body.is_empty());
-
-        doc.insert_parameter("title", "My Doc");
-        doc.push_body(DocumentElement::text("Line 1"));
-        assert_eq!(doc.parameters.get("title").map(|s| s.as_str()), Some("My Doc"));
-        assert_eq!(doc.body.len(), 1);
-        assert_eq!(doc.body[0], DocumentElement::Text("Line 1".into()));
-    }
-
-    #[test]
-    fn test_document_element_creation() {
-        let elem = DocumentElement::text("Hello world");
-        assert_eq!(elem, DocumentElement::Text("Hello world".into()));
-
-        let mut section = DocumentElement::section("Heading", Vec::new());
-        let child = DocumentElement::unknown("Child node");
-        section.push_child(child.clone());
-        assert_eq!(
-            section,
-            DocumentElement::Section {
-                title: "Heading".into(),
-                children: vec![child],
-            }
-        );
-    }
-
-    #[test]
-    fn test_shoutout_element_creation_and_kinds() {
-        let kinds = [
-            (ShoutoutElementKind::Caution, "caution"),
-            (ShoutoutElementKind::Important, "important"),
-            (ShoutoutElementKind::Note, "note"),
-            (ShoutoutElementKind::Tip, "tip"),
-            (ShoutoutElementKind::Warning, "warning"),
-        ];
-
-        for (kind, expected_str) in kinds {
-            assert_eq!(kind.as_str(), expected_str);
-            let elem = DocumentElement::shoutout(kind, format!("{expected_str} content"));
-            assert_eq!(
-                elem,
-                DocumentElement::Shoutout {
-                    kind,
-                    content: format!("{expected_str} content"),
-                }
-            );
-        }
-    }
 
     #[test]
     fn test_bullet_list_item_creation() {
@@ -346,6 +312,40 @@ mod tests {
     }
 
     #[test]
+    fn test_document_element_creation() {
+        let elem = DocumentElement::text("Hello world");
+        assert_eq!(elem, DocumentElement::Text("Hello world".into()));
+
+        let mut section = DocumentElement::section("Heading", Vec::new());
+        let child = DocumentElement::unknown("Child node");
+        section.push_child(child.clone());
+        assert_eq!(
+            section,
+            DocumentElement::Section {
+                title: "Heading".into(),
+                children: vec![child],
+            }
+        );
+    }
+
+    #[test]
+    fn test_document_push_body_and_header() {
+        let mut doc = Document::with_capacity(4);
+        assert!(doc.parameters.is_empty());
+        assert!(doc.header.is_empty());
+        assert!(doc.body.is_empty());
+
+        doc.insert_parameter("title", "My Doc");
+        doc.push_body(DocumentElement::text("Line 1"));
+        doc.push_header(DocumentElement::text("Header Line"));
+        assert_eq!(doc.parameters.get("title").map(|s| s.as_str()), Some("My Doc"));
+        assert_eq!(doc.body.len(), 1);
+        assert_eq!(doc.header.len(), 1);
+        assert_eq!(doc.body[0], DocumentElement::Text("Line 1".into()));
+        assert_eq!(doc.header[0], DocumentElement::Text("Header Line".into()));
+    }
+
+    #[test]
     fn test_ordered_list_item_creation() {
         let root_item = DocumentElement::ordered_list_item(0, 1, "First item");
         assert_eq!(
@@ -366,6 +366,40 @@ mod tests {
                 content: "Deep item".into(),
             }
         );
+    }
+
+    #[test]
+    fn test_shoutout_element_creation_and_kinds() {
+        let kinds = [
+            (ShoutoutElementKind::Caution, "caution"),
+            (ShoutoutElementKind::Important, "important"),
+            (ShoutoutElementKind::Note, "note"),
+            (ShoutoutElementKind::Tip, "tip"),
+            (ShoutoutElementKind::Warning, "warning"),
+        ];
+
+        for (kind, expected_str) in kinds {
+            assert_eq!(kind.as_str(), expected_str);
+            assert_eq!(format!("{kind}"), expected_str);
+            let elem = DocumentElement::shoutout(kind, format!("{expected_str} content"));
+            assert_eq!(
+                elem,
+                DocumentElement::Shoutout {
+                    kind,
+                    content: format!("{expected_str} content"),
+                }
+            );
+        }
+    }
+
+    #[test]
+    fn test_table_alignment_as_str() {
+        assert_eq!(TableAlignment::Center.as_str(), "center");
+        assert_eq!(TableAlignment::Left.as_str(), "left");
+        assert_eq!(TableAlignment::None.as_str(), "none");
+        assert_eq!(TableAlignment::Right.as_str(), "right");
+        assert_eq!(format!("{}", TableAlignment::Center), "center");
+        assert_eq!(TableAlignment::default(), TableAlignment::None);
     }
 
     #[test]
@@ -390,14 +424,4 @@ mod tests {
             }
         );
     }
-
-    #[test]
-    fn test_table_alignment_as_str() {
-        assert_eq!(TableAlignment::Left.as_str(), "left");
-        assert_eq!(TableAlignment::Center.as_str(), "center");
-        assert_eq!(TableAlignment::Right.as_str(), "right");
-        assert_eq!(TableAlignment::None.as_str(), "none");
-        assert_eq!(TableAlignment::default(), TableAlignment::None);
-    }
 }
-
