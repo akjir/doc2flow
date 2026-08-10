@@ -26,213 +26,243 @@
       ]
     },
     {
-      "kind": "unknown",
-      "content": "# Part 1: System Setup & Preparation"
-    },
-    {
-      "kind": "text",
-      "content": "This top-level section defines the overall operational scope. It replaces ~~legacy manual procedures~~ with **modern automated verification workflows**."
-    },
-    {
-      "kind": "unknown",
-      "content": "## Section 1: Initial System Verification"
-    },
-    {
-      "kind": "unknown",
-      "content": "### Prerequisites Checklist"
-    },
-    {
-      "kind": "check_box_item",
-      "depth": 0,
-      "checked": false,
-      "content": {
-        "kind": "text",
-        "content": "Check operating system compatibility and network connectivity"
-      }
-    },
-    {
-      "kind": "check_box_item",
-      "depth": 1,
-      "checked": false,
-      "content": {
-        "kind": "text",
-        "content": "Verify primary network interface (eth0 / IPv4)"
-      }
-    },
-    {
-      "kind": "check_box_item",
-      "depth": 1,
-      "checked": true,
-      "content": {
-        "kind": "text",
-        "content": "Test DNS resolution and gateway reachability"
-      }
-    },
-    {
-      "kind": "check_box_item",
-      "depth": 0,
-      "checked": true,
-      "content": {
-        "kind": "text",
-        "content": "Verify administrator credentials and execution permissions"
-      }
-    },
-    {
-      "kind": "check_box_item",
-      "depth": 0,
-      "checked": false,
-      "content": {
-        "kind": "text",
-        "content": "Confirm target directory layout and storage capacity"
-      }
-    },
-    {
-      "kind": "unknown",
-      "content": "### Execution Steps"
-    },
-    {
-      "kind": "ordered_list_item",
-      "depth": 0,
-      "position": 1,
-      "content": {
-        "kind": "text",
-        "content": "Review system architecture diagrams and prerequisites."
-      }
-    },
-    {
-      "kind": "ordered_list_item",
-      "depth": 0,
-      "position": 2,
-      "content": {
-        "kind": "text",
-        "content": "Initialize runtime environment configuration."
-      }
-    },
-    {
-      "kind": "ordered_list_item",
-      "depth": 0,
-      "position": 3,
-      "content": {
-        "kind": "text",
-        "content": "Validate operational readiness before service deployment."
-      }
-    },
-    {
-      "kind": "unknown",
-      "content": "### Reference Links & Documentation"
-    },
-    {
-      "kind": "bullet_list_item",
-      "depth": 0,
-      "content": {
-        "kind": "text",
-        "content": "[External System Documentation](https://example.com/docs)"
-      }
-    },
-    {
-      "kind": "bullet_list_item",
-      "depth": 0,
-      "content": {
-        "kind": "image",
-        "alt": "Download System Specification PDF",
-        "url": "https://example.com/files/specification.pdf"
-      }
-    },
-    {
-      "kind": "unknown",
-      "content": "### Essential Information"
-    },
-    {
-      "kind": "shoutout",
-      "subkind": "note",
-      "content": "Note: All actions in this procedure are logged and stored locally in browser storage."
-    },
-    {
-      "kind": "shoutout",
-      "subkind": "tip",
-      "content": "Tip: You can toggle section completion by checking off all interactive items."
-    },
-    {
-      "kind": "unknown",
-      "content": "# Part 2: Maintenance & Reference"
-    },
-    {
-      "kind": "unknown",
-      "content": "## Section 2: Configuration & Service Deployment"
-    },
-    {
-      "kind": "unknown",
-      "content": "### Environment Setup"
-    },
-    {
-      "kind": "shoutout",
-      "subkind": "important",
-      "content": "Important: Ensure configuration settings are validated before starting services."
-    },
-    {
-      "kind": "text",
-      "content": "Execute the setup command:"
-    },
-    {
-      "kind": "code_block",
-      "language": "bash",
-      "content": "# Initialize system configuration\nd2f --init custom_guide.md --host {{TARGET_HOST}} --port {{SERVICE_PORT}}"
-    },
-    {
-      "kind": "shoutout",
-      "subkind": "warning",
-      "content": "Warning: Modifying environment settings will cause a service restart."
-    },
-    {
-      "kind": "shoutout",
-      "subkind": "caution",
-      "content": "Caution: Do not delete existing database volumes without a verified backup."
-    },
-    {
-      "kind": "unknown",
-      "content": "### System Infrastructure Matrix"
-    },
-    {
-      "kind": "table",
-      "alignments": ["none", "none", "none"],
-      "rows": [
-        ["Component", "Endpoint", "Status"],
-        ["Control Service", "192.168.1.100:8080", "Active"],
-        ["Database Node", "192.168.1.101:5432", "Ready"],
-        ["Worker Agent", "192.168.1.102:9090", "Standby"]
+      "kind": "section",
+      "level": 1,
+      "title": "Part 1: System Setup & Preparation",
+      "children": [
+        {
+          "kind": "text",
+          "content": "This top-level section defines the overall operational scope. It replaces ~~legacy manual procedures~~ with **modern automated verification workflows**."
+        },
+        {
+          "kind": "section",
+          "level": 2,
+          "title": "Section 1: Initial System Verification",
+          "children": [
+            {
+              "kind": "section",
+              "level": 3,
+              "title": "Prerequisites Checklist",
+              "children": [
+                {
+                  "kind": "check_box_item",
+                  "depth": 0,
+                  "checked": false,
+                  "content": {
+                    "kind": "text",
+                    "content": "Check operating system compatibility and network connectivity"
+                  }
+                },
+                {
+                  "kind": "check_box_item",
+                  "depth": 1,
+                  "checked": false,
+                  "content": {
+                    "kind": "text",
+                    "content": "Verify primary network interface (eth0 / IPv4)"
+                  }
+                },
+                {
+                  "kind": "check_box_item",
+                  "depth": 1,
+                  "checked": true,
+                  "content": {
+                    "kind": "text",
+                    "content": "Test DNS resolution and gateway reachability"
+                  }
+                },
+                {
+                  "kind": "check_box_item",
+                  "depth": 0,
+                  "checked": true,
+                  "content": {
+                    "kind": "text",
+                    "content": "Verify administrator credentials and execution permissions"
+                  }
+                },
+                {
+                  "kind": "check_box_item",
+                  "depth": 0,
+                  "checked": false,
+                  "content": {
+                    "kind": "text",
+                    "content": "Confirm target directory layout and storage capacity"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "section",
+              "level": 3,
+              "title": "Execution Steps",
+              "children": [
+                {
+                  "kind": "ordered_list_item",
+                  "depth": 0,
+                  "position": 1,
+                  "content": {
+                    "kind": "text",
+                    "content": "Review system architecture diagrams and prerequisites."
+                  }
+                },
+                {
+                  "kind": "ordered_list_item",
+                  "depth": 0,
+                  "position": 2,
+                  "content": {
+                    "kind": "text",
+                    "content": "Initialize runtime environment configuration."
+                  }
+                },
+                {
+                  "kind": "ordered_list_item",
+                  "depth": 0,
+                  "position": 3,
+                  "content": {
+                    "kind": "text",
+                    "content": "Validate operational readiness before service deployment."
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "section",
+              "level": 3,
+              "title": "Reference Links & Documentation",
+              "children": [
+                {
+                  "kind": "bullet_list_item",
+                  "depth": 0,
+                  "content": {
+                    "kind": "text",
+                    "content": "[External System Documentation](https://example.com/docs)"
+                  }
+                },
+                {
+                  "kind": "bullet_list_item",
+                  "depth": 0,
+                  "content": {
+                    "kind": "image",
+                    "alt": "Download System Specification PDF",
+                    "url": "https://example.com/files/specification.pdf"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "section",
+              "level": 3,
+              "title": "Essential Information",
+              "children": [
+                {
+                  "kind": "shoutout",
+                  "subkind": "note",
+                  "content": "Note: All actions in this procedure are logged and stored locally in browser storage."
+                },
+                {
+                  "kind": "shoutout",
+                  "subkind": "tip",
+                  "content": "Tip: You can toggle section completion by checking off all interactive items."
+                }
+              ]
+            }
+          ]
+        }
       ]
     },
     {
-      "kind": "bullet_list_item",
-      "depth": 0,
-      "content": {
-        "kind": "text",
-        "content": "Standard bullet item 1: Verify log directory permissions"
-      }
-    },
-    {
-      "kind": "bullet_list_item",
-      "depth": 1,
-      "content": {
-        "kind": "text",
-        "content": "Sub-item A: Ensure log rotation is active"
-      }
-    },
-    {
-      "kind": "bullet_list_item",
-      "depth": 1,
-      "content": {
-        "kind": "text",
-        "content": "Sub-item B: Check disk quota limits"
-      }
-    },
-    {
-      "kind": "bullet_list_item",
-      "depth": 0,
-      "content": {
-        "kind": "text",
-        "content": "Standard bullet item 2: Backup system configuration before final sign-off"
-      }
+      "kind": "section",
+      "level": 1,
+      "title": "Part 2: Maintenance & Reference",
+      "children": [
+        {
+          "kind": "section",
+          "level": 2,
+          "title": "Section 2: Configuration & Service Deployment",
+          "children": [
+            {
+              "kind": "section",
+              "level": 3,
+              "title": "Environment Setup",
+              "children": [
+                {
+                  "kind": "shoutout",
+                  "subkind": "important",
+                  "content": "Important: Ensure configuration settings are validated before starting services."
+                },
+                {
+                  "kind": "text",
+                  "content": "Execute the setup command:"
+                },
+                {
+                  "kind": "code_block",
+                  "language": "bash",
+                  "content": "# Initialize system configuration\nd2f --init custom_guide.md --host {{TARGET_HOST}} --port {{SERVICE_PORT}}"
+                },
+                {
+                  "kind": "shoutout",
+                  "subkind": "warning",
+                  "content": "Warning: Modifying environment settings will cause a service restart."
+                },
+                {
+                  "kind": "shoutout",
+                  "subkind": "caution",
+                  "content": "Caution: Do not delete existing database volumes without a verified backup."
+                }
+              ]
+            },
+            {
+              "kind": "section",
+              "level": 3,
+              "title": "System Infrastructure Matrix",
+              "children": [
+                {
+                  "kind": "table",
+                  "alignments": ["none", "none", "none"],
+                  "rows": [
+                    ["Component", "Endpoint", "Status"],
+                    ["Control Service", "192.168.1.100:8080", "Active"],
+                    ["Database Node", "192.168.1.101:5432", "Ready"],
+                    ["Worker Agent", "192.168.1.102:9090", "Standby"]
+                  ]
+                },
+                {
+                  "kind": "bullet_list_item",
+                  "depth": 0,
+                  "content": {
+                    "kind": "text",
+                    "content": "Standard bullet item 1: Verify log directory permissions"
+                  }
+                },
+                {
+                  "kind": "bullet_list_item",
+                  "depth": 1,
+                  "content": {
+                    "kind": "text",
+                    "content": "Sub-item A: Ensure log rotation is active"
+                  }
+                },
+                {
+                  "kind": "bullet_list_item",
+                  "depth": 1,
+                  "content": {
+                    "kind": "text",
+                    "content": "Sub-item B: Check disk quota limits"
+                  }
+                },
+                {
+                  "kind": "bullet_list_item",
+                  "depth": 0,
+                  "content": {
+                    "kind": "text",
+                    "content": "Standard bullet item 2: Backup system configuration before final sign-off"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ]
 }

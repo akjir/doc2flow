@@ -894,8 +894,9 @@ fn test_experimental_building_parser_integration() {
     assert!(output.contains("\"title\": \"Integration\""));
     assert!(output.contains("\"header\": ["));
     assert!(output.contains("\"body\": ["));
-    assert!(output.contains("\"kind\": \"unknown\""));
-    assert!(output.contains("\"content\": \"# Heading\""));
+    assert!(output.contains("\"kind\": \"section\""));
+    assert!(output.contains("\"level\": 1"));
+    assert!(output.contains("\"title\": \"Heading\""));
     assert!(output.contains("\"kind\": \"text\""));
     assert!(output.contains("\"content\": \"Some text\""));
 }

@@ -159,9 +159,78 @@ fn build_unclosed_block_directive_err(line_number: usize, line_snippet: &str) ->
     .into()
 }
 
+/// Returns the heading level if the element is a Section.
+fn get_section_level(elem: &DocumentElement) -> usize {
+    match elem {
+        DocumentElement::Section { level, .. } => *level,
+        _ => 0,
+    }
+}
+
+/// Parses a markdown heading line into its normalized section level (1, 2, or 3) and title.
+fn parse_heading_line(line: &str) -> Option<(usize, &str)> {
+    let trimmed = line.trim_start();
+    if !trimmed.starts_with('#') {
+        return None;
+    }
+    let hash_count = trimmed.bytes().take_while(|&b| b == b'#').count();
+    let rest = &trimmed[hash_count..];
+    if rest.is_empty() {
+        let level = match hash_count {
+            1 => 1,
+            2 => 2,
+            _ => 3,
+        };
+        Some((level, ""))
+    } else if rest.starts_with([' ', '\t']) {
+        let level = match hash_count {
+            1 => 1,
+            2 => 2,
+            _ => 3,
+        };
+        Some((level, rest.trim()))
+    } else {
+        None
+    }
+}
+
+/// Unwinds closed sections from the stack and adds the new section to the hierarchy.
+fn push_section(
+    doc: &mut Document,
+    section_stack: &mut Vec<DocumentElement>,
+    level: usize,
+    title: &str,
+) {
+    while let Some(top) = section_stack.last() {
+        if get_section_level(top) >= level {
+            let popped = section_stack.pop().unwrap();
+            if let Some(parent) = section_stack.last_mut() {
+                parent.push_child(popped);
+            } else {
+                doc.push_body(popped);
+            }
+        } else {
+            break;
+        }
+    }
+    section_stack.push(DocumentElement::section(level, title, Vec::new()));
+}
+
+/// Unwinds all active sections on the stack into their parent containers or document body.
+fn flush_section_stack(doc: &mut Document, section_stack: &mut Vec<DocumentElement>) {
+    while let Some(popped) = section_stack.pop() {
+        if let Some(parent) = section_stack.last_mut() {
+            parent.push_child(popped);
+        } else {
+            doc.push_body(popped);
+        }
+    }
+}
+
 /// Classifies a non-table line and appends it to target buffer or document body.
 fn classify_and_push_line(
     doc: &mut Document,
+    section_stack: &mut Vec<DocumentElement>,
     in_block: bool,
     block_children: &mut Vec<DocumentElement>,
     effective_line: &str,
@@ -173,10 +242,24 @@ fn classify_and_push_line(
         return;
     }
 
-    if let Some((depth, checked, content)) = parse_check_box_item(effective_line) {
+    if let Some((level, title)) = parse_heading_line(effective_line) {
+        ordered_list_stack.clear();
+        if in_block {
+            push_element(
+                doc,
+                section_stack,
+                in_block,
+                block_children,
+                DocumentElement::section(level, title, Vec::new()),
+            );
+        } else {
+            push_section(doc, section_stack, level, title);
+        }
+    } else if let Some((depth, checked, content)) = parse_check_box_item(effective_line) {
         ordered_list_stack.clear();
         push_element(
             doc,
+            section_stack,
             in_block,
             block_children,
             DocumentElement::check_box_item(depth, checked, parse_item_content(content)),
@@ -185,16 +268,18 @@ fn classify_and_push_line(
         ordered_list_stack.clear();
         push_element(
             doc,
+            section_stack,
             in_block,
             block_children,
             DocumentElement::bullet_list_item(depth, parse_item_content(content)),
         );
     } else if let Some(elem) = try_process_ordered_list_item(effective_line, ordered_list_stack) {
-        push_element(doc, in_block, block_children, elem);
+        push_element(doc, section_stack, in_block, block_children, elem);
     } else if let Some((alt, url)) = parse_image(trimmed) {
         ordered_list_stack.clear();
         push_element(
             doc,
+            section_stack,
             in_block,
             block_children,
             DocumentElement::image(alt, url),
@@ -204,6 +289,7 @@ fn classify_and_push_line(
         let (shoutout_kind, content) = parse_shoutout_line(trimmed);
         push_element(
             doc,
+            section_stack,
             in_block,
             block_children,
             DocumentElement::shoutout(shoutout_kind, content),
@@ -212,6 +298,7 @@ fn classify_and_push_line(
         ordered_list_stack.clear();
         push_element(
             doc,
+            section_stack,
             in_block,
             block_children,
             DocumentElement::text(trimmed),
@@ -220,6 +307,7 @@ fn classify_and_push_line(
         ordered_list_stack.clear();
         push_element(
             doc,
+            section_stack,
             in_block,
             block_children,
             DocumentElement::unknown(trimmed),
@@ -289,6 +377,7 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
     let mut phase = FrontmatterPhase::SeekingStart;
     let mut comment_filter = CommentFilterState::new();
     let mut ordered_list_stack: Vec<(usize, usize)> = Vec::new();
+    let mut section_stack: Vec<DocumentElement> = Vec::new();
 
     let mut in_code_block = false;
     let mut code_block_lang: Option<String> = None;
@@ -334,6 +423,7 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
                 let content = trim_code_block_lines(&code_block_lines);
                 push_element(
                     &mut doc,
+                    &mut section_stack,
                     in_block_directive,
                     &mut block_children,
                     DocumentElement::code_block(code_block_lang.take(), content),
@@ -374,6 +464,7 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
                     if let Some((alignments, rows)) = active_table.take() {
                         push_element(
                             &mut doc,
+                            &mut section_stack,
                             in_block_directive,
                             &mut block_children,
                             DocumentElement::table(alignments, rows),
@@ -382,6 +473,7 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
                     if let Some(pending) = pending_table_header.take() {
                         classify_and_push_line(
                             &mut doc,
+                            &mut section_stack,
                             in_block_directive,
                             &mut block_children,
                             &pending,
@@ -397,7 +489,13 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
                         if rest.is_empty() {
                             let children = std::mem::take(&mut block_children);
                             let name = std::mem::take(&mut block_name);
-                            doc.push_body(DocumentElement::block_directive(name, children));
+                            push_element(
+                                &mut doc,
+                                &mut section_stack,
+                                false,
+                                &mut block_children,
+                                DocumentElement::block_directive(name, children),
+                            );
                             in_block_directive = false;
                             continue;
                         } else {
@@ -421,6 +519,7 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
                     if let Some((alignments, rows)) = active_table.take() {
                         push_element(
                             &mut doc,
+                            &mut section_stack,
                             in_block_directive,
                             &mut block_children,
                             DocumentElement::table(alignments, rows),
@@ -429,6 +528,7 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
                     if let Some(pending) = pending_table_header.take() {
                         classify_and_push_line(
                             &mut doc,
+                            &mut section_stack,
                             in_block_directive,
                             &mut block_children,
                             &pending,
@@ -461,6 +561,7 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
                         let (alignments, rows) = active_table.take().unwrap();
                         push_element(
                             &mut doc,
+                            &mut section_stack,
                             in_block_directive,
                             &mut block_children,
                             DocumentElement::table(alignments, rows),
@@ -476,6 +577,7 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
                     } else {
                         classify_and_push_line(
                             &mut doc,
+                            &mut section_stack,
                             in_block_directive,
                             &mut block_children,
                             &pending_line,
@@ -504,6 +606,7 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
 
                 classify_and_push_line(
                     &mut doc,
+                    &mut section_stack,
                     in_block_directive,
                     &mut block_children,
                     effective_line,
@@ -517,6 +620,7 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
         let content = trim_code_block_lines(&code_block_lines);
         push_element(
             &mut doc,
+            &mut section_stack,
             in_block_directive,
             &mut block_children,
             DocumentElement::code_block(code_block_lang.take(), content),
@@ -526,6 +630,7 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
     if let Some((alignments, rows)) = active_table.take() {
         push_element(
             &mut doc,
+            &mut section_stack,
             in_block_directive,
             &mut block_children,
             DocumentElement::table(alignments, rows),
@@ -534,6 +639,7 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
     if let Some(pending) = pending_table_header.take() {
         classify_and_push_line(
             &mut doc,
+            &mut section_stack,
             in_block_directive,
             &mut block_children,
             &pending,
@@ -569,7 +675,10 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
             help_text: "close the frontmatter block with a closing '---' line.".into(),
         }
         .into()),
-        FrontmatterPhase::Complete => Ok(doc),
+        FrontmatterPhase::Complete => {
+            flush_section_stack(&mut doc, &mut section_stack);
+            Ok(doc)
+        }
     }
 }
 
@@ -758,15 +867,18 @@ fn parse_table_row(line: &str) -> Vec<String> {
     cells
 }
 
-/// Appends an element either to the active block children buffer or to the document body.
+/// Appends an element either to the active block children buffer, the topmost active section, or document body.
 fn push_element(
     doc: &mut Document,
+    section_stack: &mut [DocumentElement],
     in_block: bool,
     block_children: &mut Vec<DocumentElement>,
     elem: DocumentElement,
 ) {
     if in_block {
         block_children.push(elem);
+    } else if let Some(active_section) = section_stack.last_mut() {
+        active_section.push_child(elem);
     } else {
         doc.push_body(elem);
     }
@@ -904,21 +1016,23 @@ mod tests {
             doc.parameters.get("version").map(|s| s.as_str()),
             Some("1.0.0")
         );
-        assert_eq!(doc.body.len(), 4);
+        assert_eq!(doc.body.len(), 1);
 
-        assert_eq!(doc.body[0], DocumentElement::Unknown("# Heading 1".into()));
         assert_eq!(
-            doc.body[1],
-            DocumentElement::Text("This is plain text paragraph.".into())
+            doc.body[0],
+            DocumentElement::section(
+                1,
+                "Heading 1",
+                vec![
+                    DocumentElement::Text("This is plain text paragraph.".into()),
+                    DocumentElement::Shoutout {
+                        kind: ShoutoutElementKind::Note,
+                        content: "Callout note".into(),
+                    },
+                    DocumentElement::Text("Another text.".into()),
+                ]
+            )
         );
-        assert_eq!(
-            doc.body[2],
-            DocumentElement::Shoutout {
-                kind: ShoutoutElementKind::Note,
-                content: "Callout note".into(),
-            }
-        );
-        assert_eq!(doc.body[3], DocumentElement::Text("Another text.".into()));
     }
 
     #[test]
@@ -927,9 +1041,15 @@ mod tests {
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.parameters.get("title").map(|s| s.as_str()), Some("Doc"));
-        assert_eq!(doc.body.len(), 2);
-        assert_eq!(doc.body[0], DocumentElement::Unknown("# Heading 1".into()));
-        assert_eq!(doc.body[1], DocumentElement::Text("Visible text".into()));
+        assert_eq!(doc.body.len(), 1);
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::section(
+                1,
+                "Heading 1",
+                vec![DocumentElement::Text("Visible text".into())]
+            )
+        );
     }
 
     #[test]
@@ -1009,9 +1129,15 @@ mod tests {
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.parameters.get("title").map(|s| s.as_str()), Some("CRLF"));
-        assert_eq!(doc.body.len(), 2);
-        assert_eq!(doc.body[0], DocumentElement::Unknown("# Heading".into()));
-        assert_eq!(doc.body[1], DocumentElement::Text("Text".into()));
+        assert_eq!(doc.body.len(), 1);
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::section(
+                1,
+                "Heading",
+                vec![DocumentElement::Text("Text".into())]
+            )
+        );
     }
 
     #[test]
@@ -1540,7 +1666,7 @@ mod tests {
         let md = "---\ntitle: \"Table With Other Elements\"\n---\n| Col A | Col B |\n| --- | --- |\n| A1 | B1 |\n# Next Section\n- Bullet item\n\n| Next Table |\n| --- |\n| Only Row |";
         let doc = parse_d2f_markdown(md).unwrap();
 
-        assert_eq!(doc.body.len(), 4);
+        assert_eq!(doc.body.len(), 2);
         assert_eq!(
             doc.body[0],
             DocumentElement::table(
@@ -1551,15 +1677,20 @@ mod tests {
                 ]
             )
         );
-        assert_eq!(doc.body[1], DocumentElement::Unknown("# Next Section".into()));
-        assert_eq!(doc.body[2], DocumentElement::bullet_list_item(0, DocumentElement::text("Bullet item")));
         assert_eq!(
-            doc.body[3],
-            DocumentElement::table(
-                vec![TableAlignment::None],
+            doc.body[1],
+            DocumentElement::section(
+                1,
+                "Next Section",
                 vec![
-                    vec!["Next Table".into()],
-                    vec!["Only Row".into()],
+                    DocumentElement::bullet_list_item(0, DocumentElement::text("Bullet item")),
+                    DocumentElement::table(
+                        vec![TableAlignment::None],
+                        vec![
+                            vec!["Next Table".into()],
+                            vec!["Only Row".into()],
+                        ]
+                    ),
                 ]
             )
         );
@@ -1859,6 +1990,133 @@ mod tests {
         assert_eq!(doc.body[3], DocumentElement::text("![Alt](no closing paren"));
         assert_eq!(doc.body[4], DocumentElement::text("Prefix ![Alt](url) suffix"));
     }
+
+    #[test]
+    fn test_parse_heading_line() {
+        assert_eq!(parse_heading_line("# Title"), Some((1, "Title")));
+        assert_eq!(parse_heading_line("## Subtitle"), Some((2, "Subtitle")));
+        assert_eq!(parse_heading_line("### Sub-sub"), Some((3, "Sub-sub")));
+        assert_eq!(parse_heading_line("#### Level 4 capped"), Some((3, "Level 4 capped")));
+        assert_eq!(parse_heading_line("########## Level 10 capped"), Some((3, "Level 10 capped")));
+        assert_eq!(parse_heading_line("#"), Some((1, "")));
+        assert_eq!(parse_heading_line("##"), Some((2, "")));
+        assert_eq!(parse_heading_line("###"), Some((3, "")));
+        assert_eq!(parse_heading_line("   # Indented"), Some((1, "Indented")));
+        assert_eq!(parse_heading_line("#hashtag"), None);
+        assert_eq!(parse_heading_line("Not a heading"), None);
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_section_hierarchy_and_capping() {
+        let md = "---\ntitle: \"Sections Doc\"\n---\nIntro text\n\n# Section 1\nText in 1\n\n## Section 1.1\nText in 1.1\n\n### Section 1.1.1\nText in 1.1.1\n\n#### Section 1.1.2 Capped\nText in 1.1.2\n\n########## Section 1.1.3 Capped\nText in 1.1.3\n\n## Section 1.2\nText in 1.2\n\n# Section 2\nText in 2";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 3);
+        // Intro text
+        assert_eq!(doc.body[0], DocumentElement::text("Intro text"));
+
+        // Section 1 (Level 1)
+        if let DocumentElement::Section { level, title, children } = &doc.body[1] {
+            assert_eq!(*level, 1);
+            assert_eq!(title, "Section 1");
+            assert_eq!(children.len(), 3);
+            assert_eq!(children[0], DocumentElement::text("Text in 1"));
+
+            // Section 1.1 (Level 2)
+            if let DocumentElement::Section { level: l2_1, title: t2_1, children: ch2_1 } = &children[1] {
+                assert_eq!(*l2_1, 2);
+                assert_eq!(t2_1, "Section 1.1");
+                assert_eq!(ch2_1.len(), 4);
+                assert_eq!(ch2_1[0], DocumentElement::text("Text in 1.1"));
+
+                // Section 1.1.1 (Level 3)
+                assert_eq!(
+                    ch2_1[1],
+                    DocumentElement::section(3, "Section 1.1.1", vec![DocumentElement::text("Text in 1.1.1")])
+                );
+                // Section 1.1.2 (Level 3, capped from 4)
+                assert_eq!(
+                    ch2_1[2],
+                    DocumentElement::section(3, "Section 1.1.2 Capped", vec![DocumentElement::text("Text in 1.1.2")])
+                );
+                // Section 1.1.3 (Level 3, capped from 10)
+                assert_eq!(
+                    ch2_1[3],
+                    DocumentElement::section(3, "Section 1.1.3 Capped", vec![DocumentElement::text("Text in 1.1.3")])
+                );
+            } else {
+                panic!("expected Section 1.1");
+            }
+
+            // Section 1.2 (Level 2)
+            assert_eq!(
+                children[2],
+                DocumentElement::section(2, "Section 1.2", vec![DocumentElement::text("Text in 1.2")])
+            );
+        } else {
+            panic!("expected Section 1");
+        }
+
+        // Section 2 (Level 1)
+        assert_eq!(
+            doc.body[2],
+            DocumentElement::section(1, "Section 2", vec![DocumentElement::text("Text in 2")])
+        );
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_section_with_mixed_elements() {
+        let md = "---\ntitle: \"Mixed Elements\"\n---\n# Main Heading\nParagraph line\n- [ ] Task 1\n- Bullet 1\n>! Important note\n```rust\nfn main() {}\n```\n| H1 | H2 |\n| --- | --- |\n| D1 | D2 |\n:::variables\n| KEY | VAL |\n| --- | --- |\n| PORT | 8080 |\n:::\n![Diagram](arch.png)";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 1);
+        if let DocumentElement::Section { level, title, children } = &doc.body[0] {
+            assert_eq!(*level, 1);
+            assert_eq!(title, "Main Heading");
+            assert_eq!(children.len(), 8);
+            assert_eq!(children[0], DocumentElement::text("Paragraph line"));
+            assert_eq!(
+                children[1],
+                DocumentElement::check_box_item(0, false, DocumentElement::text("Task 1"))
+            );
+            assert_eq!(
+                children[2],
+                DocumentElement::bullet_list_item(0, DocumentElement::text("Bullet 1"))
+            );
+            assert_eq!(
+                children[3],
+                DocumentElement::shoutout(ShoutoutElementKind::Important, "Important note")
+            );
+            assert_eq!(
+                children[4],
+                DocumentElement::code_block(Some("rust"), "fn main() {}")
+            );
+            assert_eq!(
+                children[5],
+                DocumentElement::table(
+                    vec![TableAlignment::None, TableAlignment::None],
+                    vec![vec!["H1".into(), "H2".into()], vec!["D1".into(), "D2".into()]]
+                )
+            );
+            assert_eq!(
+                children[6],
+                DocumentElement::block_directive(
+                    "variables",
+                    vec![DocumentElement::table(
+                        vec![TableAlignment::None, TableAlignment::None],
+                        vec![vec!["KEY".into(), "VAL".into()], vec!["PORT".into(), "8080".into()]]
+                    )]
+                )
+            );
+            assert_eq!(
+                children[7],
+                DocumentElement::image("Diagram", "arch.png")
+            );
+        } else {
+            panic!("expected Section");
+        }
+    }
 }
+
 
 

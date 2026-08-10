@@ -27,8 +27,9 @@ mod tests {
         assert!(result.contains("\"title\": \"Test Doc\""));
         assert!(result.contains("\"header\": ["));
         assert!(result.contains("\"body\": ["));
-        assert!(result.contains("\"kind\": \"unknown\""));
-        assert!(result.contains("\"content\": \"# Test\""));
+        assert!(result.contains("\"kind\": \"section\""));
+        assert!(result.contains("\"level\": 1"));
+        assert!(result.contains("\"title\": \"Test\""));
         assert!(result.contains("\"kind\": \"text\""));
         assert!(result.contains("\"content\": \"Paragraph text\""));
     }
@@ -39,7 +40,9 @@ mod tests {
         assert!(!result.contains("Header comment"));
         assert!(!result.contains("multiline"));
         assert!(result.contains("\"title\": \"Test\""));
-        assert!(result.contains("\"content\": \"# Test\""));
+        assert!(result.contains("\"kind\": \"section\""));
+        assert!(result.contains("\"level\": 1"));
+        assert!(result.contains("\"title\": \"Test\""));
         assert!(result.contains("\"content\": \"Paragraph text\""));
     }
 
@@ -137,6 +140,18 @@ mod tests {
         assert!(result.contains("\"name\": \"diagrams\""));
         assert!(result.contains("\"alt\": \"Block Img\""));
         assert!(result.contains("\"url\": \"block.webp\""));
+    }
+
+    #[test]
+    fn test_parse_with_nested_sections() {
+        let result = parse("---\ntitle: \"Nested Sections\"\n---\n# Main\nParagraph 1\n## Sub\nParagraph 2\n### SubSub\nParagraph 3").unwrap();
+        assert!(result.contains("\"kind\": \"section\""));
+        assert!(result.contains("\"level\": 1"));
+        assert!(result.contains("\"title\": \"Main\""));
+        assert!(result.contains("\"level\": 2"));
+        assert!(result.contains("\"title\": \"Sub\""));
+        assert!(result.contains("\"level\": 3"));
+        assert!(result.contains("\"title\": \"SubSub\""));
     }
 }
 

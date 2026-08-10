@@ -100,6 +100,8 @@ pub enum DocumentElement {
     },
     /// Collapsible or structured section containing nested child elements.
     Section {
+        /// Heading level of the section (1 for `#`, 2 for `##`, 3 for `###` and higher).
+        level: usize,
         /// Section heading or title.
         title: String,
         /// Nested child elements within this section.
@@ -176,9 +178,14 @@ impl DocumentElement {
         }
     }
 
-    /// Creates a new section document element with children.
-    pub fn section(title: impl Into<String>, children: Vec<DocumentElement>) -> Self {
+    /// Creates a new section document element with level, title, and children.
+    pub fn section(
+        level: usize,
+        title: impl Into<String>,
+        children: Vec<DocumentElement>,
+    ) -> Self {
         Self::Section {
+            level,
             title: title.into(),
             children,
         }
@@ -349,12 +356,13 @@ mod tests {
         let elem = DocumentElement::text("Hello world");
         assert_eq!(elem, DocumentElement::Text("Hello world".into()));
 
-        let mut section = DocumentElement::section("Heading", Vec::new());
+        let mut section = DocumentElement::section(1, "Heading", Vec::new());
         let child = DocumentElement::unknown("Child node");
         section.push_child(child.clone());
         assert_eq!(
             section,
             DocumentElement::Section {
+                level: 1,
                 title: "Heading".into(),
                 children: vec![child],
             }

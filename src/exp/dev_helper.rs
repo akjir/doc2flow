@@ -134,8 +134,13 @@ fn format_element_inline(out: &mut String, elem: &DocumentElement, indent_level:
             format_element_inline(out, content, indent_level + 1);
             out.push('\n');
         }
-        DocumentElement::Section { title, children } => {
+        DocumentElement::Section {
+            level,
+            title,
+            children,
+        } => {
             let _ = write!(out, "{child_indent}\"kind\": \"section\",\n");
+            let _ = write!(out, "{child_indent}\"level\": {level},\n");
             let _ = write!(out, "{child_indent}\"title\": \"");
             escape_json_string(out, title);
             let _ = write!(out, "\",\n");
@@ -256,6 +261,7 @@ mod tests {
 
         let text_elem = DocumentElement::text("Hello \"world\"\nNew line");
         let section_elem = DocumentElement::section(
+            1,
             "My Section",
             vec![DocumentElement::unknown("Child")],
         );
@@ -269,6 +275,7 @@ mod tests {
         assert!(json.contains("\"kind\": \"text\""));
         assert!(json.contains("\"content\": \"Hello \\\"world\\\"\\nNew line\""));
         assert!(json.contains("\"kind\": \"section\""));
+        assert!(json.contains("\"level\": 1"));
         assert!(json.contains("\"title\": \"My Section\""));
         assert!(json.contains("\"kind\": \"unknown\""));
         assert!(json.contains("\"content\": \"Child\""));
