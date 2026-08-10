@@ -1,11 +1,11 @@
 //! Base64 Data-URI formatting and file conversion utilities.
 
-use std::fs;
 use std::path::Path;
 
 use super::base64::base64_encode_into;
+use super::io;
 use super::mime::guess_mime_type;
-use crate::core::error::{Error, Result};
+use crate::core::error::Result;
 
 /// Reads a local file and encodes its content into a Base64 Data URI string.
 ///
@@ -24,12 +24,10 @@ use crate::core::error::{Error, Result};
 ///
 /// # Errors
 ///
-/// Returns [`Error`] if the file cannot be read.
+/// Returns [`Error`](crate::core::error::Error) if the file cannot be read.
 pub fn file_to_data_uri(path: &Path) -> Result<String> {
     let mime = guess_mime_type(path);
-    let bytes = fs::read(path).map_err(|err| {
-        Error::Message(format!("I/O error at {}: {}", path.display(), err))
-    })?;
+    let bytes = io::read_file_bytes(path)?;
     Ok(to_base64_data_uri(mime, &bytes))
 }
 
