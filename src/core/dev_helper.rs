@@ -1,7 +1,8 @@
 //! Development helper for AST inspection and JSON formatting.
 
-use crate::exp::document::Document;
-use crate::exp::document::DocumentElement;
+use crate::core::document::Document;
+use crate::core::document::DocumentElement;
+
 use std::fmt::Write;
 
 /// Serializes a document model to a formatted JSON string for development inspection.
@@ -241,7 +242,8 @@ fn escape_json_string(out: &mut String, s: &str) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::exp::document::ShoutoutElementKind;
+    use crate::core::document::ShoutoutElementKind;
+
 
     #[test]
     fn test_document_to_json_empty() {
@@ -417,7 +419,8 @@ mod tests {
 
     #[test]
     fn test_document_to_json_with_table() {
-        use crate::exp::document::TableAlignment;
+        use crate::core::document::TableAlignment;
+
 
         let mut doc = Document::new();
         doc.push_body(DocumentElement::table(

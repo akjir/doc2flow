@@ -14,7 +14,7 @@ use std::path::Path;
 /// # Examples
 ///
 /// ```
-/// use doc2flow::utils::uri::to_base64_data_uri_into;
+/// use doc2flow::legacy::utils::uri::to_base64_data_uri_into;
 ///
 /// let mut buf = String::new();
 /// to_base64_data_uri_into("image/png", b"foo", &mut buf);
@@ -40,7 +40,7 @@ pub fn to_base64_data_uri_into(mime: &str, bytes: &[u8], out: &mut String) {
 /// # Examples
 ///
 /// ```
-/// use doc2flow::utils::uri::to_base64_data_uri;
+/// use doc2flow::legacy::utils::uri::to_base64_data_uri;
 ///
 /// let uri = to_base64_data_uri("image/png", b"foo");
 /// assert_eq!(uri, "data:image/png;base64,Zm9v");
@@ -68,7 +68,7 @@ pub fn to_base64_data_uri(mime: &str, bytes: &[u8]) -> String {
 ///
 /// ```no_run
 /// use std::path::Path;
-/// use doc2flow::utils::uri::file_to_data_uri;
+/// use doc2flow::legacy::utils::uri::file_to_data_uri;
 ///
 /// let uri = file_to_data_uri(Path::new("test.png")).unwrap();
 /// assert!(uri.starts_with("data:image/png;base64,"));
@@ -76,7 +76,7 @@ pub fn to_base64_data_uri(mime: &str, bytes: &[u8]) -> String {
 ///
 /// # Errors
 ///
-/// Returns [`Doc2FlowError::Io`](crate::utils::error::Doc2FlowError::Io) if the file cannot be read.
+/// Returns [`Doc2FlowError::Io`](crate::legacy::utils::error::Doc2FlowError::Io) if the file cannot be read.
 pub fn file_to_data_uri(path: &Path) -> Result<String> {
     let mime = guess_mime_type(path);
     let bytes = io::read_file_bytes(path)?;
@@ -87,7 +87,8 @@ pub fn file_to_data_uri(path: &Path) -> Result<String> {
 mod tests {
     use super::super::base64::base64_encode;
     use super::*;
-    use crate::utils::error::Doc2FlowError;
+    use crate::legacy::utils::error::Doc2FlowError;
+
 
     #[test]
     fn test_file_to_data_uri_success_and_error() {

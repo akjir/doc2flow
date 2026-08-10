@@ -1,20 +1,21 @@
-//! Experimental document parser.
+//! Core document parser.
 
-use crate::exp::dev_helper::document_to_json;
-use crate::exp::parsing::parse_d2f_markdown;
-use crate::utils::error::{Doc2FlowError, Result};
+use crate::core::dev_helper::document_to_json;
+use crate::core::parsing::parse_d2f_markdown;
+use crate::core::error::{Error, Result};
 
-/// Parses Markdown content using the experimental building pipeline.
+/// Parses Markdown content into a structured JSON AST string.
 ///
 /// # Errors
 ///
 /// Returns an error if parsing fails.
 pub fn parse(md_content: &str) -> Result<String> {
     let document =
-        parse_d2f_markdown(md_content).map_err(|e| Doc2FlowError::Message(e.to_string()))?;
+        parse_d2f_markdown(md_content).map_err(|e| Error::Message(e.to_string()))?;
     let json = document_to_json(&document);
     Ok(json)
 }
+
 
 #[cfg(test)]
 mod tests {

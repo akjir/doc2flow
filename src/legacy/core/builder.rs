@@ -1,14 +1,15 @@
 //! HTML Builder and asset orchestrator integrating vertical slices and core assets.
 
-pub use crate::components::DEFAULT_LOGO_SVG;
-pub use crate::constants::{APP_VERSION, LICENSE_TERMS, LICENSE_URL, REPOSITORY_URL};
-use crate::converter::{DocumentFeatures, Frontmatter};
-use crate::utils::error::{Doc2FlowError, Result};
-use crate::feature::{DocumentContext, Feature};
-use crate::features;
-use crate::locales::{Locale, validate_locale_coverage};
+pub use crate::legacy::core::components::DEFAULT_LOGO_SVG;
+pub use crate::legacy::core::constants::{APP_VERSION, LICENSE_TERMS, LICENSE_URL, REPOSITORY_URL};
+use crate::legacy::core::converter::{DocumentFeatures, Frontmatter};
+use crate::legacy::utils::error::{Doc2FlowError, Result};
+use crate::legacy::core::feature::{DocumentContext, Feature};
+use crate::legacy::features;
+use crate::legacy::core::locales::{Locale, validate_locale_coverage};
 use std::collections::HashMap;
 use std::fmt::Write;
+
 
 /// Embedded core CSS styles for layout and components.
 pub static STYLE_CORE: &str = include_str!("web/dist/core.css");
@@ -24,7 +25,7 @@ pub fn assemble_styles(ctx: &DocumentContext, features: &[Box<dyn Feature>], out
     out.push_str(STYLE_CORE);
     out.push('\n');
 
-    let enabled = crate::core::feature::resolve_enabled_features(features, ctx);
+    let enabled = crate::legacy::core::feature::resolve_enabled_features(features, ctx);
     for feature in features {
         if enabled.contains(feature.name())
             && let Some(css) = feature.css()
@@ -43,7 +44,7 @@ pub fn assemble_scripts(ctx: &DocumentContext, features: &[Box<dyn Feature>], ou
     out.push_str(SCRIPT_CORE);
     out.push('\n');
 
-    let enabled = crate::core::feature::resolve_enabled_features(features, ctx);
+    let enabled = crate::legacy::core::feature::resolve_enabled_features(features, ctx);
     for feature in features {
         if enabled.contains(feature.name())
             && let Some(js) = feature.javascript()
@@ -124,7 +125,7 @@ pub fn render_finish_box(out: &mut impl Write, features: &DocumentFeatures, loca
 ///
 /// ```
 /// use std::time::{Duration, UNIX_EPOCH};
-/// use doc2flow::builder::format_iso8601_utc;
+/// use doc2flow::legacy::core::builder::format_iso8601_utc;
 ///
 /// let epoch = UNIX_EPOCH;
 /// assert_eq!(format_iso8601_utc(epoch), "1970-01-01T00:00:00Z");
@@ -169,7 +170,7 @@ pub fn format_iso8601_utc(time: std::time::SystemTime) -> String {
 /// # Examples
 ///
 /// ```
-/// use doc2flow::builder::generate_template_markdown;
+/// use doc2flow::legacy::core::builder::generate_template_markdown;
 ///
 /// let template = generate_template_markdown();
 /// assert!(template.contains("title:"));
@@ -260,14 +261,15 @@ pub fn build_template_vars<'a>(ctx: &TemplateContext<'a>) -> HashMap<&'static st
 ///
 /// ```
 /// use std::collections::HashMap;
-/// use doc2flow::locales::Locale;
-/// use doc2flow::builder::substitute_template;
+/// use doc2flow::legacy::core::locales::Locale;
+/// use doc2flow::legacy::core::builder::substitute_template;
 ///
 /// let mut vars = HashMap::new();
 /// vars.insert("NAME", "World");
 /// let result = substitute_template("Hello {{NAME}}!", &vars, None);
 /// assert_eq!(result, "Hello World!");
 /// ```
+
 pub fn substitute_template(
     template: &str,
     vars: &HashMap<&str, &str>,
@@ -417,7 +419,7 @@ pub fn assemble_html(
     let mut active_features_str = String::with_capacity(64);
     active_features_str.push_str("core");
 
-    let enabled = crate::core::feature::resolve_enabled_features(features, ctx);
+    let enabled = crate::legacy::core::feature::resolve_enabled_features(features, ctx);
     for feature in features {
         let name = feature.name();
         if enabled.contains(name) {
@@ -523,11 +525,11 @@ pub fn assemble_html(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::features::code::CodeFeature;
-    use crate::features::header::HeaderFeature;
-    use crate::features::image::ImageFeature;
-    use crate::features::table::TableFeature;
-    use crate::features::tasks::TasksFeature;
+    use crate::legacy::features::code::CodeFeature;
+    use crate::legacy::features::header::HeaderFeature;
+    use crate::legacy::features::image::ImageFeature;
+    use crate::legacy::features::table::TableFeature;
+    use crate::legacy::features::tasks::TasksFeature;
 
     #[test]
     fn test_generate_template_markdown_contains_required_sections() {

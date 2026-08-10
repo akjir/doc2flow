@@ -1,12 +1,5 @@
 # Project Specification: Doc2Flow (d2f)
 
-> [!NOTE]
-> **[BRANCH EXPERIMENT: feature/modular-building - REVERT/MIGRATE ON MERGE TO MAIN]**
-> This branch isolates an experimental modular building pipeline under `src/exp/`.
-> - **Isolation Rule:** Production code (`src/core/`, `src/features/`, `src/utils/`) remains frozen. Required helper functions must be copied into `src/exp/` rather than coupled to legacy modules.
-> - **Execution:** Activated solely via `--experimental-building`. Standard invocation remains completely unchanged.
-> - **Merge-Back Revert Checklist:** Upon merging into `main`, revert this experiment banner, integrate or replace the legacy building pipeline with the finalized `src/exp/` implementation, and clean up temporary markers.
-
 ## 1. Overview & Objectives
 Doc2Flow (`d2f`) is a command-line interface (CLI) tool built for Windows that converts Markdown files into fully self-contained HTML files. The generated HTML files serve as interactive guides, manuals, protocols, and checklists for end users.
 
@@ -27,6 +20,9 @@ The target binary is **`d2f.exe`**.
 ```bash
 # Standard execution (generates input.html)
 d2f.exe input.md
+
+# Legacy pipeline execution
+d2f.exe input.md --legacy
 
 # Explicit output path
 d2f.exe input.md -o custom_output.html
@@ -56,7 +52,8 @@ d2f.exe --version
 | `LOGO` | `-l`, `--logo` | Path to custom logo (SVG, PNG, JPG, WebP) | No | Default embedded SVG logo |
 | `INIT` | `-i`, `--init` | Generates starter template Markdown file | No | `template.md` |
 | `AUTO_SCALE` | `-s`, `--auto-scale` | Auto-resizes local images > 250 KB to WebP | No | `false` |
-| `EXP_BUILD` *(branch experiment)* | `--experimental-building` | Activates experimental isolated modular pipeline | No | `false` |
+| `LEGACY` | `--legacy` | Runs using legacy processing pipeline | No | `false` |
+
 
 ---
 
@@ -141,14 +138,13 @@ d2f.exe --version
   * `src/components.rs`: Core-universal zero-allocation HTML UI building blocks (`out: &mut impl Write`). Feature-specific HTML components reside in their respective feature modules.
   * `src/core/builder.rs`: Central HTML page orchestrator, dynamic feature style assembler (`assemble_styles`), and script bundle assembler (`assemble_scripts`).
 * **Constants Architecture & Encapsulation Rules:**
-  * **Feature-Specific Constants (Strict Encapsulation):** Constants used exclusively by an individual feature (e.g. CSS class names, frontmatter keys, selector strings, feature-internal default values) MUST be defined directly in the respective `src/features/<feature_name>/module.rs` (or private submodules). Distributing feature constants across central files or dumpsters is strictly prohibited to eliminate tight coupling.
-  * **Global System Constants (`src/core/constants.rs`):** Reserved exclusively for application-wide, feature-independent system metadata and global core defaults (e.g. `APP_NAME`, `CLI_BANNER`, `APP_VERSION`, `REPOSITORY_URL`, `LICENSE_TERMS`, `LICENSE_URL`, global system/I/O limits).
-* **Centralized Diagnostic Error Handling (`src/utils/error.rs`):** Runtime, I/O, and syntax errors map to domain error types (`Doc2FlowError`) with compiler-style `stderr` warnings (`print_warning`).
-* **Experimental Modular Pipeline (`src/exp/`) `[BRANCH EXPERIMENT: REVERT/MIGRATE ON MERGE]`:
-  * Dedicated experimental building subsystem rooted at `src/exp/mod.rs` and `src/exp/parser.rs`.
-  * **Strict Isolation & Freeze:** Production files under `src/core/`, `src/features/`, and `src/utils/` remain frozen.
-  * **Zero-Coupling Duplication Rule:** Functions needed from core/features are copied into `src/exp/` rather than coupled to legacy modules.
-  * **Conditional Routing:** Invoked exclusively when `--experimental-building` is passed to the CLI.
+  * **Feature-Specific Constants (Strict Encapsulation):** Constants used exclusively by an individual feature (e.g. CSS class names, frontmatter keys, selector strings, feature-internal default values) MUST be defined directly in the respective `src/legacy/features/<feature_name>/module.rs` (or private submodules). Distributing feature constants across central files or dumpsters is strictly prohibited to eliminate tight coupling.
+  * **Global System Constants (`src/legacy/core/constants.rs`):** Reserved exclusively for application-wide, feature-independent system metadata and global core defaults (e.g. `APP_NAME`, `CLI_BANNER`, `APP_VERSION`, `REPOSITORY_URL`, `LICENSE_TERMS`, `LICENSE_URL`, global system/I/O limits).
+* **Centralized Diagnostic Error Handling:** Runtime, I/O, and syntax errors map to diagnostic compiler-style error types (`Error` in `src/core/error.rs`, `Doc2FlowError` in `src/legacy/utils/error.rs`).
+* **Legacy Subsystem (`src/legacy/`):**
+  * Contains the self-contained legacy conversion engine (`src/legacy/legacy.rs`, `core/`, `features/`, `utils/`).
+  * Zero coupling to the root `src/core/` pipeline.
+  * Activated when `--legacy` is passed on the CLI.
 
 ---
 
@@ -160,7 +156,7 @@ d2f.exe --version
   * Format: `v<MAJOR>.<MINOR>.<PATCH>+<COMMIT_COUNT>.<COMMIT_HASH>[.dev]`
   * Exported as `D2F_FULL_VERSION` compiler env var; embedded in `d2f --version` output, HTML `<meta name="generator">` tags, and header comments.
 * **Binary Size:** Executable size target `< 10 MB` using stripping, LTO, and release optimizations.
-* **Core Dependencies:** `pulldown-cmark`, `serde`, `serde_json`, `image` (custom Base64/MIME helpers in `src/utils/`).
+* **Core Dependencies:** `pulldown-cmark`, `serde`, `serde_json`, `image` (custom Base64/MIME helpers in `src/legacy/utils/`).
 * **Error Handling & Testing:** Zero panics on invalid paths/inputs; human-readable diagnostic error messages on `stderr`. Unit and integration test suite coverage.
 
 ---
@@ -187,72 +183,23 @@ doc2flow/
 ├── src/                      # Rust CLI backend
 │   ├── main.rs               # CLI entry point and argument parsing
 │   ├── lib.rs                # Module declarations and library interface
-│   ├── exp/                  # [BRANCH EXPERIMENT] Experimental building pipeline
-│   │   ├── mod.rs            # Experimental module root
-│   │   └── parser.rs         # Experimental Markdown parser & builder
-│   ├── utils/                # Generic, project-agnostic library subsystem
-│   │   ├── mod.rs            # Library module root and clean API exports
-│   │   ├── base64.rs         # RFC 4648 Base64 encoding routines
-│   │   ├── error.rs          # Diagnostic error types and reporting
-│   │   ├── hasher.rs         # SHA-256 cryptographic hash generator
-│   │   ├── io.rs             # Central filesystem and asset IO
-│   │   ├── mime.rs           # Extension-based MIME type inference
-│   │   └── uri.rs            # Base64 Data URI formatting and file conversion
-│   ├── core/                 # Core architecture, engine, stylesheets and TS runtime
+│   ├── core/                 # Core modular engine and document AST pipeline
 │   │   ├── mod.rs            # Core module exports
-│   │   ├── builder.rs        # HTML Assembler and template engine
-│   │   ├── components.rs     # Core-universal HTML UI component generators
-│   │   ├── constants.rs      # Global system metadata, CLI branding, and core defaults
-│   │   ├── converter.rs      # Markdown AST parser and feature detector interface
-│   │   ├── feature.rs        # Feature trait and DocumentContext detection
-│   │   ├── id.rs             # Document identifier generation
-│   │   ├── image.rs          # Image optimization, WebP scaling and Base64 embedding
-│   │   ├── locales.rs        # Locale loader and translation engine
-│   │   ├── parsing/          # CLI argument parsing and grammar
-│   │   │   └── arguments.rs  # Zero-dependency CLI argument parsing and validation
-│   │   └── web/              # Core web frontend runtime and stylesheets
-│   │       ├── comments.ts   # Inline check-item comment boxes and persistence
-│   │       ├── core.ts       # Central core module, bundle entry point, and reset handler registry
-│   │       ├── export.ts     # Document export operations (PDF export and HTML state download)
-│   │       ├── items.ts      # Interactive document text and list item click handlers and persistence
-│   │       ├── lang.ts       # Dynamic localization dictionary
-│   │       ├── search.ts     # Search toolbar and text filtering
-│   │       ├── sections.ts   # Collapsible section toggling and state handlers
-│   │       ├── storage.ts    # localStorage persistence manager for save and load handlers
-│   │       ├── types.ts      # Shared TypeScript type definitions
-│   │       ├── utils.ts      # Utility functions for debouncing
-│   │       └── dist/         # Compiled core web assets
-│   │           ├── core.css  # Core layout and component stylesheet
-│   │           └── core.js   # Compiled core JavaScript client runtime
-│   └── features/             # Vertical slice feature modules
-│       ├── mod.rs            # Central feature registry (get_all_features)
-│       ├── code/             # Unified code block and copy feature vertical slice (depends on fields)
-│       │   ├── module.rs     # Rust Feature struct, trait implementation, and HTML components
-│       │   ├── code.ts       # TypeScript client script for variables and copy button
-│       │   ├── code.js       # Compiled JavaScript bundle for code block features
-│       │   └── code.css      # Isolated CSS for code blocks, variables table and copy button
-│       ├── fields/           # Form input field persistence and date shortcuts vertical slice
-│       │   ├── module.rs     # Rust Feature struct and trait implementation
-│       │   ├── fields.ts     # TypeScript client script for form input persistence and date shortcuts
-│       │   └── fields.js     # Compiled JavaScript bundle for fields feature
-│       ├── header/           # Unified document header and flexible banner vertical slice
-│       │   ├── module.rs     # Rust Feature struct, trait implementation, and HTML components
-│       │   └── header.css    # Isolated CSS for flexible header card and print styles
-│       ├── image/            # Unified image container and lightbox vertical slice
-│       │   ├── module.rs     # Rust Feature struct, trait implementation, and HTML components
-│       │   ├── image.ts      # TypeScript client script for lightbox modal
-│       │   ├── image.js      # Compiled JavaScript bundle for image features
-│       │   └── image.css     # Isolated CSS for image container, lightbox and print
-│       ├── table/            # Unified section table and tabular layout vertical slice
-│       │   ├── module.rs     # Rust Feature struct and trait implementation
-│       │   ├── table.ts      # TypeScript client script for section table hover and formatting
-│       │   ├── table.js      # Compiled JavaScript bundle for table features
-│       │   └── table.css     # Isolated CSS for section tables and print styles
-│       └── tasks/            # Unified task list and checklist progress vertical slice
-│           ├── module.rs     # Rust Feature struct, trait implementation, and HTML components
-│           ├── tasks.ts      # TypeScript client script for checklist progress and finish box
-│           ├── tasks.js      # Compiled JavaScript bundle for tasks features
-│           └── tasks.css     # Isolated CSS for checklist items, progress bar and finish box
+│   │   ├── parser.rs         # Markdown parser & AST generator
+│   │   ├── document.rs       # Document AST data structures
+│   │   ├── error.rs          # Compiler-style diagnostic error reporting
+│   │   ├── dev_helper.rs     # AST serialization and development inspection
+│   │   └── parsing/          # Document and CLI argument parsing
+│   │       ├── mod.rs        # Parsing module root
+│   │       ├── arguments.rs  # CLI argument parser with --legacy support
+│   │       └── markdown.rs   # Zero-alloc Markdown parser
+│   └── legacy/               # Isolated legacy conversion subsystem
+│       ├── mod.rs            # Legacy subsystem root
+│       ├── legacy.rs         # Legacy CLI execution runner
+│       ├── utils/            # Generic legacy utility library
+│       ├── core/             # Legacy core processing engine
+│       └── features/         # Legacy vertical slice features
+
 ├── tests/
 │   ├── example_onboarding.html # Compiled onboarding showcase HTML fixture
 │   ├── example_onboarding.md # Onboarding Markdown showcase source

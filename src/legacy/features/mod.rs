@@ -19,14 +19,16 @@ pub use header::HeaderFeature;
 pub use image::ImageFeature;
 pub use table::TableFeature;
 pub use tasks::TasksFeature;
-use crate::core::feature::Feature;
+use crate::legacy::core::feature::Feature;
+
 
 /// Returns all available vertical slice feature instances in registration order.
 ///
 /// # Examples
 ///
 /// ```
-/// use doc2flow::features::get_all_features;
+/// use doc2flow::legacy::features::get_all_features;
+
 ///
 /// let features = get_all_features();
 /// assert_eq!(features.len(), 6);

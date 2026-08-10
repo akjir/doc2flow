@@ -1,8 +1,8 @@
-use crate::components::DEFAULT_LOGO_SVG;
-use crate::utils::error::{DiagnosticError, Doc2FlowError, Result, build_caret_annotation, print_warning};
-use crate::utils::io;
-use crate::utils::mime::guess_mime_type;
-use crate::utils::uri::{file_to_data_uri, to_base64_data_uri};
+use crate::legacy::core::components::DEFAULT_LOGO_SVG;
+use crate::legacy::utils::error::{DiagnosticError, Doc2FlowError, Result, build_caret_annotation, print_warning};
+use crate::legacy::utils::io;
+use crate::legacy::utils::mime::guess_mime_type;
+use crate::legacy::utils::uri::{file_to_data_uri, to_base64_data_uri};
 use image::{GenericImageView, ImageFormat, imageops::FilterType};
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -10,7 +10,8 @@ use std::collections::hash_map::Entry;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
 
-pub use crate::utils::uri::to_base64_data_uri_into;
+pub use crate::legacy::utils::uri::to_base64_data_uri_into;
+
 
 /// Maximum allowed size in bytes for a local image embedded into HTML (250 KB).
 pub const MAX_IMAGE_SIZE_BYTES: u64 = 250 * 1024;
@@ -35,7 +36,7 @@ pub fn resolve_logo_path(path: &Path, base_dir: Option<&Path>) -> PathBuf {
 ///
 /// ```no_run
 /// use std::path::Path;
-/// use doc2flow::image::load_logo;
+/// use doc2flow::legacy::core::image::load_logo;
 ///
 /// let logo_html = load_logo(Some(Path::new("custom_logo.svg")), Some(Path::new("docs")));
 /// assert!(logo_html.contains("<svg") || logo_html.contains("<img"));
@@ -216,7 +217,8 @@ fn render_non_image_link(
     alt_text: &str,
 ) -> usize {
     if let Some(next_cursor) = strip_img_item_wrapper(out, html, img_end) {
-        let comment_icon = crate::components::COMMENT_ICON_SVG;
+        let comment_icon = crate::legacy::core::components::COMMENT_ICON_SVG;
+
         out.push_str("<div class=\"doc-item text-item\">\n  <span class=\"text-content\"><a href=\"");
         out.push_str(src_val);
         out.push_str("\" target=\"_blank\" rel=\"noopener noreferrer\">");
@@ -433,7 +435,7 @@ fn strip_img_item_wrapper(out: &mut String, html: &str, img_end: usize) -> Optio
 /// # Examples
 ///
 /// ```
-/// use doc2flow::image::extract_attribute;
+/// use doc2flow::legacy::core::image::extract_attribute;
 ///
 /// let tag = r#"<img src="photo.png" alt="Demo">"#;
 /// let (start, end, val) = extract_attribute(tag, "src").unwrap();

@@ -1,14 +1,12 @@
-use doc2flow::builder;
-use doc2flow::converter;
-use doc2flow::error::{Doc2FlowError, Result};
-use doc2flow::io;
-use doc2flow::locales::Locale;
-use doc2flow::args::{help_message, parse_args};
+//! Doc2Flow CLI entry point.
+
+use doc2flow::core::error::{Error, Result};
+use doc2flow::core::parsing::arguments::{help_message, parse_args};
 use std::env;
 use std::process::ExitCode;
 
 fn run() -> Result<()> {
-    let args = parse_args(env::args()).map_err(Doc2FlowError::Message)?;
+    let args = parse_args(env::args()).map_err(Error::Message)?;
 
     if args.show_help {
         println!("{}", help_message());
@@ -20,68 +18,11 @@ fn run() -> Result<()> {
         return Ok(());
     }
 
-    if let Some(init_path) = args.init {
-        let template_content = builder::generate_template_markdown();
-        io::write_file(&init_path, template_content)?;
-        println!("Successfully generated template {}", init_path.display());
+    if args.legacy {
+        doc2flow::legacy::run().map_err(|err| Error::Message(err.to_string()))?;
         return Ok(());
     }
 
-    let Some(input_path) = args.input else {
-        return Err(Doc2FlowError::Message(
-            "Missing input file. Specify input path or use --init to generate a template."
-                .to_string(),
-        ));
-    };
-
-    let output_path = args.output.unwrap_or_else(|| input_path.with_extension("html"));
-
-    let md_content = io::read_file_to_string(&input_path)?;
-
-    let final_html = if args.experimental_building {
-        doc2flow::exp::parser::parse(&md_content)?
-    } else {
-        let file_name = input_path.to_str();
-        let (frontmatter, markdown_body) =
-            converter::parse_and_validate_frontmatter(&md_content, file_name)?;
-        let language_code = frontmatter.language.as_deref().unwrap_or("en");
-        let locale = Locale::from_lang_code(language_code);
-
-        let frontmatter_map = frontmatter.to_hashmap();
-        let ctx = doc2flow::feature::DocumentContext::new(&frontmatter_map, markdown_body);
-        let all_features = doc2flow::features::get_all_features();
-        let features = doc2flow::converter::DocumentFeatures::resolve(&all_features, &ctx);
-
-        let (html_content, _) = converter::convert_markdown_to_html_with_options(
-            markdown_body,
-            &locale,
-            frontmatter.numbered_sections,
-        )?;
-
-        let base_dir = input_path.parent();
-
-        let logo_path = args
-            .logo
-            .as_deref()
-            .or_else(|| frontmatter.logo.as_deref().map(std::path::Path::new));
-        let logo_html = doc2flow::image::load_logo(logo_path, base_dir);
-
-        let d2f_id = doc2flow::id::generate_d2f_id(&frontmatter)?;
-        let rendered_html =
-            builder::render(&frontmatter, &locale, &html_content, &d2f_id, Some(&logo_html), &features)?;
-
-        doc2flow::image::embed_images_as_base64_with_source(
-            &rendered_html,
-            Some(&md_content),
-            file_name,
-            base_dir,
-            args.auto_scale,
-        )?
-    };
-
-    io::write_file(&output_path, final_html)?;
-
-    println!("Successfully generated {}", output_path.display());
     Ok(())
 }
 

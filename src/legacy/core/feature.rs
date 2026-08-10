@@ -18,7 +18,7 @@ impl<'a> DocumentContext<'a> {
     ///
     /// ```
     /// use std::collections::HashMap;
-    /// use doc2flow::core::feature::DocumentContext;
+    /// use doc2flow::legacy::core::feature::DocumentContext;
     ///
     /// let fm = HashMap::new();
     /// let ctx = DocumentContext::new(&fm, "# Heading");
@@ -47,7 +47,7 @@ pub trait Feature {
     /// # Examples
     ///
     /// ```
-    /// use doc2flow::core::feature::{DocumentContext, Feature};
+    /// use doc2flow::legacy::core::feature::{DocumentContext, Feature};
     ///
     /// struct CustomFeature;
     /// impl Feature for CustomFeature {
@@ -82,7 +82,7 @@ pub trait Feature {
 ///
 /// ```
 /// use std::collections::HashMap;
-/// use doc2flow::core::feature::{DocumentContext, Feature, resolve_enabled_features};
+/// use doc2flow::legacy::core::feature::{DocumentContext, Feature, resolve_enabled_features};
 ///
 /// struct FeatA;
 /// impl Feature for FeatA {

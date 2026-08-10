@@ -11,7 +11,8 @@ pub mod id;
 pub mod image;
 pub mod locales;
 
-pub use crate::utils::{base64, error, hasher, io, mime, uri};
+pub use crate::legacy::utils::{base64, error, hasher, io, mime, uri};
+
 pub use args::{Args, help_message, parse_args};
 pub use builder::{
     SCRIPT_CORE, STYLE_CORE, assemble_html, assemble_scripts, assemble_styles,

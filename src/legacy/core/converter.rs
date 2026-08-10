@@ -1,7 +1,8 @@
-use crate::components;
-use crate::features;
-use crate::utils::error::{Result, print_warning};
-use crate::locales::Locale;
+use crate::legacy::core::components;
+use crate::legacy::features;
+use crate::legacy::utils::error::{Result, print_warning};
+use crate::legacy::core::locales::Locale;
+
 use pulldown_cmark::{
     html, CodeBlockKind, Event, HeadingLevel, Options, Parser as MarkdownParser, Tag, TagEnd,
 };
@@ -151,9 +152,10 @@ impl DocumentFeatures {
     ///
     /// ```
     /// use std::collections::HashMap;
-    /// use doc2flow::converter::DocumentFeatures;
-    /// use doc2flow::feature::DocumentContext;
-    /// use doc2flow::features::get_all_features;
+    /// use doc2flow::legacy::core::converter::DocumentFeatures;
+    /// use doc2flow::legacy::core::feature::DocumentContext;
+    /// use doc2flow::legacy::features::get_all_features;
+
     ///
     /// let fm = HashMap::new();
     /// let ctx = DocumentContext::new(&fm, "```rust\nfn main() {}\n```");
@@ -164,8 +166,9 @@ impl DocumentFeatures {
     /// assert!(df.is_feature_active("code"));
     /// assert!(df.is_feature_active("fields"));
     /// ```
-    pub fn resolve(features: &[Box<dyn crate::core::feature::Feature>], ctx: &crate::core::feature::DocumentContext) -> Self {
-        let active = crate::core::feature::resolve_enabled_features(features, ctx);
+    pub fn resolve(features: &[Box<dyn crate::legacy::core::feature::Feature>], ctx: &crate::legacy::core::feature::DocumentContext) -> Self {
+        let active = crate::legacy::core::feature::resolve_enabled_features(features, ctx);
+
         Self::from_active_set(&active)
     }
 
@@ -175,7 +178,7 @@ impl DocumentFeatures {
     ///
     /// ```
     /// use std::collections::HashSet;
-    /// use doc2flow::converter::DocumentFeatures;
+    /// use doc2flow::legacy::core::converter::DocumentFeatures;
     ///
     /// let mut active = HashSet::new();
     /// active.insert("code");
@@ -203,7 +206,7 @@ impl DocumentFeatures {
     /// # Examples
     ///
     /// ```
-    /// use doc2flow::converter::DocumentFeatures;
+    /// use doc2flow::legacy::core::converter::DocumentFeatures;
     ///
     /// let mut features = DocumentFeatures::default();
     /// features.has_code = true;
@@ -229,7 +232,7 @@ impl DocumentFeatures {
     /// # Examples
     ///
     /// ```
-    /// use doc2flow::converter::DocumentFeatures;
+    /// use doc2flow::legacy::core::converter::DocumentFeatures;
     ///
     /// let mut features = DocumentFeatures::default();
     /// assert_eq!(features.to_features_string(), "core");

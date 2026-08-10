@@ -1,6 +1,7 @@
 //! Internationalization module for Doc2Flow static UI terms.
 
-use crate::utils::error::{Doc2FlowError, Result};
+use crate::legacy::utils::error::{Doc2FlowError, Result};
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -22,7 +23,7 @@ impl Locale {
     /// # Examples
     ///
     /// ```
-    /// use doc2flow::locales::Locale;
+    /// use doc2flow::legacy::core::locales::Locale;
     ///
     /// let json = r#"{"lang_code": "en", "search": "Search"}"#;
     /// let locale = Locale::from_json(json);

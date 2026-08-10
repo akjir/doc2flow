@@ -10,7 +10,7 @@ const BASE64_CHARS: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrst
 /// # Examples
 ///
 /// ```
-/// use doc2flow::utils::base64::base64_encode_into;
+/// use doc2flow::legacy::utils::base64::base64_encode_into;
 ///
 /// let mut buf = String::from("data:text/plain;base64,");
 /// base64_encode_into(b"foo", &mut buf);
@@ -66,7 +66,7 @@ pub fn base64_encode_into(data: &[u8], out: &mut String) {
 /// # Examples
 ///
 /// ```
-/// use doc2flow::utils::base64::base64_encode;
+/// use doc2flow::legacy::utils::base64::base64_encode;
 ///
 /// assert_eq!(base64_encode(b"foo"), "Zm9v");
 /// ```

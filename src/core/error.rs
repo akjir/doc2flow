@@ -1,4 +1,4 @@
-//! Error types and diagnostic definitions for experimental pipeline.
+//! Error types and diagnostic definitions for Doc2Flow core engine.
 
 use std::borrow::Cow;
 use std::fmt::{self, Display, Formatter, Write};
@@ -83,7 +83,7 @@ impl Display for DiagnosticError<'_> {
 
 impl std::error::Error for DiagnosticError<'_> {}
 
-/// Centralized error type for experimental operations.
+/// Centralized error type for core operations.
 #[derive(Debug)]
 pub enum Error {
     /// Rendered compiler-style diagnostic error string.
@@ -127,8 +127,9 @@ impl From<String> for Error {
     }
 }
 
-/// Result type alias for experimental operations.
+/// Result type alias for core operations.
 pub type Result<T, E = Error> = std::result::Result<T, E>;
+
 
 /// Constructs a diagnostic caret annotation string pointing to a source location.
 pub fn build_caret_annotation(col_no: usize, span_len: usize, max_len: usize) -> Cow<'static, str> {

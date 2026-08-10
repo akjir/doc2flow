@@ -85,7 +85,7 @@ impl From<&DiagnosticError<'_>> for Doc2FlowError {
 ///
 /// ```no_run
 /// use std::fs::File;
-/// use doc2flow::utils::error::IoResultExt;
+/// use doc2flow::legacy::utils::error::IoResultExt;
 ///
 /// let res = File::open("missing_file.txt").with_path("missing_file.txt");
 /// assert!(res.is_err());
@@ -113,7 +113,7 @@ const STATIC_CARETS: &str =
 /// # Examples
 ///
 /// ```
-/// use doc2flow::utils::error::build_caret_annotation;
+/// use doc2flow::legacy::utils::error::build_caret_annotation;
 ///
 /// let carets = build_caret_annotation(1, 3, 10);
 /// assert_eq!(carets, "^^^");

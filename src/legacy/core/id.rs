@@ -1,8 +1,9 @@
 //! Dynamic `d2f_id` generator module for Doc2Flow.
 
-use crate::converter::Frontmatter;
-use crate::utils::error::{Doc2FlowError, Result, print_warning};
-use crate::utils::hasher::sha256_bytes;
+use crate::legacy::core::converter::Frontmatter;
+use crate::legacy::utils::error::{Doc2FlowError, Result, print_warning};
+use crate::legacy::utils::hasher::sha256_bytes;
+
 use std::borrow::Cow;
 
 const HEX_CHARS: &[u8; 16] = b"0123456789abcdef";
@@ -20,10 +21,11 @@ const HEX_CHARS: &[u8; 16] = b"0123456789abcdef";
 /// # Examples
 ///
 /// ```
-/// use doc2flow::converter::Frontmatter;
-/// use doc2flow::id::generate_d2f_id;
+/// use doc2flow::legacy::core::converter::Frontmatter;
+/// use doc2flow::legacy::core::id::generate_d2f_id;
 ///
 /// let mut fm = Frontmatter::new();
+
 /// fm.title = Some("Server Guide".into());
 /// fm.version = Some("1.0.0".into());
 /// fm.date = Some("2026-07-25".into());

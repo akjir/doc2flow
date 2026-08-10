@@ -1,8 +1,9 @@
 //! Markdown parser without external dependencies.
 
-use crate::exp::document::{Document, DocumentElement, ShoutoutElementKind, TableAlignment};
-use crate::exp::error::{build_caret_annotation, DiagnosticError};
-use crate::exp::{Error, Result};
+use crate::core::document::{Document, DocumentElement, ShoutoutElementKind, TableAlignment};
+use crate::core::error::{build_caret_annotation, DiagnosticError};
+use crate::core::{Error, Result};
+
 
 
 /// State tracker for filtering HTML comments across lines.
