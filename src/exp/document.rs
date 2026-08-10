@@ -82,6 +82,13 @@ pub enum DocumentElement {
         /// Code block text content.
         content: String,
     },
+    /// Image element with alt text and source target URL.
+    Image {
+        /// Alternative descriptive text for the image.
+        alt: String,
+        /// Source URL or file path location of the image.
+        url: String,
+    },
     /// Ordered list item element with indentation depth, sequential position, and child content.
     OrderedListItem {
         /// Nesting depth level based on leading spaces.
@@ -149,6 +156,14 @@ impl DocumentElement {
         Self::CodeBlock {
             language: language.map(Into::into),
             content: content.into(),
+        }
+    }
+
+    /// Creates a new image document element with alt text and target URL.
+    pub fn image(alt: impl Into<String>, url: impl Into<String>) -> Self {
+        Self::Image {
+            alt: alt.into(),
+            url: url.into(),
         }
     }
 
@@ -361,6 +376,18 @@ mod tests {
         assert_eq!(doc.header.len(), 1);
         assert_eq!(doc.body[0], DocumentElement::Text("Line 1".into()));
         assert_eq!(doc.header[0], DocumentElement::Text("Header Line".into()));
+    }
+
+    #[test]
+    fn test_image_creation() {
+        let elem = DocumentElement::image("Architecture Diagram", "images/arch.png");
+        assert_eq!(
+            elem,
+            DocumentElement::Image {
+                alt: "Architecture Diagram".into(),
+                url: "images/arch.png".into(),
+            }
+        );
     }
 
     #[test]

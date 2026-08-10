@@ -123,6 +123,21 @@ mod tests {
         assert!(result.contains("\"kind\": \"text\""));
         assert!(result.contains("\"content\": \"Sample text\""));
     }
+
+    #[test]
+    fn test_parse_with_image() {
+        let result = parse("---\ntitle: \"Image Doc\"\n---\n![Architecture](arch.png)\n- ![List Image](list.svg)\n:::diagrams\n![Block Img](block.webp)\n:::").unwrap();
+        assert!(result.contains("\"kind\": \"image\""));
+        assert!(result.contains("\"alt\": \"Architecture\""));
+        assert!(result.contains("\"url\": \"arch.png\""));
+        assert!(result.contains("\"kind\": \"bullet_list_item\""));
+        assert!(result.contains("\"alt\": \"List Image\""));
+        assert!(result.contains("\"url\": \"list.svg\""));
+        assert!(result.contains("\"kind\": \"block_directive\""));
+        assert!(result.contains("\"name\": \"diagrams\""));
+        assert!(result.contains("\"alt\": \"Block Img\""));
+        assert!(result.contains("\"url\": \"block.webp\""));
+    }
 }
 
 

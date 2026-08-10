@@ -113,6 +113,15 @@ fn format_element_inline(out: &mut String, elem: &DocumentElement, indent_level:
             escape_json_string(out, content);
             let _ = write!(out, "\"\n");
         }
+        DocumentElement::Image { alt, url } => {
+            let _ = write!(out, "{child_indent}\"kind\": \"image\",\n");
+            let _ = write!(out, "{child_indent}\"alt\": \"");
+            escape_json_string(out, alt);
+            let _ = write!(out, "\",\n");
+            let _ = write!(out, "{child_indent}\"url\": \"");
+            escape_json_string(out, url);
+            let _ = write!(out, "\"\n");
+        }
         DocumentElement::OrderedListItem {
             depth,
             position,
@@ -351,6 +360,26 @@ mod tests {
         assert!(json.contains("\"content\": \"echo \\\"Hello world\\\"\""));
         assert!(json.contains("\"language\": null"));
         assert!(json.contains("\"content\": \"plain text block\""));
+    }
+
+    #[test]
+    fn test_document_to_json_with_images() {
+        let mut doc = Document::new();
+        doc.push_body(DocumentElement::image(
+            "System Architecture",
+            "assets/diagram.png",
+        ));
+        doc.push_body(DocumentElement::image(
+            "Logo with \"quotes\"",
+            "https://example.com/logo.svg",
+        ));
+
+        let json = document_to_json(&doc);
+        assert!(json.contains("\"kind\": \"image\""));
+        assert!(json.contains("\"alt\": \"System Architecture\""));
+        assert!(json.contains("\"url\": \"assets/diagram.png\""));
+        assert!(json.contains("\"alt\": \"Logo with \\\"quotes\\\"\""));
+        assert!(json.contains("\"url\": \"https://example.com/logo.svg\""));
     }
 
     #[test]

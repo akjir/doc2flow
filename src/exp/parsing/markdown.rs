@@ -179,7 +179,7 @@ fn classify_and_push_line(
             doc,
             in_block,
             block_children,
-            DocumentElement::check_box_item(depth, checked, DocumentElement::text(content)),
+            DocumentElement::check_box_item(depth, checked, parse_item_content(content)),
         );
     } else if let Some((depth, content)) = parse_bullet_list_item(effective_line) {
         ordered_list_stack.clear();
@@ -187,10 +187,18 @@ fn classify_and_push_line(
             doc,
             in_block,
             block_children,
-            DocumentElement::bullet_list_item(depth, DocumentElement::text(content)),
+            DocumentElement::bullet_list_item(depth, parse_item_content(content)),
         );
     } else if let Some(elem) = try_process_ordered_list_item(effective_line, ordered_list_stack) {
         push_element(doc, in_block, block_children, elem);
+    } else if let Some((alt, url)) = parse_image(trimmed) {
+        ordered_list_stack.clear();
+        push_element(
+            doc,
+            in_block,
+            block_children,
+            DocumentElement::image(alt, url),
+        );
     } else if trimmed.starts_with('>') {
         ordered_list_stack.clear();
         let (shoutout_kind, content) = parse_shoutout_line(trimmed);
@@ -565,6 +573,26 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
     }
 }
 
+/// Parses a standalone image markdown pattern `![alt](url)` into alt text and url slices.
+fn parse_image(input: &str) -> Option<(&str, &str)> {
+    let trimmed = input.trim();
+    let rest = trimmed.strip_prefix("![")?;
+    let close_bracket_idx = rest.find("](")?;
+    let alt = &rest[..close_bracket_idx];
+    let after_bracket = &rest[close_bracket_idx + 2..];
+    let url = after_bracket.strip_suffix(')')?;
+    Some((alt, url.trim()))
+}
+
+/// Resolves inner list item content into a structured DocumentElement (e.g. Image or Text).
+fn parse_item_content(content: &str) -> DocumentElement {
+    if let Some((alt, url)) = parse_image(content) {
+        DocumentElement::image(alt, url)
+    } else {
+        DocumentElement::text(content)
+    }
+}
+
 /// Parses an ordered list item candidate into its nesting depth, leading number, and inner content.
 fn parse_ordered_list_candidate(line: &str) -> Option<(usize, u64, &str)> {
     let leading_spaces = line.bytes().take_while(|&b| b == b' ').count();
@@ -785,6 +813,7 @@ fn try_process_ordered_list_item(
     stack: &mut Vec<(usize, usize)>,
 ) -> Option<DocumentElement> {
     let (depth, parsed_num, content) = parse_ordered_list_candidate(line)?;
+    let content_elem = parse_item_content(content);
 
     if stack.is_empty() {
         if parsed_num == 1 {
@@ -792,7 +821,7 @@ fn try_process_ordered_list_item(
             Some(DocumentElement::ordered_list_item(
                 depth,
                 1,
-                DocumentElement::text(content),
+                content_elem,
             ))
         } else {
             None
@@ -804,7 +833,7 @@ fn try_process_ordered_list_item(
             Some(DocumentElement::ordered_list_item(
                 depth,
                 1,
-                DocumentElement::text(content),
+                content_elem,
             ))
         } else if depth == last_depth {
             let entry = stack.last_mut().unwrap();
@@ -813,7 +842,7 @@ fn try_process_ordered_list_item(
             Some(DocumentElement::ordered_list_item(
                 depth,
                 position,
-                DocumentElement::text(content),
+                content_elem,
             ))
         } else {
             while let Some(top) = stack.last() {
@@ -831,14 +860,14 @@ fn try_process_ordered_list_item(
                     Some(DocumentElement::ordered_list_item(
                         depth,
                         position,
-                        DocumentElement::text(content),
+                        content_elem,
                     ))
                 } else if parsed_num == 1 {
                     stack.push((depth, 1));
                     Some(DocumentElement::ordered_list_item(
                         depth,
                         1,
-                        DocumentElement::text(content),
+                        content_elem,
                     ))
                 } else {
                     stack.clear();
@@ -849,7 +878,7 @@ fn try_process_ordered_list_item(
                 Some(DocumentElement::ordered_list_item(
                     depth,
                     1,
-                    DocumentElement::text(content),
+                    content_elem,
                 ))
             } else {
                 None
@@ -1716,6 +1745,119 @@ mod tests {
         let err_str = err.to_string();
         assert!(err_str.contains("nested block directives are not supported"));
         assert!(err_str.contains("nested block directive opening found here"));
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_standalone_images() {
+        let md = "---\ntitle: \"Images Test\"\n---\n![Architecture Diagram](assets/arch.png)\n![](https://example.com/logo.svg)\n![Empty URL]()\n![ With Spaces ](  https://example.com/pic.webp  )";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 4);
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::image("Architecture Diagram", "assets/arch.png")
+        );
+        assert_eq!(
+            doc.body[1],
+            DocumentElement::image("", "https://example.com/logo.svg")
+        );
+        assert_eq!(
+            doc.body[2],
+            DocumentElement::image("Empty URL", "")
+        );
+        assert_eq!(
+            doc.body[3],
+            DocumentElement::image(" With Spaces ", "https://example.com/pic.webp")
+        );
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_images_in_lists() {
+        let md = "---\ntitle: \"List Images\"\n---\n- ![Bullet Img](img/bullet.png)\n- [x] ![Check Img](img/check.png)\n- [ ] Normal text\n1. ![Ordered Img 1](img/step1.png)\n2. ![Ordered Img 2](img/step2.png)";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 5);
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::bullet_list_item(
+                0,
+                DocumentElement::image("Bullet Img", "img/bullet.png")
+            )
+        );
+        assert_eq!(
+            doc.body[1],
+            DocumentElement::check_box_item(
+                0,
+                true,
+                DocumentElement::image("Check Img", "img/check.png")
+            )
+        );
+        assert_eq!(
+            doc.body[2],
+            DocumentElement::check_box_item(
+                0,
+                false,
+                DocumentElement::text("Normal text")
+            )
+        );
+        assert_eq!(
+            doc.body[3],
+            DocumentElement::ordered_list_item(
+                0,
+                1,
+                DocumentElement::image("Ordered Img 1", "img/step1.png")
+            )
+        );
+        assert_eq!(
+            doc.body[4],
+            DocumentElement::ordered_list_item(
+                0,
+                2,
+                DocumentElement::image("Ordered Img 2", "img/step2.png")
+            )
+        );
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_images_in_block_directive() {
+        let md = "---\ntitle: \"Block Directive Images\"\n---\n:::gallery\n![Pic 1](pic1.jpg)\n- ![Nested Pic](pic2.jpg)\nText\n:::";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 1);
+        if let DocumentElement::BlockDirective { name, children } = &doc.body[0] {
+            assert_eq!(name, "gallery");
+            assert_eq!(children.len(), 3);
+            assert_eq!(
+                children[0],
+                DocumentElement::image("Pic 1", "pic1.jpg")
+            );
+            assert_eq!(
+                children[1],
+                DocumentElement::bullet_list_item(
+                    0,
+                    DocumentElement::image("Nested Pic", "pic2.jpg")
+                )
+            );
+            assert_eq!(
+                children[2],
+                DocumentElement::text("Text")
+            );
+        } else {
+            panic!("expected BlockDirective");
+        }
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_image_edge_cases() {
+        let md = "---\ntitle: \"Image Edge Cases\"\n---\n! Not an image\n![Unclosed bracket(url)\n![Alt]no paren\n![Alt](no closing paren\nPrefix ![Alt](url) suffix";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 5);
+        assert_eq!(doc.body[0], DocumentElement::text("! Not an image"));
+        assert_eq!(doc.body[1], DocumentElement::text("![Unclosed bracket(url)"));
+        assert_eq!(doc.body[2], DocumentElement::text("![Alt]no paren"));
+        assert_eq!(doc.body[3], DocumentElement::text("![Alt](no closing paren"));
+        assert_eq!(doc.body[4], DocumentElement::text("Prefix ![Alt](url) suffix"));
     }
 }
 
