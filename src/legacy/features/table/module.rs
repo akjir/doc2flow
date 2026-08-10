@@ -1,6 +1,7 @@
 //! Section table and tabular layout feature slice.
 
-use crate::core::feature::{DocumentContext, Feature};
+use crate::legacy::core::feature::{DocumentContext, Feature};
+
 
 /// Unified section table feature slice providing responsive table wrappers, hover highlights, and print formatting.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -12,7 +13,8 @@ impl TableFeature {
     /// # Examples
     ///
     /// ```
-    /// use doc2flow::features::table::TableFeature;
+    /// use doc2flow::legacy::features::table::TableFeature;
+
     ///
     /// let feature = TableFeature::new();
     /// ```

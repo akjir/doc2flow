@@ -1,6 +1,7 @@
 //! Code block and clipboard copying feature slice.
 
-use crate::core::feature::{DocumentContext, Feature};
+use crate::legacy::core::feature::{DocumentContext, Feature};
+
 use std::fmt::Write;
 
 /// Code copy SVG icon button element.
@@ -37,17 +38,18 @@ pub fn render_variable_table<K: AsRef<str>, V: AsRef<str>>(
     rows: &[(K, V)],
     json_payload: &str,
 ) {
-    let escaped_json = crate::converter::html_escape(json_payload);
-    let escaped_col_var = crate::converter::html_escape(col_variable);
-    let escaped_col_val = crate::converter::html_escape(col_value);
+    let escaped_json = crate::legacy::core::converter::html_escape(json_payload);
+    let escaped_col_var = crate::legacy::core::converter::html_escape(col_variable);
+    let escaped_col_val = crate::legacy::core::converter::html_escape(col_value);
 
     let _ = writeln!(
         out,
         "<div class=\"item-table-var-wrap\"><table class=\"item-table-var\" data-variables=\"{escaped_json}\"><thead><tr><th>{escaped_col_var}</th><th>{escaped_col_val}</th></tr></thead><tbody>"
     );
     for (k, v) in rows {
-        let escaped_k = crate::converter::html_escape(k.as_ref());
-        let escaped_v = crate::converter::html_escape(v.as_ref());
+        let escaped_k = crate::legacy::core::converter::html_escape(k.as_ref());
+        let escaped_v = crate::legacy::core::converter::html_escape(v.as_ref());
+
         let _ = writeln!(
             out,
             "<tr><td>{escaped_k}</td><td><input type=\"text\" class=\"item-table-var-input persistent-field\" id=\"f_var_{escaped_k}\" data-var-key=\"{escaped_k}\" data-default-value=\"{escaped_v}\" value=\"{escaped_v}\"></td></tr>"
@@ -66,7 +68,8 @@ impl CodeFeature {
     /// # Examples
     ///
     /// ```
-    /// use doc2flow::features::code::CodeFeature;
+    /// use doc2flow::legacy::features::code::CodeFeature;
+
     ///
     /// let feature = CodeFeature::new();
     /// ```

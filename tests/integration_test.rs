@@ -891,7 +891,8 @@ title: "Image Fallback Test"
 #[test]
 fn test_core_parser_integration() {
     let input = "---\ntitle: \"Integration\"\n---\n# Heading\n\nSome text";
-    let output = doc2flow::core::parser::parse(input).expect("parsing failed");
+    let document = doc2flow::core::parse_d2f_markdown(input).expect("parsing failed");
+    let output = doc2flow::core::document_to_json(&document);
     assert!(output.contains("\"parameters\": {"));
     assert!(output.contains("\"title\": \"Integration\""));
     assert!(output.contains("\"header\": ["));

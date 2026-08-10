@@ -1,6 +1,7 @@
 //! Image lightbox and embedding feature slice.
 
-use crate::core::feature::{DocumentContext, Feature};
+use crate::legacy::core::feature::{DocumentContext, Feature};
+
 use std::fmt::Write;
 
 /// Renders an image container block directly into the output buffer.
@@ -29,7 +30,8 @@ impl ImageFeature {
     /// # Examples
     ///
     /// ```
-    /// use doc2flow::features::image::ImageFeature;
+    /// use doc2flow::legacy::features::image::ImageFeature;
+
     ///
     /// let feature = ImageFeature::new();
     /// ```

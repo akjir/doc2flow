@@ -1,6 +1,7 @@
 //! Document header and flexible banner layout feature slice.
 
-use crate::core::feature::{DocumentContext, Feature};
+use crate::legacy::core::feature::{DocumentContext, Feature};
+
 use std::fmt::Write;
 
 /// Renders a section-style flexible header card containing title, subtitle, and logo.
@@ -8,7 +9,7 @@ use std::fmt::Write;
 /// # Examples
 ///
 /// ```
-/// use doc2flow::features::header::render_flex_header;
+/// use doc2flow::legacy::features::header::render_flex_header;
 ///
 /// let mut buf = String::new();
 /// render_flex_header(&mut buf, "My Title", Some("My Subtitle"), "<svg></svg>");
@@ -22,7 +23,7 @@ pub fn render_flex_header(
     subtitle: Option<&str>,
     logo_html: &str,
 ) {
-    let escaped_title = crate::converter::html_escape(title);
+    let escaped_title = crate::legacy::core::converter::html_escape(title);
     let _ = out.write_str("<section class=\"section header-flex\" id=\"header-flex\">\n  <div class=\"header-flex-top\">\n    <div class=\"header-flex-titles\">\n      <h1 class=\"header-flex-title\">");
     let _ = out.write_str(&escaped_title);
     let _ = out.write_str("</h1>\n");
@@ -30,7 +31,8 @@ pub fn render_flex_header(
     if let Some(sub) = subtitle
         && !sub.trim().is_empty()
     {
-        let escaped_sub = crate::converter::html_escape(sub);
+        let escaped_sub = crate::legacy::core::converter::html_escape(sub);
+
         let _ = out.write_str("      <div class=\"header-flex-sub\">");
         let _ = out.write_str(&escaped_sub);
         let _ = out.write_str("</div>\n");
@@ -51,7 +53,7 @@ impl HeaderFeature {
     /// # Examples
     ///
     /// ```
-    /// use doc2flow::features::header::HeaderFeature;
+    /// use doc2flow::legacy::features::header::HeaderFeature;
     ///
     /// let feature = HeaderFeature::new();
     /// ```

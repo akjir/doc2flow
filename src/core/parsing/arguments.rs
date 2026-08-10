@@ -8,42 +8,52 @@ use std::path::PathBuf;
 const DEFAULT_TEMPLATE_NAME: &str = "template.md";
 
 /// Parsed command line arguments for the `d2f` executable.
-#[derive(Debug, PartialEq, Eq, Default)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct Args {
-    /// Path to the input Markdown file.
-    pub input: Option<PathBuf>,
-    /// Path to the output HTML file (optional).
-    pub output: Option<PathBuf>,
-    /// Optional target path for generating a starter template Markdown file.
-    pub init: Option<PathBuf>,
-    /// Optional path to a custom logo image file (SVG, PNG, JPG, WebP).
-    pub logo: Option<PathBuf>,
     /// Automatically resize local images exceeding 250 KB to WebP.
     pub auto_scale: bool,
+    /// Optional target path for generating a starter template Markdown file.
+    pub init: Option<PathBuf>,
+    /// Path to the input Markdown file.
+    pub input: Option<PathBuf>,
     /// Whether to run using the legacy pipeline.
     pub legacy: bool,
+    /// Optional path to a custom logo image file (SVG, PNG, JPG, WebP).
+    pub logo: Option<PathBuf>,
+    /// Path to the output HTML file (optional).
+    pub output: Option<PathBuf>,
     /// Whether the user requested help information.
     pub show_help: bool,
     /// Whether the user requested version information.
     pub show_version: bool,
 }
 
-/// Parses a non-empty path value for a CLI option flag.
-fn parse_required_path(flag_name: &str, raw_val: &str) -> Result<PathBuf, String> {
-    if raw_val.is_empty() {
-        Err(format!("Option '{flag_name}' requires a non-empty path value"))
-    } else {
-        Ok(PathBuf::from(raw_val))
-    }
-}
-
-/// Parses an optional template path value for `--init`.
-fn parse_init_path(raw_val: &str) -> PathBuf {
-    if raw_val.is_empty() {
-        PathBuf::from(DEFAULT_TEMPLATE_NAME)
-    } else {
-        PathBuf::from(raw_val)
-    }
+/// Returns the formatted CLI help text for `d2f`.
+///
+/// # Examples
+///
+/// ```
+/// use doc2flow::core::parsing::arguments::help_message;
+///
+/// assert!(help_message().contains("Doc2Flow (d2f)"));
+/// ```
+pub fn help_message() -> &'static str {
+    concat!(
+        "Doc2Flow (d2f)\n",
+        "Converts structured Markdown documents into standalone offline HTML flowcharts.\n\n",
+        "USAGE:\n",
+        "    d2f [OPTIONS] [INPUT]\n\n",
+        "ARGS:\n",
+        "    <INPUT>    Path to the input Markdown file\n\n",
+        "OPTIONS:\n",
+        "    -o, --output <PATH>         Path to the output HTML file (optional)\n",
+        "    -l, --logo <PATH>           Path to a custom logo image (SVG, PNG, JPG, WebP)\n",
+        "    -i, --init [PATH]           Generate a starter template Markdown file (default: template.md)\n",
+        "    -s, --auto-scale            Automatically resize local images exceeding 250 KB to WebP\n",
+        "        --legacy                Run using the legacy processing pipeline\n",
+        "    -h, --help                  Print help information\n",
+        "    -V, --version               Print version information\n"
+    )
 }
 
 /// Parses raw command-line arguments into a structured [`Args`] struct.
@@ -134,37 +144,40 @@ where
     Ok(parsed)
 }
 
-/// Returns the formatted CLI help text for `d2f`.
-///
-/// # Examples
-///
-/// ```
-/// use doc2flow::core::parsing::arguments::help_message;
-///
-/// assert!(help_message().contains("Doc2Flow (d2f)"));
-/// ```
-pub fn help_message() -> &'static str {
-    concat!(
-        "Doc2Flow (d2f)\n",
-        "Converts structured Markdown documents into standalone offline HTML flowcharts.\n\n",
-        "USAGE:\n",
-        "    d2f [OPTIONS] [INPUT]\n\n",
-        "ARGS:\n",
-        "    <INPUT>    Path to the input Markdown file\n\n",
-        "OPTIONS:\n",
-        "    -o, --output <PATH>         Path to the output HTML file (optional)\n",
-        "    -l, --logo <PATH>           Path to a custom logo image (SVG, PNG, JPG, WebP)\n",
-        "    -i, --init [PATH]           Generate a starter template Markdown file (default: template.md)\n",
-        "    -s, --auto-scale            Automatically resize local images exceeding 250 KB to WebP\n",
-        "        --legacy                Run using the legacy processing pipeline\n",
-        "    -h, --help                  Print help information\n",
-        "    -V, --version               Print version information\n"
-    )
+/// Parses an optional template path value for `--init`.
+fn parse_init_path(raw_val: &str) -> PathBuf {
+    PathBuf::from(if raw_val.is_empty() {
+        DEFAULT_TEMPLATE_NAME
+    } else {
+        raw_val
+    })
+}
+
+/// Parses a non-empty path value for a CLI option flag.
+fn parse_required_path(flag_name: &str, raw_val: &str) -> Result<PathBuf, String> {
+    if raw_val.is_empty() {
+        Err(format!("Option '{flag_name}' requires a non-empty path value"))
+    } else {
+        Ok(PathBuf::from(raw_val))
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_help_message_content() {
+        let msg = help_message();
+        assert!(msg.contains("Doc2Flow (d2f)"));
+        assert!(msg.contains("--output"));
+        assert!(msg.contains("--logo"));
+        assert!(msg.contains("--init"));
+        assert!(msg.contains("--auto-scale"));
+        assert!(msg.contains("--legacy"));
+        assert!(msg.contains("--help"));
+        assert!(msg.contains("--version"));
+    }
 
     #[test]
     fn test_parse_args_defaults_and_positional() {
@@ -179,27 +192,35 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_args_legacy() {
-        let args = parse_args(&["d2f", "input.md", "--legacy"]).unwrap();
-        assert!(args.legacy);
+    fn test_parse_args_errors() {
+        assert!(parse_args(&["d2f", "--unknown"]).is_err());
+        assert!(parse_args(&["d2f", "-o"]).is_err());
+        assert!(parse_args(&["d2f", "-l"]).is_err());
+        assert!(parse_args(&["d2f", "--output="]).is_err());
+        assert!(parse_args(&["d2f", "-o="]).is_err());
+        assert!(parse_args(&["d2f", "--output", ""]).is_err());
+        assert!(parse_args(&["d2f", "-o", ""]).is_err());
+        assert!(parse_args(&["d2f", "--logo="]).is_err());
+        assert!(parse_args(&["d2f", "-l="]).is_err());
+        assert!(parse_args(&["d2f", "--logo", ""]).is_err());
+        assert!(parse_args(&["d2f", "-l", ""]).is_err());
+        assert!(parse_args(&["d2f", "input1.md", "input2.md"]).is_err());
+        assert!(parse_args(&["d2f", "--unknown=value"]).is_err());
     }
 
     #[test]
-    fn test_parse_args_options() {
-        let args = parse_args(&[
-            "d2f",
-            "input.md",
-            "-o",
-            "output.html",
-            "-s",
-            "--init=custom_tpl.md",
-        ])
-        .unwrap();
-        assert_eq!(args.input, Some(PathBuf::from("input.md")));
-        assert_eq!(args.output, Some(PathBuf::from("output.html")));
-        assert_eq!(args.init, Some(PathBuf::from("custom_tpl.md")));
-        assert!(args.auto_scale);
-        assert!(!args.legacy);
+    fn test_parse_args_help_and_version() {
+        let args = parse_args(&["d2f", "-h"]).unwrap();
+        assert!(args.show_help);
+
+        let args_long_h = parse_args(&["d2f", "--help"]).unwrap();
+        assert!(args_long_h.show_help);
+
+        let args_v = parse_args(&["d2f", "--version"]).unwrap();
+        assert!(args_v.show_version);
+
+        let args_v_short = parse_args(&["d2f", "-V"]).unwrap();
+        assert!(args_v_short.show_version);
     }
 
     #[test]
@@ -224,66 +245,41 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_args_help_and_version() {
-        let args = parse_args(&["d2f", "-h"]).unwrap();
-        assert!(args.show_help);
-
-        let args_long_h = parse_args(&["d2f", "--help"]).unwrap();
-        assert!(args_long_h.show_help);
-
-        let args_v = parse_args(&["d2f", "--version"]).unwrap();
-        assert!(args_v.show_version);
-
-        let args_v_short = parse_args(&["d2f", "-V"]).unwrap();
-        assert!(args_v_short.show_version);
+    fn test_parse_args_legacy() {
+        let args = parse_args(&["d2f", "input.md", "--legacy"]).unwrap();
+        assert!(args.legacy);
     }
 
     #[test]
     fn test_parse_args_logo_options() {
         let args_l = parse_args(&["d2f", "input.md", "-l", "my_logo.png"]).unwrap();
-        assert_eq!(args_logo(args_l), Some(PathBuf::from("my_logo.png")));
+        assert_eq!(args_l.logo, Some(PathBuf::from("my_logo.png")));
 
         let args_long = parse_args(&["d2f", "input.md", "--logo", "brand/logo.svg"]).unwrap();
-        assert_eq!(args_logo(args_long), Some(PathBuf::from("brand/logo.svg")));
+        assert_eq!(args_long.logo, Some(PathBuf::from("brand/logo.svg")));
 
         let args_eq = parse_args(&["d2f", "input.md", "--logo=assets/logo.webp"]).unwrap();
-        assert_eq!(args_logo(args_eq), Some(PathBuf::from("assets/logo.webp")));
+        assert_eq!(args_eq.logo, Some(PathBuf::from("assets/logo.webp")));
 
         let args_short_eq = parse_args(&["d2f", "input.md", "-l=assets/logo.png"]).unwrap();
-        assert_eq!(args_logo(args_short_eq), Some(PathBuf::from("assets/logo.png")));
-    }
-
-    fn args_logo(args: Args) -> Option<PathBuf> {
-        args.logo
+        assert_eq!(args_short_eq.logo, Some(PathBuf::from("assets/logo.png")));
     }
 
     #[test]
-    fn test_parse_args_errors() {
-        assert!(parse_args(&["d2f", "--unknown"]).is_err());
-        assert!(parse_args(&["d2f", "-o"]).is_err());
-        assert!(parse_args(&["d2f", "-l"]).is_err());
-        assert!(parse_args(&["d2f", "--output="]).is_err());
-        assert!(parse_args(&["d2f", "-o="]).is_err());
-        assert!(parse_args(&["d2f", "--output", ""]).is_err());
-        assert!(parse_args(&["d2f", "-o", ""]).is_err());
-        assert!(parse_args(&["d2f", "--logo="]).is_err());
-        assert!(parse_args(&["d2f", "-l="]).is_err());
-        assert!(parse_args(&["d2f", "--logo", ""]).is_err());
-        assert!(parse_args(&["d2f", "-l", ""]).is_err());
-        assert!(parse_args(&["d2f", "input1.md", "input2.md"]).is_err());
-        assert!(parse_args(&["d2f", "--unknown=value"]).is_err());
-    }
-
-    #[test]
-    fn test_help_message_content() {
-        let msg = help_message();
-        assert!(msg.contains("Doc2Flow (d2f)"));
-        assert!(msg.contains("--output"));
-        assert!(msg.contains("--logo"));
-        assert!(msg.contains("--init"));
-        assert!(msg.contains("--auto-scale"));
-        assert!(msg.contains("--legacy"));
-        assert!(msg.contains("--help"));
-        assert!(msg.contains("--version"));
+    fn test_parse_args_options() {
+        let args = parse_args(&[
+            "d2f",
+            "input.md",
+            "-o",
+            "output.html",
+            "-s",
+            "--init=custom_tpl.md",
+        ])
+        .unwrap();
+        assert_eq!(args.input, Some(PathBuf::from("input.md")));
+        assert_eq!(args.output, Some(PathBuf::from("output.html")));
+        assert_eq!(args.init, Some(PathBuf::from("custom_tpl.md")));
+        assert!(args.auto_scale);
+        assert!(!args.legacy);
     }
 }

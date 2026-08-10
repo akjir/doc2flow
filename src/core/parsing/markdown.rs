@@ -4,8 +4,6 @@ use crate::core::document::{Document, DocumentElement, ShoutoutElementKind, Tabl
 use crate::core::error::{build_caret_annotation, DiagnosticError};
 use crate::core::{Error, Result};
 
-
-
 /// State tracker for filtering HTML comments across lines.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 struct CommentFilterState {

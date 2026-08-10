@@ -1,12 +1,15 @@
 //! Doc2Flow CLI entry point.
 
+use doc2flow::core::dev_helper::document_to_json;
 use doc2flow::core::error::{Error, Result};
 use doc2flow::core::parsing::arguments::{help_message, parse_args};
+use doc2flow::core::parsing::parse_d2f_markdown;
+use doc2flow::core::utils::io;
 use std::env;
 use std::process::ExitCode;
 
 fn run() -> Result<()> {
-    let args = parse_args(env::args()).map_err(Error::Message)?;
+    let args = parse_args(env::args())?;
 
     if args.show_help {
         println!("{}", help_message());
@@ -23,6 +26,23 @@ fn run() -> Result<()> {
         return Ok(());
     }
 
+    let Some(input_path) = args.input else {
+        return Err(
+            "Missing input file. Specify input path or use --init to generate a template.".into(),
+        );
+    };
+
+    let output_path = args.output.unwrap_or_else(|| input_path.with_extension("html"));
+
+    let md_content = io::read_file_to_string(&input_path)?;
+
+    let document =
+        parse_d2f_markdown(&md_content).map_err(|e| Error::Message(e.to_string()))?;
+    let json = document_to_json(&document);
+
+    io::write_file(&output_path, json)?;
+
+    println!("Successfully generated {}", output_path.display());
     Ok(())
 }
 

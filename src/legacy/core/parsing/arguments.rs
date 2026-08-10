@@ -20,10 +20,11 @@ pub struct Args {
     pub logo: Option<PathBuf>,
     /// Automatically resize local images exceeding 250 KB to WebP.
     pub auto_scale: bool,
-    /// Whether to run the experimental building pipeline.
-    pub experimental_building: bool,
+    /// Whether to run the legacy building pipeline.
+    pub legacy: bool,
     /// Whether the user requested help information.
     pub show_help: bool,
+
     /// Whether the user requested version information.
     pub show_version: bool,
 }
@@ -51,7 +52,7 @@ fn parse_init_path(raw_val: &str) -> PathBuf {
 /// # Examples
 ///
 /// ```
-/// use doc2flow::args::parse_args;
+/// use doc2flow::legacy::core::args::parse_args;
 ///
 /// let args = parse_args(&["d2f", "doc.md", "-s"]).unwrap();
 /// assert_eq!(args.input.unwrap().to_str().unwrap(), "doc.md");
@@ -78,8 +79,9 @@ where
             "-h" | "--help" => parsed.show_help = true,
             "-V" | "--version" => parsed.show_version = true,
             "-s" | "--auto-scale" => parsed.auto_scale = true,
-            "--experimental-building" => parsed.experimental_building = true,
+            "--legacy" => parsed.legacy = true,
             "-o" | "--output" => {
+
                 let val = iter
                     .next()
                     .ok_or_else(|| String::from("Option '--output' requires a path value"))?;
@@ -139,7 +141,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use doc2flow::args::help_message;
+/// use doc2flow::legacy::core::args::help_message;
 ///
 /// assert!(help_message().contains("Doc2Flow (d2f)"));
 /// ```
@@ -172,15 +174,15 @@ mod tests {
         assert_eq!(args.output, None);
         assert_eq!(args.init, None);
         assert!(!args.auto_scale);
-        assert!(!args.experimental_building);
+        assert!(!args.legacy);
         assert!(!args.show_help);
         assert!(!args.show_version);
     }
 
     #[test]
-    fn test_parse_args_experimental_building() {
-        let args = parse_args(&["d2f", "input.md", "--experimental-building"]).unwrap();
-        assert!(args.experimental_building);
+    fn test_parse_args_legacy() {
+        let args = parse_args(&["d2f", "input.md", "--legacy"]).unwrap();
+        assert!(args.legacy);
     }
 
     #[test]
@@ -198,8 +200,9 @@ mod tests {
         assert_eq!(args.output, Some(PathBuf::from("output.html")));
         assert_eq!(args.init, Some(PathBuf::from("custom_tpl.md")));
         assert!(args.auto_scale);
-        assert!(!args.experimental_building);
+        assert!(!args.legacy);
     }
+
 
     #[test]
     fn test_parse_args_init_defaults() {

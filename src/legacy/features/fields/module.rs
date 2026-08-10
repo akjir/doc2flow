@@ -1,6 +1,7 @@
 //! Form field state persistence and reset feature slice.
 
-use crate::core::feature::{DocumentContext, Feature};
+use crate::legacy::core::feature::{DocumentContext, Feature};
+
 
 /// Unified fields feature slice providing persistent form input handling.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -12,7 +13,8 @@ impl FieldsFeature {
     /// # Examples
     ///
     /// ```
-    /// use doc2flow::features::fields::FieldsFeature;
+    /// use doc2flow::legacy::features::fields::FieldsFeature;
+
     ///
     /// let feature = FieldsFeature::new();
     /// ```

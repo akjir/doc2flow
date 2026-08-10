@@ -1,7 +1,8 @@
 //! Task list, checklist progress tracking, and sign-off finish box feature slice.
 
-use crate::core::components::COMMENT_ICON_SVG;
-use crate::core::feature::{DocumentContext, Feature};
+use crate::legacy::core::components::COMMENT_ICON_SVG;
+use crate::legacy::core::feature::{DocumentContext, Feature};
+
 use std::fmt::Write;
 
 /// Renders a task list checkbox item directly into the output buffer.
@@ -69,7 +70,8 @@ impl TasksFeature {
     /// # Examples
     ///
     /// ```
-    /// use doc2flow::features::tasks::TasksFeature;
+    /// use doc2flow::legacy::features::tasks::TasksFeature;
+
     ///
     /// let feature = TasksFeature::new();
     /// ```
