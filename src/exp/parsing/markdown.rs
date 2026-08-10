@@ -179,7 +179,7 @@ fn classify_and_push_line(
             doc,
             in_block,
             block_children,
-            DocumentElement::check_box_item(depth, checked, content),
+            DocumentElement::check_box_item(depth, checked, DocumentElement::text(content)),
         );
     } else if let Some((depth, content)) = parse_bullet_list_item(effective_line) {
         ordered_list_stack.clear();
@@ -187,7 +187,7 @@ fn classify_and_push_line(
             doc,
             in_block,
             block_children,
-            DocumentElement::bullet_list_item(depth, content),
+            DocumentElement::bullet_list_item(depth, DocumentElement::text(content)),
         );
     } else if let Some(elem) = try_process_ordered_list_item(effective_line, ordered_list_stack) {
         push_element(doc, in_block, block_children, elem);
@@ -789,7 +789,11 @@ fn try_process_ordered_list_item(
     if stack.is_empty() {
         if parsed_num == 1 {
             stack.push((depth, 1));
-            Some(DocumentElement::ordered_list_item(depth, 1, content))
+            Some(DocumentElement::ordered_list_item(
+                depth,
+                1,
+                DocumentElement::text(content),
+            ))
         } else {
             None
         }
@@ -797,12 +801,20 @@ fn try_process_ordered_list_item(
         let last_depth = stack.last().unwrap().0;
         if depth > last_depth {
             stack.push((depth, 1));
-            Some(DocumentElement::ordered_list_item(depth, 1, content))
+            Some(DocumentElement::ordered_list_item(
+                depth,
+                1,
+                DocumentElement::text(content),
+            ))
         } else if depth == last_depth {
             let entry = stack.last_mut().unwrap();
             entry.1 += 1;
             let position = entry.1;
-            Some(DocumentElement::ordered_list_item(depth, position, content))
+            Some(DocumentElement::ordered_list_item(
+                depth,
+                position,
+                DocumentElement::text(content),
+            ))
         } else {
             while let Some(top) = stack.last() {
                 if top.0 > depth {
@@ -816,17 +828,29 @@ fn try_process_ordered_list_item(
                 if top.0 == depth {
                     top.1 += 1;
                     let position = top.1;
-                    Some(DocumentElement::ordered_list_item(depth, position, content))
+                    Some(DocumentElement::ordered_list_item(
+                        depth,
+                        position,
+                        DocumentElement::text(content),
+                    ))
                 } else if parsed_num == 1 {
                     stack.push((depth, 1));
-                    Some(DocumentElement::ordered_list_item(depth, 1, content))
+                    Some(DocumentElement::ordered_list_item(
+                        depth,
+                        1,
+                        DocumentElement::text(content),
+                    ))
                 } else {
                     stack.clear();
                     None
                 }
             } else if parsed_num == 1 {
                 stack.push((depth, 1));
-                Some(DocumentElement::ordered_list_item(depth, 1, content))
+                Some(DocumentElement::ordered_list_item(
+                    depth,
+                    1,
+                    DocumentElement::text(content),
+                ))
             } else {
                 None
             }
@@ -1063,13 +1087,13 @@ mod tests {
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 7);
-        assert_eq!(doc.body[0], DocumentElement::bullet_list_item(0, "Level 0"));
-        assert_eq!(doc.body[1], DocumentElement::bullet_list_item(1, "Level 1a"));
-        assert_eq!(doc.body[2], DocumentElement::bullet_list_item(1, "Level 1b"));
-        assert_eq!(doc.body[3], DocumentElement::bullet_list_item(2, "Level 2a"));
-        assert_eq!(doc.body[4], DocumentElement::bullet_list_item(2, "Level 2b"));
+        assert_eq!(doc.body[0], DocumentElement::bullet_list_item(0, DocumentElement::text("Level 0")));
+        assert_eq!(doc.body[1], DocumentElement::bullet_list_item(1, DocumentElement::text("Level 1a")));
+        assert_eq!(doc.body[2], DocumentElement::bullet_list_item(1, DocumentElement::text("Level 1b")));
+        assert_eq!(doc.body[3], DocumentElement::bullet_list_item(2, DocumentElement::text("Level 2a")));
+        assert_eq!(doc.body[4], DocumentElement::bullet_list_item(2, DocumentElement::text("Level 2b")));
         assert_eq!(doc.body[5], DocumentElement::text("Regular text"));
-        assert_eq!(doc.body[6], DocumentElement::bullet_list_item(0, "Another root"));
+        assert_eq!(doc.body[6], DocumentElement::bullet_list_item(0, DocumentElement::text("Another root")));
     }
 
     #[test]
@@ -1078,8 +1102,8 @@ mod tests {
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 2);
-        assert_eq!(doc.body[0], DocumentElement::bullet_list_item(1, "Item 1"));
-        assert_eq!(doc.body[1], DocumentElement::bullet_list_item(2, "Item 2"));
+        assert_eq!(doc.body[0], DocumentElement::bullet_list_item(1, DocumentElement::text("Item 1")));
+        assert_eq!(doc.body[1], DocumentElement::bullet_list_item(2, DocumentElement::text("Item 2")));
     }
 
     #[test]
@@ -1194,12 +1218,12 @@ mod tests {
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 6);
-        assert_eq!(doc.body[0], DocumentElement::check_box_item(0, false, "Task 1"));
-        assert_eq!(doc.body[1], DocumentElement::check_box_item(1, true, "Subtask 1.1"));
-        assert_eq!(doc.body[2], DocumentElement::check_box_item(1, true, "Subtask 1.2"));
-        assert_eq!(doc.body[3], DocumentElement::check_box_item(2, false, "Sub-subtask"));
-        assert_eq!(doc.body[4], DocumentElement::check_box_item(0, true, "Task 2"));
-        assert_eq!(doc.body[5], DocumentElement::check_box_item(0, false, ""));
+        assert_eq!(doc.body[0], DocumentElement::check_box_item(0, false, DocumentElement::text("Task 1")));
+        assert_eq!(doc.body[1], DocumentElement::check_box_item(1, true, DocumentElement::text("Subtask 1.1")));
+        assert_eq!(doc.body[2], DocumentElement::check_box_item(1, true, DocumentElement::text("Subtask 1.2")));
+        assert_eq!(doc.body[3], DocumentElement::check_box_item(2, false, DocumentElement::text("Sub-subtask")));
+        assert_eq!(doc.body[4], DocumentElement::check_box_item(0, true, DocumentElement::text("Task 2")));
+        assert_eq!(doc.body[5], DocumentElement::check_box_item(0, false, DocumentElement::text("")));
     }
 
     #[test]
@@ -1208,11 +1232,11 @@ mod tests {
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 5);
-        assert_eq!(doc.body[0], DocumentElement::bullet_list_item(0, "Bullet 1"));
-        assert_eq!(doc.body[1], DocumentElement::check_box_item(0, false, "Task 1"));
-        assert_eq!(doc.body[2], DocumentElement::bullet_list_item(1, "Bullet nested"));
-        assert_eq!(doc.body[3], DocumentElement::check_box_item(1, true, "Task nested"));
-        assert_eq!(doc.body[4], DocumentElement::bullet_list_item(0, "Bullet 2"));
+        assert_eq!(doc.body[0], DocumentElement::bullet_list_item(0, DocumentElement::text("Bullet 1")));
+        assert_eq!(doc.body[1], DocumentElement::check_box_item(0, false, DocumentElement::text("Task 1")));
+        assert_eq!(doc.body[2], DocumentElement::bullet_list_item(1, DocumentElement::text("Bullet nested")));
+        assert_eq!(doc.body[3], DocumentElement::check_box_item(1, true, DocumentElement::text("Task nested")));
+        assert_eq!(doc.body[4], DocumentElement::bullet_list_item(0, DocumentElement::text("Bullet 2")));
     }
 
     #[test]
@@ -1252,9 +1276,9 @@ mod tests {
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 3);
-        assert_eq!(doc.body[0], DocumentElement::ordered_list_item(0, 1, "First"));
-        assert_eq!(doc.body[1], DocumentElement::ordered_list_item(0, 2, "Second"));
-        assert_eq!(doc.body[2], DocumentElement::ordered_list_item(0, 3, "Third"));
+        assert_eq!(doc.body[0], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("First")));
+        assert_eq!(doc.body[1], DocumentElement::ordered_list_item(0, 2, DocumentElement::text("Second")));
+        assert_eq!(doc.body[2], DocumentElement::ordered_list_item(0, 3, DocumentElement::text("Third")));
     }
 
     #[test]
@@ -1262,16 +1286,16 @@ mod tests {
         let md1 = "---\ntitle: \"Repeated 1s\"\n---\n1. Apple\n1. Banana\n1. Cherry";
         let doc1 = parse_d2f_markdown(md1).unwrap();
         assert_eq!(doc1.body.len(), 3);
-        assert_eq!(doc1.body[0], DocumentElement::ordered_list_item(0, 1, "Apple"));
-        assert_eq!(doc1.body[1], DocumentElement::ordered_list_item(0, 2, "Banana"));
-        assert_eq!(doc1.body[2], DocumentElement::ordered_list_item(0, 3, "Cherry"));
+        assert_eq!(doc1.body[0], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Apple")));
+        assert_eq!(doc1.body[1], DocumentElement::ordered_list_item(0, 2, DocumentElement::text("Banana")));
+        assert_eq!(doc1.body[2], DocumentElement::ordered_list_item(0, 3, DocumentElement::text("Cherry")));
 
         let md2 = "---\ntitle: \"Random Numbers\"\n---\n1. Red\n5. Green\n99. Blue";
         let doc2 = parse_d2f_markdown(md2).unwrap();
         assert_eq!(doc2.body.len(), 3);
-        assert_eq!(doc2.body[0], DocumentElement::ordered_list_item(0, 1, "Red"));
-        assert_eq!(doc2.body[1], DocumentElement::ordered_list_item(0, 2, "Green"));
-        assert_eq!(doc2.body[2], DocumentElement::ordered_list_item(0, 3, "Blue"));
+        assert_eq!(doc2.body[0], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Red")));
+        assert_eq!(doc2.body[1], DocumentElement::ordered_list_item(0, 2, DocumentElement::text("Green")));
+        assert_eq!(doc2.body[2], DocumentElement::ordered_list_item(0, 3, DocumentElement::text("Blue")));
     }
 
     #[test]
@@ -1280,12 +1304,12 @@ mod tests {
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 6);
-        assert_eq!(doc.body[0], DocumentElement::ordered_list_item(0, 1, "L0_1"));
-        assert_eq!(doc.body[1], DocumentElement::ordered_list_item(1, 1, "L1_1"));
-        assert_eq!(doc.body[2], DocumentElement::ordered_list_item(1, 2, "L1_2"));
-        assert_eq!(doc.body[3], DocumentElement::ordered_list_item(2, 1, "L2_1"));
-        assert_eq!(doc.body[4], DocumentElement::ordered_list_item(1, 3, "L1_3"));
-        assert_eq!(doc.body[5], DocumentElement::ordered_list_item(0, 2, "L0_2"));
+        assert_eq!(doc.body[0], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("L0_1")));
+        assert_eq!(doc.body[1], DocumentElement::ordered_list_item(1, 1, DocumentElement::text("L1_1")));
+        assert_eq!(doc.body[2], DocumentElement::ordered_list_item(1, 2, DocumentElement::text("L1_2")));
+        assert_eq!(doc.body[3], DocumentElement::ordered_list_item(2, 1, DocumentElement::text("L2_1")));
+        assert_eq!(doc.body[4], DocumentElement::ordered_list_item(1, 3, DocumentElement::text("L1_3")));
+        assert_eq!(doc.body[5], DocumentElement::ordered_list_item(0, 2, DocumentElement::text("L0_2")));
     }
 
     #[test]
@@ -1294,10 +1318,10 @@ mod tests {
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 4);
-        assert_eq!(doc.body[0], DocumentElement::ordered_list_item(0, 1, "Root 1"));
-        assert_eq!(doc.body[1], DocumentElement::ordered_list_item(1, 1, "Subitem 1"));
-        assert_eq!(doc.body[2], DocumentElement::ordered_list_item(1, 2, "Subitem 2"));
-        assert_eq!(doc.body[3], DocumentElement::ordered_list_item(0, 2, "Root 2"));
+        assert_eq!(doc.body[0], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Root 1")));
+        assert_eq!(doc.body[1], DocumentElement::ordered_list_item(1, 1, DocumentElement::text("Subitem 1")));
+        assert_eq!(doc.body[2], DocumentElement::ordered_list_item(1, 2, DocumentElement::text("Subitem 2")));
+        assert_eq!(doc.body[3], DocumentElement::ordered_list_item(0, 2, DocumentElement::text("Root 2")));
     }
 
     #[test]
@@ -1306,11 +1330,11 @@ mod tests {
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 7);
-        assert_eq!(doc.body[0], DocumentElement::ordered_list_item(0, 1, "Item 1"));
-        assert_eq!(doc.body[1], DocumentElement::ordered_list_item(0, 2, "Item 2"));
+        assert_eq!(doc.body[0], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Item 1")));
+        assert_eq!(doc.body[1], DocumentElement::ordered_list_item(0, 2, DocumentElement::text("Item 2")));
         assert_eq!(doc.body[2], DocumentElement::text("Paragraph text"));
-        assert_eq!(doc.body[3], DocumentElement::ordered_list_item(0, 1, "New list 1"));
-        assert_eq!(doc.body[4], DocumentElement::ordered_list_item(0, 2, "New list 2"));
+        assert_eq!(doc.body[3], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("New list 1")));
+        assert_eq!(doc.body[4], DocumentElement::ordered_list_item(0, 2, DocumentElement::text("New list 2")));
         assert_eq!(doc.body[5], DocumentElement::text("Another paragraph"));
         assert_eq!(doc.body[6], DocumentElement::text("2. Not a list"));
     }
@@ -1321,21 +1345,21 @@ mod tests {
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 9);
-        assert_eq!(doc.body[0], DocumentElement::ordered_list_item(0, 1, "Item 1"));
-        assert_eq!(doc.body[1], DocumentElement::bullet_list_item(0, "Bullet item"));
-        assert_eq!(doc.body[2], DocumentElement::ordered_list_item(0, 1, "Item after bullet"));
-        assert_eq!(doc.body[3], DocumentElement::check_box_item(0, false, "Check item"));
-        assert_eq!(doc.body[4], DocumentElement::ordered_list_item(0, 1, "Item after check"));
+        assert_eq!(doc.body[0], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Item 1")));
+        assert_eq!(doc.body[1], DocumentElement::bullet_list_item(0, DocumentElement::text("Bullet item")));
+        assert_eq!(doc.body[2], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Item after bullet")));
+        assert_eq!(doc.body[3], DocumentElement::check_box_item(0, false, DocumentElement::text("Check item")));
+        assert_eq!(doc.body[4], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Item after check")));
         assert_eq!(
             doc.body[5],
             DocumentElement::shoutout(ShoutoutElementKind::Note, "Note shoutout")
         );
-        assert_eq!(doc.body[6], DocumentElement::ordered_list_item(0, 1, "Item after shoutout"));
+        assert_eq!(doc.body[6], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Item after shoutout")));
         assert_eq!(
             doc.body[7],
             DocumentElement::code_block(None::<String>, "code")
         );
-        assert_eq!(doc.body[8], DocumentElement::ordered_list_item(0, 1, "Item after code"));
+        assert_eq!(doc.body[8], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Item after code")));
     }
 
     #[test]
@@ -1344,9 +1368,9 @@ mod tests {
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 3);
-        assert_eq!(doc.body[0], DocumentElement::ordered_list_item(0, 1, "Item 1"));
-        assert_eq!(doc.body[1], DocumentElement::ordered_list_item(0, 2, "Item 2"));
-        assert_eq!(doc.body[2], DocumentElement::ordered_list_item(1, 1, "Subitem"));
+        assert_eq!(doc.body[0], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Item 1")));
+        assert_eq!(doc.body[1], DocumentElement::ordered_list_item(0, 2, DocumentElement::text("Item 2")));
+        assert_eq!(doc.body[2], DocumentElement::ordered_list_item(1, 1, DocumentElement::text("Subitem")));
     }
 
     #[test]
@@ -1499,7 +1523,7 @@ mod tests {
             )
         );
         assert_eq!(doc.body[1], DocumentElement::Unknown("# Next Section".into()));
-        assert_eq!(doc.body[2], DocumentElement::bullet_list_item(0, "Bullet item"));
+        assert_eq!(doc.body[2], DocumentElement::bullet_list_item(0, DocumentElement::text("Bullet item")));
         assert_eq!(
             doc.body[3],
             DocumentElement::table(
@@ -1609,9 +1633,9 @@ mod tests {
         if let DocumentElement::BlockDirective { name, children } = &doc.body[0] {
             assert_eq!(name, "custom123");
             assert_eq!(children.len(), 5);
-            assert_eq!(children[0], DocumentElement::bullet_list_item(0, "Bullet 1"));
-            assert_eq!(children[1], DocumentElement::check_box_item(0, true, "Checkbox"));
-            assert_eq!(children[2], DocumentElement::ordered_list_item(0, 1, "Numbered 1"));
+            assert_eq!(children[0], DocumentElement::bullet_list_item(0, DocumentElement::text("Bullet 1")));
+            assert_eq!(children[1], DocumentElement::check_box_item(0, true, DocumentElement::text("Checkbox")));
+            assert_eq!(children[2], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Numbered 1")));
             assert_eq!(children[3], DocumentElement::shoutout(ShoutoutElementKind::Important, "Important shoutout"));
             assert_eq!(children[4], DocumentElement::code_block(Some("bash"), "echo test"));
         } else {

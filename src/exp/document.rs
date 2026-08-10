@@ -59,21 +59,21 @@ pub enum DocumentElement {
         /// Directive name identifier (e.g. `variables`).
         name: String,
     },
-    /// Bullet list item element with indentation depth.
+    /// Bullet list item element with indentation depth and child content.
     BulletListItem {
         /// Nesting depth level based on leading spaces.
         depth: usize,
-        /// List item text content.
-        content: String,
+        /// Child document element content.
+        content: Box<DocumentElement>,
     },
-    /// Checkbox list item element with indentation depth and checked status.
+    /// Checkbox list item element with indentation depth, checked status, and child content.
     CheckBoxItem {
         /// Nesting depth level based on leading spaces.
         depth: usize,
         /// Indicates whether the checkbox is checked.
         checked: bool,
-        /// Checkbox item text content.
-        content: String,
+        /// Child document element content.
+        content: Box<DocumentElement>,
     },
     /// Fenced code block with optional language specifier and content.
     CodeBlock {
@@ -82,14 +82,14 @@ pub enum DocumentElement {
         /// Code block text content.
         content: String,
     },
-    /// Ordered list item element with indentation depth and sequential position.
+    /// Ordered list item element with indentation depth, sequential position, and child content.
     OrderedListItem {
         /// Nesting depth level based on leading spaces.
         depth: usize,
         /// 1-based sequential position within the list at this depth.
         position: usize,
-        /// List item text content.
-        content: String,
+        /// Child document element content.
+        content: Box<DocumentElement>,
     },
     /// Collapsible or structured section containing nested child elements.
     Section {
@@ -127,20 +127,20 @@ impl DocumentElement {
         }
     }
 
-    /// Creates a new bullet list item document element with depth.
-    pub fn bullet_list_item(depth: usize, content: impl Into<String>) -> Self {
+    /// Creates a new bullet list item document element with depth and child content.
+    pub fn bullet_list_item(depth: usize, content: DocumentElement) -> Self {
         Self::BulletListItem {
             depth,
-            content: content.into(),
+            content: Box::new(content),
         }
     }
 
-    /// Creates a new checkbox list item document element with depth and checked state.
-    pub fn check_box_item(depth: usize, checked: bool, content: impl Into<String>) -> Self {
+    /// Creates a new checkbox list item document element with depth, checked state, and child content.
+    pub fn check_box_item(depth: usize, checked: bool, content: DocumentElement) -> Self {
         Self::CheckBoxItem {
             depth,
             checked,
-            content: content.into(),
+            content: Box::new(content),
         }
     }
 
@@ -152,12 +152,12 @@ impl DocumentElement {
         }
     }
 
-    /// Creates a new ordered list item document element with depth and position.
-    pub fn ordered_list_item(depth: usize, position: usize, content: impl Into<String>) -> Self {
+    /// Creates a new ordered list item document element with depth, position, and child content.
+    pub fn ordered_list_item(depth: usize, position: usize, content: DocumentElement) -> Self {
         Self::OrderedListItem {
             depth,
             position,
-            content: content.into(),
+            content: Box::new(content),
         }
     }
 
@@ -275,35 +275,35 @@ mod tests {
 
     #[test]
     fn test_bullet_list_item_creation() {
-        let elem = DocumentElement::bullet_list_item(2, "Nested item");
+        let elem = DocumentElement::bullet_list_item(2, DocumentElement::text("Nested item"));
         assert_eq!(
             elem,
             DocumentElement::BulletListItem {
                 depth: 2,
-                content: "Nested item".into(),
+                content: Box::new(DocumentElement::text("Nested item")),
             }
         );
     }
 
     #[test]
     fn test_check_box_item_creation() {
-        let unchecked = DocumentElement::check_box_item(0, false, "Pending task");
+        let unchecked = DocumentElement::check_box_item(0, false, DocumentElement::text("Pending task"));
         assert_eq!(
             unchecked,
             DocumentElement::CheckBoxItem {
                 depth: 0,
                 checked: false,
-                content: "Pending task".into(),
+                content: Box::new(DocumentElement::text("Pending task")),
             }
         );
 
-        let checked = DocumentElement::check_box_item(2, true, "Completed subtask");
+        let checked = DocumentElement::check_box_item(2, true, DocumentElement::text("Completed subtask"));
         assert_eq!(
             checked,
             DocumentElement::CheckBoxItem {
                 depth: 2,
                 checked: true,
-                content: "Completed subtask".into(),
+                content: Box::new(DocumentElement::text("Completed subtask")),
             }
         );
     }
@@ -365,23 +365,23 @@ mod tests {
 
     #[test]
     fn test_ordered_list_item_creation() {
-        let root_item = DocumentElement::ordered_list_item(0, 1, "First item");
+        let root_item = DocumentElement::ordered_list_item(0, 1, DocumentElement::text("First item"));
         assert_eq!(
             root_item,
             DocumentElement::OrderedListItem {
                 depth: 0,
                 position: 1,
-                content: "First item".into(),
+                content: Box::new(DocumentElement::text("First item")),
             }
         );
 
-        let nested_item = DocumentElement::ordered_list_item(2, 5, "Deep item");
+        let nested_item = DocumentElement::ordered_list_item(2, 5, DocumentElement::text("Deep item"));
         assert_eq!(
             nested_item,
             DocumentElement::OrderedListItem {
                 depth: 2,
                 position: 5,
-                content: "Deep item".into(),
+                content: Box::new(DocumentElement::text("Deep item")),
             }
         );
     }
@@ -456,7 +456,7 @@ mod tests {
             }
         );
 
-        let child2 = DocumentElement::bullet_list_item(0, "List item");
+        let child2 = DocumentElement::bullet_list_item(0, DocumentElement::text("List item"));
         directive.push_child(child2.clone());
 
         assert_eq!(

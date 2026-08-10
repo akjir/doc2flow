@@ -50,9 +50,16 @@ pub fn document_to_json(doc: &Document) -> String {
 /// Formats a single document element and its children with indentation.
 fn format_element(out: &mut String, elem: &DocumentElement, indent_level: usize) {
     let indent = "  ".repeat(indent_level);
+    let _ = write!(out, "{indent}");
+    format_element_inline(out, elem, indent_level);
+}
+
+/// Formats a single document element starting with the opening brace.
+fn format_element_inline(out: &mut String, elem: &DocumentElement, indent_level: usize) {
+    let indent = "  ".repeat(indent_level);
     let child_indent = "  ".repeat(indent_level + 1);
 
-    let _ = write!(out, "{indent}{{\n");
+    out.push_str("{\n");
     match elem {
         DocumentElement::BlockDirective { children, name } => {
             let _ = write!(out, "{child_indent}\"kind\": \"block_directive\",\n");
@@ -77,9 +84,9 @@ fn format_element(out: &mut String, elem: &DocumentElement, indent_level: usize)
         DocumentElement::BulletListItem { depth, content } => {
             let _ = write!(out, "{child_indent}\"kind\": \"bullet_list_item\",\n");
             let _ = write!(out, "{child_indent}\"depth\": {depth},\n");
-            let _ = write!(out, "{child_indent}\"content\": \"");
-            escape_json_string(out, content);
-            let _ = write!(out, "\"\n");
+            let _ = write!(out, "{child_indent}\"content\": ");
+            format_element_inline(out, content, indent_level + 1);
+            out.push('\n');
         }
         DocumentElement::CheckBoxItem {
             depth,
@@ -89,9 +96,9 @@ fn format_element(out: &mut String, elem: &DocumentElement, indent_level: usize)
             let _ = write!(out, "{child_indent}\"kind\": \"check_box_item\",\n");
             let _ = write!(out, "{child_indent}\"depth\": {depth},\n");
             let _ = write!(out, "{child_indent}\"checked\": {checked},\n");
-            let _ = write!(out, "{child_indent}\"content\": \"");
-            escape_json_string(out, content);
-            let _ = write!(out, "\"\n");
+            let _ = write!(out, "{child_indent}\"content\": ");
+            format_element_inline(out, content, indent_level + 1);
+            out.push('\n');
         }
         DocumentElement::CodeBlock { language, content } => {
             let _ = write!(out, "{child_indent}\"kind\": \"code_block\",\n");
@@ -114,9 +121,9 @@ fn format_element(out: &mut String, elem: &DocumentElement, indent_level: usize)
             let _ = write!(out, "{child_indent}\"kind\": \"ordered_list_item\",\n");
             let _ = write!(out, "{child_indent}\"depth\": {depth},\n");
             let _ = write!(out, "{child_indent}\"position\": {position},\n");
-            let _ = write!(out, "{child_indent}\"content\": \"");
-            escape_json_string(out, content);
-            let _ = write!(out, "\"\n");
+            let _ = write!(out, "{child_indent}\"content\": ");
+            format_element_inline(out, content, indent_level + 1);
+            out.push('\n');
         }
         DocumentElement::Section { title, children } => {
             let _ = write!(out, "{child_indent}\"kind\": \"section\",\n");
@@ -200,18 +207,16 @@ fn format_element(out: &mut String, elem: &DocumentElement, indent_level: usize)
     let _ = write!(out, "{indent}}}");
 }
 
-/// Escapes special JSON characters into the target output buffer.
-fn escape_json_string(out: &mut String, input: &str) {
-    for ch in input.chars() {
+/// Escapes a string for JSON output.
+fn escape_json_string(out: &mut String, s: &str) {
+    for ch in s.chars() {
         match ch {
             '"' => out.push_str("\\\""),
             '\\' => out.push_str("\\\\"),
             '\n' => out.push_str("\\n"),
             '\r' => out.push_str("\\r"),
             '\t' => out.push_str("\\t"),
-            '\x08' => out.push_str("\\b"),
-            '\x0C' => out.push_str("\\f"),
-            c if (c as u32) < 0x20 => {
+            c if c.is_control() => {
                 let _ = write!(out, "\\u{:04x}", c as u32);
             }
             c => out.push(c),
@@ -222,6 +227,7 @@ fn escape_json_string(out: &mut String, input: &str) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::exp::document::ShoutoutElementKind;
 
     #[test]
     fn test_document_to_json_empty() {
@@ -236,33 +242,31 @@ mod tests {
     #[test]
     fn test_document_to_json_with_elements() {
         let mut doc = Document::new();
-        doc.insert_parameter("title", "Test");
+        doc.insert_parameter("title", "Test Title");
+        doc.insert_parameter("author", "Tester");
+
         let text_elem = DocumentElement::text("Hello \"world\"\nNew line");
         let section_elem = DocumentElement::section(
-            "Section Title",
+            "My Section",
             vec![DocumentElement::unknown("Child")],
         );
-        doc.push_body(text_elem);
+
+        doc.push_header(text_elem);
         doc.push_body(section_elem);
 
         let json = document_to_json(&doc);
-        assert!(json.contains("\"parameters\": {"));
-        assert!(json.contains("\"title\": \"Test\""));
-        assert!(json.contains("\"header\": ["));
-        assert!(json.contains("\"body\": ["));
+        assert!(json.contains("\"title\": \"Test Title\""));
+        assert!(json.contains("\"author\": \"Tester\""));
         assert!(json.contains("\"kind\": \"text\""));
         assert!(json.contains("\"content\": \"Hello \\\"world\\\"\\nNew line\""));
         assert!(json.contains("\"kind\": \"section\""));
-        assert!(json.contains("\"title\": \"Section Title\""));
-        assert!(json.contains("\"children\": ["));
+        assert!(json.contains("\"title\": \"My Section\""));
         assert!(json.contains("\"kind\": \"unknown\""));
         assert!(json.contains("\"content\": \"Child\""));
     }
 
     #[test]
     fn test_document_to_json_with_shoutouts() {
-        use crate::exp::document::ShoutoutElementKind;
-
         let mut doc = Document::new();
         doc.push_body(DocumentElement::shoutout(
             ShoutoutElementKind::Important,
@@ -284,12 +288,20 @@ mod tests {
     #[test]
     fn test_document_to_json_with_bullet_list_items() {
         let mut doc = Document::new();
-        doc.push_body(DocumentElement::bullet_list_item(0, "Root item"));
-        doc.push_body(DocumentElement::bullet_list_item(1, "Child item"));
+        doc.push_body(DocumentElement::bullet_list_item(
+            0,
+            DocumentElement::text("Root item"),
+        ));
+        doc.push_body(DocumentElement::bullet_list_item(
+            1,
+            DocumentElement::text("Child item"),
+        ));
 
         let json = document_to_json(&doc);
         assert!(json.contains("\"kind\": \"bullet_list_item\""));
         assert!(json.contains("\"depth\": 0"));
+        assert!(json.contains("\"content\": {"));
+        assert!(json.contains("\"kind\": \"text\""));
         assert!(json.contains("\"content\": \"Root item\""));
         assert!(json.contains("\"depth\": 1"));
         assert!(json.contains("\"content\": \"Child item\""));
@@ -298,13 +310,23 @@ mod tests {
     #[test]
     fn test_document_to_json_with_check_box_items() {
         let mut doc = Document::new();
-        doc.push_body(DocumentElement::check_box_item(0, false, "Todo item"));
-        doc.push_body(DocumentElement::check_box_item(2, true, "Done item"));
+        doc.push_body(DocumentElement::check_box_item(
+            0,
+            false,
+            DocumentElement::text("Todo item"),
+        ));
+        doc.push_body(DocumentElement::check_box_item(
+            2,
+            true,
+            DocumentElement::text("Done item"),
+        ));
 
         let json = document_to_json(&doc);
         assert!(json.contains("\"kind\": \"check_box_item\""));
         assert!(json.contains("\"depth\": 0"));
         assert!(json.contains("\"checked\": false"));
+        assert!(json.contains("\"content\": {"));
+        assert!(json.contains("\"kind\": \"text\""));
         assert!(json.contains("\"content\": \"Todo item\""));
         assert!(json.contains("\"depth\": 2"));
         assert!(json.contains("\"checked\": true"));
@@ -334,13 +356,23 @@ mod tests {
     #[test]
     fn test_document_to_json_with_ordered_list_items() {
         let mut doc = Document::new();
-        doc.push_body(DocumentElement::ordered_list_item(0, 1, "First item"));
-        doc.push_body(DocumentElement::ordered_list_item(2, 3, "Nested item"));
+        doc.push_body(DocumentElement::ordered_list_item(
+            0,
+            1,
+            DocumentElement::text("First item"),
+        ));
+        doc.push_body(DocumentElement::ordered_list_item(
+            2,
+            3,
+            DocumentElement::text("Nested item"),
+        ));
 
         let json = document_to_json(&doc);
         assert!(json.contains("\"kind\": \"ordered_list_item\""));
         assert!(json.contains("\"depth\": 0"));
         assert!(json.contains("\"position\": 1"));
+        assert!(json.contains("\"content\": {"));
+        assert!(json.contains("\"kind\": \"text\""));
         assert!(json.contains("\"content\": \"First item\""));
         assert!(json.contains("\"depth\": 2"));
         assert!(json.contains("\"position\": 3"));
