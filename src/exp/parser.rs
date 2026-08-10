@@ -102,4 +102,14 @@ mod tests {
         assert!(result.contains("\"position\": 2"));
         assert!(result.contains("\"content\": \"Second item\""));
     }
+
+    #[test]
+    fn test_parse_with_table() {
+        let result = parse("---\ntitle: \"Table Test\"\n---\n| Header A | Header B |\n| :--- | ---: |\n| Cell 1 | Cell 2 |").unwrap();
+        assert!(result.contains("\"kind\": \"table\""));
+        assert!(result.contains("\"alignments\": [\"left\", \"right\"]"));
+        assert!(result.contains("[\"Header A\", \"Header B\"]"));
+        assert!(result.contains("[\"Cell 1\", \"Cell 2\"]"));
+    }
 }
+

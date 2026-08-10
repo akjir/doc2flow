@@ -88,6 +88,13 @@ pub enum DocumentElement {
         /// Inner shoutout message content.
         content: String,
     },
+    /// Table element containing column alignments and a 2D matrix of cell contents (rows, columns).
+    Table {
+        /// Alignment specification for each column.
+        alignments: Vec<TableAlignment>,
+        /// Rows of the table (header row followed by data rows), where each row is a vector of cell strings.
+        rows: Vec<Vec<String>>,
+    },
     /// Standard plain text paragraph or line.
     Text(String),
     /// Unrecognized or fallback content.
@@ -152,6 +159,11 @@ impl DocumentElement {
         }
     }
 
+    /// Creates a new table document element with column alignments and row matrix.
+    pub fn table(alignments: Vec<TableAlignment>, rows: Vec<Vec<String>>) -> Self {
+        Self::Table { alignments, rows }
+    }
+
     /// Creates a new plain text document element.
     pub fn text(content: impl Into<String>) -> Self {
         Self::Text(content.into())
@@ -160,6 +172,33 @@ impl DocumentElement {
     /// Creates a new unknown fallback document element.
     pub fn unknown(content: impl Into<String>) -> Self {
         Self::Unknown(content.into())
+    }
+}
+
+/// Text alignment specification for a table column.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum TableAlignment {
+    /// Left-aligned column text (`:---`).
+    Left,
+    /// Center-aligned column text (`:---:`).
+    Center,
+    /// Right-aligned column text (`---:`).
+    Right,
+    /// Default or unspecified alignment (`---`).
+    #[default]
+    None,
+}
+
+impl TableAlignment {
+    /// Returns the static lowercase string identifier.
+    #[inline]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Left => "left",
+            Self::Center => "center",
+            Self::Right => "right",
+            Self::None => "none",
+        }
     }
 }
 
@@ -328,4 +367,37 @@ mod tests {
             }
         );
     }
+
+    #[test]
+    fn test_table_element_creation_and_alignments() {
+        let alignments = vec![
+            TableAlignment::Left,
+            TableAlignment::Center,
+            TableAlignment::Right,
+            TableAlignment::None,
+        ];
+        let rows = vec![
+            vec!["H1".into(), "H2".into(), "H3".into(), "H4".into()],
+            vec!["D1".into(), "D2".into(), "D3".into(), "D4".into()],
+        ];
+        let table = DocumentElement::table(alignments.clone(), rows.clone());
+
+        assert_eq!(
+            table,
+            DocumentElement::Table {
+                alignments,
+                rows,
+            }
+        );
+    }
+
+    #[test]
+    fn test_table_alignment_as_str() {
+        assert_eq!(TableAlignment::Left.as_str(), "left");
+        assert_eq!(TableAlignment::Center.as_str(), "center");
+        assert_eq!(TableAlignment::Right.as_str(), "right");
+        assert_eq!(TableAlignment::None.as_str(), "none");
+        assert_eq!(TableAlignment::default(), TableAlignment::None);
+    }
 }
+

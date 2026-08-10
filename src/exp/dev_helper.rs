@@ -129,6 +129,40 @@ fn format_element(out: &mut String, elem: &DocumentElement, indent_level: usize)
             escape_json_string(out, content);
             let _ = write!(out, "\"\n");
         }
+        DocumentElement::Table { alignments, rows } => {
+            let _ = write!(out, "{child_indent}\"kind\": \"table\",\n");
+            let _ = write!(out, "{child_indent}\"alignments\": [");
+            for (k, align) in alignments.iter().enumerate() {
+                let _ = write!(out, "\"{}\"", align.as_str());
+                if k + 1 < alignments.len() {
+                    out.push_str(", ");
+                }
+            }
+            out.push_str("],\n");
+            let _ = write!(out, "{child_indent}\"rows\": [");
+            if rows.is_empty() {
+                out.push_str("]\n");
+            } else {
+                out.push('\n');
+                for (r_idx, row) in rows.iter().enumerate() {
+                    let _ = write!(out, "{child_indent}  [");
+                    for (c_idx, cell) in row.iter().enumerate() {
+                        out.push('"');
+                        escape_json_string(out, cell);
+                        out.push('"');
+                        if c_idx + 1 < row.len() {
+                            out.push_str(", ");
+                        }
+                    }
+                    out.push(']');
+                    if r_idx + 1 < rows.len() {
+                        out.push(',');
+                    }
+                    out.push('\n');
+                }
+                let _ = write!(out, "{child_indent}]\n");
+            }
+        }
         DocumentElement::Text(content) => {
             let _ = write!(out, "{child_indent}\"kind\": \"text\",\n");
             let _ = write!(out, "{child_indent}\"content\": \"");
@@ -292,4 +326,30 @@ mod tests {
         assert!(json.contains("\"position\": 3"));
         assert!(json.contains("\"content\": \"Nested item\""));
     }
+
+    #[test]
+    fn test_document_to_json_with_table() {
+        use crate::exp::document::TableAlignment;
+
+        let mut doc = Document::new();
+        doc.push_body(DocumentElement::table(
+            vec![
+                TableAlignment::Left,
+                TableAlignment::Center,
+                TableAlignment::Right,
+            ],
+            vec![
+                vec!["Col 1".into(), "Col 2".into(), "Col 3".into()],
+                vec!["Val 1".into(), "Val \"2\"".into(), "Val 3".into()],
+            ],
+        ));
+
+        let json = document_to_json(&doc);
+        assert!(json.contains("\"kind\": \"table\""));
+        assert!(json.contains("\"alignments\": [\"left\", \"center\", \"right\"]"));
+        assert!(json.contains("\"rows\": ["));
+        assert!(json.contains("[\"Col 1\", \"Col 2\", \"Col 3\"]"));
+        assert!(json.contains("[\"Val 1\", \"Val \\\"2\\\"\", \"Val 3\"]"));
+    }
 }
+

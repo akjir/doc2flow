@@ -1,8 +1,9 @@
 //! Markdown parser without external dependencies.
 
-use crate::exp::document::{Document, DocumentElement, ShoutoutElementKind};
+use crate::exp::document::{Document, DocumentElement, ShoutoutElementKind, TableAlignment};
 use crate::exp::error::{build_caret_annotation, DiagnosticError};
 use crate::exp::{Error, Result};
+
 
 /// State tracker for filtering HTML comments across lines.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
@@ -26,6 +27,9 @@ impl CommentFilterState {
                 Some(end_idx) => {
                     self.in_comment = false;
                     current = &current[end_idx + 3..];
+                    if current.trim().is_empty() {
+                        return None;
+                    }
                 }
                 None => return None,
             }
@@ -51,7 +55,11 @@ impl CommentFilterState {
             }
         }
         buf.push_str(current);
-        Some(buf.as_str())
+        if buf.trim().is_empty() {
+            None
+        } else {
+            Some(buf.as_str())
+        }
     }
 }
 
@@ -233,6 +241,150 @@ fn parse_shoutout_line(line: &str) -> (ShoutoutElementKind, &str) {
     }
 }
 
+/// Parses a single cell in a table delimiter row into its `TableAlignment`.
+fn parse_table_alignment(cell: &str) -> Option<TableAlignment> {
+    let trimmed = cell.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+
+    let has_prefix_colon = trimmed.starts_with(':');
+    let has_suffix_colon = trimmed.ends_with(':');
+
+    let inner = if has_prefix_colon {
+        &trimmed[1..]
+    } else {
+        trimmed
+    };
+
+    let inner = if has_suffix_colon && !inner.is_empty() {
+        &inner[..inner.len() - 1]
+    } else {
+        inner
+    };
+
+    if inner.is_empty() || !inner.chars().all(|c| c == '-') {
+        return None;
+    }
+
+    match (has_prefix_colon, has_suffix_colon) {
+        (true, true) => Some(TableAlignment::Center),
+        (true, false) => Some(TableAlignment::Left),
+        (false, true) => Some(TableAlignment::Right),
+        (false, false) => Some(TableAlignment::None),
+    }
+}
+
+/// Parses a markdown table delimiter row (e.g. `| :--- | :---: | ---: |`) into column alignments.
+fn parse_table_delimiter_row(line: &str) -> Option<Vec<TableAlignment>> {
+    let trimmed = line.trim();
+    if !trimmed.contains('|') && !trimmed.starts_with('-') {
+        return None;
+    }
+
+    let inner = if let Some(stripped) = trimmed.strip_prefix('|') {
+        stripped
+    } else {
+        trimmed
+    };
+
+    let inner = if inner.ends_with('|') && !inner.ends_with("\\|") {
+        &inner[..inner.len() - 1]
+    } else {
+        inner
+    };
+
+    if inner.trim().is_empty() {
+        return None;
+    }
+
+    let raw_cells: Vec<&str> = inner.split('|').collect();
+    if raw_cells.is_empty() {
+        return None;
+    }
+
+    let mut alignments = Vec::with_capacity(raw_cells.len());
+    for raw_cell in raw_cells {
+        let align = parse_table_alignment(raw_cell)?;
+        alignments.push(align);
+    }
+
+    Some(alignments)
+}
+
+/// Parses a markdown table row into trimmed cell string contents, unescaping escaped pipes (`\|`).
+fn parse_table_row(line: &str) -> Vec<String> {
+    let trimmed = line.trim();
+    let inner = if let Some(stripped) = trimmed.strip_prefix('|') {
+        stripped
+    } else {
+        trimmed
+    };
+
+    let inner = if inner.ends_with('|') && !inner.ends_with("\\|") {
+        &inner[..inner.len() - 1]
+    } else {
+        inner
+    };
+
+    let mut cells = Vec::new();
+    let mut current_cell = String::with_capacity(32);
+    let mut chars = inner.chars().peekable();
+
+    while let Some(ch) = chars.next() {
+        if ch == '\\' {
+            if let Some(&next_ch) = chars.peek() {
+                if next_ch == '|' {
+                    current_cell.push('|');
+                    chars.next();
+                    continue;
+                }
+            }
+            current_cell.push('\\');
+        } else if ch == '|' {
+            cells.push(current_cell.trim().to_string());
+            current_cell.clear();
+        } else {
+            current_cell.push(ch);
+        }
+    }
+    cells.push(current_cell.trim().to_string());
+    cells
+}
+
+/// Classifies a non-table line and appends it to the document body.
+fn classify_and_push_line(
+    doc: &mut Document,
+    effective_line: &str,
+    ordered_list_stack: &mut Vec<(usize, usize)>,
+) {
+    let trimmed = effective_line.trim();
+    if trimmed.is_empty() {
+        ordered_list_stack.clear();
+        return;
+    }
+
+    if let Some((depth, checked, content)) = parse_check_box_item(effective_line) {
+        ordered_list_stack.clear();
+        doc.push_body(DocumentElement::check_box_item(depth, checked, content));
+    } else if let Some((depth, content)) = parse_bullet_list_item(effective_line) {
+        ordered_list_stack.clear();
+        doc.push_body(DocumentElement::bullet_list_item(depth, content));
+    } else if let Some(elem) = try_process_ordered_list_item(effective_line, ordered_list_stack) {
+        doc.push_body(elem);
+    } else if trimmed.starts_with('>') {
+        ordered_list_stack.clear();
+        let (shoutout_kind, content) = parse_shoutout_line(trimmed);
+        doc.push_body(DocumentElement::shoutout(shoutout_kind, content));
+    } else if is_plain_text(trimmed) {
+        ordered_list_stack.clear();
+        doc.push_body(DocumentElement::text(trimmed));
+    } else {
+        ordered_list_stack.clear();
+        doc.push_body(DocumentElement::unknown(trimmed));
+    }
+}
+
 /// Trims leading and trailing empty lines from a slice of code lines.
 fn trim_code_block_lines(lines: &[&str]) -> String {
     let start = lines.iter().position(|line| !line.trim().is_empty());
@@ -270,6 +422,9 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
     let mut in_code_block = false;
     let mut code_block_lang: Option<String> = None;
     let mut code_block_lines: Vec<&str> = Vec::new();
+
+    let mut active_table: Option<(Vec<TableAlignment>, Vec<Vec<String>>)> = None;
+    let mut pending_table_header: Option<String> = None;
 
     let mut fm_start_line = 0;
     let mut fm_start_snippet = "";
@@ -333,6 +488,12 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
             FrontmatterPhase::Complete => {
                 let trimmed_start = effective_line.trim_start();
                 if trimmed_start.starts_with("```") {
+                    if let Some((alignments, rows)) = active_table.take() {
+                        doc.push_body(DocumentElement::table(alignments, rows));
+                    }
+                    if let Some(pending) = pending_table_header.take() {
+                        classify_and_push_line(&mut doc, &pending, &mut ordered_list_stack);
+                    }
                     ordered_list_stack.clear();
                     let info = trimmed_start.strip_prefix("```").unwrap_or("").trim();
                     code_block_lang = if info.is_empty() {
@@ -345,30 +506,49 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
                     continue;
                 }
 
-                let trimmed = effective_line.trim();
-                if !trimmed.is_empty() {
-                    if let Some((depth, checked, content)) = parse_check_box_item(effective_line) {
-                        ordered_list_stack.clear();
-                        doc.push_body(DocumentElement::check_box_item(depth, checked, content));
-                    } else if let Some((depth, content)) = parse_bullet_list_item(effective_line) {
-                        ordered_list_stack.clear();
-                        doc.push_body(DocumentElement::bullet_list_item(depth, content));
-                    } else if let Some(elem) =
-                        try_process_ordered_list_item(effective_line, &mut ordered_list_stack)
+                if let Some((_, ref mut rows)) = active_table {
+                    let trimmed = effective_line.trim();
+                    if !trimmed.is_empty()
+                        && trimmed.contains('|')
+                        && !trimmed.starts_with(['#', '>'])
+                        && !trimmed.starts_with("```")
                     {
-                        doc.push_body(elem);
-                    } else if trimmed.starts_with('>') {
-                        ordered_list_stack.clear();
-                        let (shoutout_kind, content) = parse_shoutout_line(trimmed);
-                        doc.push_body(DocumentElement::shoutout(shoutout_kind, content));
-                    } else if is_plain_text(trimmed) {
-                        ordered_list_stack.clear();
-                        doc.push_body(DocumentElement::text(trimmed));
+                        rows.push(parse_table_row(effective_line));
+                        continue;
                     } else {
-                        ordered_list_stack.clear();
-                        doc.push_body(DocumentElement::unknown(trimmed));
+                        let (alignments, rows) = active_table.take().unwrap();
+                        doc.push_body(DocumentElement::table(alignments, rows));
                     }
                 }
+
+                if let Some(pending_line) = pending_table_header.take() {
+                    if let Some(alignments) = parse_table_delimiter_row(effective_line) {
+                        let header_row = parse_table_row(&pending_line);
+                        active_table = Some((alignments, vec![header_row]));
+                        continue;
+                    } else {
+                        classify_and_push_line(&mut doc, &pending_line, &mut ordered_list_stack);
+                    }
+                }
+
+                let trimmed = effective_line.trim();
+                if trimmed.is_empty() {
+                    ordered_list_stack.clear();
+                    continue;
+                }
+
+                if trimmed.contains('|')
+                    && !trimmed.starts_with(['#', '>'])
+                    && !trimmed.starts_with("```")
+                    && !trimmed.starts_with("- ")
+                    && !trimmed.starts_with("- [")
+                {
+                    ordered_list_stack.clear();
+                    pending_table_header = Some(effective_line.to_string());
+                    continue;
+                }
+
+                classify_and_push_line(&mut doc, effective_line, &mut ordered_list_stack);
             }
         }
     }
@@ -376,6 +556,13 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
     if in_code_block {
         let content = trim_code_block_lines(&code_block_lines);
         doc.push_body(DocumentElement::code_block(code_block_lang.take(), content));
+    }
+
+    if let Some((alignments, rows)) = active_table.take() {
+        doc.push_body(DocumentElement::table(alignments, rows));
+    }
+    if let Some(pending) = pending_table_header.take() {
+        classify_and_push_line(&mut doc, &pending, &mut ordered_list_stack);
     }
 
     // Final state validation
@@ -939,4 +1126,228 @@ mod tests {
         assert_eq!(doc.body[1], DocumentElement::ordered_list_item(0, 2, "Item 2"));
         assert_eq!(doc.body[2], DocumentElement::ordered_list_item(1, 1, "Subitem"));
     }
+
+    #[test]
+    fn test_parse_table_alignment_cases() {
+        assert_eq!(parse_table_alignment("---"), Some(TableAlignment::None));
+        assert_eq!(parse_table_alignment(" :--- "), Some(TableAlignment::Left));
+        assert_eq!(parse_table_alignment(":---:"), Some(TableAlignment::Center));
+        assert_eq!(parse_table_alignment("---:"), Some(TableAlignment::Right));
+        assert_eq!(parse_table_alignment("-"), Some(TableAlignment::None));
+        assert_eq!(parse_table_alignment(":-"), Some(TableAlignment::Left));
+        assert_eq!(parse_table_alignment(":-:"), Some(TableAlignment::Center));
+        assert_eq!(parse_table_alignment("-:"), Some(TableAlignment::Right));
+        assert_eq!(parse_table_alignment(""), None);
+        assert_eq!(parse_table_alignment(":::"), None);
+        assert_eq!(parse_table_alignment("abc"), None);
+        assert_eq!(parse_table_alignment("--x--"), None);
+    }
+
+    #[test]
+    fn test_parse_table_delimiter_row_cases() {
+        let align1 = parse_table_delimiter_row("| :--- | :---: | ---: | --- |");
+        assert_eq!(
+            align1,
+            Some(vec![
+                TableAlignment::Left,
+                TableAlignment::Center,
+                TableAlignment::Right,
+                TableAlignment::None,
+            ])
+        );
+
+        let align2 = parse_table_delimiter_row(":-: | -:");
+        assert_eq!(
+            align2,
+            Some(vec![TableAlignment::Center, TableAlignment::Right])
+        );
+
+        assert_eq!(parse_table_delimiter_row("Not a delimiter"), None);
+        assert_eq!(parse_table_delimiter_row("| --- | abc |"), None);
+    }
+
+    #[test]
+    fn test_parse_table_row_cases() {
+        assert_eq!(
+            parse_table_row("| A | B | C |"),
+            vec!["A", "B", "C"]
+        );
+        assert_eq!(
+            parse_table_row("A | B"),
+            vec!["A", "B"]
+        );
+        assert_eq!(
+            parse_table_row("| A \\| B | C |"),
+            vec!["A | B", "C"]
+        );
+        assert_eq!(
+            parse_table_row("|   Spaced   |   Content   |"),
+            vec!["Spaced", "Content"]
+        );
+        assert_eq!(
+            parse_table_row("| Empty | | End |"),
+            vec!["Empty", "", "End"]
+        );
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_table_basic() {
+        let md = "---\ntitle: \"Table Doc\"\n---\n| Name | Role | Location |\n| :--- | :---: | ---: |\n| Alice | Engineer | Berlin |\n| Bob | Designer | London |";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 1);
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::table(
+                vec![
+                    TableAlignment::Left,
+                    TableAlignment::Center,
+                    TableAlignment::Right,
+                ],
+                vec![
+                    vec!["Name".into(), "Role".into(), "Location".into()],
+                    vec!["Alice".into(), "Engineer".into(), "Berlin".into()],
+                    vec!["Bob".into(), "Designer".into(), "London".into()],
+                ]
+            )
+        );
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_table_with_escaped_pipes_and_no_outer_pipes() {
+        let md = "---\ntitle: \"Escaped Pipes\"\n---\nSyntax | Description\n---|---\n`grep \\| sort` | Pipeline\n`d2f -o file` | CLI output";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 1);
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::table(
+                vec![TableAlignment::None, TableAlignment::None],
+                vec![
+                    vec!["Syntax".into(), "Description".into()],
+                    vec!["`grep | sort`".into(), "Pipeline".into()],
+                    vec!["`d2f -o file`".into(), "CLI output".into()],
+                ]
+            )
+        );
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_table_interrupted_by_blank_line() {
+        let md = "---\ntitle: \"Multiple Tables\"\n---\n| T1H1 | T1H2 |\n| --- | --- |\n| R1 | R2 |\n\n| T2H1 | T2H2 |\n| :--- | ---: |\n| V1 | V2 |";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 2);
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::table(
+                vec![TableAlignment::None, TableAlignment::None],
+                vec![
+                    vec!["T1H1".into(), "T1H2".into()],
+                    vec!["R1".into(), "R2".into()],
+                ]
+            )
+        );
+        assert_eq!(
+            doc.body[1],
+            DocumentElement::table(
+                vec![TableAlignment::Left, TableAlignment::Right],
+                vec![
+                    vec!["T2H1".into(), "T2H2".into()],
+                    vec!["V1".into(), "V2".into()],
+                ]
+            )
+        );
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_table_interrupted_by_heading_and_lists() {
+        let md = "---\ntitle: \"Table With Other Elements\"\n---\n| Col A | Col B |\n| --- | --- |\n| A1 | B1 |\n# Next Section\n- Bullet item\n\n| Next Table |\n| --- |\n| Only Row |";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 4);
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::table(
+                vec![TableAlignment::None, TableAlignment::None],
+                vec![
+                    vec!["Col A".into(), "Col B".into()],
+                    vec!["A1".into(), "B1".into()],
+                ]
+            )
+        );
+        assert_eq!(doc.body[1], DocumentElement::Unknown("# Next Section".into()));
+        assert_eq!(doc.body[2], DocumentElement::bullet_list_item(0, "Bullet item"));
+        assert_eq!(
+            doc.body[3],
+            DocumentElement::table(
+                vec![TableAlignment::None],
+                vec![
+                    vec!["Next Table".into()],
+                    vec!["Only Row".into()],
+                ]
+            )
+        );
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_table_with_comments() {
+        let md = "---\ntitle: \"Table With Comments\"\n---\n| Col 1 <!-- inline --> | Col 2 |\n<!-- multiline\ncomment -->\n| --- | --- |\n| Val 1 | Val 2 <!-- comment --> |";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 1);
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::table(
+                vec![TableAlignment::None, TableAlignment::None],
+                vec![
+                    vec!["Col 1".into(), "Col 2".into()],
+                    vec!["Val 1".into(), "Val 2".into()],
+                ]
+            )
+        );
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_pipe_in_text_fallback() {
+        let md = "---\ntitle: \"Non Table Pipes\"\n---\nThis is plain text with | pipe character.\nAnother regular sentence.\n\nOption A | Option B\nNot a table.";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 4);
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::text("This is plain text with | pipe character.")
+        );
+        assert_eq!(
+            doc.body[1],
+            DocumentElement::text("Another regular sentence.")
+        );
+        assert_eq!(
+            doc.body[2],
+            DocumentElement::text("Option A | Option B")
+        );
+        assert_eq!(
+            doc.body[3],
+            DocumentElement::text("Not a table.")
+        );
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_table_at_eof() {
+        let md = "---\ntitle: \"Table at EOF\"\n---\n| H1 | H2 |\n| --- | --- |\n| D1 | D2 |";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 1);
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::table(
+                vec![TableAlignment::None, TableAlignment::None],
+                vec![
+                    vec!["H1".into(), "H2".into()],
+                    vec!["D1".into(), "D2".into()],
+                ]
+            )
+        );
+    }
 }
+

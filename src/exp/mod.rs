@@ -7,5 +7,6 @@ pub mod parser;
 pub mod parsing;
 
 pub use dev_helper::document_to_json;
-pub use document::{Document, DocumentElement, ShoutoutElementKind};
+pub use document::{Document, DocumentElement, ShoutoutElementKind, TableAlignment};
 pub use error::{DiagnosticError, Error, Result, build_caret_annotation};
+
