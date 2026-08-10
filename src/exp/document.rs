@@ -61,26 +61,26 @@ pub enum DocumentElement {
     },
     /// Bullet list item element with indentation depth and child content.
     BulletListItem {
-        /// Nesting depth level based on leading spaces.
-        depth: usize,
         /// Child document element content.
         content: Box<DocumentElement>,
+        /// Nesting depth level based on leading spaces.
+        depth: usize,
     },
     /// Checkbox list item element with indentation depth, checked status, and child content.
     CheckBoxItem {
-        /// Nesting depth level based on leading spaces.
-        depth: usize,
         /// Indicates whether the checkbox is checked.
         checked: bool,
         /// Child document element content.
         content: Box<DocumentElement>,
+        /// Nesting depth level based on leading spaces.
+        depth: usize,
     },
     /// Fenced code block with optional language specifier and content.
     CodeBlock {
-        /// Optional programming or markup language identifier (info string).
-        language: Option<String>,
         /// Code block text content.
         content: String,
+        /// Optional programming or markup language identifier (info string).
+        language: Option<String>,
     },
     /// Image element with alt text and source target URL.
     Image {
@@ -91,28 +91,28 @@ pub enum DocumentElement {
     },
     /// Ordered list item element with indentation depth, sequential position, and child content.
     OrderedListItem {
+        /// Child document element content.
+        content: Box<DocumentElement>,
         /// Nesting depth level based on leading spaces.
         depth: usize,
         /// 1-based sequential position within the list at this depth.
         position: usize,
-        /// Child document element content.
-        content: Box<DocumentElement>,
     },
     /// Collapsible or structured section containing nested child elements.
     Section {
+        /// Nested child elements within this section.
+        children: Vec<DocumentElement>,
         /// Heading level of the section (1 for `#`, 2 for `##`, 3 for `###` and higher).
         level: usize,
         /// Section heading or title.
         title: String,
-        /// Nested child elements within this section.
-        children: Vec<DocumentElement>,
     },
     /// Shoutout or callout container element with a specific severity level.
     Shoutout {
-        /// Specific category and severity of this shoutout.
-        kind: ShoutoutElementKind,
         /// Inner shoutout message content.
         content: String,
+        /// Specific category and severity of this shoutout.
+        kind: ShoutoutElementKind,
     },
     /// Table element containing column alignments and a 2D matrix of cell contents (rows, columns).
     Table {
@@ -139,25 +139,25 @@ impl DocumentElement {
     /// Creates a new bullet list item document element with depth and child content.
     pub fn bullet_list_item(depth: usize, content: DocumentElement) -> Self {
         Self::BulletListItem {
-            depth,
             content: Box::new(content),
+            depth,
         }
     }
 
     /// Creates a new checkbox list item document element with depth, checked state, and child content.
     pub fn check_box_item(depth: usize, checked: bool, content: DocumentElement) -> Self {
         Self::CheckBoxItem {
-            depth,
             checked,
             content: Box::new(content),
+            depth,
         }
     }
 
     /// Creates a new code block document element.
     pub fn code_block(language: Option<impl Into<String>>, content: impl Into<String>) -> Self {
         Self::CodeBlock {
-            language: language.map(Into::into),
             content: content.into(),
+            language: language.map(Into::into),
         }
     }
 
@@ -172,9 +172,9 @@ impl DocumentElement {
     /// Creates a new ordered list item document element with depth, position, and child content.
     pub fn ordered_list_item(depth: usize, position: usize, content: DocumentElement) -> Self {
         Self::OrderedListItem {
+            content: Box::new(content),
             depth,
             position,
-            content: Box::new(content),
         }
     }
 
@@ -185,17 +185,17 @@ impl DocumentElement {
         children: Vec<DocumentElement>,
     ) -> Self {
         Self::Section {
+            children,
             level,
             title: title.into(),
-            children,
         }
     }
 
     /// Creates a new shoutout document element.
     pub fn shoutout(kind: ShoutoutElementKind, content: impl Into<String>) -> Self {
         Self::Shoutout {
-            kind,
             content: content.into(),
+            kind,
         }
     }
 
@@ -296,13 +296,38 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_block_directive_element_creation_and_push_child() {
+        let child1 = DocumentElement::text("Inside block");
+        let mut directive = DocumentElement::block_directive("variables", vec![child1.clone()]);
+
+        assert_eq!(
+            directive,
+            DocumentElement::BlockDirective {
+                children: vec![child1.clone()],
+                name: "variables".into(),
+            }
+        );
+
+        let child2 = DocumentElement::bullet_list_item(0, DocumentElement::text("List item"));
+        directive.push_child(child2.clone());
+
+        assert_eq!(
+            directive,
+            DocumentElement::BlockDirective {
+                children: vec![child1, child2],
+                name: "variables".into(),
+            }
+        );
+    }
+
+    #[test]
     fn test_bullet_list_item_creation() {
         let elem = DocumentElement::bullet_list_item(2, DocumentElement::text("Nested item"));
         assert_eq!(
             elem,
             DocumentElement::BulletListItem {
-                depth: 2,
                 content: Box::new(DocumentElement::text("Nested item")),
+                depth: 2,
             }
         );
     }
@@ -313,9 +338,9 @@ mod tests {
         assert_eq!(
             unchecked,
             DocumentElement::CheckBoxItem {
-                depth: 0,
                 checked: false,
                 content: Box::new(DocumentElement::text("Pending task")),
+                depth: 0,
             }
         );
 
@@ -323,9 +348,9 @@ mod tests {
         assert_eq!(
             checked,
             DocumentElement::CheckBoxItem {
-                depth: 2,
                 checked: true,
                 content: Box::new(DocumentElement::text("Completed subtask")),
+                depth: 2,
             }
         );
     }
@@ -336,8 +361,8 @@ mod tests {
         assert_eq!(
             elem_with_lang,
             DocumentElement::CodeBlock {
-                language: Some("bash".into()),
                 content: "echo 'hi'".into(),
+                language: Some("bash".into()),
             }
         );
 
@@ -345,8 +370,8 @@ mod tests {
         assert_eq!(
             elem_without_lang,
             DocumentElement::CodeBlock {
-                language: None,
                 content: "plain code".into(),
+                language: None,
             }
         );
     }
@@ -362,9 +387,9 @@ mod tests {
         assert_eq!(
             section,
             DocumentElement::Section {
+                children: vec![child],
                 level: 1,
                 title: "Heading".into(),
-                children: vec![child],
             }
         );
     }
@@ -404,9 +429,9 @@ mod tests {
         assert_eq!(
             root_item,
             DocumentElement::OrderedListItem {
+                content: Box::new(DocumentElement::text("First item")),
                 depth: 0,
                 position: 1,
-                content: Box::new(DocumentElement::text("First item")),
             }
         );
 
@@ -414,9 +439,9 @@ mod tests {
         assert_eq!(
             nested_item,
             DocumentElement::OrderedListItem {
+                content: Box::new(DocumentElement::text("Deep item")),
                 depth: 2,
                 position: 5,
-                content: Box::new(DocumentElement::text("Deep item")),
             }
         );
     }
@@ -438,8 +463,8 @@ mod tests {
             assert_eq!(
                 elem,
                 DocumentElement::Shoutout {
-                    kind,
                     content: format!("{expected_str} content"),
+                    kind,
                 }
             );
         }
@@ -477,30 +502,4 @@ mod tests {
             }
         );
     }
-
-    #[test]
-    fn test_block_directive_element_creation_and_push_child() {
-        let child1 = DocumentElement::text("Inside block");
-        let mut directive = DocumentElement::block_directive("variables", vec![child1.clone()]);
-
-        assert_eq!(
-            directive,
-            DocumentElement::BlockDirective {
-                name: "variables".into(),
-                children: vec![child1.clone()],
-            }
-        );
-
-        let child2 = DocumentElement::bullet_list_item(0, DocumentElement::text("List item"));
-        directive.push_child(child2.clone());
-
-        assert_eq!(
-            directive,
-            DocumentElement::BlockDirective {
-                name: "variables".into(),
-                children: vec![child1, child2],
-            }
-        );
-    }
 }
-
