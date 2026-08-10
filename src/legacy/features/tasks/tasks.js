@@ -1,5 +1,5 @@
 (() => {
-  // ../src/features/tasks/tasks.ts
+  // ../src/legacy/features/tasks/tasks.ts
   (() => {
     function styleItem(cb) {
       const item = cb.closest(".check-item");

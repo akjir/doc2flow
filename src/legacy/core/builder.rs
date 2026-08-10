@@ -176,7 +176,7 @@ pub fn format_iso8601_utc(time: std::time::SystemTime) -> String {
 /// assert!(template.contains("## Section 1: Initial System Verification"));
 /// ```
 pub fn generate_template_markdown() -> String {
-    let raw = include_str!("../../resources/templates/template.md");
+    let raw = include_str!("../../../resources/templates/template.md");
     raw.replace("{{APP_VERSION}}", APP_VERSION)
 }
 
@@ -318,7 +318,7 @@ pub fn render(
     logo_html: Option<&str>,
     features: &DocumentFeatures,
 ) -> Result<String> {
-    let base_html = include_str!("../../resources/templates/base.html");
+    let base_html = include_str!("../../../resources/templates/base.html");
 
     let mut style_css = String::with_capacity(STYLE_CORE.len() + 4096);
     render_styles(&mut style_css, features);
@@ -403,7 +403,7 @@ pub fn assemble_html(
     doc_id: &str,
     logo_html: Option<&str>,
 ) -> Result<String> {
-    let base_html = include_str!("../../resources/templates/base.html");
+    let base_html = include_str!("../../../resources/templates/base.html");
 
     let mut style_css = String::with_capacity(STYLE_CORE.len() + 4096);
     assemble_styles(ctx, features, &mut style_css);

@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+168.20a045f.dev">
-  <meta name="version" content="0.9.4+168.20a045f.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+185.0debe2a.dev">
+  <meta name="version" content="0.9.4+185.0debe2a.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-09T15:37:55Z">
+  <meta name="dcterms.created" content="2026-08-10T19:41:57Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, code, fields, header, tables">
   <title>Microservice Deployment & Infrastructure Setup</title>
@@ -1353,9 +1353,9 @@ mark.d2f-highlight {
     window.d2f.document = window.d2f.document || {};
     window.d2f.document.id = 'd2f_id_fe4acdd7616c7913';
     window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {"callout_note":"Note","var_table_value":"Value","lang_code":"en","date":"Date","loading":"Loading...","copied":"Copied!","export_pdf":"Export as PDF","callout_important":"Important","copy_code":"Copy code","var_table_variable":"Variable","progress_template":"{done} of {total} tasks completed ({pct}%)","name_placeholder":"Name","setup_in_progress":"Process in Progress","sections_visible":"{visible} / {total} sections visible","signature_date":"Date","callout_caution":"Caution","var_table_title":"Variables","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","date_placeholder":"MM/DD/YYYY","reset_all":"Reset","save_state":"Save State","callout_tip":"Tip","callout_warning":"Warning","search_placeholder":"Search... (Ctrl+K)","comment_placeholder":"Add a comment...","setup_completed":"Process Completed"};
+    window.d2f.lang.dictionary = {"copied":"Copied!","callout_note":"Note","callout_warning":"Warning","var_table_variable":"Variable","var_table_value":"Value","confirm_reset":"Are you sure you want to reset all inputs and markings and expand all sections?","reset_all":"Reset","name_placeholder":"Name","loading":"Loading...","signature_date":"Date","progress_template":"{done} of {total} tasks completed ({pct}%)","setup_in_progress":"Process in Progress","date_placeholder":"MM/DD/YYYY","save_state":"Save State","callout_tip":"Tip","lang_code":"en","copy_code":"Copy code","var_table_title":"Variables","callout_important":"Important","setup_completed":"Process Completed","export_pdf":"Export as PDF","date":"Date","comment_placeholder":"Add a comment...","search_placeholder":"Search... (Ctrl+K)","sections_visible":"{visible} / {total} sections visible","callout_caution":"Caution"};
     (() => {
-  // ../src/core/web/storage.ts
+  // ../src/legacy/core/web/storage.ts
   var saveHandlers = /* @__PURE__ */ new Set();
   var loadHandlers = /* @__PURE__ */ new Set();
   window.d2f = window.d2f || {};
@@ -1427,7 +1427,7 @@ mark.d2f-highlight {
     }
   }
 
-  // ../src/core/web/utils.ts
+  // ../src/legacy/core/web/utils.ts
   function debounce(func, wait) {
     let timeout;
     return function(...args) {
@@ -1446,7 +1446,7 @@ mark.d2f-highlight {
     isRecord
   };
 
-  // ../src/core/web/export.ts
+  // ../src/legacy/core/web/export.ts
   var exportHandlers = /* @__PURE__ */ new Set();
   window.d2f = window.d2f || {};
   window.d2f.export = {
@@ -1506,7 +1506,7 @@ mark.d2f-highlight {
     }
   }
 
-  // ../src/core/web/sections.ts
+  // ../src/legacy/core/web/sections.ts
   function setSectionCollapseState(sec, isCollapsed) {
     const body = sec.querySelector(".sb");
     const sh = sec.querySelector(".sh");
@@ -1614,7 +1614,7 @@ mark.d2f-highlight {
     });
   }
 
-  // ../src/core/web/comments.ts
+  // ../src/legacy/core/web/comments.ts
   function autoExpandTextarea(el) {
     if (!el)
       return;
@@ -1731,7 +1731,7 @@ mark.d2f-highlight {
     document.addEventListener("change", handleCommentInput);
   }
 
-  // ../src/core/web/items.ts
+  // ../src/legacy/core/web/items.ts
   function saveItems() {
     const texts = {};
     document.querySelectorAll(".doc-item.text-item, .doc-item.simple-item").forEach((item, index) => {
@@ -1781,7 +1781,7 @@ mark.d2f-highlight {
     });
   }
 
-  // ../src/core/web/search.ts
+  // ../src/legacy/core/web/search.ts
   var preSearchCollapsedState = null;
   var lastMatchedSectionIds = /* @__PURE__ */ new Set();
   function removeHighlights(container) {
@@ -2017,7 +2017,7 @@ mark.d2f-highlight {
     });
   }
 
-  // ../src/core/web/core.ts
+  // ../src/legacy/core/web/core.ts
   var resetHandlers = /* @__PURE__ */ new Set();
   function registerResetHandler(handler) {
     resetHandlers.add(handler);
@@ -2048,7 +2048,7 @@ mark.d2f-highlight {
 })();
 
 (() => {
-  // ../src/features/code/code.ts
+  // ../src/legacy/features/code/code.ts
   (() => {
     const feedbackTimers = /* @__PURE__ */ new WeakMap();
     function showCopiedFeedback(btn) {
@@ -2199,7 +2199,7 @@ mark.d2f-highlight {
 })();
 
 (() => {
-  // ../src/features/fields/fields.ts
+  // ../src/legacy/features/fields/fields.ts
   (() => {
     function saveFields() {
       const fields = {};
@@ -2225,7 +2225,7 @@ mark.d2f-highlight {
     }
     function resetFields() {
       document.querySelectorAll(
-        "input, textarea, select"
+        "input, textarea"
       ).forEach((el) => {
         if (el.id === "search-input" || el.classList.contains("search-input"))
           return;
@@ -2241,8 +2241,6 @@ mark.d2f-highlight {
           el.value = "";
           el.textContent = "";
           el.removeAttribute("value");
-        } else if (el instanceof HTMLSelectElement) {
-          el.selectedIndex = 0;
         }
       });
     }
@@ -2272,7 +2270,7 @@ mark.d2f-highlight {
 })();
 
 (() => {
-  // ../src/features/table/table.ts
+  // ../src/legacy/features/table/table.ts
   (() => {
     function initSectionTables() {
       const wrappers = document.querySelectorAll(".item-table-wrap, .section table");

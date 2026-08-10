@@ -3,7 +3,7 @@
   "version": "0.9.4",
   "private": true,
   "scripts": {
-    "build": "npx -y esbuild ../src/core/web/core.ts --bundle --outfile=../src/core/web/dist/core.js && npx -y esbuild ../src/features/tasks/tasks.ts --bundle --outfile=../src/features/tasks/tasks.js && npx -y esbuild ../src/features/image/image.ts --bundle --outfile=../src/features/image/image.js && npx -y esbuild ../src/features/code/code.ts --bundle --outfile=../src/features/code/code.js && npx -y esbuild ../src/features/table/table.ts --bundle --outfile=../src/features/table/table.js && npx -y esbuild ../src/features/fields/fields.ts --bundle --outfile=../src/features/fields/fields.js"
+    "build": "npx -y esbuild ../src/legacy/core/web/core.ts --bundle --outfile=../src/legacy/core/web/dist/core.js && npx -y esbuild ../src/legacy/features/tasks/tasks.ts --bundle --outfile=../src/legacy/features/tasks/tasks.js && npx -y esbuild ../src/legacy/features/image/image.ts --bundle --outfile=../src/legacy/features/image/image.js && npx -y esbuild ../src/legacy/features/code/code.ts --bundle --outfile=../src/legacy/features/code/code.js && npx -y esbuild ../src/legacy/features/table/table.ts --bundle --outfile=../src/legacy/features/table/table.js && npx -y esbuild ../src/legacy/features/fields/fields.ts --bundle --outfile=../src/legacy/features/fields/fields.js"
   },
   "devDependencies": {
     "esbuild": "^0.20.0",

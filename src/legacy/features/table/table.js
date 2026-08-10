@@ -1,5 +1,5 @@
 (() => {
-  // ../src/features/table/table.ts
+  // ../src/legacy/features/table/table.ts
   (() => {
     function initSectionTables() {
       const wrappers = document.querySelectorAll(".item-table-wrap, .section table");

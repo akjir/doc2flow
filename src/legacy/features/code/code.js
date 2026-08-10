@@ -1,5 +1,5 @@
 (() => {
-  // ../src/features/code/code.ts
+  // ../src/legacy/features/code/code.ts
   (() => {
     const feedbackTimers = /* @__PURE__ */ new WeakMap();
     function showCopiedFeedback(btn) {

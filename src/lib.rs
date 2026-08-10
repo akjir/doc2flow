@@ -1,9 +1,11 @@
 //! doc2flow library interface.
 
-pub mod core;
 pub mod exp;
-pub mod features;
-pub mod utils;
+pub mod legacy;
 
-pub use core::*;
-pub use utils::*;
+pub use legacy::core;
+pub use legacy::features;
+pub use legacy::utils;
+
+pub use legacy::core::*;
+pub use legacy::utils::*;

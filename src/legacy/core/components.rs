@@ -6,7 +6,7 @@ use std::fmt::Write;
 pub const COMMENT_ICON_SVG: &str = r##"<span class="item-comment-icon"><svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-comment"/></svg></span>"##;
 
 /// Default embedded SVG header logo.
-pub const DEFAULT_LOGO_SVG: &str = include_str!("../../resources/images/logo.svg");
+pub const DEFAULT_LOGO_SVG: &str = include_str!("../../../resources/images/logo.svg");
 
 /// Renders a section header component with badges and toggle buttons directly into the output buffer.
 #[inline]

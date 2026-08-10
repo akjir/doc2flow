@@ -14,7 +14,7 @@
     "rootDir": "../src"
   },
   "include": [
-    "../src/core/ts/**/*",
-    "../src/features/**/*"
+    "../src/legacy/core/web/**/*",
+    "../src/legacy/features/**/*"
   ]
 }

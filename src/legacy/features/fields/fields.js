@@ -1,5 +1,5 @@
 (() => {
-  // ../src/features/fields/fields.ts
+  // ../src/legacy/features/fields/fields.ts
   (() => {
     function saveFields() {
       const fields = {};
