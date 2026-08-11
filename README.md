@@ -243,7 +243,7 @@ doc2flow/
 │   │   ├── id.rs         # Document identifier (d2f_id) generator
 │   │   ├── image.rs      # Base64 embedding & WebP auto-scaling
 │   │   ├── locales.rs    # Locale loader & translation engine
-│   │   ├── parsing/      # CLI argument parsing and grammar
+│   │   ├── parse/        # CLI argument parsing and grammar
 │   │   └── web/          # Core web frontend runtime and stylesheets
 │   └── features/         # Vertical slice feature modules
 ├── tests/                # Integration test suite & showcase fixtures

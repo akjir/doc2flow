@@ -33,7 +33,7 @@ pub struct Args {
 /// # Examples
 ///
 /// ```
-/// use doc2flow::core::parsing::arguments::help_message;
+/// use doc2flow::core::parse::arguments::help_message;
 ///
 /// assert!(help_message().contains("Doc2Flow (d2f)"));
 /// ```
@@ -61,7 +61,7 @@ pub fn help_message() -> &'static str {
 /// # Examples
 ///
 /// ```
-/// use doc2flow::core::parsing::arguments::parse_args;
+/// use doc2flow::core::parse::arguments::parse_args;
 ///
 /// let args = parse_args(&["d2f", "doc.md", "-s"]).unwrap();
 /// assert_eq!(args.input.unwrap().to_str().unwrap(), "doc.md");

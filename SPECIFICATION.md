@@ -185,14 +185,18 @@ doc2flow/
 │   ├── lib.rs                # Module declarations and library interface
 │   ├── core/                 # Core modular engine and document AST pipeline
 │   │   ├── mod.rs            # Core module exports
-│   │   ├── parser.rs         # Markdown parser & AST generator
+│   │   ├── build/            # Document building and output generator
+│   │   │   ├── mod.rs        # Build module root
+│   │   │   └── builder.rs    # Document builder engine
 │   │   ├── document.rs       # Document AST data structures
 │   │   ├── error.rs          # Compiler-style diagnostic error reporting
 │   │   ├── dev_helper.rs     # AST serialization and development inspection
-│   │   └── parsing/          # Document and CLI argument parsing
-│   │       ├── mod.rs        # Parsing module root
-│   │       ├── arguments.rs  # CLI argument parser with --legacy support
-│   │       └── markdown.rs   # Zero-alloc Markdown parser
+│   │   ├── parse/            # Document and CLI argument parsing
+│   │   │   ├── mod.rs        # Parse module root
+│   │   │   ├── arguments.rs  # CLI argument parser with --legacy support
+│   │   │   ├── markdown.rs   # Zero-alloc Markdown parser
+│   │   │   └── parser.rs     # Document parser entry point
+│   │   └── utils/            # Core filesystem and encoding utilities
 │   └── legacy/               # Isolated legacy conversion subsystem
 │       ├── mod.rs            # Legacy subsystem root
 │       ├── legacy.rs         # Legacy CLI execution runner

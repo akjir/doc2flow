@@ -1,9 +1,9 @@
 //! Doc2Flow CLI entry point.
 
-use doc2flow::core::dev_helper::document_to_json;
+use doc2flow::core::build::builder;
 use doc2flow::core::error::{Error, Result};
-use doc2flow::core::parsing::arguments::{help_message, parse_args};
-use doc2flow::core::parsing::parse_d2f_markdown;
+use doc2flow::core::parse::arguments::{help_message, parse_args};
+use doc2flow::core::parse::parser;
 use doc2flow::core::utils::io;
 use std::env;
 use std::process::ExitCode;
@@ -36,11 +36,10 @@ fn run() -> Result<()> {
 
     let md_content = io::read_file_to_string(&input_path)?;
 
-    let document =
-        parse_d2f_markdown(&md_content).map_err(|e| Error::Message(e.to_string()))?;
-    let json = document_to_json(&document);
+    let document = parser::parse(&md_content)?;
+    let content = builder::build(&document);
 
-    io::write_file(&output_path, json)?;
+    io::write_file(&output_path, content)?;
 
     println!("Successfully generated {}", output_path.display());
     Ok(())
