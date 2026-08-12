@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="{{LANG_CODE}}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="generator" content="Doc2Flow {{APP_VERSION}}">
+  <meta name="version" content="{{APP_VERSION_RAW}}">
+  <meta name="repository" content="{{REPOSITORY_URL}}">
+  <meta name="license" content="{{LICENSE_URL}}">
+  <meta name="dcterms.created" content="{{CREATED_AT}}">
+  <meta name="dcterms.source" content="{{REPOSITORY_URL}}">
+  <meta name="features" content="{{FEATURES}}">
+  <title>{{TITLE}}</title>
+  <style>
+    {{CSS}}
+  </style>
+</head>
+<body>
+  <header class="doc-header">
+  </header>
+  <main class="doc-body">
+    {{CONTENT}}
+  </main><!-- doc-body -->
+  <script>
+    window.d2f = window.d2f || {};
+    window.d2f.document = window.d2f.document || {};
+    window.d2f.document.id = '{{DOC_ID}}';
+    window.d2f.lang = window.d2f.lang || {};
+    window.d2f.lang.dictionary = {{I18N_JSON}};
+    {{JS}}
+  </script>
+</body>
+</html>

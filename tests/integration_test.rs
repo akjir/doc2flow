@@ -906,7 +906,7 @@ fn test_core_parser_integration() {
 
 #[test]
 fn test_cli_core_arguments_defaults() {
-    use doc2flow::core::parse::arguments::parse_args;
+    use doc2flow::core::arguments::parse_args;
 
     let args = parse_args(&["d2f", "input.md"]).unwrap();
     assert_eq!(args.input, Some(std::path::PathBuf::from("input.md")));
@@ -915,7 +915,7 @@ fn test_cli_core_arguments_defaults() {
 
 #[test]
 fn test_cli_core_arguments_legacy_flag() {
-    use doc2flow::core::parse::arguments::parse_args;
+    use doc2flow::core::arguments::parse_args;
 
     let args = parse_args(&["d2f", "input.md", "--legacy"]).unwrap();
     assert_eq!(args.input, Some(std::path::PathBuf::from("input.md")));
@@ -925,8 +925,8 @@ fn test_cli_core_arguments_legacy_flag() {
 #[test]
 fn test_parser_and_builder_pipeline_integration() {
     let input = "---\ntitle: \"Pipeline Test\"\n---\n# Pipeline Heading\n\nContent paragraph";
-    let document = doc2flow::core::parse::parser::parse(input).expect("parse failed");
-    let content = doc2flow::core::build::builder::build(&document);
+    let document = doc2flow::core::parser::parse(input).expect("parse failed");
+    let content = doc2flow::core::builder::build(&document);
     assert!(content.as_bytes().len() > 0);
     assert!(content.contains("\"title\": \"Pipeline Test\""));
     assert!(content.contains("\"title\": \"Pipeline Heading\""));

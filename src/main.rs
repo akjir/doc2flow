@@ -1,9 +1,9 @@
 //! Doc2Flow CLI entry point.
 
-use doc2flow::core::build::builder;
+use doc2flow::core::arguments::{help_message, parse_args};
+use doc2flow::core::builder;
 use doc2flow::core::error::{Error, Result};
-use doc2flow::core::parse::arguments::{help_message, parse_args};
-use doc2flow::core::parse::parser;
+use doc2flow::core::parser;
 use doc2flow::core::utils::io;
 use std::env;
 use std::process::ExitCode;

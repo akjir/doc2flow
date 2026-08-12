@@ -189,8 +189,8 @@ doc2flow/
 │   │   │   ├── mod.rs        # Build module root
 │   │   │   └── builder.rs    # Document builder engine
 │   │   ├── document.rs       # Document AST data structures
+│   │   ├── document_json.rs  # AST serialization and development inspection
 │   │   ├── error.rs          # Compiler-style diagnostic error reporting
-│   │   ├── dev_helper.rs     # AST serialization and development inspection
 │   │   ├── parse/            # Document and CLI argument parsing
 │   │   │   ├── mod.rs        # Parse module root
 │   │   │   ├── arguments.rs  # CLI argument parser with --legacy support

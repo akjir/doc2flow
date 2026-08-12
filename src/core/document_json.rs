@@ -1,13 +1,23 @@
-//! Development helper for AST inspection and JSON formatting.
-
-use crate::core::document::Document;
-use crate::core::document::DocumentElement;
+//! AST serialization and JSON formatting for documents.
 
 use std::fmt::Write;
 
-/// Serializes a document model to a formatted JSON string for development inspection.
+use crate::core::document::{Document, DocumentElement};
+
+/// Serializes a document model to a formatted JSON string.
+///
+/// # Examples
+///
+/// ```
+/// use doc2flow::core::document::Document;
+/// use doc2flow::core::document_json::document_to_json;
+///
+/// let doc = Document::new();
+/// let json = document_to_json(&doc);
+/// assert!(json.contains("\"parameters\":"));
+/// ```
 pub fn document_to_json(doc: &Document) -> String {
-    let mut out = String::with_capacity(512);
+    let mut out = String::with_capacity(1024);
     out.push_str("{\n  \"parameters\": {\n");
 
     let mut sorted_keys: Vec<_> = doc.parameters.keys().collect();
@@ -48,181 +58,7 @@ pub fn document_to_json(doc: &Document) -> String {
     out
 }
 
-/// Formats a single document element and its children with indentation.
-fn format_element(out: &mut String, elem: &DocumentElement, indent_level: usize) {
-    let indent = "  ".repeat(indent_level);
-    let _ = write!(out, "{indent}");
-    format_element_inline(out, elem, indent_level);
-}
-
-/// Formats a single document element starting with the opening brace.
-fn format_element_inline(out: &mut String, elem: &DocumentElement, indent_level: usize) {
-    let indent = "  ".repeat(indent_level);
-    let child_indent = "  ".repeat(indent_level + 1);
-
-    out.push_str("{\n");
-    match elem {
-        DocumentElement::BlockDirective { children, name } => {
-            let _ = write!(out, "{child_indent}\"kind\": \"block_directive\",\n");
-            let _ = write!(out, "{child_indent}\"name\": \"");
-            escape_json_string(out, name);
-            let _ = write!(out, "\",\n");
-            let _ = write!(out, "{child_indent}\"children\": [");
-            if children.is_empty() {
-                out.push_str("]\n");
-            } else {
-                out.push('\n');
-                for (j, child) in children.iter().enumerate() {
-                    format_element(out, child, indent_level + 2);
-                    if j + 1 < children.len() {
-                        out.push(',');
-                    }
-                    out.push('\n');
-                }
-                let _ = write!(out, "{child_indent}]\n");
-            }
-        }
-        DocumentElement::BulletListItem { depth, content } => {
-            let _ = write!(out, "{child_indent}\"kind\": \"bullet_list_item\",\n");
-            let _ = write!(out, "{child_indent}\"depth\": {depth},\n");
-            let _ = write!(out, "{child_indent}\"content\": ");
-            format_element_inline(out, content, indent_level + 1);
-            out.push('\n');
-        }
-        DocumentElement::CheckBoxItem {
-            depth,
-            checked,
-            content,
-        } => {
-            let _ = write!(out, "{child_indent}\"kind\": \"check_box_item\",\n");
-            let _ = write!(out, "{child_indent}\"depth\": {depth},\n");
-            let _ = write!(out, "{child_indent}\"checked\": {checked},\n");
-            let _ = write!(out, "{child_indent}\"content\": ");
-            format_element_inline(out, content, indent_level + 1);
-            out.push('\n');
-        }
-        DocumentElement::CodeBlock { language, content } => {
-            let _ = write!(out, "{child_indent}\"kind\": \"code_block\",\n");
-            if let Some(lang) = language {
-                let _ = write!(out, "{child_indent}\"language\": \"");
-                escape_json_string(out, lang);
-                let _ = write!(out, "\",\n");
-            } else {
-                let _ = write!(out, "{child_indent}\"language\": null,\n");
-            }
-            let _ = write!(out, "{child_indent}\"content\": \"");
-            escape_json_string(out, content);
-            let _ = write!(out, "\"\n");
-        }
-        DocumentElement::Image { alt, url } => {
-            let _ = write!(out, "{child_indent}\"kind\": \"image\",\n");
-            let _ = write!(out, "{child_indent}\"alt\": \"");
-            escape_json_string(out, alt);
-            let _ = write!(out, "\",\n");
-            let _ = write!(out, "{child_indent}\"url\": \"");
-            escape_json_string(out, url);
-            let _ = write!(out, "\"\n");
-        }
-        DocumentElement::OrderedListItem {
-            depth,
-            position,
-            content,
-        } => {
-            let _ = write!(out, "{child_indent}\"kind\": \"ordered_list_item\",\n");
-            let _ = write!(out, "{child_indent}\"depth\": {depth},\n");
-            let _ = write!(out, "{child_indent}\"position\": {position},\n");
-            let _ = write!(out, "{child_indent}\"content\": ");
-            format_element_inline(out, content, indent_level + 1);
-            out.push('\n');
-        }
-        DocumentElement::Section {
-            level,
-            title,
-            children,
-        } => {
-            let _ = write!(out, "{child_indent}\"kind\": \"section\",\n");
-            let _ = write!(out, "{child_indent}\"level\": {level},\n");
-            let _ = write!(out, "{child_indent}\"title\": \"");
-            escape_json_string(out, title);
-            let _ = write!(out, "\",\n");
-            let _ = write!(out, "{child_indent}\"children\": [");
-            if children.is_empty() {
-                out.push_str("]\n");
-            } else {
-                out.push('\n');
-                for (j, child) in children.iter().enumerate() {
-                    format_element(out, child, indent_level + 2);
-                    if j + 1 < children.len() {
-                        out.push(',');
-                    }
-                    out.push('\n');
-                }
-                let _ = write!(out, "{child_indent}]\n");
-            }
-        }
-        DocumentElement::Shoutout { kind, content } => {
-            let _ = write!(out, "{child_indent}\"kind\": \"shoutout\",\n");
-            let _ = write!(
-                out,
-                "{child_indent}\"subkind\": \"{}\",\n",
-                kind.as_str()
-            );
-            let _ = write!(out, "{child_indent}\"content\": \"");
-            escape_json_string(out, content);
-            let _ = write!(out, "\"\n");
-        }
-        DocumentElement::Table { alignments, rows } => {
-            let _ = write!(out, "{child_indent}\"kind\": \"table\",\n");
-            let _ = write!(out, "{child_indent}\"alignments\": [");
-            for (k, align) in alignments.iter().enumerate() {
-                let _ = write!(out, "\"{}\"", align.as_str());
-                if k + 1 < alignments.len() {
-                    out.push_str(", ");
-                }
-            }
-            out.push_str("],\n");
-            let _ = write!(out, "{child_indent}\"rows\": [");
-            if rows.is_empty() {
-                out.push_str("]\n");
-            } else {
-                out.push('\n');
-                for (r_idx, row) in rows.iter().enumerate() {
-                    let _ = write!(out, "{child_indent}  [");
-                    for (c_idx, cell) in row.iter().enumerate() {
-                        out.push('"');
-                        escape_json_string(out, cell);
-                        out.push('"');
-                        if c_idx + 1 < row.len() {
-                            out.push_str(", ");
-                        }
-                    }
-                    out.push(']');
-                    if r_idx + 1 < rows.len() {
-                        out.push(',');
-                    }
-                    out.push('\n');
-                }
-                let _ = write!(out, "{child_indent}]\n");
-            }
-        }
-        DocumentElement::Text(content) => {
-            let _ = write!(out, "{child_indent}\"kind\": \"text\",\n");
-            let _ = write!(out, "{child_indent}\"content\": \"");
-            escape_json_string(out, content);
-            let _ = write!(out, "\"\n");
-        }
-        DocumentElement::Unknown(content) => {
-            let _ = write!(out, "{child_indent}\"kind\": \"unknown\",\n");
-            let _ = write!(out, "{child_indent}\"content\": \"");
-            escape_json_string(out, content);
-            let _ = write!(out, "\"\n");
-        }
-    }
-
-    let _ = write!(out, "{indent}}}");
-}
-
-/// Escapes a string for JSON output.
+/// Escapes special characters in a string for JSON output.
 fn escape_json_string(out: &mut String, s: &str) {
     for ch in s.chars() {
         match ch {
@@ -239,11 +75,226 @@ fn escape_json_string(out: &mut String, s: &str) {
     }
 }
 
+/// Formats a single document element and its children with indentation.
+fn format_element(out: &mut String, elem: &DocumentElement, indent_level: usize) {
+    write_indent(out, indent_level);
+    format_element_inline(out, elem, indent_level);
+}
+
+/// Formats a single document element starting with the opening brace.
+fn format_element_inline(out: &mut String, elem: &DocumentElement, indent_level: usize) {
+    out.push_str("{\n");
+    match elem {
+        DocumentElement::BlockDirective { children, name } => {
+            write_indent(out, indent_level + 1);
+            out.push_str("\"kind\": \"block_directive\",\n");
+            write_indent(out, indent_level + 1);
+            out.push_str("\"name\": \"");
+            escape_json_string(out, name);
+            out.push_str("\",\n");
+            write_indent(out, indent_level + 1);
+            out.push_str("\"children\": [");
+            if children.is_empty() {
+                out.push_str("]\n");
+            } else {
+                out.push('\n');
+                for (j, child) in children.iter().enumerate() {
+                    format_element(out, child, indent_level + 2);
+                    if j + 1 < children.len() {
+                        out.push(',');
+                    }
+                    out.push('\n');
+                }
+                write_indent(out, indent_level + 1);
+                out.push_str("]\n");
+            }
+        }
+        DocumentElement::BulletListItem { depth, content } => {
+            write_indent(out, indent_level + 1);
+            out.push_str("\"kind\": \"bullet_list_item\",\n");
+            write_indent(out, indent_level + 1);
+            let _ = write!(out, "\"depth\": {depth},\n");
+            write_indent(out, indent_level + 1);
+            out.push_str("\"content\": ");
+            format_element_inline(out, content, indent_level + 1);
+            out.push('\n');
+        }
+        DocumentElement::CheckBoxItem {
+            depth,
+            checked,
+            content,
+        } => {
+            write_indent(out, indent_level + 1);
+            out.push_str("\"kind\": \"check_box_item\",\n");
+            write_indent(out, indent_level + 1);
+            let _ = write!(out, "\"depth\": {depth},\n");
+            write_indent(out, indent_level + 1);
+            let _ = write!(out, "\"checked\": {checked},\n");
+            write_indent(out, indent_level + 1);
+            out.push_str("\"content\": ");
+            format_element_inline(out, content, indent_level + 1);
+            out.push('\n');
+        }
+        DocumentElement::CodeBlock { language, content } => {
+            write_indent(out, indent_level + 1);
+            out.push_str("\"kind\": \"code_block\",\n");
+            write_indent(out, indent_level + 1);
+            if let Some(lang) = language {
+                out.push_str("\"language\": \"");
+                escape_json_string(out, lang);
+                out.push_str("\",\n");
+            } else {
+                out.push_str("\"language\": null,\n");
+            }
+            write_indent(out, indent_level + 1);
+            out.push_str("\"content\": \"");
+            escape_json_string(out, content);
+            out.push_str("\"\n");
+        }
+        DocumentElement::Image { alt, url } => {
+            write_indent(out, indent_level + 1);
+            out.push_str("\"kind\": \"image\",\n");
+            write_indent(out, indent_level + 1);
+            out.push_str("\"alt\": \"");
+            escape_json_string(out, alt);
+            out.push_str("\",\n");
+            write_indent(out, indent_level + 1);
+            out.push_str("\"url\": \"");
+            escape_json_string(out, url);
+            out.push_str("\"\n");
+        }
+        DocumentElement::OrderedListItem {
+            depth,
+            position,
+            content,
+        } => {
+            write_indent(out, indent_level + 1);
+            out.push_str("\"kind\": \"ordered_list_item\",\n");
+            write_indent(out, indent_level + 1);
+            let _ = write!(out, "\"depth\": {depth},\n");
+            write_indent(out, indent_level + 1);
+            let _ = write!(out, "\"position\": {position},\n");
+            write_indent(out, indent_level + 1);
+            out.push_str("\"content\": ");
+            format_element_inline(out, content, indent_level + 1);
+            out.push('\n');
+        }
+        DocumentElement::Section {
+            level,
+            title,
+            children,
+        } => {
+            write_indent(out, indent_level + 1);
+            out.push_str("\"kind\": \"section\",\n");
+            write_indent(out, indent_level + 1);
+            let _ = write!(out, "\"level\": {level},\n");
+            write_indent(out, indent_level + 1);
+            out.push_str("\"title\": \"");
+            escape_json_string(out, title);
+            out.push_str("\",\n");
+            write_indent(out, indent_level + 1);
+            out.push_str("\"children\": [");
+            if children.is_empty() {
+                out.push_str("]\n");
+            } else {
+                out.push('\n');
+                for (j, child) in children.iter().enumerate() {
+                    format_element(out, child, indent_level + 2);
+                    if j + 1 < children.len() {
+                        out.push(',');
+                    }
+                    out.push('\n');
+                }
+                write_indent(out, indent_level + 1);
+                out.push_str("]\n");
+            }
+        }
+        DocumentElement::Shoutout { kind, content } => {
+            write_indent(out, indent_level + 1);
+            out.push_str("\"kind\": \"shoutout\",\n");
+            write_indent(out, indent_level + 1);
+            out.push_str("\"subkind\": \"");
+            out.push_str(kind.as_str());
+            out.push_str("\",\n");
+            write_indent(out, indent_level + 1);
+            out.push_str("\"content\": \"");
+            escape_json_string(out, content);
+            out.push_str("\"\n");
+        }
+        DocumentElement::Table { alignments, rows } => {
+            write_indent(out, indent_level + 1);
+            out.push_str("\"kind\": \"table\",\n");
+            write_indent(out, indent_level + 1);
+            out.push_str("\"alignments\": [");
+            for (k, align) in alignments.iter().enumerate() {
+                out.push('"');
+                out.push_str(align.as_str());
+                out.push('"');
+                if k + 1 < alignments.len() {
+                    out.push_str(", ");
+                }
+            }
+            out.push_str("],\n");
+            write_indent(out, indent_level + 1);
+            out.push_str("\"rows\": [");
+            if rows.is_empty() {
+                out.push_str("]\n");
+            } else {
+                out.push('\n');
+                for (r_idx, row) in rows.iter().enumerate() {
+                    write_indent(out, indent_level + 1);
+                    out.push_str("  [");
+                    for (c_idx, cell) in row.iter().enumerate() {
+                        out.push('"');
+                        escape_json_string(out, cell);
+                        out.push('"');
+                        if c_idx + 1 < row.len() {
+                            out.push_str(", ");
+                        }
+                    }
+                    out.push(']');
+                    if r_idx + 1 < rows.len() {
+                        out.push(',');
+                    }
+                    out.push('\n');
+                }
+                write_indent(out, indent_level + 1);
+                out.push_str("]\n");
+            }
+        }
+        DocumentElement::Text(content) => {
+            write_indent(out, indent_level + 1);
+            out.push_str("\"kind\": \"text\",\n");
+            write_indent(out, indent_level + 1);
+            out.push_str("\"content\": \"");
+            escape_json_string(out, content);
+            out.push_str("\"\n");
+        }
+        DocumentElement::Unknown(content) => {
+            write_indent(out, indent_level + 1);
+            out.push_str("\"kind\": \"unknown\",\n");
+            write_indent(out, indent_level + 1);
+            out.push_str("\"content\": \"");
+            escape_json_string(out, content);
+            out.push_str("\"\n");
+        }
+    }
+
+    write_indent(out, indent_level);
+    out.push('}');
+}
+
+/// Writes indentation spaces directly to the buffer.
+fn write_indent(out: &mut String, level: usize) {
+    for _ in 0..level {
+        out.push_str("  ");
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::document::ShoutoutElementKind;
-
+    use crate::core::document::{ShoutoutElementKind, TableAlignment};
 
     #[test]
     fn test_document_to_json_empty() {
@@ -419,9 +470,6 @@ mod tests {
 
     #[test]
     fn test_document_to_json_with_table() {
-        use crate::core::document::TableAlignment;
-
-
         let mut doc = Document::new();
         doc.push_body(DocumentElement::table(
             vec![
@@ -462,6 +510,23 @@ mod tests {
         assert!(json.contains("\"kind\": \"text\""));
         assert!(json.contains("\"content\": \"First text\""));
     }
+
+    #[test]
+    fn test_escape_json_string_special_characters() {
+        let mut out = String::new();
+        escape_json_string(&mut out, "Tab\tNewline\nCarriage\rSlash\\Quote\"Control\x07");
+        assert_eq!(out, "Tab\\tNewline\\nCarriage\\rSlash\\\\Quote\\\"Control\\u0007");
+    }
+
+    #[test]
+    fn test_format_empty_containers() {
+        let mut doc = Document::new();
+        doc.push_body(DocumentElement::block_directive("empty_block", vec![]));
+        doc.push_body(DocumentElement::section(1, "Empty Section", vec![]));
+        doc.push_body(DocumentElement::table(vec![], vec![]));
+
+        let json = document_to_json(&doc);
+        assert!(json.contains("\"children\": []"));
+        assert!(json.contains("\"rows\": []"));
+    }
 }
-
-

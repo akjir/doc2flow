@@ -2,14 +2,14 @@
 
 use crate::core::document::Document;
 use crate::core::error::Result;
-use crate::core::parse::markdown::parse_d2f_markdown;
+use crate::core::markdown::parse_d2f_markdown;
 
 /// Parses Markdown content into a structured [`Document`] model.
 ///
 /// # Examples
 ///
 /// ```
-/// use doc2flow::core::parse::parser::parse;
+/// use doc2flow::core::parser::parse;
 ///
 /// let doc = parse("---\ntitle: Document\n---\n# Hello").unwrap();
 /// assert_eq!(doc.parameters.get("title").map(String::as_str), Some("Document"));
