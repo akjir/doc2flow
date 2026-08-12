@@ -13,14 +13,13 @@ pub mod table;
 #[path = "tasks/module.rs"]
 pub mod tasks;
 
+use crate::legacy::core::feature::Feature;
 pub use code::CodeFeature;
 pub use fields::FieldsFeature;
 pub use header::HeaderFeature;
 pub use image::ImageFeature;
 pub use table::TableFeature;
 pub use tasks::TasksFeature;
-use crate::legacy::core::feature::Feature;
-
 
 /// Returns all available vertical slice feature instances in registration order.
 ///

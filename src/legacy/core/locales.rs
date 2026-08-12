@@ -35,8 +35,8 @@ impl Locale {
 
     /// Fallibly parses a `Locale` from a JSON string.
     pub fn try_from_json(json_str: &str) -> Result<Self> {
-        let entries: HashMap<String, String> = serde_json::from_str(json_str)
-            .map_err(|e| Doc2FlowError::Json(e.to_string()))?;
+        let entries: HashMap<String, String> =
+            serde_json::from_str(json_str).map_err(|e| Doc2FlowError::Json(e.to_string()))?;
         let lang_code = entries
             .get("lang_code")
             .cloned()
@@ -180,9 +180,18 @@ mod tests {
     #[test]
     fn test_get_ignore_ascii_case() {
         let locale = Locale::from_lang_code("en");
-        assert_eq!(locale.get_ignore_ascii_case("EXPORT_PDF"), Some("Export as PDF"));
-        assert_eq!(locale.get_ignore_ascii_case("Export_Pdf"), Some("Export as PDF"));
-        assert_eq!(locale.get_ignore_ascii_case("export_pdf"), Some("Export as PDF"));
+        assert_eq!(
+            locale.get_ignore_ascii_case("EXPORT_PDF"),
+            Some("Export as PDF")
+        );
+        assert_eq!(
+            locale.get_ignore_ascii_case("Export_Pdf"),
+            Some("Export as PDF")
+        );
+        assert_eq!(
+            locale.get_ignore_ascii_case("export_pdf"),
+            Some("Export as PDF")
+        );
         assert_eq!(locale.get_ignore_ascii_case("NONEXISTENT"), None);
     }
 

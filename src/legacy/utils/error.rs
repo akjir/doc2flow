@@ -37,9 +37,14 @@ impl Display for Doc2FlowError {
                 f,
                 "Fatal: At least 2 of the required identity fields (title, version, date) are missing in frontmatter."
             ),
-            Doc2FlowError::ImageNotFound(path) => write!(f, "Image file not found: {}", path.display()),
+            Doc2FlowError::ImageNotFound(path) => {
+                write!(f, "Image file not found: {}", path.display())
+            }
             Doc2FlowError::ImageProcess(msg) => write!(f, "{msg}"),
-            Doc2FlowError::Io { path: Some(path), source } => {
+            Doc2FlowError::Io {
+                path: Some(path),
+                source,
+            } => {
                 write!(f, "I/O error at {}: {}", path.display(), source)
             }
             Doc2FlowError::Io { path: None, source } => write!(f, "I/O error: {source}"),
@@ -121,11 +126,7 @@ const STATIC_CARETS: &str =
 /// let padded = build_caret_annotation(4, 3, 10);
 /// assert_eq!(padded, "   ^^^");
 /// ```
-pub fn build_caret_annotation(
-    col_no: usize,
-    span_len: usize,
-    max_len: usize,
-) -> Cow<'static, str> {
+pub fn build_caret_annotation(col_no: usize, span_len: usize, max_len: usize) -> Cow<'static, str> {
     let max_len = max_len.max(1);
     let span = span_len.max(1);
     let padding_len = col_no.saturating_sub(1);
@@ -346,10 +347,7 @@ mod tests {
             source: io_err,
         };
         assert!(d2f_io.source().is_some());
-        assert_eq!(
-            d2f_io.source().unwrap().to_string(),
-            "file not found"
-        );
+        assert_eq!(d2f_io.source().unwrap().to_string(), "file not found");
 
         let diag_err = Doc2FlowError::Diagnostic("diag error".to_string());
         assert!(diag_err.source().is_none());

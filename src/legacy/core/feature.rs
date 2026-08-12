@@ -326,10 +326,8 @@ mod tests {
 
     #[test]
     fn test_resolve_direct_frontmatter_activation() {
-        let features: Vec<Box<dyn Feature>> = vec![
-            Box::new(DefaultFeature),
-            Box::new(CustomFeature),
-        ];
+        let features: Vec<Box<dyn Feature>> =
+            vec![Box::new(DefaultFeature), Box::new(CustomFeature)];
 
         let mut fm = HashMap::new();
         fm.insert("enable_default".to_string(), "true".to_string());
@@ -342,10 +340,8 @@ mod tests {
 
     #[test]
     fn test_resolve_direct_markdown_activation() {
-        let features: Vec<Box<dyn Feature>> = vec![
-            Box::new(DefaultFeature),
-            Box::new(CustomFeature),
-        ];
+        let features: Vec<Box<dyn Feature>> =
+            vec![Box::new(DefaultFeature), Box::new(CustomFeature)];
 
         let fm = HashMap::new();
         let ctx = DocumentContext::new(&fm, "Some markdown with ENABLE_CUSTOM here");
@@ -357,10 +353,7 @@ mod tests {
 
     #[test]
     fn test_resolve_single_level_dependency() {
-        let features: Vec<Box<dyn Feature>> = vec![
-            Box::new(FeatureA),
-            Box::new(FeatureB),
-        ];
+        let features: Vec<Box<dyn Feature>> = vec![Box::new(FeatureA), Box::new(FeatureB)];
 
         let mut fm = HashMap::new();
         fm.insert("enable_a".to_string(), "1".to_string());
@@ -373,11 +366,8 @@ mod tests {
 
     #[test]
     fn test_resolve_transitive_dependencies() {
-        let features: Vec<Box<dyn Feature>> = vec![
-            Box::new(FeatureA),
-            Box::new(FeatureB),
-            Box::new(FeatureC),
-        ];
+        let features: Vec<Box<dyn Feature>> =
+            vec![Box::new(FeatureA), Box::new(FeatureB), Box::new(FeatureC)];
 
         let mut fm = HashMap::new();
         fm.insert("enable_a".to_string(), "1".to_string());
@@ -391,10 +381,8 @@ mod tests {
 
     #[test]
     fn test_resolve_cyclic_dependencies() {
-        let features: Vec<Box<dyn Feature>> = vec![
-            Box::new(CyclicFeatureX),
-            Box::new(CyclicFeatureY),
-        ];
+        let features: Vec<Box<dyn Feature>> =
+            vec![Box::new(CyclicFeatureX), Box::new(CyclicFeatureY)];
 
         let fm = HashMap::new();
         let ctx = DocumentContext::new(&fm, "");
@@ -407,9 +395,7 @@ mod tests {
 
     #[test]
     fn test_resolve_unregistered_dependency() {
-        let features: Vec<Box<dyn Feature>> = vec![
-            Box::new(UnregisteredDepFeature),
-        ];
+        let features: Vec<Box<dyn Feature>> = vec![Box::new(UnregisteredDepFeature)];
 
         let fm = HashMap::new();
         let ctx = DocumentContext::new(&fm, "");

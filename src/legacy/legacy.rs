@@ -40,7 +40,9 @@ pub fn run() -> Result<()> {
         ));
     };
 
-    let output_path = args.output.unwrap_or_else(|| input_path.with_extension("html"));
+    let output_path = args
+        .output
+        .unwrap_or_else(|| input_path.with_extension("html"));
 
     let md_content = io::read_file_to_string(&input_path)?;
 
@@ -70,8 +72,14 @@ pub fn run() -> Result<()> {
     let logo_html = crate::legacy::core::image::load_logo(logo_path, base_dir);
 
     let d2f_id = crate::legacy::core::id::generate_d2f_id(&frontmatter)?;
-    let rendered_html =
-        builder::render(&frontmatter, &locale, &html_content, &d2f_id, Some(&logo_html), &features)?;
+    let rendered_html = builder::render(
+        &frontmatter,
+        &locale,
+        &html_content,
+        &d2f_id,
+        Some(&logo_html),
+        &features,
+    )?;
 
     let final_html = crate::legacy::core::image::embed_images_as_base64_with_source(
         &rendered_html,

@@ -78,7 +78,8 @@ mod tests {
         let fm = HashMap::new();
 
         // 1. Markdown with image syntax: enabled
-        let ctx_with_md_img = DocumentContext::new(&fm, "Here is an image: ![Diagram](img/arch.png)");
+        let ctx_with_md_img =
+            DocumentContext::new(&fm, "Here is an image: ![Diagram](img/arch.png)");
         assert!(feature.is_enabled(&ctx_with_md_img));
 
         let ctx_with_html_img =

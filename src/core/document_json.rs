@@ -4,6 +4,9 @@ use std::fmt::Write;
 
 use crate::core::document::{Document, DocumentElement};
 
+const HEX_DIGITS: &[u8; 16] = b"0123456789abcdef";
+const SPACES: &str = "                                                                ";
+
 /// Serializes a document model to a formatted JSON string.
 ///
 /// # Examples
@@ -21,7 +24,7 @@ pub fn document_to_json(doc: &Document) -> String {
     out.push_str("{\n  \"parameters\": {\n");
 
     let mut sorted_keys: Vec<_> = doc.parameters.keys().collect();
-    sorted_keys.sort();
+    sorted_keys.sort_unstable();
     for (i, key) in sorted_keys.iter().enumerate() {
         let val = &doc.parameters[*key];
         out.push_str("    \"");
@@ -58,20 +61,42 @@ pub fn document_to_json(doc: &Document) -> String {
     out
 }
 
-/// Escapes special characters in a string for JSON output.
+/// Escapes special characters in a string for JSON output using fast chunk slicing.
 fn escape_json_string(out: &mut String, s: &str) {
-    for ch in s.chars() {
-        match ch {
-            '"' => out.push_str("\\\""),
-            '\\' => out.push_str("\\\\"),
-            '\n' => out.push_str("\\n"),
-            '\r' => out.push_str("\\r"),
-            '\t' => out.push_str("\\t"),
-            c if c.is_control() => {
-                let _ = write!(out, "\\u{:04x}", c as u32);
+    let mut last_idx = 0;
+    let bytes = s.as_bytes();
+
+    for (i, &b) in bytes.iter().enumerate() {
+        let escape = match b {
+            b'"' => "\\\"",
+            b'\\' => "\\\\",
+            b'\n' => "\\n",
+            b'\r' => "\\r",
+            b'\t' => "\\t",
+            0x08 => "\\b",
+            0x0C => "\\f",
+            _ if b < 0x20 => {
+                if i > last_idx {
+                    out.push_str(&s[last_idx..i]);
+                }
+                out.push_str("\\u00");
+                out.push(HEX_DIGITS[(b >> 4) as usize] as char);
+                out.push(HEX_DIGITS[(b & 0x0F) as usize] as char);
+                last_idx = i + 1;
+                continue;
             }
-            c => out.push(c),
+            _ => continue,
+        };
+
+        if i > last_idx {
+            out.push_str(&s[last_idx..i]);
         }
+        out.push_str(escape);
+        last_idx = i + 1;
+    }
+
+    if last_idx < s.len() {
+        out.push_str(&s[last_idx..]);
     }
 }
 
@@ -109,7 +134,7 @@ fn format_element_inline(out: &mut String, elem: &DocumentElement, indent_level:
                 out.push_str("]\n");
             }
         }
-        DocumentElement::BulletListItem { depth, content } => {
+        DocumentElement::BulletListItem { content, depth } => {
             write_indent(out, indent_level + 1);
             out.push_str("\"kind\": \"bullet_list_item\",\n");
             write_indent(out, indent_level + 1);
@@ -120,9 +145,9 @@ fn format_element_inline(out: &mut String, elem: &DocumentElement, indent_level:
             out.push('\n');
         }
         DocumentElement::CheckBoxItem {
-            depth,
             checked,
             content,
+            depth,
         } => {
             write_indent(out, indent_level + 1);
             out.push_str("\"kind\": \"check_box_item\",\n");
@@ -135,7 +160,7 @@ fn format_element_inline(out: &mut String, elem: &DocumentElement, indent_level:
             format_element_inline(out, content, indent_level + 1);
             out.push('\n');
         }
-        DocumentElement::CodeBlock { language, content } => {
+        DocumentElement::CodeBlock { content, language } => {
             write_indent(out, indent_level + 1);
             out.push_str("\"kind\": \"code_block\",\n");
             write_indent(out, indent_level + 1);
@@ -164,9 +189,9 @@ fn format_element_inline(out: &mut String, elem: &DocumentElement, indent_level:
             out.push_str("\"\n");
         }
         DocumentElement::OrderedListItem {
+            content,
             depth,
             position,
-            content,
         } => {
             write_indent(out, indent_level + 1);
             out.push_str("\"kind\": \"ordered_list_item\",\n");
@@ -180,9 +205,9 @@ fn format_element_inline(out: &mut String, elem: &DocumentElement, indent_level:
             out.push('\n');
         }
         DocumentElement::Section {
+            children,
             level,
             title,
-            children,
         } => {
             write_indent(out, indent_level + 1);
             out.push_str("\"kind\": \"section\",\n");
@@ -209,7 +234,7 @@ fn format_element_inline(out: &mut String, elem: &DocumentElement, indent_level:
                 out.push_str("]\n");
             }
         }
-        DocumentElement::Shoutout { kind, content } => {
+        DocumentElement::Shoutout { content, kind } => {
             write_indent(out, indent_level + 1);
             out.push_str("\"kind\": \"shoutout\",\n");
             write_indent(out, indent_level + 1);
@@ -284,10 +309,15 @@ fn format_element_inline(out: &mut String, elem: &DocumentElement, indent_level:
     out.push('}');
 }
 
-/// Writes indentation spaces directly to the buffer.
+/// Writes indentation spaces directly to the buffer using pre-allocated static spaces.
 fn write_indent(out: &mut String, level: usize) {
-    for _ in 0..level {
-        out.push_str("  ");
+    let num_spaces = level * 2;
+    if num_spaces <= SPACES.len() {
+        out.push_str(&SPACES[..num_spaces]);
+    } else {
+        for _ in 0..level {
+            out.push_str("  ");
+        }
     }
 }
 
@@ -313,11 +343,8 @@ mod tests {
         doc.insert_parameter("author", "Tester");
 
         let text_elem = DocumentElement::text("Hello \"world\"\nNew line");
-        let section_elem = DocumentElement::section(
-            1,
-            "My Section",
-            vec![DocumentElement::unknown("Child")],
-        );
+        let section_elem =
+            DocumentElement::section(1, "My Section", vec![DocumentElement::unknown("Child")]);
 
         doc.push_header(text_elem);
         doc.push_body(section_elem);
@@ -514,8 +541,21 @@ mod tests {
     #[test]
     fn test_escape_json_string_special_characters() {
         let mut out = String::new();
-        escape_json_string(&mut out, "Tab\tNewline\nCarriage\rSlash\\Quote\"Control\x07");
-        assert_eq!(out, "Tab\\tNewline\\nCarriage\\rSlash\\\\Quote\\\"Control\\u0007");
+        escape_json_string(
+            &mut out,
+            "Tab\tNewline\nCarriage\rSlash\\Quote\"Control\x07",
+        );
+        assert_eq!(
+            out,
+            "Tab\\tNewline\\nCarriage\\rSlash\\\\Quote\\\"Control\\u0007"
+        );
+    }
+
+    #[test]
+    fn test_escape_json_string_control_characters() {
+        let mut out = String::new();
+        escape_json_string(&mut out, "\x00\x08\x0c\x1b\x1f");
+        assert_eq!(out, "\\u0000\\b\\f\\u001b\\u001f");
     }
 
     #[test]
@@ -528,5 +568,45 @@ mod tests {
         let json = document_to_json(&doc);
         assert!(json.contains("\"children\": []"));
         assert!(json.contains("\"rows\": []"));
+    }
+
+    #[test]
+    fn test_document_to_json_deeply_nested_structures() {
+        let mut doc = Document::new();
+        let mut current_elem = DocumentElement::text("Deepest leaf");
+
+        for depth in (0..20).rev() {
+            if depth % 2 == 0 {
+                current_elem = DocumentElement::bullet_list_item(depth, current_elem);
+            } else {
+                current_elem = DocumentElement::section(
+                    depth + 1,
+                    format!("Level {depth}"),
+                    vec![current_elem],
+                );
+            }
+        }
+
+        doc.push_body(current_elem);
+
+        let json = document_to_json(&doc);
+        assert!(json.contains("\"kind\": \"bullet_list_item\""));
+        assert!(json.contains("\"kind\": \"section\""));
+        assert!(json.contains("\"content\": \"Deepest leaf\""));
+    }
+
+    #[test]
+    fn test_write_indent_levels() {
+        let mut out = String::new();
+        write_indent(&mut out, 0);
+        assert_eq!(out, "");
+
+        write_indent(&mut out, 2);
+        assert_eq!(out, "    ");
+
+        out.clear();
+        write_indent(&mut out, 40);
+        assert_eq!(out.len(), 80);
+        assert!(out.chars().all(|c| c == ' '));
     }
 }

@@ -3,11 +3,12 @@
 use crate::core::constants::{APP_VERSION, LICENSE_URL, REPOSITORY_URL};
 use crate::core::document::Document;
 use crate::core::document_json::document_to_json;
+use crate::core::feature::DocumentFeature;
 
 /// Embedded base HTML template.
 pub const TEMPLATE_HTML: &str = include_str!("../../resources/templates/template.html");
 
-/// Builds output content from a structured [`Document`].
+/// Builds output content from a structured [`Document`] and active [`DocumentFeature`] flags.
 ///
 /// Returns a formatted string implementing `AsRef<[u8]>`.
 ///
@@ -16,12 +17,15 @@ pub const TEMPLATE_HTML: &str = include_str!("../../resources/templates/template
 /// ```
 /// use doc2flow::core::builder::build;
 /// use doc2flow::core::document::Document;
+/// use doc2flow::core::feature::DocumentFeature;
 ///
 /// let doc = Document::new();
-/// let content = build(&doc);
+/// let features = DocumentFeature::default();
+/// let content = build(&doc, &features);
 /// assert!(!content.is_empty());
 /// ```
-pub fn build(document: &Document) -> String {
+pub fn build(document: &Document, features: &DocumentFeature) -> String {
+    let _ = features;
     let app_version_raw = APP_VERSION.strip_prefix('v').unwrap_or(APP_VERSION);
     let json_content = document_to_json(document);
 
@@ -40,7 +44,8 @@ mod tests {
     #[test]
     fn test_builder_build_as_ref_u8() {
         let doc = Document::new();
-        let content = build(&doc);
+        let features = DocumentFeature::default();
+        let content = build(&doc, &features);
         assert!(!content.as_bytes().is_empty());
         assert!(content.contains("<!DOCTYPE html>"));
         assert!(content.contains(APP_VERSION));

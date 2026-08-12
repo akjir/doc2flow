@@ -6,8 +6,8 @@ pub mod constants;
 pub mod document;
 pub mod document_json;
 pub mod error;
+pub mod feature;
 pub mod markdown;
-pub mod parser;
 pub mod utils;
 
 pub use arguments::{Args, help_message, parse_args};
@@ -18,5 +18,5 @@ pub use constants::{
 pub use document::{Document, DocumentElement, ShoutoutElementKind, TableAlignment};
 pub use document_json::document_to_json;
 pub use error::{DiagnosticError, Error, Result, build_caret_annotation};
+pub use feature::DocumentFeature;
 pub use markdown::parse_d2f_markdown;
-pub use parser::parse;

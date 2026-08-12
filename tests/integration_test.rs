@@ -1,6 +1,5 @@
 use doc2flow::legacy::converter::{convert_markdown_to_html, parse_frontmatter};
 
-
 #[test]
 fn test_callout_variants_conversion() {
     let input = r#"## Section 1
@@ -105,13 +104,11 @@ language: "de"
     let (fm, _body) = parse_frontmatter(input);
     assert_eq!(fm.language.as_deref(), Some("de"));
 
-    let locale = doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let locale =
+        doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     assert_eq!(locale.lang_code, "de");
     assert_eq!(locale.get("export_pdf"), "Als PDF exportieren");
-    assert_eq!(
-        locale.get("reset_all"),
-        "Zurücksetzen"
-    );
+    assert_eq!(locale.get("reset_all"), "Zurücksetzen");
 }
 
 #[test]
@@ -134,8 +131,9 @@ test code
 "#;
 
     let locale = doc2flow::legacy::locales::Locale::from_lang_code("de");
-    let (html, _features) = doc2flow::legacy::converter::convert_markdown_to_html_with_locale(input, &locale)
-        .expect("conversion failed");
+    let (html, _features) =
+        doc2flow::legacy::converter::convert_markdown_to_html_with_locale(input, &locale)
+            .expect("conversion failed");
 
     assert!(html.contains("<div class=\"note\" data-label=\"Hinweis\">Standard Hinweis</div>"));
     assert!(html.contains("<div class=\"note note-tip\" data-label=\"Tipp\">Tipp Text</div>"));
@@ -166,12 +164,21 @@ language: "de"
 "#;
 
     let (fm, body) = doc2flow::legacy::converter::parse_frontmatter(input);
-    let locale = doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
-    let (html_body, features) = doc2flow::legacy::converter::convert_markdown_to_html_with_locale(body, &locale)
-        .expect("body conversion failed");
+    let locale =
+        doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let (html_body, features) =
+        doc2flow::legacy::converter::convert_markdown_to_html_with_locale(body, &locale)
+            .expect("body conversion failed");
 
-    let final_html = doc2flow::legacy::builder::render(&fm, &locale, &html_body, "doc_test_123", None, &features)
-        .expect("template rendering failed");
+    let final_html = doc2flow::legacy::builder::render(
+        &fm,
+        &locale,
+        &html_body,
+        "doc_test_123",
+        None,
+        &features,
+    )
+    .expect("template rendering failed");
 
     assert!(final_html.contains("<!DOCTYPE html>"));
     assert!(final_html.contains("<html lang=\"de\">"));
@@ -189,10 +196,12 @@ language: "de"
 
 #[test]
 fn test_showcase_en_fixture_conversion() {
-    let md_content = doc2flow::legacy::io::read_file_to_string(std::path::Path::new("examples/showcase_en.md"))
-        .expect("Failed to read examples/showcase_en.md");
+    let md_content =
+        doc2flow::legacy::io::read_file_to_string(std::path::Path::new("examples/showcase_en.md"))
+            .expect("Failed to read examples/showcase_en.md");
     let (fm, body) = doc2flow::legacy::converter::parse_frontmatter(&md_content);
-    let locale = doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let locale =
+        doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     let (html_body, features) = doc2flow::legacy::converter::convert_markdown_to_html_with_options(
         body,
         &locale,
@@ -201,7 +210,8 @@ fn test_showcase_en_fixture_conversion() {
     .expect("conversion failed");
     let d2f_id = doc2flow::legacy::id::generate_d2f_id(&fm).expect("id gen failed");
     let rendered =
-        doc2flow::legacy::builder::render(&fm, &locale, &html_body, &d2f_id, None, &features).expect("rendering failed");
+        doc2flow::legacy::builder::render(&fm, &locale, &html_body, &d2f_id, None, &features)
+            .expect("rendering failed");
     let html = doc2flow::legacy::image::embed_images_as_base64(
         &rendered,
         Some(std::path::Path::new("examples")),
@@ -226,10 +236,12 @@ fn test_showcase_en_fixture_conversion() {
 
 #[test]
 fn test_showcase_de_fixture_conversion() {
-    let md_content = doc2flow::legacy::io::read_file_to_string(std::path::Path::new("examples/showcase_de.md"))
-        .expect("Failed to read examples/showcase_de.md");
+    let md_content =
+        doc2flow::legacy::io::read_file_to_string(std::path::Path::new("examples/showcase_de.md"))
+            .expect("Failed to read examples/showcase_de.md");
     let (fm, body) = doc2flow::legacy::converter::parse_frontmatter(&md_content);
-    let locale = doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let locale =
+        doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     let (html_body, features) = doc2flow::legacy::converter::convert_markdown_to_html_with_options(
         body,
         &locale,
@@ -238,7 +250,8 @@ fn test_showcase_de_fixture_conversion() {
     .expect("conversion failed");
     let d2f_id = doc2flow::legacy::id::generate_d2f_id(&fm).expect("id gen failed");
     let rendered =
-        doc2flow::legacy::builder::render(&fm, &locale, &html_body, &d2f_id, None, &features).expect("rendering failed");
+        doc2flow::legacy::builder::render(&fm, &locale, &html_body, &d2f_id, None, &features)
+            .expect("rendering failed");
     let html = doc2flow::legacy::image::embed_images_as_base64(
         &rendered,
         Some(std::path::Path::new("examples")),
@@ -265,7 +278,8 @@ fn test_showcase_de_fixture_conversion() {
 fn test_template_generator_conversion() {
     let template_md = doc2flow::legacy::builder::generate_template_markdown();
     let (fm, body) = doc2flow::legacy::converter::parse_frontmatter(&template_md);
-    let locale = doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let locale =
+        doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     let (html_body, features) = doc2flow::legacy::converter::convert_markdown_to_html_with_options(
         body,
         &locale,
@@ -274,7 +288,8 @@ fn test_template_generator_conversion() {
     .expect("conversion failed");
     let d2f_id = doc2flow::legacy::id::generate_d2f_id(&fm).expect("id gen failed");
     let html =
-        doc2flow::legacy::builder::render(&fm, &locale, &html_body, &d2f_id, None, &features).expect("rendering failed");
+        doc2flow::legacy::builder::render(&fm, &locale, &html_body, &d2f_id, None, &features)
+            .expect("rendering failed");
 
     assert!(html.contains("Doc2Flow Standard Operating Procedure"));
     assert!(!html.contains("DOC2FLOW (D2F) - TEMPLATE & USAGE GUIDE"));
@@ -293,8 +308,9 @@ date: "2026-07-25"
 ## Section 1
 "#;
 
-    let (fm, _body) = doc2flow::legacy::converter::parse_and_validate_frontmatter(input, Some("test.md"))
-        .expect("validation failed for valid frontmatter");
+    let (fm, _body) =
+        doc2flow::legacy::converter::parse_and_validate_frontmatter(input, Some("test.md"))
+            .expect("validation failed for valid frontmatter");
     assert_eq!(fm.title.as_deref(), Some("Valid Spec"));
 }
 
@@ -312,15 +328,23 @@ date: "2026-07-26"
 - [ ] Task 3
 "#;
 
-    let (fm, body) = doc2flow::legacy::converter::parse_and_validate_frontmatter(input, Some("test_h1.md")).unwrap();
-    let locale = doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
-    let (html_body, features) = doc2flow::legacy::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
+    let (fm, body) =
+        doc2flow::legacy::converter::parse_and_validate_frontmatter(input, Some("test_h1.md"))
+            .unwrap();
+    let locale =
+        doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let (html_body, features) =
+        doc2flow::legacy::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
     let d2f_id = doc2flow::legacy::id::generate_d2f_id(&fm).unwrap();
-    let rendered = doc2flow::legacy::builder::render(&fm, &locale, &html_body, &d2f_id, None, &features).unwrap();
+    let rendered =
+        doc2flow::legacy::builder::render(&fm, &locale, &html_body, &d2f_id, None, &features)
+            .unwrap();
 
     assert!(rendered.contains(r#"<h2 class="sh sh-h1" role="button" tabindex="0" aria-expanded="true"><span>Main Section</span>"#));
     assert!(rendered.contains(r#"badge-s1"#));
-    assert!(rendered.contains(r#"<h2 class="sh" role="button" tabindex="0" aria-expanded="true"><span>Sub Section</span>"#));
+    assert!(rendered.contains(
+        r#"<h2 class="sh" role="button" tabindex="0" aria-expanded="true"><span>Sub Section</span>"#
+    ));
     assert!(rendered.contains(r#"badge-s2"#));
     assert!(!html_body.contains("onclick="));
 }
@@ -338,7 +362,10 @@ fn test_auto_scale_integration_test() {
     let file_size = doc2flow::legacy::io::get_file_size(&img_path).unwrap();
     if file_size <= doc2flow::legacy::image::MAX_IMAGE_SIZE_BYTES {
         let mut existing = doc2flow::legacy::io::read_file_bytes(&img_path).unwrap();
-        existing.resize((doc2flow::legacy::image::MAX_IMAGE_SIZE_BYTES + 50 * 1024) as usize, 0);
+        existing.resize(
+            (doc2flow::legacy::image::MAX_IMAGE_SIZE_BYTES + 50 * 1024) as usize,
+            0,
+        );
         doc2flow::legacy::io::write_file(&img_path, &existing).unwrap();
     }
 
@@ -353,12 +380,16 @@ date: "2026-07-26"
 
     let file_name = "spec_scale.md";
     let (fm, body) =
-        doc2flow::legacy::converter::parse_and_validate_frontmatter(input, Some(file_name)).unwrap();
-    let locale = doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+        doc2flow::legacy::converter::parse_and_validate_frontmatter(input, Some(file_name))
+            .unwrap();
+    let locale =
+        doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     let (html_body, features) =
         doc2flow::legacy::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
     let d2f_id = doc2flow::legacy::id::generate_d2f_id(&fm).unwrap();
-    let rendered = doc2flow::legacy::builder::render(&fm, &locale, &html_body, &d2f_id, None, &features).unwrap();
+    let rendered =
+        doc2flow::legacy::builder::render(&fm, &locale, &html_body, &d2f_id, None, &features)
+            .unwrap();
 
     let html = doc2flow::legacy::image::embed_images_as_base64_with_source(
         &rendered,
@@ -398,11 +429,17 @@ date: "2026-07-26"
 - [x] Task 2 Completed
 "#;
 
-    let (fm, body) = doc2flow::legacy::converter::parse_and_validate_frontmatter(input, Some("pipeline.md")).unwrap();
-    let locale = doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
-    let (html_body, features) = doc2flow::legacy::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
+    let (fm, body) =
+        doc2flow::legacy::converter::parse_and_validate_frontmatter(input, Some("pipeline.md"))
+            .unwrap();
+    let locale =
+        doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let (html_body, features) =
+        doc2flow::legacy::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
     let d2f_id = doc2flow::legacy::id::generate_d2f_id(&fm).unwrap();
-    let html = doc2flow::legacy::builder::render(&fm, &locale, &html_body, &d2f_id, None, &features).unwrap();
+    let html =
+        doc2flow::legacy::builder::render(&fm, &locale, &html_body, &d2f_id, None, &features)
+            .unwrap();
 
     assert!(html.contains("<html lang=\"de\">"));
     assert!(html.contains("data-label=\"Hinweis\""));
@@ -425,11 +462,17 @@ date: "2026-07-26"
 ![Specification PDF](files/spec.pdf)
 "#;
 
-    let (fm, body) = doc2flow::legacy::converter::parse_and_validate_frontmatter(input, Some("pdf_spec.md")).unwrap();
-    let locale = doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
-    let (html_body, features) = doc2flow::legacy::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
+    let (fm, body) =
+        doc2flow::legacy::converter::parse_and_validate_frontmatter(input, Some("pdf_spec.md"))
+            .unwrap();
+    let locale =
+        doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let (html_body, features) =
+        doc2flow::legacy::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
     let d2f_id = doc2flow::legacy::id::generate_d2f_id(&fm).unwrap();
-    let rendered = doc2flow::legacy::builder::render(&fm, &locale, &html_body, &d2f_id, None, &features).unwrap();
+    let rendered =
+        doc2flow::legacy::builder::render(&fm, &locale, &html_body, &d2f_id, None, &features)
+            .unwrap();
     let html = doc2flow::legacy::image::embed_images_as_base64(&rendered, None).unwrap();
 
     assert!(html.contains("<div class=\"doc-item text-item\">"));
@@ -465,8 +508,16 @@ fn test_cli_version_output_formatting() {
     let args = parse_args(&["d2f", "--version"]).unwrap();
     assert!(args.show_version);
     let full_version = env!("D2F_FULL_VERSION");
-    assert!(full_version.starts_with('v'), "Full version must start with 'v': {}", full_version);
-    assert!(full_version.contains('+'), "Full version must contain build metadata '+': {}", full_version);
+    assert!(
+        full_version.starts_with('v'),
+        "Full version must start with 'v': {}",
+        full_version
+    );
+    assert!(
+        full_version.contains('+'),
+        "Full version must contain build metadata '+': {}",
+        full_version
+    );
     assert!(full_version.contains(env!("CARGO_PKG_VERSION")));
 }
 
@@ -481,12 +532,18 @@ language: "fr"
 - [ ] Task 1
 "#;
 
-    let (fm, body) = doc2flow::legacy::converter::parse_and_validate_frontmatter(input, Some("fallback.md")).unwrap();
-    let locale = doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let (fm, body) =
+        doc2flow::legacy::converter::parse_and_validate_frontmatter(input, Some("fallback.md"))
+            .unwrap();
+    let locale =
+        doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     assert_eq!(locale.lang_code, "en"); // Fallback to English
-    let (html_body, features) = doc2flow::legacy::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
+    let (html_body, features) =
+        doc2flow::legacy::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
     let d2f_id = doc2flow::legacy::id::generate_d2f_id(&fm).unwrap();
-    let html = doc2flow::legacy::builder::render(&fm, &locale, &html_body, &d2f_id, None, &features).unwrap();
+    let html =
+        doc2flow::legacy::builder::render(&fm, &locale, &html_body, &d2f_id, None, &features)
+            .unwrap();
 
     assert!(html.contains("<html lang=\"en\">"));
     assert!(html.contains("Save State"));
@@ -503,7 +560,6 @@ fn test_non_existent_input_file_handling() {
         }
         _ => panic!("Expected Doc2FlowError::Io variant"),
     }
-
 }
 
 #[test]
@@ -536,34 +592,43 @@ logo: "{}"
     );
 
     let (fm, body) =
-        doc2flow::legacy::converter::parse_and_validate_frontmatter(&input, Some("logo_spec.md")).unwrap();
-    let locale = doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+        doc2flow::legacy::converter::parse_and_validate_frontmatter(&input, Some("logo_spec.md"))
+            .unwrap();
+    let locale =
+        doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     let (html_body, features) =
         doc2flow::legacy::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
     let d2f_id = doc2flow::legacy::id::generate_d2f_id(&fm).unwrap();
 
     // 1. Frontmatter logo resolution
-    let fm_logo_html = doc2flow::legacy::image::load_logo(
-        fm.logo.as_deref().map(Path::new),
-        Some(&temp_dir),
-    );
+    let fm_logo_html =
+        doc2flow::legacy::image::load_logo(fm.logo.as_deref().map(Path::new), Some(&temp_dir));
     assert!(fm_logo_html.contains("id=\"fm-logo\""));
 
-    let rendered_fm =
-        doc2flow::legacy::builder::render(&fm, &locale, &html_body, &d2f_id, Some(&fm_logo_html), &features)
-            .unwrap();
+    let rendered_fm = doc2flow::legacy::builder::render(
+        &fm,
+        &locale,
+        &html_body,
+        &d2f_id,
+        Some(&fm_logo_html),
+        &features,
+    )
+    .unwrap();
     assert!(rendered_fm.contains("id=\"fm-logo\""));
 
     // 2. CLI logo precedence over frontmatter logo
-    let cli_logo_html = doc2flow::legacy::image::load_logo(
-        Some(&cli_logo_path),
-        Some(&temp_dir),
-    );
+    let cli_logo_html = doc2flow::legacy::image::load_logo(Some(&cli_logo_path), Some(&temp_dir));
     assert!(cli_logo_html.contains("<img src=\"data:image/png;base64,"));
 
-    let rendered_cli =
-        doc2flow::legacy::builder::render(&fm, &locale, &html_body, &d2f_id, Some(&cli_logo_html), &features)
-            .unwrap();
+    let rendered_cli = doc2flow::legacy::builder::render(
+        &fm,
+        &locale,
+        &html_body,
+        &d2f_id,
+        Some(&cli_logo_html),
+        &features,
+    )
+    .unwrap();
     assert!(rendered_cli.contains("<img src=\"data:image/png;base64,"));
     assert!(!rendered_cli.contains("id=\"fm-logo\""));
 
@@ -582,27 +647,48 @@ date: "2026-07-27"
 "#;
 
     let (fm, body) =
-        doc2flow::legacy::converter::parse_and_validate_frontmatter(input, Some("meta_spec.md")).unwrap();
-    let locale = doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+        doc2flow::legacy::converter::parse_and_validate_frontmatter(input, Some("meta_spec.md"))
+            .unwrap();
+    let locale =
+        doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     let (html_body, features) =
         doc2flow::legacy::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
     let d2f_id = doc2flow::legacy::id::generate_d2f_id(&fm).unwrap();
 
-    let rendered = doc2flow::legacy::builder::render(&fm, &locale, &html_body, &d2f_id, None, &features).unwrap();
+    let rendered =
+        doc2flow::legacy::builder::render(&fm, &locale, &html_body, &d2f_id, None, &features)
+            .unwrap();
 
     // Verify meta tags
-    let raw_ver = doc2flow::legacy::builder::APP_VERSION.strip_prefix('v').unwrap_or(doc2flow::legacy::builder::APP_VERSION);
-    assert!(rendered.contains(&format!("<meta name=\"generator\" content=\"Doc2Flow {}\">", doc2flow::legacy::builder::APP_VERSION)));
+    let raw_ver = doc2flow::legacy::builder::APP_VERSION
+        .strip_prefix('v')
+        .unwrap_or(doc2flow::legacy::builder::APP_VERSION);
+    assert!(rendered.contains(&format!(
+        "<meta name=\"generator\" content=\"Doc2Flow {}\">",
+        doc2flow::legacy::builder::APP_VERSION
+    )));
     assert!(rendered.contains(&format!("<meta name=\"version\" content=\"{}\">", raw_ver)));
-    assert!(rendered.contains("<meta name=\"repository\" content=\"https://github.com/akjir/doc2flow\">"));
-    assert!(rendered.contains("<meta name=\"license\" content=\"https://github.com/akjir/doc2flow/blob/main/LICENSE\">"));
+    assert!(
+        rendered
+            .contains("<meta name=\"repository\" content=\"https://github.com/akjir/doc2flow\">")
+    );
+    assert!(rendered.contains(
+        "<meta name=\"license\" content=\"https://github.com/akjir/doc2flow/blob/main/LICENSE\">"
+    ));
     assert!(rendered.contains("<meta name=\"dcterms.created\" content=\""));
-    assert!(rendered.contains("<meta name=\"dcterms.source\" content=\"https://github.com/akjir/doc2flow\">"));
+    assert!(
+        rendered.contains(
+            "<meta name=\"dcterms.source\" content=\"https://github.com/akjir/doc2flow\">"
+        )
+    );
     assert!(rendered.contains("<meta name=\"features\" content=\"core, tasks\">"));
 
     // Verify template.md metadata comments
     let init_tmpl = doc2flow::legacy::builder::generate_template_markdown();
-    assert!(init_tmpl.contains(&format!("DOC2FLOW (D2F) {} - TEMPLATE & USAGE GUIDE", doc2flow::legacy::builder::APP_VERSION)));
+    assert!(init_tmpl.contains(&format!(
+        "DOC2FLOW (D2F) {} - TEMPLATE & USAGE GUIDE",
+        doc2flow::legacy::builder::APP_VERSION
+    )));
     assert!(init_tmpl.contains("Repository: https://github.com/akjir/doc2flow"));
     assert!(init_tmpl.contains("License: GPL-3.0-or-later"));
 }
@@ -623,8 +709,10 @@ date: "2026-07-28"
 "#;
 
     let (fm, body) =
-        doc2flow::legacy::converter::parse_and_validate_frontmatter(input, Some("loose_task.md")).unwrap();
-    let locale = doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+        doc2flow::legacy::converter::parse_and_validate_frontmatter(input, Some("loose_task.md"))
+            .unwrap();
+    let locale =
+        doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
     let (html_body, _features) =
         doc2flow::legacy::converter::convert_markdown_to_html_with_locale(body, &locale).unwrap();
 
@@ -633,7 +721,10 @@ date: "2026-07-28"
     assert!(html_body.contains(r#"<label class="check-label" for="cb_s1_1">Item 1</label>"#));
 
     assert!(html_body.contains(r#"<div class="doc-item check-item checked" id="wrap-cb_s1_2">"#));
-    assert!(html_body.contains(r#"<input type="checkbox" id="cb_s1_2" checked=""#) || html_body.contains(r#"<input type="checkbox" id="cb_s1_2" checked>"#));
+    assert!(
+        html_body.contains(r#"<input type="checkbox" id="cb_s1_2" checked=""#)
+            || html_body.contains(r#"<input type="checkbox" id="cb_s1_2" checked>"#)
+    );
     assert!(html_body.contains(r#"<label class="check-label" for="cb_s1_2">Item 2</label>"#));
 
     assert!(html_body.contains(r#"<div class="doc-item check-item" id="wrap-cb_s1_3">"#));
@@ -667,16 +758,19 @@ numbered_sections: true
 "#;
 
     let (fm, body) =
-        doc2flow::legacy::converter::parse_and_validate_frontmatter(input, Some("numbering.md")).unwrap();
+        doc2flow::legacy::converter::parse_and_validate_frontmatter(input, Some("numbering.md"))
+            .unwrap();
     assert!(fm.numbered_sections);
 
-    let locale = doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
-    let (html_body, _features) = doc2flow::legacy::converter::convert_markdown_to_html_with_options(
-        body,
-        &locale,
-        fm.numbered_sections,
-    )
-    .unwrap();
+    let locale =
+        doc2flow::legacy::locales::Locale::from_lang_code(fm.language.as_deref().unwrap_or("en"));
+    let (html_body, _features) =
+        doc2flow::legacy::converter::convert_markdown_to_html_with_options(
+            body,
+            &locale,
+            fm.numbered_sections,
+        )
+        .unwrap();
 
     assert!(html_body.contains("<span>1. Main Architecture</span>"));
     assert!(html_body.contains("<span>1.1 Overview &amp; Scope</span>"));
@@ -709,10 +803,14 @@ date: "2026-07-29"
 "#;
 
     let (fm, body) =
-        doc2flow::legacy::converter::parse_and_validate_frontmatter(input, Some("test.md")).unwrap();
+        doc2flow::legacy::converter::parse_and_validate_frontmatter(input, Some("test.md"))
+            .unwrap();
     let locale = doc2flow::legacy::locales::Locale::from_lang_code("en");
-    let (html_body, features) = doc2flow::legacy::converter::convert_markdown_to_html(&body).unwrap();
-    let full_doc = doc2flow::legacy::builder::render(&fm, &locale, &html_body, "doc123", None, &features).unwrap();
+    let (html_body, features) =
+        doc2flow::legacy::converter::convert_markdown_to_html(&body).unwrap();
+    let full_doc =
+        doc2flow::legacy::builder::render(&fm, &locale, &html_body, "doc123", None, &features)
+            .unwrap();
 
     assert!(full_doc.contains(r#"<div class="search-toolbar hidden" id="search-toolbar">"#));
     assert!(full_doc.contains(r#"id="search-toggle-btn""#));
@@ -731,7 +829,8 @@ fn test_section_table_feature_detection() {
 | Cocoa | 50g |
 "#;
 
-    let (html_body, features) = doc2flow::legacy::converter::convert_markdown_to_html(table_md).unwrap();
+    let (html_body, features) =
+        doc2flow::legacy::converter::convert_markdown_to_html(table_md).unwrap();
     assert!(features.has_tables);
     assert!(!features.has_code);
     assert!(!features.has_tasks);
@@ -739,7 +838,9 @@ fn test_section_table_feature_detection() {
 
     let fm = doc2flow::legacy::converter::Frontmatter::new();
     let locale = doc2flow::legacy::locales::Locale::from_lang_code("en");
-    let full_doc = doc2flow::legacy::builder::render(&fm, &locale, &html_body, "doc_table", None, &features).unwrap();
+    let full_doc =
+        doc2flow::legacy::builder::render(&fm, &locale, &html_body, "doc_table", None, &features)
+            .unwrap();
 
     assert!(full_doc.contains("/* ==========================================================================\n   1. BASE TABLE STYLES & CSS VARIABLES"));
     assert!(full_doc.contains("initSectionTables"));
@@ -752,7 +853,8 @@ fn test_section_table_feature_detection() {
 |---|---|
 | VAR_A | ValA |
 "#;
-    let (_var_html, var_features) = doc2flow::legacy::converter::convert_markdown_to_html(var_table_md).unwrap();
+    let (_var_html, var_features) =
+        doc2flow::legacy::converter::convert_markdown_to_html(var_table_md).unwrap();
     assert!(!var_features.has_tables);
 }
 
@@ -774,13 +876,21 @@ header: "flex"
 - [ ] Run basic health check
 "#;
 
-    let (fm, body) =
-        doc2flow::legacy::converter::parse_and_validate_frontmatter(input_flex, Some("test_flex.md")).unwrap();
+    let (fm, body) = doc2flow::legacy::converter::parse_and_validate_frontmatter(
+        input_flex,
+        Some("test_flex.md"),
+    )
+    .unwrap();
     assert_eq!(fm.header.as_deref(), Some("flex"));
 
     let locale = doc2flow::legacy::locales::Locale::from_lang_code("en");
-    let (html_body, mut features) = doc2flow::legacy::converter::convert_markdown_to_html(&body).unwrap();
-    if fm.header.as_deref().map_or(false, |v| v.eq_ignore_ascii_case("flex")) {
+    let (html_body, mut features) =
+        doc2flow::legacy::converter::convert_markdown_to_html(&body).unwrap();
+    if fm
+        .header
+        .as_deref()
+        .map_or(false, |v| v.eq_ignore_ascii_case("flex"))
+    {
         features.has_header = true;
     }
 
@@ -794,7 +904,8 @@ header: "flex"
         "doc_header_flex",
         Some("<svg class=\"custom-logo\"></svg>"),
         &features,
-    ).unwrap();
+    )
+    .unwrap();
 
     // Verify flex header card is rendered
     assert!(full_doc.contains(r#"<section class="section header-flex" id="header-flex">"#));
@@ -803,11 +914,20 @@ header: "flex"
     assert!(full_doc.contains(r#"<svg class="custom-logo"></svg>"#));
 
     // Verify placement: header-flex appears BEFORE variable table and BEFORE Section 1
-    let flex_pos = full_doc.find(r#"id="header-flex""#).expect("header-flex must exist");
-    let var_pos = full_doc.find(r#"class="item-table-var-wrap""#).expect("var table must exist");
-    let sec_pos = full_doc.find(r#"<!-- S1 -->"#).expect("section 1 must exist");
+    let flex_pos = full_doc
+        .find(r#"id="header-flex""#)
+        .expect("header-flex must exist");
+    let var_pos = full_doc
+        .find(r#"class="item-table-var-wrap""#)
+        .expect("var table must exist");
+    let sec_pos = full_doc
+        .find(r#"<!-- S1 -->"#)
+        .expect("section 1 must exist");
 
-    assert!(flex_pos < var_pos, "header-flex must precede variable table");
+    assert!(
+        flex_pos < var_pos,
+        "header-flex must precede variable table"
+    );
     assert!(var_pos < sec_pos, "variable table must precede section 1");
 
     // Verify CSS is included
@@ -815,7 +935,9 @@ header: "flex"
     assert!(full_doc.contains(".doc-header .header-top"));
 
     // Verify features meta contains header
-    assert!(full_doc.contains(r#"<meta name="features" content="core, code, fields, header, tasks">"#));
+    assert!(
+        full_doc.contains(r#"<meta name="features" content="core, code, fields, header, tasks">"#)
+    );
 }
 
 #[test]
@@ -831,11 +953,19 @@ header: "none"
 - Normal text
 "#;
 
-    let (fm, body) =
-        doc2flow::legacy::converter::parse_and_validate_frontmatter(input_none, Some("test_none.md")).unwrap();
+    let (fm, body) = doc2flow::legacy::converter::parse_and_validate_frontmatter(
+        input_none,
+        Some("test_none.md"),
+    )
+    .unwrap();
     let locale = doc2flow::legacy::locales::Locale::from_lang_code("en");
-    let (html_body, mut features) = doc2flow::legacy::converter::convert_markdown_to_html(&body).unwrap();
-    if fm.header.as_deref().map_or(false, |v| v.eq_ignore_ascii_case("flex")) {
+    let (html_body, mut features) =
+        doc2flow::legacy::converter::convert_markdown_to_html(&body).unwrap();
+    if fm
+        .header
+        .as_deref()
+        .map_or(false, |v| v.eq_ignore_ascii_case("flex"))
+    {
         features.has_header = true;
     }
 
@@ -848,7 +978,8 @@ header: "none"
         "doc_header_none",
         None,
         &features,
-    ).unwrap();
+    )
+    .unwrap();
 
     // Verify flex header card is NOT rendered
     assert!(!full_doc.contains(r#"id="header-flex""#));
@@ -868,9 +999,11 @@ title: "Image Fallback Test"
 "#;
 
     let (fm, body) =
-        doc2flow::legacy::converter::parse_and_validate_frontmatter(input, Some("test_img.md")).unwrap();
+        doc2flow::legacy::converter::parse_and_validate_frontmatter(input, Some("test_img.md"))
+            .unwrap();
     let locale = doc2flow::legacy::locales::Locale::from_lang_code("en");
-    let (html_body, features) = doc2flow::legacy::converter::convert_markdown_to_html(&body).unwrap();
+    let (html_body, features) =
+        doc2flow::legacy::converter::convert_markdown_to_html(&body).unwrap();
     assert!(features.has_images);
 
     let full_doc = doc2flow::legacy::builder::render(
@@ -880,7 +1013,8 @@ title: "Image Fallback Test"
         "doc_img_fallback",
         None,
         &features,
-    ).unwrap();
+    )
+    .unwrap();
 
     assert!(full_doc.contains("https://invalid-host-doc2flow.test/missing.png"));
     assert!(full_doc.contains(".doc-body img.img-fallback"));
@@ -925,11 +1059,13 @@ fn test_cli_core_arguments_legacy_flag() {
 #[test]
 fn test_parser_and_builder_pipeline_integration() {
     let input = "---\ntitle: \"Pipeline Test\"\n---\n# Pipeline Heading\n\nContent paragraph";
-    let document = doc2flow::core::parser::parse(input).expect("parse failed");
-    let content = doc2flow::core::builder::build(&document);
+    let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
+    let features = doc2flow::core::DocumentFeature::from(&document);
+    assert!(features.section);
+    assert!(features.text);
+    assert!(!features.table);
+    let content = doc2flow::core::builder::build(&document, &features);
     assert!(content.as_bytes().len() > 0);
     assert!(content.contains("\"title\": \"Pipeline Test\""));
     assert!(content.contains("\"title\": \"Pipeline Heading\""));
 }
-
-

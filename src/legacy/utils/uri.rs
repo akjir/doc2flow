@@ -89,7 +89,6 @@ mod tests {
     use super::*;
     use crate::legacy::utils::error::Doc2FlowError;
 
-
     #[test]
     fn test_file_to_data_uri_success_and_error() {
         let temp_dir = std::env::temp_dir().join("d2f_test_data_uri");

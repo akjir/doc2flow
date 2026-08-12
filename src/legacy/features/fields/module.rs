@@ -2,7 +2,6 @@
 
 use crate::legacy::core::feature::{DocumentContext, Feature};
 
-
 /// Unified fields feature slice providing persistent form input handling.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct FieldsFeature;

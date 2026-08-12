@@ -131,7 +131,8 @@ mod tests {
         assert!(feature.is_enabled(&ctx_with_upper_checked));
 
         // 3. Markdown without task items: disabled
-        let ctx_no_tasks = DocumentContext::new(&fm, "# Heading\n- Regular bullet item\n1. Numbered item");
+        let ctx_no_tasks =
+            DocumentContext::new(&fm, "# Heading\n- Regular bullet item\n1. Numbered item");
         assert!(!feature.is_enabled(&ctx_no_tasks));
 
         let ctx_empty = DocumentContext::new(&fm, "");

@@ -2,7 +2,6 @@
 
 use crate::legacy::core::feature::{DocumentContext, Feature};
 
-
 /// Unified section table feature slice providing responsive table wrappers, hover highlights, and print formatting.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct TableFeature;
@@ -67,8 +66,10 @@ mod tests {
         );
         assert!(feature.is_enabled(&ctx_with_pipe_table));
 
-        let ctx_with_html_table =
-            DocumentContext::new(&fm, "<table class=\"custom-table\"><tr><td>Data</td></tr></table>");
+        let ctx_with_html_table = DocumentContext::new(
+            &fm,
+            "<table class=\"custom-table\"><tr><td>Data</td></tr></table>",
+        );
         assert!(feature.is_enabled(&ctx_with_html_table));
 
         // 2. Markdown without tables: disabled

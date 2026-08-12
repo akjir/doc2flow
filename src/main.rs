@@ -3,7 +3,8 @@
 use doc2flow::core::arguments::{help_message, parse_args};
 use doc2flow::core::builder;
 use doc2flow::core::error::{Error, Result};
-use doc2flow::core::parser;
+use doc2flow::core::feature::DocumentFeature;
+use doc2flow::core::markdown::parse_d2f_markdown;
 use doc2flow::core::utils::io;
 use std::env;
 use std::process::ExitCode;
@@ -32,12 +33,15 @@ fn run() -> Result<()> {
         );
     };
 
-    let output_path = args.output.unwrap_or_else(|| input_path.with_extension("html"));
+    let output_path = args
+        .output
+        .unwrap_or_else(|| input_path.with_extension("html"));
 
     let md_content = io::read_file_to_string(&input_path)?;
 
-    let document = parser::parse(&md_content)?;
-    let content = builder::build(&document);
+    let document = parse_d2f_markdown(&md_content)?;
+    let features = DocumentFeature::from(&document);
+    let content = builder::build(&document, &features);
 
     io::write_file(&output_path, content)?;
 

@@ -1,7 +1,7 @@
 //! Markdown parser without external dependencies.
 
 use crate::core::document::{Document, DocumentElement, ShoutoutElementKind, TableAlignment};
-use crate::core::error::{build_caret_annotation, DiagnosticError};
+use crate::core::error::{DiagnosticError, build_caret_annotation};
 use crate::core::{Error, Result};
 
 /// State tracker for filtering HTML comments across lines.
@@ -75,7 +75,11 @@ enum FrontmatterPhase {
 
 /// Constructs a standardized diagnostic error for invalid block directive names.
 fn build_invalid_block_directive_name_err(line_number: usize, line_snippet: &str) -> Error {
-    let snippet = if line_snippet.is_empty() { "" } else { line_snippet };
+    let snippet = if line_snippet.is_empty() {
+        ""
+    } else {
+        line_snippet
+    };
     let carets = build_caret_annotation(1, snippet.len().max(1), snippet.len().max(1));
     DiagnosticError {
         message: "invalid block directive name".into(),
@@ -84,15 +88,21 @@ fn build_invalid_block_directive_name_err(line_number: usize, line_snippet: &str
         col_number: 1,
         line_snippet: snippet.into(),
         annotation_carets: carets,
-        annotation_text: "directive name must contain only alphanumeric characters (a-z, 0-9)".into(),
-        help_text: "use only alphanumeric characters for directive names, e.g. ':::variables'.".into(),
+        annotation_text: "directive name must contain only alphanumeric characters (a-z, 0-9)"
+            .into(),
+        help_text: "use only alphanumeric characters for directive names, e.g. ':::variables'."
+            .into(),
     }
     .into()
 }
 
 /// Constructs a standardized diagnostic error for missing block directive names.
 fn build_missing_block_directive_name_err(line_number: usize, line_snippet: &str) -> Error {
-    let snippet = if line_snippet.is_empty() { "" } else { line_snippet };
+    let snippet = if line_snippet.is_empty() {
+        ""
+    } else {
+        line_snippet
+    };
     let carets = build_caret_annotation(1, snippet.len().max(1), snippet.len().max(1));
     DiagnosticError {
         message: "missing block directive name".into(),
@@ -102,14 +112,19 @@ fn build_missing_block_directive_name_err(line_number: usize, line_snippet: &str
         line_snippet: snippet.into(),
         annotation_carets: carets,
         annotation_text: "expected directive name after colons".into(),
-        help_text: "provide an alphanumeric name for the block directive, e.g. ':::variables'.".into(),
+        help_text: "provide an alphanumeric name for the block directive, e.g. ':::variables'."
+            .into(),
     }
     .into()
 }
 
 /// Constructs a standardized diagnostic error for missing frontmatter delimiters.
 fn build_missing_frontmatter_err(line_number: usize, line_snippet: &str) -> Error {
-    let snippet = if line_snippet.is_empty() { "" } else { line_snippet };
+    let snippet = if line_snippet.is_empty() {
+        ""
+    } else {
+        line_snippet
+    };
     let carets = build_caret_annotation(1, snippet.len().max(1), snippet.len().max(1));
     DiagnosticError {
         message: "missing frontmatter delimiter '---'".into(),
@@ -126,7 +141,11 @@ fn build_missing_frontmatter_err(line_number: usize, line_snippet: &str) -> Erro
 
 /// Constructs a standardized diagnostic error for nested block directives.
 fn build_nested_block_directive_err(line_number: usize, line_snippet: &str) -> Error {
-    let snippet = if line_snippet.is_empty() { "" } else { line_snippet };
+    let snippet = if line_snippet.is_empty() {
+        ""
+    } else {
+        line_snippet
+    };
     let carets = build_caret_annotation(1, snippet.len().max(1), snippet.len().max(1));
     DiagnosticError {
         message: "nested block directives are not supported".into(),
@@ -143,7 +162,11 @@ fn build_nested_block_directive_err(line_number: usize, line_snippet: &str) -> E
 
 /// Constructs a standardized diagnostic error for unclosed block directives.
 fn build_unclosed_block_directive_err(line_number: usize, line_snippet: &str) -> Error {
-    let snippet = if line_snippet.is_empty() { "" } else { line_snippet };
+    let snippet = if line_snippet.is_empty() {
+        ""
+    } else {
+        line_snippet
+    };
     let carets = build_caret_annotation(1, snippet.len().max(3), snippet.len().max(3));
     DiagnosticError {
         message: "unclosed block directive".into(),
@@ -929,11 +952,7 @@ fn try_process_ordered_list_item(
     if stack.is_empty() {
         if parsed_num == 1 {
             stack.push((depth, 1));
-            Some(DocumentElement::ordered_list_item(
-                depth,
-                1,
-                content_elem,
-            ))
+            Some(DocumentElement::ordered_list_item(depth, 1, content_elem))
         } else {
             None
         }
@@ -941,11 +960,7 @@ fn try_process_ordered_list_item(
         let last_depth = stack.last().unwrap().0;
         if depth > last_depth {
             stack.push((depth, 1));
-            Some(DocumentElement::ordered_list_item(
-                depth,
-                1,
-                content_elem,
-            ))
+            Some(DocumentElement::ordered_list_item(depth, 1, content_elem))
         } else if depth == last_depth {
             let entry = stack.last_mut().unwrap();
             entry.1 += 1;
@@ -975,22 +990,14 @@ fn try_process_ordered_list_item(
                     ))
                 } else if parsed_num == 1 {
                     stack.push((depth, 1));
-                    Some(DocumentElement::ordered_list_item(
-                        depth,
-                        1,
-                        content_elem,
-                    ))
+                    Some(DocumentElement::ordered_list_item(depth, 1, content_elem))
                 } else {
                     stack.clear();
                     None
                 }
             } else if parsed_num == 1 {
                 stack.push((depth, 1));
-                Some(DocumentElement::ordered_list_item(
-                    depth,
-                    1,
-                    content_elem,
-                ))
+                Some(DocumentElement::ordered_list_item(depth, 1, content_elem))
             } else {
                 None
             }
@@ -1066,7 +1073,10 @@ mod tests {
         let md = "---\ntitle: \"Test\"\n---\nLine 1\n---\nLine 2";
         let doc = parse_d2f_markdown(md).unwrap();
 
-        assert_eq!(doc.parameters.get("title").map(|s| s.as_str()), Some("Test"));
+        assert_eq!(
+            doc.parameters.get("title").map(|s| s.as_str()),
+            Some("Test")
+        );
         assert_eq!(doc.body.len(), 3);
         assert_eq!(doc.body[0], DocumentElement::Text("Line 1".into()));
         assert_eq!(doc.body[1], DocumentElement::Unknown("---".into()));
@@ -1127,15 +1137,14 @@ mod tests {
         let md = "---\r\ntitle: \"CRLF\"\r\n---\r\n# Heading\r\nText";
         let doc = parse_d2f_markdown(md).unwrap();
 
-        assert_eq!(doc.parameters.get("title").map(|s| s.as_str()), Some("CRLF"));
+        assert_eq!(
+            doc.parameters.get("title").map(|s| s.as_str()),
+            Some("CRLF")
+        );
         assert_eq!(doc.body.len(), 1);
         assert_eq!(
             doc.body[0],
-            DocumentElement::section(
-                1,
-                "Heading",
-                vec![DocumentElement::Text("Text".into())]
-            )
+            DocumentElement::section(1, "Heading", vec![DocumentElement::Text("Text".into())])
         );
     }
 
@@ -1155,21 +1164,53 @@ mod tests {
     fn test_parse_shoutout_line_prefixes() {
         let cases = [
             ("> Note content", ShoutoutElementKind::Note, "Note content"),
-            (">Note without space", ShoutoutElementKind::Note, "Note without space"),
+            (
+                ">Note without space",
+                ShoutoutElementKind::Note,
+                "Note without space",
+            ),
             (">   Spaced note", ShoutoutElementKind::Note, "Spaced note"),
             (">?", ShoutoutElementKind::Tip, ""),
             (">? Tip content", ShoutoutElementKind::Tip, "Tip content"),
-            (">?Tip without space", ShoutoutElementKind::Tip, "Tip without space"),
+            (
+                ">?Tip without space",
+                ShoutoutElementKind::Tip,
+                "Tip without space",
+            ),
             ("> ? Spaced tip", ShoutoutElementKind::Tip, "Spaced tip"),
-            (">! Important note", ShoutoutElementKind::Important, "Important note"),
+            (
+                ">! Important note",
+                ShoutoutElementKind::Important,
+                "Important note",
+            ),
             (">!Important", ShoutoutElementKind::Important, "Important"),
-            ("> ! Spaced important", ShoutoutElementKind::Important, "Spaced important"),
-            (">!! Warning note", ShoutoutElementKind::Warning, "Warning note"),
+            (
+                "> ! Spaced important",
+                ShoutoutElementKind::Important,
+                "Spaced important",
+            ),
+            (
+                ">!! Warning note",
+                ShoutoutElementKind::Warning,
+                "Warning note",
+            ),
             (">!!Warning", ShoutoutElementKind::Warning, "Warning"),
-            ("> !! Spaced warning", ShoutoutElementKind::Warning, "Spaced warning"),
-            (">!!! Caution alert", ShoutoutElementKind::Caution, "Caution alert"),
+            (
+                "> !! Spaced warning",
+                ShoutoutElementKind::Warning,
+                "Spaced warning",
+            ),
+            (
+                ">!!! Caution alert",
+                ShoutoutElementKind::Caution,
+                "Caution alert",
+            ),
             (">!!!Caution", ShoutoutElementKind::Caution, "Caution"),
-            ("> !!! Spaced caution", ShoutoutElementKind::Caution, "Spaced caution"),
+            (
+                "> !!! Spaced caution",
+                ShoutoutElementKind::Caution,
+                "Spaced caution",
+            ),
         ];
 
         for (input, expected_kind, expected_content) in cases {
@@ -1219,9 +1260,18 @@ mod tests {
             ("   - Depth 2 (3 spaces)", Some((2, "Depth 2 (3 spaces)"))),
             ("    - Depth 2 (4 spaces)", Some((2, "Depth 2 (4 spaces)"))),
             ("     - Depth 3 (5 spaces)", Some((3, "Depth 3 (5 spaces)"))),
-            ("      - Depth 3 (6 spaces)", Some((3, "Depth 3 (6 spaces)"))),
-            ("       - Depth 4 (7 spaces)", Some((4, "Depth 4 (7 spaces)"))),
-            ("        - Depth 4 (8 spaces)", Some((4, "Depth 4 (8 spaces)"))),
+            (
+                "      - Depth 3 (6 spaces)",
+                Some((3, "Depth 3 (6 spaces)")),
+            ),
+            (
+                "       - Depth 4 (7 spaces)",
+                Some((4, "Depth 4 (7 spaces)")),
+            ),
+            (
+                "        - Depth 4 (8 spaces)",
+                Some((4, "Depth 4 (8 spaces)")),
+            ),
             ("  -   Spaced content   ", Some((1, "Spaced content"))),
             ("  -", Some((1, ""))),
         ];
@@ -1241,13 +1291,31 @@ mod tests {
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 7);
-        assert_eq!(doc.body[0], DocumentElement::bullet_list_item(0, DocumentElement::text("Level 0")));
-        assert_eq!(doc.body[1], DocumentElement::bullet_list_item(1, DocumentElement::text("Level 1a")));
-        assert_eq!(doc.body[2], DocumentElement::bullet_list_item(1, DocumentElement::text("Level 1b")));
-        assert_eq!(doc.body[3], DocumentElement::bullet_list_item(2, DocumentElement::text("Level 2a")));
-        assert_eq!(doc.body[4], DocumentElement::bullet_list_item(2, DocumentElement::text("Level 2b")));
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::bullet_list_item(0, DocumentElement::text("Level 0"))
+        );
+        assert_eq!(
+            doc.body[1],
+            DocumentElement::bullet_list_item(1, DocumentElement::text("Level 1a"))
+        );
+        assert_eq!(
+            doc.body[2],
+            DocumentElement::bullet_list_item(1, DocumentElement::text("Level 1b"))
+        );
+        assert_eq!(
+            doc.body[3],
+            DocumentElement::bullet_list_item(2, DocumentElement::text("Level 2a"))
+        );
+        assert_eq!(
+            doc.body[4],
+            DocumentElement::bullet_list_item(2, DocumentElement::text("Level 2b"))
+        );
         assert_eq!(doc.body[5], DocumentElement::text("Regular text"));
-        assert_eq!(doc.body[6], DocumentElement::bullet_list_item(0, DocumentElement::text("Another root")));
+        assert_eq!(
+            doc.body[6],
+            DocumentElement::bullet_list_item(0, DocumentElement::text("Another root"))
+        );
     }
 
     #[test]
@@ -1256,8 +1324,14 @@ mod tests {
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 2);
-        assert_eq!(doc.body[0], DocumentElement::bullet_list_item(1, DocumentElement::text("Item 1")));
-        assert_eq!(doc.body[1], DocumentElement::bullet_list_item(2, DocumentElement::text("Item 2")));
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::bullet_list_item(1, DocumentElement::text("Item 1"))
+        );
+        assert_eq!(
+            doc.body[1],
+            DocumentElement::bullet_list_item(2, DocumentElement::text("Item 2"))
+        );
     }
 
     #[test]
@@ -1316,16 +1390,14 @@ mod tests {
 
     #[test]
     fn test_parse_d2f_markdown_unclosed_code_block_at_eof() {
-        let md = "---\ntitle: \"Unclosed Code\"\n---\n```rust\nfn main() {\n    println!(\"hi\");\n}";
+        let md =
+            "---\ntitle: \"Unclosed Code\"\n---\n```rust\nfn main() {\n    println!(\"hi\");\n}";
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 1);
         assert_eq!(
             doc.body[0],
-            DocumentElement::code_block(
-                Some("rust"),
-                "fn main() {\n    println!(\"hi\");\n}"
-            )
+            DocumentElement::code_block(Some("rust"), "fn main() {\n    println!(\"hi\");\n}")
         );
     }
 
@@ -1334,21 +1406,51 @@ mod tests {
         let cases = [
             ("- [ ] Root unchecked", Some((0, false, "Root unchecked"))),
             ("- [x] Root checked", Some((0, true, "Root checked"))),
-            ("- [X] Root checked upper", Some((0, true, "Root checked upper"))),
+            (
+                "- [X] Root checked upper",
+                Some((0, true, "Root checked upper")),
+            ),
             ("- [ ]", Some((0, false, ""))),
             ("- [ ] ", Some((0, false, ""))),
             ("- [x]", Some((0, true, ""))),
             ("- [x] ", Some((0, true, ""))),
             ("- [X]", Some((0, true, ""))),
-            (" - [ ] Depth 1 (1 space)", Some((1, false, "Depth 1 (1 space)"))),
-            ("  - [ ] Depth 1 (2 spaces)", Some((1, false, "Depth 1 (2 spaces)"))),
-            ("   - [x] Depth 2 (3 spaces)", Some((2, true, "Depth 2 (3 spaces)"))),
-            ("    - [x] Depth 2 (4 spaces)", Some((2, true, "Depth 2 (4 spaces)"))),
-            ("     - [X] Depth 3 (5 spaces)", Some((3, true, "Depth 3 (5 spaces)"))),
-            ("      - [X] Depth 3 (6 spaces)", Some((3, true, "Depth 3 (6 spaces)"))),
-            ("       - [ ] Depth 4 (7 spaces)", Some((4, false, "Depth 4 (7 spaces)"))),
-            ("        - [x] Depth 4 (8 spaces)", Some((4, true, "Depth 4 (8 spaces)"))),
-            ("  - [ ]   Spaced task content   ", Some((1, false, "Spaced task content"))),
+            (
+                " - [ ] Depth 1 (1 space)",
+                Some((1, false, "Depth 1 (1 space)")),
+            ),
+            (
+                "  - [ ] Depth 1 (2 spaces)",
+                Some((1, false, "Depth 1 (2 spaces)")),
+            ),
+            (
+                "   - [x] Depth 2 (3 spaces)",
+                Some((2, true, "Depth 2 (3 spaces)")),
+            ),
+            (
+                "    - [x] Depth 2 (4 spaces)",
+                Some((2, true, "Depth 2 (4 spaces)")),
+            ),
+            (
+                "     - [X] Depth 3 (5 spaces)",
+                Some((3, true, "Depth 3 (5 spaces)")),
+            ),
+            (
+                "      - [X] Depth 3 (6 spaces)",
+                Some((3, true, "Depth 3 (6 spaces)")),
+            ),
+            (
+                "       - [ ] Depth 4 (7 spaces)",
+                Some((4, false, "Depth 4 (7 spaces)")),
+            ),
+            (
+                "        - [x] Depth 4 (8 spaces)",
+                Some((4, true, "Depth 4 (8 spaces)")),
+            ),
+            (
+                "  - [ ]   Spaced task content   ",
+                Some((1, false, "Spaced task content")),
+            ),
             ("- [ ]NoSpace", None),
             ("- [x]NoSpace", None),
             ("- [y] Invalid char", None),
@@ -1372,12 +1474,30 @@ mod tests {
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 6);
-        assert_eq!(doc.body[0], DocumentElement::check_box_item(0, false, DocumentElement::text("Task 1")));
-        assert_eq!(doc.body[1], DocumentElement::check_box_item(1, true, DocumentElement::text("Subtask 1.1")));
-        assert_eq!(doc.body[2], DocumentElement::check_box_item(1, true, DocumentElement::text("Subtask 1.2")));
-        assert_eq!(doc.body[3], DocumentElement::check_box_item(2, false, DocumentElement::text("Sub-subtask")));
-        assert_eq!(doc.body[4], DocumentElement::check_box_item(0, true, DocumentElement::text("Task 2")));
-        assert_eq!(doc.body[5], DocumentElement::check_box_item(0, false, DocumentElement::text("")));
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::check_box_item(0, false, DocumentElement::text("Task 1"))
+        );
+        assert_eq!(
+            doc.body[1],
+            DocumentElement::check_box_item(1, true, DocumentElement::text("Subtask 1.1"))
+        );
+        assert_eq!(
+            doc.body[2],
+            DocumentElement::check_box_item(1, true, DocumentElement::text("Subtask 1.2"))
+        );
+        assert_eq!(
+            doc.body[3],
+            DocumentElement::check_box_item(2, false, DocumentElement::text("Sub-subtask"))
+        );
+        assert_eq!(
+            doc.body[4],
+            DocumentElement::check_box_item(0, true, DocumentElement::text("Task 2"))
+        );
+        assert_eq!(
+            doc.body[5],
+            DocumentElement::check_box_item(0, false, DocumentElement::text(""))
+        );
     }
 
     #[test]
@@ -1386,11 +1506,26 @@ mod tests {
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 5);
-        assert_eq!(doc.body[0], DocumentElement::bullet_list_item(0, DocumentElement::text("Bullet 1")));
-        assert_eq!(doc.body[1], DocumentElement::check_box_item(0, false, DocumentElement::text("Task 1")));
-        assert_eq!(doc.body[2], DocumentElement::bullet_list_item(1, DocumentElement::text("Bullet nested")));
-        assert_eq!(doc.body[3], DocumentElement::check_box_item(1, true, DocumentElement::text("Task nested")));
-        assert_eq!(doc.body[4], DocumentElement::bullet_list_item(0, DocumentElement::text("Bullet 2")));
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::bullet_list_item(0, DocumentElement::text("Bullet 1"))
+        );
+        assert_eq!(
+            doc.body[1],
+            DocumentElement::check_box_item(0, false, DocumentElement::text("Task 1"))
+        );
+        assert_eq!(
+            doc.body[2],
+            DocumentElement::bullet_list_item(1, DocumentElement::text("Bullet nested"))
+        );
+        assert_eq!(
+            doc.body[3],
+            DocumentElement::check_box_item(1, true, DocumentElement::text("Task nested"))
+        );
+        assert_eq!(
+            doc.body[4],
+            DocumentElement::bullet_list_item(0, DocumentElement::text("Bullet 2"))
+        );
     }
 
     #[test]
@@ -1400,13 +1535,34 @@ mod tests {
             ("1.", Some((0, 1, ""))),
             ("1. ", Some((0, 1, ""))),
             (" 1. Depth 1 (1 space)", Some((1, 1, "Depth 1 (1 space)"))),
-            ("  1. Depth 1 (2 spaces)", Some((1, 1, "Depth 1 (2 spaces)"))),
-            ("   2. Depth 2 (3 spaces)", Some((2, 2, "Depth 2 (3 spaces)"))),
-            ("    42. Depth 2 (4 spaces)", Some((2, 42, "Depth 2 (4 spaces)"))),
-            ("     999. Depth 3 (5 spaces)", Some((3, 999, "Depth 3 (5 spaces)"))),
-            ("      1. Depth 3 (6 spaces)", Some((3, 1, "Depth 3 (6 spaces)"))),
-            ("       5. Depth 4 (7 spaces)", Some((4, 5, "Depth 4 (7 spaces)"))),
-            ("        10. Depth 4 (8 spaces)", Some((4, 10, "Depth 4 (8 spaces)"))),
+            (
+                "  1. Depth 1 (2 spaces)",
+                Some((1, 1, "Depth 1 (2 spaces)")),
+            ),
+            (
+                "   2. Depth 2 (3 spaces)",
+                Some((2, 2, "Depth 2 (3 spaces)")),
+            ),
+            (
+                "    42. Depth 2 (4 spaces)",
+                Some((2, 42, "Depth 2 (4 spaces)")),
+            ),
+            (
+                "     999. Depth 3 (5 spaces)",
+                Some((3, 999, "Depth 3 (5 spaces)")),
+            ),
+            (
+                "      1. Depth 3 (6 spaces)",
+                Some((3, 1, "Depth 3 (6 spaces)")),
+            ),
+            (
+                "       5. Depth 4 (7 spaces)",
+                Some((4, 5, "Depth 4 (7 spaces)")),
+            ),
+            (
+                "        10. Depth 4 (8 spaces)",
+                Some((4, 10, "Depth 4 (8 spaces)")),
+            ),
             ("  1.   Spaced content   ", Some((1, 1, "Spaced content"))),
             ("1.NoSpace", None),
             ("1.1 Decimal", None),
@@ -1430,9 +1586,18 @@ mod tests {
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 3);
-        assert_eq!(doc.body[0], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("First")));
-        assert_eq!(doc.body[1], DocumentElement::ordered_list_item(0, 2, DocumentElement::text("Second")));
-        assert_eq!(doc.body[2], DocumentElement::ordered_list_item(0, 3, DocumentElement::text("Third")));
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::ordered_list_item(0, 1, DocumentElement::text("First"))
+        );
+        assert_eq!(
+            doc.body[1],
+            DocumentElement::ordered_list_item(0, 2, DocumentElement::text("Second"))
+        );
+        assert_eq!(
+            doc.body[2],
+            DocumentElement::ordered_list_item(0, 3, DocumentElement::text("Third"))
+        );
     }
 
     #[test]
@@ -1440,16 +1605,34 @@ mod tests {
         let md1 = "---\ntitle: \"Repeated 1s\"\n---\n1. Apple\n1. Banana\n1. Cherry";
         let doc1 = parse_d2f_markdown(md1).unwrap();
         assert_eq!(doc1.body.len(), 3);
-        assert_eq!(doc1.body[0], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Apple")));
-        assert_eq!(doc1.body[1], DocumentElement::ordered_list_item(0, 2, DocumentElement::text("Banana")));
-        assert_eq!(doc1.body[2], DocumentElement::ordered_list_item(0, 3, DocumentElement::text("Cherry")));
+        assert_eq!(
+            doc1.body[0],
+            DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Apple"))
+        );
+        assert_eq!(
+            doc1.body[1],
+            DocumentElement::ordered_list_item(0, 2, DocumentElement::text("Banana"))
+        );
+        assert_eq!(
+            doc1.body[2],
+            DocumentElement::ordered_list_item(0, 3, DocumentElement::text("Cherry"))
+        );
 
         let md2 = "---\ntitle: \"Random Numbers\"\n---\n1. Red\n5. Green\n99. Blue";
         let doc2 = parse_d2f_markdown(md2).unwrap();
         assert_eq!(doc2.body.len(), 3);
-        assert_eq!(doc2.body[0], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Red")));
-        assert_eq!(doc2.body[1], DocumentElement::ordered_list_item(0, 2, DocumentElement::text("Green")));
-        assert_eq!(doc2.body[2], DocumentElement::ordered_list_item(0, 3, DocumentElement::text("Blue")));
+        assert_eq!(
+            doc2.body[0],
+            DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Red"))
+        );
+        assert_eq!(
+            doc2.body[1],
+            DocumentElement::ordered_list_item(0, 2, DocumentElement::text("Green"))
+        );
+        assert_eq!(
+            doc2.body[2],
+            DocumentElement::ordered_list_item(0, 3, DocumentElement::text("Blue"))
+        );
     }
 
     #[test]
@@ -1458,12 +1641,30 @@ mod tests {
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 6);
-        assert_eq!(doc.body[0], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("L0_1")));
-        assert_eq!(doc.body[1], DocumentElement::ordered_list_item(1, 1, DocumentElement::text("L1_1")));
-        assert_eq!(doc.body[2], DocumentElement::ordered_list_item(1, 2, DocumentElement::text("L1_2")));
-        assert_eq!(doc.body[3], DocumentElement::ordered_list_item(2, 1, DocumentElement::text("L2_1")));
-        assert_eq!(doc.body[4], DocumentElement::ordered_list_item(1, 3, DocumentElement::text("L1_3")));
-        assert_eq!(doc.body[5], DocumentElement::ordered_list_item(0, 2, DocumentElement::text("L0_2")));
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::ordered_list_item(0, 1, DocumentElement::text("L0_1"))
+        );
+        assert_eq!(
+            doc.body[1],
+            DocumentElement::ordered_list_item(1, 1, DocumentElement::text("L1_1"))
+        );
+        assert_eq!(
+            doc.body[2],
+            DocumentElement::ordered_list_item(1, 2, DocumentElement::text("L1_2"))
+        );
+        assert_eq!(
+            doc.body[3],
+            DocumentElement::ordered_list_item(2, 1, DocumentElement::text("L2_1"))
+        );
+        assert_eq!(
+            doc.body[4],
+            DocumentElement::ordered_list_item(1, 3, DocumentElement::text("L1_3"))
+        );
+        assert_eq!(
+            doc.body[5],
+            DocumentElement::ordered_list_item(0, 2, DocumentElement::text("L0_2"))
+        );
     }
 
     #[test]
@@ -1472,10 +1673,22 @@ mod tests {
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 4);
-        assert_eq!(doc.body[0], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Root 1")));
-        assert_eq!(doc.body[1], DocumentElement::ordered_list_item(1, 1, DocumentElement::text("Subitem 1")));
-        assert_eq!(doc.body[2], DocumentElement::ordered_list_item(1, 2, DocumentElement::text("Subitem 2")));
-        assert_eq!(doc.body[3], DocumentElement::ordered_list_item(0, 2, DocumentElement::text("Root 2")));
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Root 1"))
+        );
+        assert_eq!(
+            doc.body[1],
+            DocumentElement::ordered_list_item(1, 1, DocumentElement::text("Subitem 1"))
+        );
+        assert_eq!(
+            doc.body[2],
+            DocumentElement::ordered_list_item(1, 2, DocumentElement::text("Subitem 2"))
+        );
+        assert_eq!(
+            doc.body[3],
+            DocumentElement::ordered_list_item(0, 2, DocumentElement::text("Root 2"))
+        );
     }
 
     #[test]
@@ -1484,11 +1697,23 @@ mod tests {
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 7);
-        assert_eq!(doc.body[0], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Item 1")));
-        assert_eq!(doc.body[1], DocumentElement::ordered_list_item(0, 2, DocumentElement::text("Item 2")));
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Item 1"))
+        );
+        assert_eq!(
+            doc.body[1],
+            DocumentElement::ordered_list_item(0, 2, DocumentElement::text("Item 2"))
+        );
         assert_eq!(doc.body[2], DocumentElement::text("Paragraph text"));
-        assert_eq!(doc.body[3], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("New list 1")));
-        assert_eq!(doc.body[4], DocumentElement::ordered_list_item(0, 2, DocumentElement::text("New list 2")));
+        assert_eq!(
+            doc.body[3],
+            DocumentElement::ordered_list_item(0, 1, DocumentElement::text("New list 1"))
+        );
+        assert_eq!(
+            doc.body[4],
+            DocumentElement::ordered_list_item(0, 2, DocumentElement::text("New list 2"))
+        );
         assert_eq!(doc.body[5], DocumentElement::text("Another paragraph"));
         assert_eq!(doc.body[6], DocumentElement::text("2. Not a list"));
     }
@@ -1499,21 +1724,42 @@ mod tests {
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 9);
-        assert_eq!(doc.body[0], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Item 1")));
-        assert_eq!(doc.body[1], DocumentElement::bullet_list_item(0, DocumentElement::text("Bullet item")));
-        assert_eq!(doc.body[2], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Item after bullet")));
-        assert_eq!(doc.body[3], DocumentElement::check_box_item(0, false, DocumentElement::text("Check item")));
-        assert_eq!(doc.body[4], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Item after check")));
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Item 1"))
+        );
+        assert_eq!(
+            doc.body[1],
+            DocumentElement::bullet_list_item(0, DocumentElement::text("Bullet item"))
+        );
+        assert_eq!(
+            doc.body[2],
+            DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Item after bullet"))
+        );
+        assert_eq!(
+            doc.body[3],
+            DocumentElement::check_box_item(0, false, DocumentElement::text("Check item"))
+        );
+        assert_eq!(
+            doc.body[4],
+            DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Item after check"))
+        );
         assert_eq!(
             doc.body[5],
             DocumentElement::shoutout(ShoutoutElementKind::Note, "Note shoutout")
         );
-        assert_eq!(doc.body[6], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Item after shoutout")));
+        assert_eq!(
+            doc.body[6],
+            DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Item after shoutout"))
+        );
         assert_eq!(
             doc.body[7],
             DocumentElement::code_block(None::<String>, "code")
         );
-        assert_eq!(doc.body[8], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Item after code")));
+        assert_eq!(
+            doc.body[8],
+            DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Item after code"))
+        );
     }
 
     #[test]
@@ -1522,9 +1768,18 @@ mod tests {
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 3);
-        assert_eq!(doc.body[0], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Item 1")));
-        assert_eq!(doc.body[1], DocumentElement::ordered_list_item(0, 2, DocumentElement::text("Item 2")));
-        assert_eq!(doc.body[2], DocumentElement::ordered_list_item(1, 1, DocumentElement::text("Subitem")));
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Item 1"))
+        );
+        assert_eq!(
+            doc.body[1],
+            DocumentElement::ordered_list_item(0, 2, DocumentElement::text("Item 2"))
+        );
+        assert_eq!(
+            doc.body[2],
+            DocumentElement::ordered_list_item(1, 1, DocumentElement::text("Subitem"))
+        );
     }
 
     #[test]
@@ -1568,18 +1823,9 @@ mod tests {
 
     #[test]
     fn test_parse_table_row_cases() {
-        assert_eq!(
-            parse_table_row("| A | B | C |"),
-            vec!["A", "B", "C"]
-        );
-        assert_eq!(
-            parse_table_row("A | B"),
-            vec!["A", "B"]
-        );
-        assert_eq!(
-            parse_table_row("| A \\| B | C |"),
-            vec!["A | B", "C"]
-        );
+        assert_eq!(parse_table_row("| A | B | C |"), vec!["A", "B", "C"]);
+        assert_eq!(parse_table_row("A | B"), vec!["A", "B"]);
+        assert_eq!(parse_table_row("| A \\| B | C |"), vec!["A | B", "C"]);
         assert_eq!(
             parse_table_row("|   Spaced   |   Content   |"),
             vec!["Spaced", "Content"]
@@ -1685,10 +1931,7 @@ mod tests {
                     DocumentElement::bullet_list_item(0, DocumentElement::text("Bullet item")),
                     DocumentElement::table(
                         vec![TableAlignment::None],
-                        vec![
-                            vec!["Next Table".into()],
-                            vec!["Only Row".into()],
-                        ]
+                        vec![vec!["Next Table".into()], vec!["Only Row".into()],]
                     ),
                 ]
             )
@@ -1727,14 +1970,8 @@ mod tests {
             doc.body[1],
             DocumentElement::text("Another regular sentence.")
         );
-        assert_eq!(
-            doc.body[2],
-            DocumentElement::text("Option A | Option B")
-        );
-        assert_eq!(
-            doc.body[3],
-            DocumentElement::text("Not a table.")
-        );
+        assert_eq!(doc.body[2], DocumentElement::text("Option A | Option B"));
+        assert_eq!(doc.body[3], DocumentElement::text("Not a table."));
     }
 
     #[test]
@@ -1792,11 +2029,26 @@ mod tests {
         if let DocumentElement::BlockDirective { name, children } = &doc.body[0] {
             assert_eq!(name, "custom123");
             assert_eq!(children.len(), 5);
-            assert_eq!(children[0], DocumentElement::bullet_list_item(0, DocumentElement::text("Bullet 1")));
-            assert_eq!(children[1], DocumentElement::check_box_item(0, true, DocumentElement::text("Checkbox")));
-            assert_eq!(children[2], DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Numbered 1")));
-            assert_eq!(children[3], DocumentElement::shoutout(ShoutoutElementKind::Important, "Important shoutout"));
-            assert_eq!(children[4], DocumentElement::code_block(Some("bash"), "echo test"));
+            assert_eq!(
+                children[0],
+                DocumentElement::bullet_list_item(0, DocumentElement::text("Bullet 1"))
+            );
+            assert_eq!(
+                children[1],
+                DocumentElement::check_box_item(0, true, DocumentElement::text("Checkbox"))
+            );
+            assert_eq!(
+                children[2],
+                DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Numbered 1"))
+            );
+            assert_eq!(
+                children[3],
+                DocumentElement::shoutout(ShoutoutElementKind::Important, "Important shoutout")
+            );
+            assert_eq!(
+                children[4],
+                DocumentElement::code_block(Some("bash"), "echo test")
+            );
         } else {
             panic!("Expected BlockDirective");
         }
@@ -1891,10 +2143,7 @@ mod tests {
             doc.body[1],
             DocumentElement::image("", "https://example.com/logo.svg")
         );
-        assert_eq!(
-            doc.body[2],
-            DocumentElement::image("Empty URL", "")
-        );
+        assert_eq!(doc.body[2], DocumentElement::image("Empty URL", ""));
         assert_eq!(
             doc.body[3],
             DocumentElement::image(" With Spaces ", "https://example.com/pic.webp")
@@ -1924,11 +2173,7 @@ mod tests {
         );
         assert_eq!(
             doc.body[2],
-            DocumentElement::check_box_item(
-                0,
-                false,
-                DocumentElement::text("Normal text")
-            )
+            DocumentElement::check_box_item(0, false, DocumentElement::text("Normal text"))
         );
         assert_eq!(
             doc.body[3],
@@ -1957,10 +2202,7 @@ mod tests {
         if let DocumentElement::BlockDirective { name, children } = &doc.body[0] {
             assert_eq!(name, "gallery");
             assert_eq!(children.len(), 3);
-            assert_eq!(
-                children[0],
-                DocumentElement::image("Pic 1", "pic1.jpg")
-            );
+            assert_eq!(children[0], DocumentElement::image("Pic 1", "pic1.jpg"));
             assert_eq!(
                 children[1],
                 DocumentElement::bullet_list_item(
@@ -1968,10 +2210,7 @@ mod tests {
                     DocumentElement::image("Nested Pic", "pic2.jpg")
                 )
             );
-            assert_eq!(
-                children[2],
-                DocumentElement::text("Text")
-            );
+            assert_eq!(children[2], DocumentElement::text("Text"));
         } else {
             panic!("expected BlockDirective");
         }
@@ -1984,10 +2223,19 @@ mod tests {
 
         assert_eq!(doc.body.len(), 5);
         assert_eq!(doc.body[0], DocumentElement::text("! Not an image"));
-        assert_eq!(doc.body[1], DocumentElement::text("![Unclosed bracket(url)"));
+        assert_eq!(
+            doc.body[1],
+            DocumentElement::text("![Unclosed bracket(url)")
+        );
         assert_eq!(doc.body[2], DocumentElement::text("![Alt]no paren"));
-        assert_eq!(doc.body[3], DocumentElement::text("![Alt](no closing paren"));
-        assert_eq!(doc.body[4], DocumentElement::text("Prefix ![Alt](url) suffix"));
+        assert_eq!(
+            doc.body[3],
+            DocumentElement::text("![Alt](no closing paren")
+        );
+        assert_eq!(
+            doc.body[4],
+            DocumentElement::text("Prefix ![Alt](url) suffix")
+        );
     }
 
     #[test]
@@ -1995,8 +2243,14 @@ mod tests {
         assert_eq!(parse_heading_line("# Title"), Some((1, "Title")));
         assert_eq!(parse_heading_line("## Subtitle"), Some((2, "Subtitle")));
         assert_eq!(parse_heading_line("### Sub-sub"), Some((3, "Sub-sub")));
-        assert_eq!(parse_heading_line("#### Level 4 capped"), Some((3, "Level 4 capped")));
-        assert_eq!(parse_heading_line("########## Level 10 capped"), Some((3, "Level 10 capped")));
+        assert_eq!(
+            parse_heading_line("#### Level 4 capped"),
+            Some((3, "Level 4 capped"))
+        );
+        assert_eq!(
+            parse_heading_line("########## Level 10 capped"),
+            Some((3, "Level 10 capped"))
+        );
         assert_eq!(parse_heading_line("#"), Some((1, "")));
         assert_eq!(parse_heading_line("##"), Some((2, "")));
         assert_eq!(parse_heading_line("###"), Some((3, "")));
@@ -2015,14 +2269,24 @@ mod tests {
         assert_eq!(doc.body[0], DocumentElement::text("Intro text"));
 
         // Section 1 (Level 1)
-        if let DocumentElement::Section { level, title, children } = &doc.body[1] {
+        if let DocumentElement::Section {
+            level,
+            title,
+            children,
+        } = &doc.body[1]
+        {
             assert_eq!(*level, 1);
             assert_eq!(title, "Section 1");
             assert_eq!(children.len(), 3);
             assert_eq!(children[0], DocumentElement::text("Text in 1"));
 
             // Section 1.1 (Level 2)
-            if let DocumentElement::Section { level: l2_1, title: t2_1, children: ch2_1 } = &children[1] {
+            if let DocumentElement::Section {
+                level: l2_1,
+                title: t2_1,
+                children: ch2_1,
+            } = &children[1]
+            {
                 assert_eq!(*l2_1, 2);
                 assert_eq!(t2_1, "Section 1.1");
                 assert_eq!(ch2_1.len(), 4);
@@ -2031,17 +2295,29 @@ mod tests {
                 // Section 1.1.1 (Level 3)
                 assert_eq!(
                     ch2_1[1],
-                    DocumentElement::section(3, "Section 1.1.1", vec![DocumentElement::text("Text in 1.1.1")])
+                    DocumentElement::section(
+                        3,
+                        "Section 1.1.1",
+                        vec![DocumentElement::text("Text in 1.1.1")]
+                    )
                 );
                 // Section 1.1.2 (Level 3, capped from 4)
                 assert_eq!(
                     ch2_1[2],
-                    DocumentElement::section(3, "Section 1.1.2 Capped", vec![DocumentElement::text("Text in 1.1.2")])
+                    DocumentElement::section(
+                        3,
+                        "Section 1.1.2 Capped",
+                        vec![DocumentElement::text("Text in 1.1.2")]
+                    )
                 );
                 // Section 1.1.3 (Level 3, capped from 10)
                 assert_eq!(
                     ch2_1[3],
-                    DocumentElement::section(3, "Section 1.1.3 Capped", vec![DocumentElement::text("Text in 1.1.3")])
+                    DocumentElement::section(
+                        3,
+                        "Section 1.1.3 Capped",
+                        vec![DocumentElement::text("Text in 1.1.3")]
+                    )
                 );
             } else {
                 panic!("expected Section 1.1");
@@ -2050,7 +2326,11 @@ mod tests {
             // Section 1.2 (Level 2)
             assert_eq!(
                 children[2],
-                DocumentElement::section(2, "Section 1.2", vec![DocumentElement::text("Text in 1.2")])
+                DocumentElement::section(
+                    2,
+                    "Section 1.2",
+                    vec![DocumentElement::text("Text in 1.2")]
+                )
             );
         } else {
             panic!("expected Section 1");
@@ -2069,7 +2349,12 @@ mod tests {
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 1);
-        if let DocumentElement::Section { level, title, children } = &doc.body[0] {
+        if let DocumentElement::Section {
+            level,
+            title,
+            children,
+        } = &doc.body[0]
+        {
             assert_eq!(*level, 1);
             assert_eq!(title, "Main Heading");
             assert_eq!(children.len(), 8);
@@ -2094,7 +2379,10 @@ mod tests {
                 children[5],
                 DocumentElement::table(
                     vec![TableAlignment::None, TableAlignment::None],
-                    vec![vec!["H1".into(), "H2".into()], vec!["D1".into(), "D2".into()]]
+                    vec![
+                        vec!["H1".into(), "H2".into()],
+                        vec!["D1".into(), "D2".into()]
+                    ]
                 )
             );
             assert_eq!(
@@ -2103,19 +2391,16 @@ mod tests {
                     "variables",
                     vec![DocumentElement::table(
                         vec![TableAlignment::None, TableAlignment::None],
-                        vec![vec!["KEY".into(), "VAL".into()], vec!["PORT".into(), "8080".into()]]
+                        vec![
+                            vec!["KEY".into(), "VAL".into()],
+                            vec!["PORT".into(), "8080".into()]
+                        ]
                     )]
                 )
             );
-            assert_eq!(
-                children[7],
-                DocumentElement::image("Diagram", "arch.png")
-            );
+            assert_eq!(children[7], DocumentElement::image("Diagram", "arch.png"));
         } else {
             panic!("expected Section");
         }
     }
 }
-
-
-

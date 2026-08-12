@@ -39,10 +39,14 @@ pub fn generate_d2f_id(frontmatter: &Frontmatter) -> Result<String> {
     let norm_date = normalize_field(frontmatter.date.as_deref());
     let raw_version = normalize_field(frontmatter.version.as_deref());
 
-    let missing_count = [norm_title.is_empty(), norm_date.is_empty(), raw_version.is_empty()]
-        .into_iter()
-        .filter(|&empty| empty)
-        .count();
+    let missing_count = [
+        norm_title.is_empty(),
+        norm_date.is_empty(),
+        raw_version.is_empty(),
+    ]
+    .into_iter()
+    .filter(|&empty| empty)
+    .count();
 
     match missing_count {
         0 => (),
@@ -218,7 +222,10 @@ mod tests {
         fm.date = Some("2026-07-26".into());
 
         let result = generate_d2f_id(&fm);
-        assert!(result.is_ok(), "d2f_id generation should handle multi-byte emoji truncation safely");
+        assert!(
+            result.is_ok(),
+            "d2f_id generation should handle multi-byte emoji truncation safely"
+        );
         let id = result.unwrap();
         assert!(id.starts_with("d2f_id_"));
         assert_eq!(id.len(), 23);

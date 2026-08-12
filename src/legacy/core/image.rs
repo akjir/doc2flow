@@ -1,5 +1,7 @@
 use crate::legacy::core::components::DEFAULT_LOGO_SVG;
-use crate::legacy::utils::error::{DiagnosticError, Doc2FlowError, Result, build_caret_annotation, print_warning};
+use crate::legacy::utils::error::{
+    DiagnosticError, Doc2FlowError, Result, build_caret_annotation, print_warning,
+};
 use crate::legacy::utils::io;
 use crate::legacy::utils::mime::guess_mime_type;
 use crate::legacy::utils::uri::{file_to_data_uri, to_base64_data_uri};
@@ -11,7 +13,6 @@ use std::io::Cursor;
 use std::path::{Path, PathBuf};
 
 pub use crate::legacy::utils::uri::to_base64_data_uri_into;
-
 
 /// Maximum allowed size in bytes for a local image embedded into HTML (250 KB).
 pub const MAX_IMAGE_SIZE_BYTES: u64 = 250 * 1024;
@@ -219,7 +220,9 @@ fn render_non_image_link(
     if let Some(next_cursor) = strip_img_item_wrapper(out, html, img_end) {
         let comment_icon = crate::legacy::core::components::COMMENT_ICON_SVG;
 
-        out.push_str("<div class=\"doc-item text-item\">\n  <span class=\"text-content\"><a href=\"");
+        out.push_str(
+            "<div class=\"doc-item text-item\">\n  <span class=\"text-content\"><a href=\"",
+        );
         out.push_str(src_val);
         out.push_str("\" target=\"_blank\" rel=\"noopener noreferrer\">");
         out.push_str(alt_text);
@@ -341,9 +344,11 @@ pub fn process_and_encode_image_as_webp(image_path: &Path) -> Result<String> {
 
         buffer.clear();
         let mut cursor = Cursor::new(&mut buffer);
-        resized_img.write_to(&mut cursor, ImageFormat::WebP).map_err(|e| {
-            Doc2FlowError::ImageProcess(format!("Failed to encode image to WebP format: {}", e))
-        })?;
+        resized_img
+            .write_to(&mut cursor, ImageFormat::WebP)
+            .map_err(|e| {
+                Doc2FlowError::ImageProcess(format!("Failed to encode image to WebP format: {}", e))
+            })?;
 
         if (buffer.len() as u64) <= MAX_IMAGE_SIZE_BYTES || (target_w <= 100 && target_h <= 100) {
             break dims;
@@ -701,7 +706,8 @@ fn skip_editor_metadata_tag<'a>(full_tag: &str, rest: &'a str) -> Option<&'a str
     let is_editor_tag = tag_name.starts_with("sodipodi:") || tag_name == "metadata";
 
     if is_editor_tag {
-        if !is_closing && !is_self_closing
+        if !is_closing
+            && !is_self_closing
             && let Some(pos) = rest.find("</")
         {
             let after = &rest[pos + 2..];
@@ -969,7 +975,8 @@ mod tests {
 
     #[test]
     fn test_extract_attribute_multiline_and_newlines_in_tag() {
-        let tag = "<img\n  src=\"images/multiline.png\"\n  alt=\"System\nDiagram with Newlines\"\n/>";
+        let tag =
+            "<img\n  src=\"images/multiline.png\"\n  alt=\"System\nDiagram with Newlines\"\n/>";
         let (start, end, src_val) = extract_attribute(tag, "src").unwrap();
         assert_eq!(&tag[start..end], "src=\"images/multiline.png\"");
         assert_eq!(src_val, "images/multiline.png");
@@ -1044,7 +1051,9 @@ mod tests {
         let img_path = dir.join("big_photo.png");
 
         let img_buf = image::RgbImage::new(1000, 1000);
-        img_buf.save_with_format(&img_path, ImageFormat::Png).unwrap();
+        img_buf
+            .save_with_format(&img_path, ImageFormat::Png)
+            .unwrap();
 
         let file_size = io::get_file_size(&img_path).unwrap();
         if file_size <= MAX_IMAGE_SIZE_BYTES {
@@ -1219,7 +1228,10 @@ mod tests {
         assert!(err_str.contains("error: image 'images/large_photo.png' exceeds maximum allowed size of 250 KB (300.0 KB)"));
         assert!(err_str.contains("--> doc.md:12:16"));
         assert!(err_str.contains("12 | ![Diagram](images/large_photo.png)"));
-        assert!(err_str.contains("^^^^^^^^^^^^^^^^^^^ local image size (300.0 KB) exceeds 250 KB limit"));
+        assert!(
+            err_str
+                .contains("^^^^^^^^^^^^^^^^^^^ local image size (300.0 KB) exceeds 250 KB limit")
+        );
         assert!(err_str.contains("= help: reduce image resolution or compress 'images/large_photo.png' below 250 KB before embedding."));
     }
 }

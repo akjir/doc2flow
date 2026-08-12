@@ -15,9 +15,9 @@ pub use crate::legacy::utils::{base64, error, hasher, io, mime, uri};
 
 pub use args::{Args, help_message, parse_args};
 pub use builder::{
-    SCRIPT_CORE, STYLE_CORE, assemble_html, assemble_scripts, assemble_styles,
-    format_iso8601_utc, generate_template_markdown, render, render_finish_box,
-    render_lightbox, render_progress_bar, render_scripts, render_styles, substitute_template,
+    SCRIPT_CORE, STYLE_CORE, assemble_html, assemble_scripts, assemble_styles, format_iso8601_utc,
+    generate_template_markdown, render, render_finish_box, render_lightbox, render_progress_bar,
+    render_scripts, render_styles, substitute_template,
 };
 pub use components::*;
 pub use constants::*;

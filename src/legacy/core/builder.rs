@@ -3,13 +3,12 @@
 pub use crate::legacy::core::components::DEFAULT_LOGO_SVG;
 pub use crate::legacy::core::constants::{APP_VERSION, LICENSE_TERMS, LICENSE_URL, REPOSITORY_URL};
 use crate::legacy::core::converter::{DocumentFeatures, Frontmatter};
-use crate::legacy::utils::error::{Doc2FlowError, Result};
 use crate::legacy::core::feature::{DocumentContext, Feature};
-use crate::legacy::features;
 use crate::legacy::core::locales::{Locale, validate_locale_coverage};
+use crate::legacy::features;
+use crate::legacy::utils::error::{Doc2FlowError, Result};
 use std::collections::HashMap;
 use std::fmt::Write;
-
 
 /// Embedded core CSS styles for layout and components.
 pub static STYLE_CORE: &str = include_str!("web/dist/core.css");
@@ -100,9 +99,15 @@ pub fn render_progress_bar(out: &mut impl Write, features: &DocumentFeatures, lo
 
 /// Renders the bottom finish box component if the document contains tasks.
 pub fn render_finish_box(out: &mut impl Write, features: &DocumentFeatures, locale: &Locale) {
-    let setup_completed = locale.get_ignore_ascii_case("SETUP_COMPLETED").unwrap_or("");
-    let name_placeholder = locale.get_ignore_ascii_case("NAME_PLACEHOLDER").unwrap_or("");
-    let date_placeholder = locale.get_ignore_ascii_case("DATE_PLACEHOLDER").unwrap_or("");
+    let setup_completed = locale
+        .get_ignore_ascii_case("SETUP_COMPLETED")
+        .unwrap_or("");
+    let name_placeholder = locale
+        .get_ignore_ascii_case("NAME_PLACEHOLDER")
+        .unwrap_or("");
+    let date_placeholder = locale
+        .get_ignore_ascii_case("DATE_PLACEHOLDER")
+        .unwrap_or("");
     let signature_date = locale.get_ignore_ascii_case("SIGNATURE_DATE").unwrap_or("");
 
     features::tasks::render_finish_box(
@@ -442,9 +447,15 @@ pub fn assemble_html(
     features::tasks::render_progress_bar(&mut progress_bar_html, has_tasks, loading);
 
     let mut finish_box_html = String::with_capacity(512);
-    let setup_completed = locale.get_ignore_ascii_case("SETUP_COMPLETED").unwrap_or("");
-    let name_placeholder = locale.get_ignore_ascii_case("NAME_PLACEHOLDER").unwrap_or("");
-    let date_placeholder = locale.get_ignore_ascii_case("DATE_PLACEHOLDER").unwrap_or("");
+    let setup_completed = locale
+        .get_ignore_ascii_case("SETUP_COMPLETED")
+        .unwrap_or("");
+    let name_placeholder = locale
+        .get_ignore_ascii_case("NAME_PLACEHOLDER")
+        .unwrap_or("");
+    let date_placeholder = locale
+        .get_ignore_ascii_case("DATE_PLACEHOLDER")
+        .unwrap_or("");
     let signature_date = locale.get_ignore_ascii_case("SIGNATURE_DATE").unwrap_or("");
     features::tasks::render_finish_box(
         &mut finish_box_html,
@@ -489,7 +500,11 @@ pub fn assemble_html(
         features::header::render_flex_header(
             &mut full_content,
             title,
-            if subtitle.is_empty() { None } else { Some(subtitle) },
+            if subtitle.is_empty() {
+                None
+            } else {
+                Some(subtitle)
+            },
             logo,
         );
     }
@@ -611,9 +626,15 @@ mod tests {
         let vars = build_template_vars(&ctx);
         assert_eq!(vars.get("APP_VERSION"), Some(&"v1.0.0"));
         assert_eq!(vars.get("APP_VERSION_RAW"), Some(&"1.0.0"));
-        assert_eq!(vars.get("REPOSITORY_URL"), Some(&"https://example.com/repo"));
+        assert_eq!(
+            vars.get("REPOSITORY_URL"),
+            Some(&"https://example.com/repo")
+        );
         assert_eq!(vars.get("LICENSE_TERMS"), Some(&"MIT"));
-        assert_eq!(vars.get("LICENSE_URL"), Some(&"https://example.com/license"));
+        assert_eq!(
+            vars.get("LICENSE_URL"),
+            Some(&"https://example.com/license")
+        );
         assert_eq!(vars.get("CREATED_AT"), Some(&"2026-08-09T00:00:00Z"));
         assert_eq!(vars.get("LANG_CODE"), Some(&"en"));
         assert_eq!(vars.get("TITLE"), Some(&"My Doc"));
@@ -688,8 +709,15 @@ mod tests {
         let custom_logo = "<img src=\"data:image/png;base64,1234\" alt=\"Logo\">";
         let features = DocumentFeatures::default();
 
-        let html = render(&fm, &locale, "<p>Content</p>", "doc_1", Some(custom_logo), &features)
-            .expect("Render failed");
+        let html = render(
+            &fm,
+            &locale,
+            "<p>Content</p>",
+            "doc_1",
+            Some(custom_logo),
+            &features,
+        )
+        .expect("Render failed");
 
         assert!(html.contains("<img src=\"data:image/png;base64,1234\" alt=\"Logo\">"));
         assert!(!html.contains(DEFAULT_LOGO_SVG));
@@ -762,8 +790,15 @@ mod tests {
         features_none.has_code = false;
         features_none.has_tasks = false;
         features_none.has_header = false;
-        let html_no_img = render(&fm, &locale, "<p>No images</p>", "doc_no_img", None, &features_none)
-            .expect("Render failed");
+        let html_no_img = render(
+            &fm,
+            &locale,
+            "<p>No images</p>",
+            "doc_no_img",
+            None,
+            &features_none,
+        )
+        .expect("Render failed");
 
         assert!(!html_no_img.contains("<div class=\"lightbox\""));
         assert!(!html_no_img.contains(".lb-x"));
@@ -781,8 +816,15 @@ mod tests {
         features_all.has_code = true;
         features_all.has_tasks = true;
         features_all.has_header = true;
-        let html_img = render(&fm, &locale, "<p>Has image</p>", "doc_img", None, &features_all)
-            .expect("Render failed");
+        let html_img = render(
+            &fm,
+            &locale,
+            "<p>Has image</p>",
+            "doc_img",
+            None,
+            &features_all,
+        )
+        .expect("Render failed");
 
         assert!(html_img.contains("<div class=\"lightbox\" id=\"lightbox\">"));
         assert!(html_img.contains(".lb-x"));
@@ -801,7 +843,8 @@ mod tests {
         let fm = Frontmatter::new();
         let locale = Locale::from_lang_code("en");
         let features = DocumentFeatures::default();
-        let html = render(&fm, &locale, "<p>Content</p>", "doc_meta", None, &features).expect("Render failed");
+        let html = render(&fm, &locale, "<p>Content</p>", "doc_meta", None, &features)
+            .expect("Render failed");
         let app_version_raw = APP_VERSION.strip_prefix('v').unwrap_or(APP_VERSION);
 
         assert!(html.contains(&format!(
@@ -836,7 +879,15 @@ mod tests {
         let mut custom_features = DocumentFeatures::default();
         custom_features.has_tasks = true;
         custom_features.has_tables = true;
-        let html_custom = render(&fm, &locale, "<p>Content</p>", "doc_meta2", None, &custom_features).expect("Render failed");
+        let html_custom = render(
+            &fm,
+            &locale,
+            "<p>Content</p>",
+            "doc_meta2",
+            None,
+            &custom_features,
+        )
+        .expect("Render failed");
         assert!(html_custom.contains("<meta name=\"features\" content=\"core, tables, tasks\">"));
     }
 
@@ -1072,18 +1123,12 @@ mod tests {
         )
         .unwrap();
 
-        let html_rnd_empty = render(
-            &fm_empty,
-            &locale,
-            "<p>Plain</p>",
-            doc_id,
-            None,
-            &df_empty,
-        )
-        .unwrap();
+        let html_rnd_empty =
+            render(&fm_empty, &locale, "<p>Plain</p>", doc_id, None, &df_empty).unwrap();
 
         let app_version_raw = APP_VERSION.strip_prefix('v').unwrap_or(APP_VERSION);
-        let expected_generator = format!("<meta name=\"generator\" content=\"Doc2Flow {APP_VERSION}\">");
+        let expected_generator =
+            format!("<meta name=\"generator\" content=\"Doc2Flow {APP_VERSION}\">");
         let expected_version = format!("<meta name=\"version\" content=\"{app_version_raw}\">");
         let expected_repo = format!("<meta name=\"repository\" content=\"{REPOSITORY_URL}\">");
         let expected_lic = format!("<meta name=\"license\" content=\"{LICENSE_URL}\">");
@@ -1113,15 +1158,8 @@ mod tests {
         )
         .unwrap();
 
-        let html_rnd_code = render(
-            &fm_empty,
-            &locale,
-            "<p>Code</p>",
-            doc_id,
-            None,
-            &df_code,
-        )
-        .unwrap();
+        let html_rnd_code =
+            render(&fm_empty, &locale, "<p>Code</p>", doc_id, None, &df_code).unwrap();
 
         let expected_feat_code = "<meta name=\"features\" content=\"core, code, fields\">";
         assert!(html_asm_code.contains(expected_feat_code));

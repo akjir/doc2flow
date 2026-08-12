@@ -125,7 +125,8 @@ mod tests {
         let ctx_with_code = DocumentContext::new(&fm, "```rust\nfn main() {}\n```");
         assert!(feature.is_enabled(&ctx_with_code));
 
-        let ctx_inline_fence = DocumentContext::new(&fm, "Here is ```bash\necho test\n``` snippet.");
+        let ctx_inline_fence =
+            DocumentContext::new(&fm, "Here is ```bash\necho test\n``` snippet.");
         assert!(feature.is_enabled(&ctx_inline_fence));
 
         // 2. Markdown without code blocks: disabled

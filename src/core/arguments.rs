@@ -156,7 +156,9 @@ fn parse_init_path(raw_val: &str) -> PathBuf {
 /// Parses a non-empty path value for a CLI option flag.
 fn parse_required_path(flag_name: &str, raw_val: &str) -> Result<PathBuf, String> {
     if raw_val.is_empty() {
-        Err(format!("Option '{flag_name}' requires a non-empty path value"))
+        Err(format!(
+            "Option '{flag_name}' requires a non-empty path value"
+        ))
     } else {
         Ok(PathBuf::from(raw_val))
     }

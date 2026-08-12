@@ -130,7 +130,6 @@ impl From<String> for Error {
 /// Result type alias for core operations.
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
-
 /// Constructs a diagnostic caret annotation string pointing to a source location.
 pub fn build_caret_annotation(col_no: usize, span_len: usize, max_len: usize) -> Cow<'static, str> {
     let max_len = max_len.max(1);

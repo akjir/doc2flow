@@ -1,10 +1,10 @@
 use crate::legacy::core::components;
+use crate::legacy::core::locales::Locale;
 use crate::legacy::features;
 use crate::legacy::utils::error::{Result, print_warning};
-use crate::legacy::core::locales::Locale;
 
 use pulldown_cmark::{
-    html, CodeBlockKind, Event, HeadingLevel, Options, Parser as MarkdownParser, Tag, TagEnd,
+    CodeBlockKind, Event, HeadingLevel, Options, Parser as MarkdownParser, Tag, TagEnd, html,
 };
 use std::borrow::Cow;
 
@@ -166,7 +166,10 @@ impl DocumentFeatures {
     /// assert!(df.is_feature_active("code"));
     /// assert!(df.is_feature_active("fields"));
     /// ```
-    pub fn resolve(features: &[Box<dyn crate::legacy::core::feature::Feature>], ctx: &crate::legacy::core::feature::DocumentContext) -> Self {
+    pub fn resolve(
+        features: &[Box<dyn crate::legacy::core::feature::Feature>],
+        ctx: &crate::legacy::core::feature::DocumentContext,
+    ) -> Self {
         let active = crate::legacy::core::feature::resolve_enabled_features(features, ctx);
 
         Self::from_active_set(&active)
@@ -315,7 +318,10 @@ impl Frontmatter {
         if let Some(ref h) = self.header {
             map.insert("header".to_string(), h.clone());
         }
-        map.insert("numbered_sections".to_string(), self.numbered_sections.to_string());
+        map.insert(
+            "numbered_sections".to_string(),
+            self.numbered_sections.to_string(),
+        );
         for (k, v) in &self.custom {
             map.insert(k.clone(), v.clone());
         }
@@ -417,9 +423,7 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
                 let key = key.trim();
                 let val_trimmed = trim_matching_quotes(val);
 
-                if val_trimmed.is_empty()
-                    && key != "numbered_sections"
-                {
+                if val_trimmed.is_empty() && key != "numbered_sections" {
                     continue;
                 }
 
@@ -451,7 +455,9 @@ pub fn parse_frontmatter(md_content: &str) -> (Frontmatter, &str) {
 }
 
 /// Parses YAML frontmatter into a key-value hash map and returns remaining markdown body.
-pub fn parse_frontmatter_map(md_content: &str) -> (std::collections::HashMap<String, String>, &str) {
+pub fn parse_frontmatter_map(
+    md_content: &str,
+) -> (std::collections::HashMap<String, String>, &str) {
     let (fm, body) = parse_frontmatter(md_content);
     (fm.to_hashmap(), body)
 }
@@ -498,11 +504,7 @@ fn parse_callout<'a>(
 }
 
 /// Helper function to build and render the variable table component.
-fn build_variable_table(
-    out: &mut String,
-    locale: &Locale,
-    table_rows: &[(&str, &str)],
-) {
+fn build_variable_table(out: &mut String, locale: &Locale, table_rows: &[(&str, &str)]) {
     let mut map = std::collections::BTreeMap::new();
     for &(k, v) in table_rows {
         map.insert(k, v);
@@ -760,9 +762,7 @@ pub fn convert_markdown_to_html_with_options(
     if var_table_html.is_empty() && !code_vars.is_empty() {
         let mut final_table_rows: Vec<(&str, &str)> = Vec::with_capacity(code_vars.len());
         for cv in &code_vars {
-            eprintln!(
-                "Warning: Variable '{cv}' in code block is missing from [Variables] table."
-            );
+            eprintln!("Warning: Variable '{cv}' in code block is missing from [Variables] table.");
             final_table_rows.push((cv, ""));
         }
 
@@ -789,7 +789,9 @@ pub fn convert_markdown_to_html_with_options(
     let mut idx = 0;
     while idx < events.len() {
         if !var_event_ranges.is_empty()
-            && let Some(&(_, end_idx)) = var_event_ranges.iter().find(|(s, e)| idx >= *s && idx <= *e)
+            && let Some(&(_, end_idx)) = var_event_ranges
+                .iter()
+                .find(|(s, e)| idx >= *s && idx <= *e)
         {
             idx = end_idx + 1;
             continue;
@@ -861,10 +863,8 @@ pub fn convert_markdown_to_html_with_options(
 
             // Level 3-6 Headings (###, ####, #####, ###### Subheadings)
             Event::Start(Tag::Heading {
-                level: level @ (HeadingLevel::H3
-                | HeadingLevel::H4
-                | HeadingLevel::H5
-                | HeadingLevel::H6),
+                level:
+                    level @ (HeadingLevel::H3 | HeadingLevel::H4 | HeadingLevel::H5 | HeadingLevel::H6),
                 ..
             }) => {
                 let target_level = *level;
@@ -1083,12 +1083,10 @@ pub fn convert_markdown_to_html_with_options(
             }
 
             // Track lists (ordered vs unordered)
-            Event::Start(Tag::List(first_item_number)) => {
-                match first_item_number {
-                    Some(start) => list_stack.push(ListKind::Ordered { current: *start }),
-                    None => list_stack.push(ListKind::Unordered),
-                }
-            }
+            Event::Start(Tag::List(first_item_number)) => match first_item_number {
+                Some(start) => list_stack.push(ListKind::Ordered { current: *start }),
+                None => list_stack.push(ListKind::Unordered),
+            },
             Event::End(TagEnd::List(_)) => {
                 list_stack.pop();
             }
@@ -1253,7 +1251,8 @@ mod tests {
 
     #[test]
     fn test_parse_frontmatter_split_once() {
-        let input = "---\ntitle: \"My Title\"\nlanguage: de\nlogo: \"custom_logo.svg\"\n---\nBody text";
+        let input =
+            "---\ntitle: \"My Title\"\nlanguage: de\nlogo: \"custom_logo.svg\"\n---\nBody text";
         let (fm, body) = parse_frontmatter(input);
         assert_eq!(fm.title.as_deref(), Some("My Title"));
         assert_eq!(fm.language.as_deref(), Some("de"));
@@ -1371,19 +1370,33 @@ mod tests {
         assert!(html.contains(r#"<span class="list-bullet">&bull;</span>"#));
         assert!(html.contains(r#"<span class="check-label">Top Task</span>"#));
 
-        assert!(html.contains(r#"<div class="doc-item simple-item" id="item_s1_2" style="--indent: 1;">"#));
+        assert!(
+            html.contains(
+                r#"<div class="doc-item simple-item" id="item_s1_2" style="--indent: 1;">"#
+            )
+        );
         assert!(html.contains(r#"<span class="list-bullet">a.</span>"#));
         assert!(html.contains(r#"<span class="check-label">Sub step A</span>"#));
 
-        assert!(html.contains(r#"<div class="doc-item simple-item" id="item_s1_3" style="--indent: 1;">"#));
+        assert!(
+            html.contains(
+                r#"<div class="doc-item simple-item" id="item_s1_3" style="--indent: 1;">"#
+            )
+        );
         assert!(html.contains(r#"<span class="list-bullet">b.</span>"#));
         assert!(html.contains(r#"<span class="check-label">Sub step B</span>"#));
 
-        assert!(html.contains(r#"<div class="doc-item check-item" id="wrap-cb_s1_1" style="--indent: 1;">"#));
+        assert!(html.contains(
+            r#"<div class="doc-item check-item" id="wrap-cb_s1_1" style="--indent: 1;">"#
+        ));
         assert!(html.contains(r#"<input type="checkbox" id="cb_s1_1">"#));
         assert!(html.contains(r#"<label class="check-label" for="cb_s1_1">Sub-task 1</label>"#));
 
-        assert!(html.contains(r#"<div class="doc-item simple-item" id="item_s1_5" style="--indent: 2;">"#));
+        assert!(
+            html.contains(
+                r#"<div class="doc-item simple-item" id="item_s1_5" style="--indent: 2;">"#
+            )
+        );
         assert!(html.contains(r#"<span class="list-bullet">&bull;</span>"#));
         assert!(html.contains(r#"<span class="check-label">Deep detail X</span>"#));
     }
@@ -1430,12 +1443,15 @@ mod tests {
         let (html, _features) = convert_markdown_to_html(input).expect("conversion failed");
 
         assert!(html.contains(r#"<section class="section" id="s1" data-has-checklist="true">"#));
-        assert!(html.contains(r#"<section class="section" id="s2" data-callout-type="important">"#));
+        assert!(
+            html.contains(r#"<section class="section" id="s2" data-callout-type="important">"#)
+        );
     }
 
     #[test]
     fn test_empty_heading_conversion() {
-        let input = "# Empty H1 Header\n\n## Empty H2 Header\n\n## Non Empty H2\n\nSome paragraph content";
+        let input =
+            "# Empty H1 Header\n\n## Empty H2 Header\n\n## Non Empty H2\n\nSome paragraph content";
         let (html, _features) = convert_markdown_to_html(input).expect("conversion failed");
 
         assert!(html.contains(r#"<h2 class="sh sh-h1 no-toggle"><span>Empty H1 Header</span>"#));
@@ -1464,7 +1480,8 @@ mod tests {
 
     #[test]
     fn test_frontmatter_windows_crlf_line_endings() {
-        let input = "---\r\ntitle: \"CRLF Title\"\r\nlanguage: de\r\n---\r\n## Section 1\r\nBody line";
+        let input =
+            "---\r\ntitle: \"CRLF Title\"\r\nlanguage: de\r\n---\r\n## Section 1\r\nBody line";
         let (fm, body) = parse_frontmatter(input);
         assert_eq!(fm.title.as_deref(), Some("CRLF Title"));
         assert_eq!(fm.language.as_deref(), Some("de"));
@@ -1532,22 +1549,34 @@ mod tests {
         let input = "---\ntitle: \"Architecture Guide\"\nsubtitle: \"V2\"\ndate: \"2026-08-08\"\nversion: \"2.0.0\"\nlanguage: \"en\"\nlogo: \"brand.svg\"\nnumbered_sections: true\ncustom_key_1: \"custom_val_1\"\nframework: \"doc2flow\"\n---\n## Main Content\nHello world";
         let (map, body) = parse_frontmatter_map(input);
 
-        assert_eq!(map.get("title").map(|s| s.as_str()), Some("Architecture Guide"));
+        assert_eq!(
+            map.get("title").map(|s| s.as_str()),
+            Some("Architecture Guide")
+        );
         assert_eq!(map.get("subtitle").map(|s| s.as_str()), Some("V2"));
         assert_eq!(map.get("date").map(|s| s.as_str()), Some("2026-08-08"));
         assert_eq!(map.get("version").map(|s| s.as_str()), Some("2.0.0"));
         assert_eq!(map.get("language").map(|s| s.as_str()), Some("en"));
         assert_eq!(map.get("lang").map(|s| s.as_str()), Some("en"));
         assert_eq!(map.get("logo").map(|s| s.as_str()), Some("brand.svg"));
-        assert_eq!(map.get("numbered_sections").map(|s| s.as_str()), Some("true"));
-        assert_eq!(map.get("custom_key_1").map(|s| s.as_str()), Some("custom_val_1"));
+        assert_eq!(
+            map.get("numbered_sections").map(|s| s.as_str()),
+            Some("true")
+        );
+        assert_eq!(
+            map.get("custom_key_1").map(|s| s.as_str()),
+            Some("custom_val_1")
+        );
         assert_eq!(map.get("framework").map(|s| s.as_str()), Some("doc2flow"));
         assert_eq!(body, "## Main Content\nHello world");
 
         // Without frontmatter
         let no_fm = "## Pure Markdown\nJust body text";
         let (empty_map, no_fm_body) = parse_frontmatter_map(no_fm);
-        assert_eq!(empty_map.get("numbered_sections").map(|s| s.as_str()), Some("true"));
+        assert_eq!(
+            empty_map.get("numbered_sections").map(|s| s.as_str()),
+            Some("true")
+        );
         assert_eq!(empty_map.get("title"), None);
         assert_eq!(no_fm_body, no_fm);
     }
@@ -1613,7 +1642,10 @@ mod tests {
         assert!(html.contains(r#"<label class="check-label" for="cb_s1_1">Task 1</label>"#));
 
         assert!(html.contains(r#"<div class="doc-item check-item checked" id="wrap-cb_s1_2">"#));
-        assert!(html.contains(r#"<input type="checkbox" id="cb_s1_2" checked=""#) || html.contains(r#"<input type="checkbox" id="cb_s1_2" checked>"#));
+        assert!(
+            html.contains(r#"<input type="checkbox" id="cb_s1_2" checked=""#)
+                || html.contains(r#"<input type="checkbox" id="cb_s1_2" checked>"#)
+        );
         assert!(html.contains(r#"<label class="check-label" for="cb_s1_2">Task 2</label>"#));
 
         assert!(html.contains(r#"<div class="doc-item check-item" id="wrap-cb_s1_3">"#));
@@ -1644,7 +1676,6 @@ mod tests {
         assert!(fm4.numbered_sections);
     }
 
-
     #[test]
     fn test_unknown_frontmatter_option_warning() {
         let input = "---\ntitle: \"Test Doc\"\nunknown_key: \"some_value\"\n---";
@@ -1670,8 +1701,8 @@ mod tests {
 - [ ] Task 2.1.1
 "#;
         let locale = Locale::default();
-        let (html_enabled, _features) = convert_markdown_to_html_with_options(input, &locale, true)
-            .expect("conversion failed");
+        let (html_enabled, _features) =
+            convert_markdown_to_html_with_options(input, &locale, true).expect("conversion failed");
 
         assert!(html_enabled.contains("<span>1. First H1</span>"));
         assert!(html_enabled.contains("<span>1.1 First Sub H2</span>"));
@@ -1679,8 +1710,9 @@ mod tests {
         assert!(html_enabled.contains("<span>2. Second H1</span>"));
         assert!(html_enabled.contains("<span>2.1 Third Sub H2</span>"));
 
-        let (html_disabled, _features) = convert_markdown_to_html_with_options(input, &locale, false)
-            .expect("conversion failed");
+        let (html_disabled, _features) =
+            convert_markdown_to_html_with_options(input, &locale, false)
+                .expect("conversion failed");
 
         assert!(html_disabled.contains("<span>First H1</span>"));
         assert!(html_disabled.contains("<span>First Sub H2</span>"));
@@ -1714,7 +1746,10 @@ curl https://{{BLOCK}}.local:{{PORT}}/api
         assert!(html.contains(r#"class="item-table-var-input persistent-field""#));
         assert!(html.contains(r#"data-var-key="BLOCK""#));
         assert!(html.contains(r#"value="prod-server""#));
-        assert!(html.find("<div class=\"item-table-var-wrap\">").unwrap() < html.find("<!-- S1 -->").unwrap());
+        assert!(
+            html.find("<div class=\"item-table-var-wrap\">").unwrap()
+                < html.find("<!-- S1 -->").unwrap()
+        );
         assert!(html.contains("curl https://{{BLOCK}}.local:{{PORT}}/api"));
     }
 
@@ -1732,9 +1767,15 @@ curl https://{{BLOCK}}.local:{{PORT}}/api
         features.has_code = true;
         features.has_fields = true;
         features.has_images = true;
-        assert_eq!(features.to_features_string(), "core, code, fields, images, tables, tasks");
+        assert_eq!(
+            features.to_features_string(),
+            "core, code, fields, images, tables, tasks"
+        );
 
         features.has_header = true;
-        assert_eq!(features.to_features_string(), "core, code, fields, header, images, tables, tasks");
+        assert_eq!(
+            features.to_features_string(),
+            "core, code, fields, header, images, tables, tasks"
+        );
     }
 }

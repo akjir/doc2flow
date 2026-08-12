@@ -41,9 +41,7 @@ pub fn create_dir_all(path: impl AsRef<Path>) -> Result<()> {
 /// Returns [`Error`] if metadata cannot be queried for the target path.
 pub fn get_file_size(path: impl AsRef<Path>) -> Result<u64> {
     let path = path.as_ref();
-    fs::metadata(path)
-        .map(|m| m.len())
-        .with_path(path)
+    fs::metadata(path).map(|m| m.len()).with_path(path)
 }
 
 /// Checks whether a given filesystem path exists on disk.
@@ -138,10 +136,7 @@ pub fn remove_dir_all(path: impl AsRef<Path>) -> Result<()> {
 ///
 /// assert_eq!(resolve_path("non_existent_file_xyz.txt", None::<&str>), None);
 /// ```
-pub fn resolve_path(
-    path: impl AsRef<Path>,
-    base_dir: Option<impl AsRef<Path>>,
-) -> Option<PathBuf> {
+pub fn resolve_path(path: impl AsRef<Path>, base_dir: Option<impl AsRef<Path>>) -> Option<PathBuf> {
     let path = path.as_ref();
     let base_dir = base_dir.as_ref().map(|b| b.as_ref());
 
@@ -187,7 +182,8 @@ mod tests {
 
     impl TestTempDir {
         fn new(prefix: &str) -> Self {
-            let path = std::env::temp_dir().join(format!("d2f_test_core_{prefix}_{}", std::process::id()));
+            let path =
+                std::env::temp_dir().join(format!("d2f_test_core_{prefix}_{}", std::process::id()));
             let _ = create_dir_all(&path);
             Self { path }
         }

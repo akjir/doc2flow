@@ -32,7 +32,9 @@ pub struct Args {
 /// Parses a non-empty path value for a CLI option flag.
 fn parse_required_path(flag_name: &str, raw_val: &str) -> Result<PathBuf, String> {
     if raw_val.is_empty() {
-        Err(format!("Option '{flag_name}' requires a non-empty path value"))
+        Err(format!(
+            "Option '{flag_name}' requires a non-empty path value"
+        ))
     } else {
         Ok(PathBuf::from(raw_val))
     }
@@ -81,7 +83,6 @@ where
             "-s" | "--auto-scale" => parsed.auto_scale = true,
             "--legacy" => parsed.legacy = true,
             "-o" | "--output" => {
-
                 let val = iter
                     .next()
                     .ok_or_else(|| String::from("Option '--output' requires a path value"))?;
@@ -202,7 +203,6 @@ mod tests {
         assert!(args.auto_scale);
         assert!(!args.legacy);
     }
-
 
     #[test]
     fn test_parse_args_init_defaults() {
