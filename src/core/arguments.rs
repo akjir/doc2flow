@@ -5,6 +5,7 @@
 
 use std::path::PathBuf;
 
+/// Default filename used when creating starter templates via `--init`.
 const DEFAULT_TEMPLATE_NAME: &str = "template.md";
 
 /// Parsed command line arguments for the `d2f` executable.
@@ -146,14 +147,18 @@ where
 
 /// Parses an optional template path value for `--init`.
 fn parse_init_path(raw_val: &str) -> PathBuf {
-    PathBuf::from(if raw_val.is_empty() {
-        DEFAULT_TEMPLATE_NAME
+    if raw_val.is_empty() {
+        PathBuf::from(DEFAULT_TEMPLATE_NAME)
     } else {
-        raw_val
-    })
+        PathBuf::from(raw_val)
+    }
 }
 
 /// Parses a non-empty path value for a CLI option flag.
+///
+/// # Errors
+///
+/// Returns an error message if the raw value is empty.
 fn parse_required_path(flag_name: &str, raw_val: &str) -> Result<PathBuf, String> {
     if raw_val.is_empty() {
         Err(format!(
@@ -187,10 +192,17 @@ mod tests {
         assert_eq!(args.input, Some(PathBuf::from("input.md")));
         assert_eq!(args.output, None);
         assert_eq!(args.init, None);
+        assert_eq!(args.logo, None);
         assert!(!args.auto_scale);
         assert!(!args.legacy);
         assert!(!args.show_help);
         assert!(!args.show_version);
+    }
+
+    #[test]
+    fn test_parse_args_empty_args() {
+        let args = parse_args([] as [&str; 0]).unwrap();
+        assert_eq!(args, Args::default());
     }
 
     #[test]
@@ -226,24 +238,31 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_args_init_defaults() {
-        let args = parse_args(&["d2f", "-i"]).unwrap();
-        assert_eq!(args.init, Some(PathBuf::from("template.md")));
+    fn test_parse_args_init_custom_and_defaults() {
+        let args_short = parse_args(&["d2f", "-i"]).unwrap();
+        assert_eq!(args_short.init, Some(PathBuf::from("template.md")));
 
-        let args2 = parse_args(&["d2f", "--init"]).unwrap();
-        assert_eq!(args2.init, Some(PathBuf::from("template.md")));
+        let args_long = parse_args(&["d2f", "--init"]).unwrap();
+        assert_eq!(args_long.init, Some(PathBuf::from("template.md")));
 
-        let args3 = parse_args(&["d2f", "-i="]).unwrap();
-        assert_eq!(args3.init, Some(PathBuf::from("template.md")));
+        let args_short_eq = parse_args(&["d2f", "-i="]).unwrap();
+        assert_eq!(args_short_eq.init, Some(PathBuf::from("template.md")));
 
-        let args4 = parse_args(&["d2f", "--init="]).unwrap();
-        assert_eq!(args4.init, Some(PathBuf::from("template.md")));
+        let args_long_eq = parse_args(&["d2f", "--init="]).unwrap();
+        assert_eq!(args_long_eq.init, Some(PathBuf::from("template.md")));
 
-        let args5 = parse_args(&["d2f", "-i", ""]).unwrap();
-        assert_eq!(args5.init, Some(PathBuf::from("template.md")));
+        let args_short_empty = parse_args(&["d2f", "-i", ""]).unwrap();
+        assert_eq!(args_short_empty.init, Some(PathBuf::from("template.md")));
 
-        let args6 = parse_args(&["d2f", "--init", ""]).unwrap();
-        assert_eq!(args6.init, Some(PathBuf::from("template.md")));
+        let args_long_empty = parse_args(&["d2f", "--init", ""]).unwrap();
+        assert_eq!(args_long_empty.init, Some(PathBuf::from("template.md")));
+
+        let args_space_val = parse_args(&["d2f", "-i", "starter.md"]).unwrap();
+        assert_eq!(args_space_val.init, Some(PathBuf::from("starter.md")));
+
+        let args_next_flag = parse_args(&["d2f", "-i", "-s"]).unwrap();
+        assert_eq!(args_next_flag.init, Some(PathBuf::from("template.md")));
+        assert!(args_next_flag.auto_scale);
     }
 
     #[test]
@@ -283,5 +302,20 @@ mod tests {
         assert_eq!(args.init, Some(PathBuf::from("custom_tpl.md")));
         assert!(args.auto_scale);
         assert!(!args.legacy);
+    }
+
+    #[test]
+    fn test_parse_init_path_direct() {
+        assert_eq!(parse_init_path(""), PathBuf::from("template.md"));
+        assert_eq!(parse_init_path("custom.md"), PathBuf::from("custom.md"));
+    }
+
+    #[test]
+    fn test_parse_required_path_direct() {
+        assert!(parse_required_path("--output", "").is_err());
+        assert_eq!(
+            parse_required_path("--output", "out.html").unwrap(),
+            PathBuf::from("out.html")
+        );
     }
 }
