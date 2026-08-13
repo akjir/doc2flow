@@ -1,5 +1,7 @@
 //! Document AST feature detection and inspection.
 
+use std::fmt::{self, Display, Formatter};
+
 use crate::core::document::{Document, DocumentElement};
 
 /// Feature detection flags for document AST elements.
@@ -15,17 +17,35 @@ pub struct DocumentFeature {
     pub image: bool,
     /// Indicates whether ordered list items are present.
     pub ordered_list_item: bool,
-    /// Indicates whether section headings are present.
-    pub section: bool,
     /// Indicates whether shoutout callouts are present.
     pub shoutout: bool,
     /// Indicates whether tables are present.
     pub table: bool,
-    /// Indicates whether standard text paragraphs are present.
-    pub text: bool,
 }
 
 impl DocumentFeature {
+    /// Creates a new default feature set with no document features enabled.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use doc2flow::core::feature::DocumentFeature;
+    ///
+    /// let features = DocumentFeature::new();
+    /// assert!(features.is_empty());
+    /// ```
+    pub const fn new() -> Self {
+        Self {
+            bullet_list_item: false,
+            check_box_item: false,
+            code_block: false,
+            image: false,
+            ordered_list_item: false,
+            shoutout: false,
+            table: false,
+        }
+    }
+
     /// Returns `true` if all feature flags are enabled.
     pub const fn is_all(self) -> bool {
         self.bullet_list_item
@@ -33,10 +53,8 @@ impl DocumentFeature {
             && self.code_block
             && self.image
             && self.ordered_list_item
-            && self.section
             && self.shoutout
             && self.table
-            && self.text
     }
 
     /// Returns `true` if no feature flags are enabled.
@@ -46,10 +64,67 @@ impl DocumentFeature {
             && !self.code_block
             && !self.image
             && !self.ordered_list_item
-            && !self.section
             && !self.shoutout
             && !self.table
-            && !self.text
+    }
+
+    /// Renders a comma-separated list of enabled feature identifiers starting with `"core"`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use doc2flow::core::feature::DocumentFeature;
+    ///
+    /// let mut features = DocumentFeature::default();
+    /// assert_eq!(features.to_features_string(), "core");
+    ///
+    /// features.code_block = true;
+    /// assert_eq!(features.to_features_string(), "core, code_block");
+    ///
+    /// features.table = true;
+    /// assert_eq!(features.to_features_string(), "core, code_block, table");
+    /// ```
+    pub fn to_features_string(&self) -> String {
+        let mut out = String::with_capacity(96);
+        out.push_str("core");
+        if self.bullet_list_item {
+            out.push_str(", bullet_list_item");
+        }
+        if self.check_box_item {
+            out.push_str(", check_box_item");
+        }
+        if self.code_block {
+            out.push_str(", code_block");
+        }
+        if self.image {
+            out.push_str(", image");
+        }
+        if self.ordered_list_item {
+            out.push_str(", ordered_list_item");
+        }
+        if self.shoutout {
+            out.push_str(", shoutout");
+        }
+        if self.table {
+            out.push_str(", table");
+        }
+        out
+    }
+}
+
+impl Display for DocumentFeature {
+    /// Formats active features as a comma-separated list.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use doc2flow::core::feature::DocumentFeature;
+    ///
+    /// let features = DocumentFeature::default();
+    /// assert_eq!(features.to_string(), "core");
+    /// ```
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.to_features_string())
     }
 }
 
@@ -63,10 +138,10 @@ impl From<&Document> for DocumentFeature {
     /// use doc2flow::core::feature::DocumentFeature;
     ///
     /// let mut doc = Document::new();
-    /// doc.push_body(DocumentElement::text("Hello"));
+    /// doc.push_body(DocumentElement::code_block(Some("rust"), "fn main() {}"));
     /// let features = DocumentFeature::from(&doc);
-    /// assert!(features.text);
-    /// assert!(!features.code_block);
+    /// assert!(features.code_block);
+    /// assert!(!features.table);
     /// ```
     fn from(doc: &Document) -> Self {
         let mut features = Self::default();
@@ -82,7 +157,7 @@ fn scan_element(element: &DocumentElement, features: &mut DocumentFeature) {
         return;
     }
     match element {
-        DocumentElement::BlockDirective { children, .. } => {
+        DocumentElement::BlockDirective { children, .. } | DocumentElement::Section { children, .. } => {
             scan_elements(children, features);
         }
         DocumentElement::BulletListItem { content, .. } => {
@@ -103,20 +178,13 @@ fn scan_element(element: &DocumentElement, features: &mut DocumentFeature) {
             features.ordered_list_item = true;
             scan_element(content, features);
         }
-        DocumentElement::Section { children, .. } => {
-            features.section = true;
-            scan_elements(children, features);
-        }
         DocumentElement::Shoutout { .. } => {
             features.shoutout = true;
         }
         DocumentElement::Table { .. } => {
             features.table = true;
         }
-        DocumentElement::Text(_) => {
-            features.text = true;
-        }
-        DocumentElement::Unknown(_) => {}
+        DocumentElement::Text(_) | DocumentElement::Unknown(_) => {}
     }
 }
 
@@ -130,28 +198,24 @@ fn scan_elements(elements: &[DocumentElement], features: &mut DocumentFeature) {
     }
 }
 
+/// Returns a comma-separated list of enabled feature identifiers starting with `"core"`.
+///
+/// # Examples
+///
+/// ```
+/// use doc2flow::core::feature::{DocumentFeature, to_features_string};
+///
+/// let features = DocumentFeature::default();
+/// assert_eq!(to_features_string(&features), "core");
+/// ```
+pub fn to_features_string(features: &DocumentFeature) -> String {
+    features.to_features_string()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::core::document::{ShoutoutElementKind, TableAlignment};
-
-    #[test]
-    fn test_empty_document_boundary() {
-        let doc = Document::new();
-        let features = DocumentFeature::from(&doc);
-        assert_eq!(features, DocumentFeature::default());
-        assert!(features.is_empty());
-        assert!(!features.is_all());
-        assert!(!features.bullet_list_item);
-        assert!(!features.check_box_item);
-        assert!(!features.code_block);
-        assert!(!features.image);
-        assert!(!features.ordered_list_item);
-        assert!(!features.section);
-        assert!(!features.shoutout);
-        assert!(!features.table);
-        assert!(!features.text);
-    }
 
     #[test]
     fn test_all_features_present() {
@@ -195,68 +259,29 @@ mod tests {
         assert!(features.code_block);
         assert!(features.image);
         assert!(features.ordered_list_item);
-        assert!(features.section);
         assert!(features.shoutout);
         assert!(features.table);
-        assert!(features.text);
     }
 
     #[test]
-    fn test_partial_features_matches() {
-        let mut single_feature_doc = Document::new();
-        single_feature_doc.push_body(DocumentElement::text("Only plain text"));
-        let single_features = DocumentFeature::from(&single_feature_doc);
-        assert!(!single_features.is_empty());
-        assert!(!single_features.is_all());
-        assert!(single_features.text);
-        assert!(!single_features.code_block);
-        assert!(!single_features.table);
+    fn test_constructor_new() {
+        let features = DocumentFeature::new();
+        assert_eq!(features, DocumentFeature::default());
+        assert!(features.is_empty());
+    }
 
-        let mut multi_feature_doc = Document::new();
-        multi_feature_doc.push_body(DocumentElement::code_block(
-            None::<String>,
-            "console.log(1)",
-        ));
-        multi_feature_doc.push_body(DocumentElement::table(vec![], vec![]));
-        let multi_features = DocumentFeature::from(&multi_feature_doc);
-        assert!(!multi_features.is_empty());
-        assert!(!multi_features.is_all());
-        assert!(multi_features.code_block);
-        assert!(multi_features.table);
-        assert!(!multi_features.text);
-        assert!(!multi_features.image);
-
-        let mut eight_features_doc = Document::new();
-        eight_features_doc.push_body(DocumentElement::bullet_list_item(
-            0,
-            DocumentElement::text("A"),
-        ));
-        eight_features_doc.push_body(DocumentElement::check_box_item(
-            0,
-            false,
-            DocumentElement::text("B"),
-        ));
-        eight_features_doc.push_body(DocumentElement::code_block(None::<String>, "C"));
-        eight_features_doc.push_body(DocumentElement::ordered_list_item(
-            0,
+    #[test]
+    fn test_core_elements_only_is_empty() {
+        let mut doc = Document::new();
+        doc.push_header(DocumentElement::text("Header text"));
+        doc.push_body(DocumentElement::section(
             1,
-            DocumentElement::text("D"),
+            "Section Title",
+            vec![DocumentElement::text("Section body text")],
         ));
-        eight_features_doc.push_body(DocumentElement::section(1, "E", vec![]));
-        eight_features_doc.push_body(DocumentElement::shoutout(ShoutoutElementKind::Tip, "F"));
-        eight_features_doc.push_body(DocumentElement::table(vec![], vec![]));
-        let eight_features = DocumentFeature::from(&eight_features_doc);
-        assert!(!eight_features.is_empty());
-        assert!(!eight_features.is_all());
-        assert!(!eight_features.image);
-        assert!(eight_features.bullet_list_item);
-        assert!(eight_features.check_box_item);
-        assert!(eight_features.code_block);
-        assert!(eight_features.ordered_list_item);
-        assert!(eight_features.section);
-        assert!(eight_features.shoutout);
-        assert!(eight_features.table);
-        assert!(eight_features.text);
+        let features = DocumentFeature::from(&doc);
+        assert!(features.is_empty());
+        assert_eq!(features.to_features_string(), "core");
     }
 
     #[test]
@@ -274,11 +299,9 @@ mod tests {
         let features = DocumentFeature::from(&doc);
         assert!(!features.is_empty());
         assert!(!features.is_all());
-        assert!(features.section);
         assert!(features.bullet_list_item);
         assert!(features.ordered_list_item);
         assert!(features.check_box_item);
-        assert!(features.text);
         assert!(!features.image);
         assert!(!features.code_block);
         assert!(!features.table);
@@ -304,7 +327,6 @@ mod tests {
             1,
             DocumentElement::text("E"),
         ));
-        doc.push_header(DocumentElement::section(1, "F", vec![]));
         doc.push_header(DocumentElement::shoutout(ShoutoutElementKind::Caution, "G"));
         doc.push_header(DocumentElement::table(vec![], vec![]));
 
@@ -322,6 +344,125 @@ mod tests {
 
         let features = DocumentFeature::from(&doc);
         assert!(features.is_all());
+    }
+
+    #[test]
+    fn test_empty_document_boundary() {
+        let doc = Document::new();
+        let features = DocumentFeature::from(&doc);
+        assert_eq!(features, DocumentFeature::default());
+        assert!(features.is_empty());
+        assert!(!features.is_all());
+        assert!(!features.bullet_list_item);
+        assert!(!features.check_box_item);
+        assert!(!features.code_block);
+        assert!(!features.image);
+        assert!(!features.ordered_list_item);
+        assert!(!features.shoutout);
+        assert!(!features.table);
+    }
+
+    #[test]
+    fn test_partial_features_matches() {
+        let mut single_feature_doc = Document::new();
+        single_feature_doc.push_body(DocumentElement::bullet_list_item(
+            0,
+            DocumentElement::text("Only bullet"),
+        ));
+        let single_features = DocumentFeature::from(&single_feature_doc);
+        assert!(!single_features.is_empty());
+        assert!(!single_features.is_all());
+        assert!(single_features.bullet_list_item);
+        assert!(!single_features.code_block);
+        assert!(!single_features.table);
+
+        let mut multi_feature_doc = Document::new();
+        multi_feature_doc.push_body(DocumentElement::code_block(
+            None::<String>,
+            "console.log(1)",
+        ));
+        multi_feature_doc.push_body(DocumentElement::table(vec![], vec![]));
+        let multi_features = DocumentFeature::from(&multi_feature_doc);
+        assert!(!multi_features.is_empty());
+        assert!(!multi_features.is_all());
+        assert!(multi_features.code_block);
+        assert!(multi_features.table);
+        assert!(!multi_features.image);
+
+        let mut six_features_doc = Document::new();
+        six_features_doc.push_body(DocumentElement::bullet_list_item(
+            0,
+            DocumentElement::text("A"),
+        ));
+        six_features_doc.push_body(DocumentElement::check_box_item(
+            0,
+            false,
+            DocumentElement::text("B"),
+        ));
+        six_features_doc.push_body(DocumentElement::code_block(None::<String>, "C"));
+        six_features_doc.push_body(DocumentElement::ordered_list_item(
+            0,
+            1,
+            DocumentElement::text("D"),
+        ));
+        six_features_doc.push_body(DocumentElement::section(1, "E", vec![]));
+        six_features_doc.push_body(DocumentElement::shoutout(ShoutoutElementKind::Tip, "F"));
+        six_features_doc.push_body(DocumentElement::table(vec![], vec![]));
+        let six_features = DocumentFeature::from(&six_features_doc);
+        assert!(!six_features.is_empty());
+        assert!(!six_features.is_all());
+        assert!(!six_features.image);
+        assert!(six_features.bullet_list_item);
+        assert!(six_features.check_box_item);
+        assert!(six_features.code_block);
+        assert!(six_features.ordered_list_item);
+        assert!(six_features.shoutout);
+        assert!(six_features.table);
+    }
+
+    #[test]
+    fn test_to_features_string_all() {
+        let features = DocumentFeature {
+            bullet_list_item: true,
+            check_box_item: true,
+            code_block: true,
+            image: true,
+            ordered_list_item: true,
+            shoutout: true,
+            table: true,
+        };
+        let expected = "core, bullet_list_item, check_box_item, code_block, image, ordered_list_item, shoutout, table";
+        assert_eq!(features.to_features_string(), expected);
+        assert_eq!(to_features_string(&features), expected);
+        assert_eq!(features.to_string(), expected);
+    }
+
+    #[test]
+    fn test_to_features_string_combinations() {
+        let mut features = DocumentFeature::default();
+        features.bullet_list_item = true;
+        features.table = true;
+        assert_eq!(features.to_features_string(), "core, bullet_list_item, table");
+
+        features.image = true;
+        assert_eq!(features.to_features_string(), "core, bullet_list_item, image, table");
+    }
+
+    #[test]
+    fn test_to_features_string_default() {
+        let features = DocumentFeature::default();
+        assert_eq!(features.to_features_string(), "core");
+        assert_eq!(to_features_string(&features), "core");
+        assert_eq!(features.to_string(), "core");
+    }
+
+    #[test]
+    fn test_to_features_string_single() {
+        let mut features = DocumentFeature::default();
+        features.code_block = true;
+        assert_eq!(features.to_features_string(), "core, code_block");
+        assert_eq!(to_features_string(&features), "core, code_block");
+        assert_eq!(features.to_string(), "core, code_block");
     }
 
     #[test]

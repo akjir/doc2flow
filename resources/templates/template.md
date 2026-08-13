@@ -10,7 +10,7 @@ License: GPL-3.0-or-later
    - subtitle: Subtitle or document description.
    - date: Protocol date (YYYY-MM-DD).
    - version: Document version.
-   - language / lang: Language code for static UI translation ('en', 'de').
+   - language: Language code for static UI translation ('en', 'de').
    - logo: Optional path to a custom logo image (SVG, PNG, JPG, WebP).
    - numbered_sections: Enable automatic section numbering for H1 and H2 headings (true / false, default: true).
 

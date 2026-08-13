@@ -1058,14 +1058,16 @@ fn test_cli_core_arguments_legacy_flag() {
 
 #[test]
 fn test_parser_and_builder_pipeline_integration() {
-    let input = "---\ntitle: \"Pipeline Test\"\n---\n# Pipeline Heading\n\nContent paragraph";
+    let input = "---\ntitle: \"Pipeline Test\"\n---\n# Pipeline Heading\n\nContent paragraph\n\n- [ ] Task item";
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
     let features = doc2flow::core::DocumentFeature::from(&document);
-    assert!(features.section);
-    assert!(features.text);
+    assert!(features.check_box_item);
     assert!(!features.table);
+    assert_eq!(features.to_features_string(), "core, check_box_item");
     let content = doc2flow::core::builder::build(&document, &features);
-    assert!(content.as_bytes().len() > 0);
+    assert!(!content.as_bytes().is_empty());
     assert!(content.contains("\"title\": \"Pipeline Test\""));
     assert!(content.contains("\"title\": \"Pipeline Heading\""));
+    assert!(content.contains("<meta name=\"features\" content=\"core, check_box_item\">"));
+    assert!(!content.contains("{{FEATURES}}"));
 }
