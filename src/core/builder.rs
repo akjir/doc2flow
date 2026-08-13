@@ -41,6 +41,11 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
         .map(String::as_str)
         .filter(|s| !s.is_empty())
         .unwrap_or("en");
+    let title = document
+        .parameters
+        .get("title")
+        .map(String::as_str)
+        .unwrap_or("");
     let features_str = features.to_features_string();
 
     TEMPLATE_HTML
@@ -50,6 +55,7 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
         .replace("{{LICENSE_URL}}", LICENSE_URL)
         .replace("{{CREATED_AT}}", &created_at)
         .replace("{{LANG_CODE}}", lang_code)
+        .replace("{{TITLE}}", title)
         .replace("{{FEATURES}}", &features_str)
         .replace("{{CONTENT}}", &html_content)
 }
@@ -80,6 +86,28 @@ mod tests {
         assert!(!content.contains("{{CREATED_AT}}"));
         assert!(!content.contains("{{LANG_CODE}}"));
         assert!(!content.contains("{{FEATURES}}"));
+        assert!(!content.contains("{{TITLE}}"));
+        assert!(content.contains("<title></title>"));
+    }
+
+    #[test]
+    fn test_builder_build_custom_title() {
+        let mut doc = Document::new();
+        doc.insert_parameter("title", "Custom Title");
+        let features = DocumentFeature::default();
+        let content = build(&doc, &features);
+        assert!(content.contains("<title>Custom Title</title>"));
+        assert!(!content.contains("{{TITLE}}"));
+    }
+
+    #[test]
+    fn test_builder_build_empty_title() {
+        let mut doc = Document::new();
+        doc.insert_parameter("title", "");
+        let features = DocumentFeature::default();
+        let content = build(&doc, &features);
+        assert!(content.contains("<title></title>"));
+        assert!(!content.contains("{{TITLE}}"));
     }
 
     #[test]

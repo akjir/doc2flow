@@ -1068,6 +1068,8 @@ fn test_parser_and_builder_pipeline_integration() {
     assert!(!content.as_bytes().is_empty());
     assert!(content.contains("\"title\": \"Pipeline Test\""));
     assert!(content.contains("\"title\": \"Pipeline Heading\""));
+    assert!(content.contains("<title>Pipeline Test</title>"));
     assert!(content.contains("<meta name=\"features\" content=\"core, check_box_item\">"));
     assert!(!content.contains("{{FEATURES}}"));
+    assert!(!content.contains("{{TITLE}}"));
 }

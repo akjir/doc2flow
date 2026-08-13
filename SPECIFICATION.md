@@ -193,6 +193,10 @@ doc2flow/
 │   │   ├── feature.rs        # Document AST feature detection
 │   │   ├── markdown.rs       # Zero-alloc Markdown parser
 │   │   └── utils/            # Core filesystem and encoding utilities
+│   ├── features/             # Modular vertical slice feature modules
+│   │   ├── mod.rs            # Feature registry and exports
+│   │   ├── core/             # Core base feature (text & section styling)
+│   │   └── unknown/          # Fallback unknown feature
 │   └── legacy/               # Isolated legacy conversion subsystem
 │       ├── mod.rs            # Legacy subsystem root
 │       ├── legacy.rs         # Legacy CLI execution runner

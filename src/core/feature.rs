@@ -27,6 +27,8 @@ pub struct DocumentFeature {
     pub shoutout: bool,
     /// Indicates whether tables are present.
     pub table: bool,
+    /// Indicates whether unrecognized unknown elements are present.
+    pub unknown: bool,
 }
 
 impl DocumentFeature {
@@ -49,6 +51,7 @@ impl DocumentFeature {
             ordered_list_item: false,
             shoutout: false,
             table: false,
+            unknown: false,
         }
     }
 
@@ -61,6 +64,7 @@ impl DocumentFeature {
             && self.ordered_list_item
             && self.shoutout
             && self.table
+            && self.unknown
     }
 
     /// Returns `true` if no feature flags are enabled.
@@ -72,6 +76,7 @@ impl DocumentFeature {
             && !self.ordered_list_item
             && !self.shoutout
             && !self.table
+            && !self.unknown
     }
 
     /// Renders a comma-separated list of enabled feature identifiers starting with `"core"`.
@@ -113,6 +118,9 @@ impl DocumentFeature {
         }
         if self.table {
             out.push_str(", table");
+        }
+        if self.unknown {
+            out.push_str(", unknown");
         }
         out
     }
@@ -190,7 +198,10 @@ fn scan_element(element: &DocumentElement, features: &mut DocumentFeature) {
         DocumentElement::Table { .. } => {
             features.table = true;
         }
-        DocumentElement::Text(_) | DocumentElement::Unknown(_) => {}
+        DocumentElement::Text(_) => {}
+        DocumentElement::Unknown(_) => {
+            features.unknown = true;
+        }
     }
 }
 
@@ -267,6 +278,7 @@ mod tests {
         assert!(features.ordered_list_item);
         assert!(features.shoutout);
         assert!(features.table);
+        assert!(features.unknown);
     }
 
     #[test]
@@ -312,6 +324,7 @@ mod tests {
         assert!(!features.code_block);
         assert!(!features.table);
         assert!(!features.shoutout);
+        assert!(!features.unknown);
     }
 
     #[test]
@@ -335,6 +348,7 @@ mod tests {
         ));
         doc.push_header(DocumentElement::shoutout(ShoutoutElementKind::Caution, "G"));
         doc.push_header(DocumentElement::table(vec![], vec![]));
+        doc.push_header(DocumentElement::unknown("H"));
 
         assert!(DocumentFeature::from(&doc).is_all());
 
@@ -366,6 +380,7 @@ mod tests {
         assert!(!features.ordered_list_item);
         assert!(!features.shoutout);
         assert!(!features.table);
+        assert!(!features.unknown);
     }
 
     #[test]
@@ -381,6 +396,7 @@ mod tests {
         assert!(single_features.bullet_list_item);
         assert!(!single_features.code_block);
         assert!(!single_features.table);
+        assert!(!single_features.unknown);
 
         let mut multi_feature_doc = Document::new();
         multi_feature_doc.push_body(DocumentElement::code_block(
@@ -394,6 +410,7 @@ mod tests {
         assert!(multi_features.code_block);
         assert!(multi_features.table);
         assert!(!multi_features.image);
+        assert!(!multi_features.unknown);
 
         let mut six_features_doc = Document::new();
         six_features_doc.push_body(DocumentElement::bullet_list_item(
@@ -424,6 +441,7 @@ mod tests {
         assert!(six_features.ordered_list_item);
         assert!(six_features.shoutout);
         assert!(six_features.table);
+        assert!(!six_features.unknown);
     }
 
     #[test]
@@ -436,8 +454,9 @@ mod tests {
             ordered_list_item: true,
             shoutout: true,
             table: true,
+            unknown: true,
         };
-        let expected = "core, bullet_list_item, check_box_item, code_block, image, ordered_list_item, shoutout, table";
+        let expected = "core, bullet_list_item, check_box_item, code_block, image, ordered_list_item, shoutout, table, unknown";
         assert_eq!(features.to_features_string(), expected);
         assert_eq!(to_features_string(&features), expected);
         assert_eq!(features.to_string(), expected);
@@ -452,6 +471,12 @@ mod tests {
 
         features.image = true;
         assert_eq!(features.to_features_string(), "core, bullet_list_item, image, table");
+
+        features.unknown = true;
+        assert_eq!(
+            features.to_features_string(),
+            "core, bullet_list_item, image, table, unknown"
+        );
     }
 
     #[test]
@@ -469,14 +494,19 @@ mod tests {
         assert_eq!(features.to_features_string(), "core, code_block");
         assert_eq!(to_features_string(&features), "core, code_block");
         assert_eq!(features.to_string(), "core, code_block");
+
+        let mut unknown_feature = DocumentFeature::default();
+        unknown_feature.unknown = true;
+        assert_eq!(unknown_feature.to_features_string(), "core, unknown");
     }
 
     #[test]
-    fn test_unknown_element_ignored() {
+    fn test_unknown_element_detected() {
         let mut doc = Document::new();
         doc.push_body(DocumentElement::unknown("fallback raw data"));
         let features = DocumentFeature::from(&doc);
-        assert!(features.is_empty());
-        assert_eq!(features, DocumentFeature::default());
+        assert!(!features.is_empty());
+        assert!(features.unknown);
+        assert_eq!(features.to_features_string(), "core, unknown");
     }
 }

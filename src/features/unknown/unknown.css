@@ -1,0 +1,35 @@
+/* ==========================================================================
+   Doc2Flow - Unknown Feature Styles (Fallback Element)
+   ========================================================================== */
+
+/* 1. Base Variables & Tokens */
+:root {
+  /* Unknown Element Colors */
+  --unknown-bg: #fee2e2;
+  --unknown-border: #ef4444;
+  --unknown-color: #991b1b;
+}
+
+/* 2. Unknown Fallback Component (unknown-*) */
+.unknown-default {
+  font-family: var(--font-sans, Arial, sans-serif);
+  font-size: var(--txt-size-base, 14px);
+  line-height: var(--txt-line-height, 1.5);
+  color: var(--unknown-color);
+  background-color: var(--unknown-bg);
+  border: 1px solid var(--unknown-border);
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin: 8px 0;
+}
+
+/* 3. Print Styles */
+@media print {
+  .unknown-default {
+    border: 1px solid #000000 !important;
+    background-color: #fee2e2 !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
