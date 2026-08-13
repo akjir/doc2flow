@@ -3,6 +3,9 @@
 use crate::core::document::DocumentElement;
 use crate::core::feature::Feature;
 
+/// Embedded unknown CSS styles for fallback elements.
+pub const CSS: &str = include_str!("unknown.css");
+
 /// Unknown feature renderer handling unrecognized fallback elements.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct UnknownFeature;
@@ -28,11 +31,24 @@ impl Feature for UnknownFeature {
             _ => String::new(),
         }
     }
+
+    /// Returns the embedded CSS stylesheet for the unknown feature.
+    fn css(&self) -> Option<&'static str> {
+        Some(CSS)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_unknown_feature_css() {
+        let feature = UnknownFeature::new();
+        let css = feature.css().expect("unknown css should exist");
+        assert!(css.contains("--unknown-bg:"));
+        assert!(css.contains(".unknown-default"));
+    }
 
     #[test]
     fn test_unknown_feature_renders_unknown_element() {

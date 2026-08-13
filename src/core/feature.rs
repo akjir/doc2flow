@@ -8,6 +8,11 @@ use crate::core::document::{Document, DocumentElement};
 pub trait Feature {
     /// Converts a document element into an HTML string representation.
     fn to_html(&self, element: &DocumentElement) -> String;
+
+    /// Returns optional CSS stylesheet rules for this feature, defaulting to `None`.
+    fn css(&self) -> Option<&'static str> {
+        None
+    }
 }
 
 /// Feature detection flags for document AST elements.

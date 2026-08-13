@@ -3,6 +3,9 @@
 use crate::core::document::DocumentElement;
 use crate::core::feature::Feature;
 
+/// Embedded core CSS styles for layout and components.
+pub const CSS: &str = include_str!("core.css");
+
 /// Core feature renderer handling text and section elements.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct CoreFeature;
@@ -49,11 +52,24 @@ impl Feature for CoreFeature {
             _ => String::new(),
         }
     }
+
+    /// Returns the embedded CSS stylesheet for the core feature.
+    fn css(&self) -> Option<&'static str> {
+        Some(CSS)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_core_feature_css() {
+        let feature = CoreFeature::new();
+        let css = feature.css().expect("core css should exist");
+        assert!(css.contains("--bg-body:"));
+        assert!(css.contains(".txt-default"));
+    }
 
     #[test]
     fn test_core_feature_renders_text() {

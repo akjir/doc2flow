@@ -10,6 +10,61 @@ use crate::features::get_feature;
 /// Embedded base HTML template.
 pub const TEMPLATE_HTML: &str = include_str!("../../resources/templates/template.html");
 
+/// Appends multiline text to a buffer, indenting every non-empty line by 4 spaces.
+fn append_indented(out: &mut String, text: &str) {
+    for line in text.lines() {
+        if !line.is_empty() {
+            out.push_str("    ");
+            out.push_str(line);
+        }
+        out.push('\n');
+    }
+}
+
+/// Assembles active CSS stylesheets from core and enabled features indented with 4 spaces.
+///
+/// Core CSS is always included first, followed by active features in canonical order.
+///
+/// # Examples
+///
+/// ```
+/// use doc2flow::core::builder::assemble_styles;
+/// use doc2flow::core::feature::DocumentFeature;
+///
+/// let features = DocumentFeature::default();
+/// let css = assemble_styles(&features);
+/// assert!(css.contains("    --bg-body:"));
+/// ```
+pub fn assemble_styles(features: &DocumentFeature) -> String {
+    let mut out = String::with_capacity(12288);
+    if let Some(feature) = get_feature("core") {
+        if let Some(css) = feature.css() {
+            append_indented(&mut out, css);
+        }
+    }
+
+    for (name, is_active) in [
+        ("bullet_list_item", features.bullet_list_item),
+        ("check_box_item", features.check_box_item),
+        ("code_block", features.code_block),
+        ("image", features.image),
+        ("ordered_list_item", features.ordered_list_item),
+        ("shoutout", features.shoutout),
+        ("table", features.table),
+        ("unknown", features.unknown),
+    ] {
+        if is_active {
+            if let Some(feature) = get_feature(name) {
+                if let Some(css) = feature.css() {
+                    append_indented(&mut out, css);
+                }
+            }
+        }
+    }
+
+    out
+}
+
 /// Builds output content from a structured [`Document`] and active [`DocumentFeature`] flags.
 ///
 /// Returns a formatted string implementing `AsRef<[u8]>`.
@@ -47,6 +102,7 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
         .map(String::as_str)
         .unwrap_or("");
     let features_str = features.to_features_string();
+    let css_content = assemble_styles(features);
 
     TEMPLATE_HTML
         .replace("{{APP_VERSION}}", APP_VERSION)
@@ -57,6 +113,7 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
         .replace("{{LANG_CODE}}", lang_code)
         .replace("{{TITLE}}", title)
         .replace("{{FEATURES}}", &features_str)
+        .replace("{{CSS}}", &css_content)
         .replace("{{CONTENT}}", &html_content)
 }
 
@@ -86,8 +143,47 @@ mod tests {
         assert!(!content.contains("{{CREATED_AT}}"));
         assert!(!content.contains("{{LANG_CODE}}"));
         assert!(!content.contains("{{FEATURES}}"));
+        assert!(!content.contains("{{CSS}}"));
         assert!(!content.contains("{{TITLE}}"));
         assert!(content.contains("<title></title>"));
+        assert!(content.contains("--bg-body:"));
+        assert!(!content.contains("--unknown-bg:"));
+    }
+
+    #[test]
+    fn test_assemble_styles_core_default() {
+        let features = DocumentFeature::default();
+        let css = assemble_styles(&features);
+        assert!(css.contains("    --bg-body:"));
+        assert!(css.contains("    .txt-default"));
+        assert!(!css.contains("--unknown-bg:"));
+        assert!(!css.contains(".unknown-default"));
+    }
+
+    #[test]
+    fn test_assemble_styles_with_unknown_feature() {
+        let mut features = DocumentFeature::default();
+        features.unknown = true;
+        let css = assemble_styles(&features);
+        assert!(css.contains("    --bg-body:"));
+        assert!(css.contains("    .txt-default"));
+        assert!(css.contains("    --unknown-bg:"));
+        assert!(css.contains("    .unknown-default"));
+    }
+
+    #[test]
+    fn test_builder_build_includes_unknown_css_when_active() {
+        let mut doc = Document::new();
+        doc.push_body(crate::core::document::DocumentElement::unknown(
+            "unrecognized",
+        ));
+        let features = DocumentFeature::from(&doc);
+        let content = build(&doc, &features);
+        assert!(content.contains("<meta name=\"features\" content=\"core, unknown\">"));
+        assert!(content.contains("    --bg-body:"));
+        assert!(content.contains("    --unknown-bg:"));
+        assert!(content.contains("    .unknown-default"));
+        assert!(!content.contains("{{CSS}}"));
     }
 
     #[test]
