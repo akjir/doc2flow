@@ -60,7 +60,7 @@ mod tests {
         assert!(content.contains(REPOSITORY_URL));
         assert!(content.contains(LICENSE_URL));
         assert!(content.contains("<html lang=\"en\">"));
-        assert!(content.contains("<meta name=\"features\" content=\"core\">"));
+        assert!(content.contains("<meta name=\"features\" content=\"base\">"));
         assert!(content.contains("\"parameters\":"));
         assert!(!content.contains("{{CONTENT}}"));
         assert!(!content.contains("{{APP_VERSION}}"));
@@ -100,7 +100,7 @@ mod tests {
         ));
         let features = DocumentFeature::from(&doc);
         let content = build(&doc, &features);
-        assert!(content.contains("<meta name=\"features\" content=\"core, code_block\">"));
+        assert!(content.contains("<meta name=\"features\" content=\"base, code_block\">"));
         assert!(!content.contains("{{FEATURES}}"));
     }
 }

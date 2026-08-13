@@ -1,0 +1,200 @@
+/* ==========================================================================
+   Doc2Flow - Base Feature Styles (Default Text & Backgrounds)
+   ========================================================================== */
+
+/* 1. Base Variables & Tokens */
+:root {
+  /* Fonts */
+  --font-sans: Arial, sans-serif;
+  --font-mono: 'Courier New', monospace;
+
+  /* Typography Colors */
+  --txt-color-default: #444444;
+  --txt-color-muted: #8c959f;
+  --txt-color-heading: #163a5c;
+  --txt-color-link: #2e75b6;
+  --txt-color-link-hover: #163a5c;
+  --txt-color-code: #24292f;
+  --txt-bg-code: #f0f2f5;
+
+  /* Background Colors */
+  --bg-body: #eef2f7;
+  --bg-surface: #ffffff;
+  --bg-muted: #f8fafc;
+  --bg-subtle: #f1f5f9;
+
+  /* Typography Sizing & Line Height */
+  --txt-size-base: 14px;
+  --txt-size-sm: 12px;
+  --txt-size-xs: 11px;
+  --txt-size-lg: 16px;
+  --txt-line-height: 1.5;
+}
+
+/* 2. Global Resets & Defaults */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--txt-size-base);
+  line-height: var(--txt-line-height);
+  color: var(--txt-color-default);
+  background-color: var(--bg-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 3. Background Classes (bg-*) */
+.bg-body {
+  background-color: var(--bg-body);
+}
+
+.bg-surface {
+  background-color: var(--bg-surface);
+}
+
+.bg-muted {
+  background-color: var(--bg-muted);
+}
+
+.bg-subtle {
+  background-color: var(--bg-subtle);
+}
+
+/* 4. Text Content & Components (txt-*) */
+.txt-default {
+  font-family: var(--font-sans);
+  font-size: var(--txt-size-base);
+  line-height: var(--txt-line-height);
+  color: var(--txt-color-default);
+}
+
+.txt-content {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: var(--txt-line-height);
+  color: var(--txt-color-default);
+  word-break: break-word;
+}
+
+.txt-lead {
+  font-size: var(--txt-size-lg);
+  line-height: 1.6;
+  color: var(--txt-color-default);
+}
+
+.txt-muted {
+  color: var(--txt-color-muted);
+  font-size: var(--txt-size-sm);
+}
+
+.txt-small {
+  font-size: var(--txt-size-sm);
+  line-height: 1.4;
+}
+
+.txt-code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: var(--txt-color-code);
+  background-color: var(--txt-bg-code);
+  padding: 2px 5px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.txt-link {
+  color: var(--txt-color-link);
+  text-decoration: none;
+  transition: color 0.15s ease, text-decoration 0.15s ease;
+}
+
+.txt-link:hover {
+  color: var(--txt-color-link-hover);
+  text-decoration: underline;
+}
+
+.txt-bold {
+  font-weight: bold;
+}
+
+.txt-italic {
+  font-style: italic;
+}
+
+/* Base text element formatting inside text content */
+.txt-content a,
+.txt-default a {
+  color: var(--txt-color-link);
+  text-decoration: none;
+}
+
+.txt-content a:hover,
+.txt-default a:hover {
+  color: var(--txt-color-link-hover);
+  text-decoration: underline;
+}
+
+.txt-content code,
+.txt-default code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: var(--txt-color-code);
+  background-color: var(--txt-bg-code);
+  padding: 1px 4px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.txt-content strong,
+.txt-default strong,
+.txt-content b,
+.txt-default b {
+  font-weight: 600;
+}
+
+.txt-content em,
+.txt-default em,
+.txt-content i,
+.txt-default i {
+  font-style: italic;
+}
+
+/* 5. Print Styles */
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .bg-body,
+  .bg-surface,
+  .bg-muted,
+  .bg-subtle {
+    background-color: transparent !important;
+  }
+
+  .txt-link,
+  .txt-content a,
+  .txt-default a {
+    color: #000000 !important;
+    text-decoration: underline !important;
+  }
+
+  .txt-code,
+  .txt-content code,
+  .txt-default code {
+    border: 1px solid #d0d7de !important;
+    background-color: #f6f8fa !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

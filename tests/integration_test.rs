@@ -1063,11 +1063,11 @@ fn test_parser_and_builder_pipeline_integration() {
     let features = doc2flow::core::DocumentFeature::from(&document);
     assert!(features.check_box_item);
     assert!(!features.table);
-    assert_eq!(features.to_features_string(), "core, check_box_item");
+    assert_eq!(features.to_features_string(), "base, check_box_item");
     let content = doc2flow::core::builder::build(&document, &features);
     assert!(!content.as_bytes().is_empty());
     assert!(content.contains("\"title\": \"Pipeline Test\""));
     assert!(content.contains("\"title\": \"Pipeline Heading\""));
-    assert!(content.contains("<meta name=\"features\" content=\"core, check_box_item\">"));
+    assert!(content.contains("<meta name=\"features\" content=\"base, check_box_item\">"));
     assert!(!content.contains("{{FEATURES}}"));
 }
