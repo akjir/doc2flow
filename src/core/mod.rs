@@ -18,5 +18,5 @@ pub use constants::{
 pub use document::{Document, DocumentElement, ShoutoutElementKind, TableAlignment};
 pub use document_json::document_to_json;
 pub use error::{DiagnosticError, Error, Result, build_caret_annotation};
-pub use feature::{DocumentFeature, to_features_string};
+pub use feature::{DocumentFeature, Feature, to_features_string};
 pub use markdown::parse_d2f_markdown;

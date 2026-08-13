@@ -1,8 +1,14 @@
-//! Document AST feature detection and inspection.
+//! Document AST feature detection, inspection, and rendering traits.
 
 use std::fmt::{self, Display, Formatter};
 
 use crate::core::document::{Document, DocumentElement};
+
+/// Trait for document feature renderers converting AST elements to HTML.
+pub trait Feature {
+    /// Converts a document element into an HTML string representation.
+    fn to_html(&self, element: &DocumentElement) -> String;
+}
 
 /// Feature detection flags for document AST elements.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -68,7 +74,7 @@ impl DocumentFeature {
             && !self.table
     }
 
-    /// Renders a comma-separated list of enabled feature identifiers starting with `"base"`.
+    /// Renders a comma-separated list of enabled feature identifiers starting with `"core"`.
     ///
     /// # Examples
     ///
@@ -76,17 +82,17 @@ impl DocumentFeature {
     /// use doc2flow::core::feature::DocumentFeature;
     ///
     /// let mut features = DocumentFeature::default();
-    /// assert_eq!(features.to_features_string(), "base");
+    /// assert_eq!(features.to_features_string(), "core");
     ///
     /// features.code_block = true;
-    /// assert_eq!(features.to_features_string(), "base, code_block");
+    /// assert_eq!(features.to_features_string(), "core, code_block");
     ///
     /// features.table = true;
-    /// assert_eq!(features.to_features_string(), "base, code_block, table");
+    /// assert_eq!(features.to_features_string(), "core, code_block, table");
     /// ```
     pub fn to_features_string(&self) -> String {
         let mut out = String::with_capacity(96);
-        out.push_str("base");
+        out.push_str("core");
         if self.bullet_list_item {
             out.push_str(", bullet_list_item");
         }
@@ -121,7 +127,7 @@ impl Display for DocumentFeature {
     /// use doc2flow::core::feature::DocumentFeature;
     ///
     /// let features = DocumentFeature::default();
-    /// assert_eq!(features.to_string(), "base");
+    /// assert_eq!(features.to_string(), "core");
     /// ```
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.write_str(&self.to_features_string())
@@ -198,7 +204,7 @@ fn scan_elements(elements: &[DocumentElement], features: &mut DocumentFeature) {
     }
 }
 
-/// Returns a comma-separated list of enabled feature identifiers starting with `"base"`.
+/// Returns a comma-separated list of enabled feature identifiers starting with `"core"`.
 ///
 /// # Examples
 ///
@@ -206,7 +212,7 @@ fn scan_elements(elements: &[DocumentElement], features: &mut DocumentFeature) {
 /// use doc2flow::core::feature::{DocumentFeature, to_features_string};
 ///
 /// let features = DocumentFeature::default();
-/// assert_eq!(to_features_string(&features), "base");
+/// assert_eq!(to_features_string(&features), "core");
 /// ```
 pub fn to_features_string(features: &DocumentFeature) -> String {
     features.to_features_string()
@@ -281,7 +287,7 @@ mod tests {
         ));
         let features = DocumentFeature::from(&doc);
         assert!(features.is_empty());
-        assert_eq!(features.to_features_string(), "base");
+        assert_eq!(features.to_features_string(), "core");
     }
 
     #[test]
@@ -431,7 +437,7 @@ mod tests {
             shoutout: true,
             table: true,
         };
-        let expected = "base, bullet_list_item, check_box_item, code_block, image, ordered_list_item, shoutout, table";
+        let expected = "core, bullet_list_item, check_box_item, code_block, image, ordered_list_item, shoutout, table";
         assert_eq!(features.to_features_string(), expected);
         assert_eq!(to_features_string(&features), expected);
         assert_eq!(features.to_string(), expected);
@@ -442,27 +448,27 @@ mod tests {
         let mut features = DocumentFeature::default();
         features.bullet_list_item = true;
         features.table = true;
-        assert_eq!(features.to_features_string(), "base, bullet_list_item, table");
+        assert_eq!(features.to_features_string(), "core, bullet_list_item, table");
 
         features.image = true;
-        assert_eq!(features.to_features_string(), "base, bullet_list_item, image, table");
+        assert_eq!(features.to_features_string(), "core, bullet_list_item, image, table");
     }
 
     #[test]
     fn test_to_features_string_default() {
         let features = DocumentFeature::default();
-        assert_eq!(features.to_features_string(), "base");
-        assert_eq!(to_features_string(&features), "base");
-        assert_eq!(features.to_string(), "base");
+        assert_eq!(features.to_features_string(), "core");
+        assert_eq!(to_features_string(&features), "core");
+        assert_eq!(features.to_string(), "core");
     }
 
     #[test]
     fn test_to_features_string_single() {
         let mut features = DocumentFeature::default();
         features.code_block = true;
-        assert_eq!(features.to_features_string(), "base, code_block");
-        assert_eq!(to_features_string(&features), "base, code_block");
-        assert_eq!(features.to_string(), "base, code_block");
+        assert_eq!(features.to_features_string(), "core, code_block");
+        assert_eq!(to_features_string(&features), "core, code_block");
+        assert_eq!(features.to_string(), "core, code_block");
     }
 
     #[test]

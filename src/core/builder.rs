@@ -1,9 +1,10 @@
 //! Document build and rendering module.
 
 use crate::core::constants::{APP_VERSION, LICENSE_URL, REPOSITORY_URL};
-use crate::core::document::Document;
+use crate::core::document::{Document, DocumentElement};
 use crate::core::document_json::document_to_json;
 use crate::core::feature::DocumentFeature;
+use crate::features::get_feature;
 
 /// Embedded base HTML template.
 pub const TEMPLATE_HTML: &str = include_str!("../../resources/templates/template.html");
@@ -27,6 +28,11 @@ pub const TEMPLATE_HTML: &str = include_str!("../../resources/templates/template
 pub fn build(document: &Document, features: &DocumentFeature) -> String {
     let app_version_raw = APP_VERSION.strip_prefix('v').unwrap_or(APP_VERSION);
     let json_content = document_to_json(document);
+    let text_element = DocumentElement::text(json_content);
+    let html_content = match get_feature("core") {
+        Some(feature) => feature.to_html(&text_element),
+        None => String::new(),
+    };
     let lang_code = document
         .parameters
         .get("language")
@@ -42,7 +48,7 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
         .replace("{{LICENSE_URL}}", LICENSE_URL)
         .replace("{{LANG_CODE}}", lang_code)
         .replace("{{FEATURES}}", &features_str)
-        .replace("{{CONTENT}}", &json_content)
+        .replace("{{CONTENT}}", &html_content)
 }
 
 #[cfg(test)]
@@ -60,7 +66,8 @@ mod tests {
         assert!(content.contains(REPOSITORY_URL));
         assert!(content.contains(LICENSE_URL));
         assert!(content.contains("<html lang=\"en\">"));
-        assert!(content.contains("<meta name=\"features\" content=\"base\">"));
+        assert!(content.contains("<meta name=\"features\" content=\"core\">"));
+        assert!(content.contains("<p class=\"txt-default\">"));
         assert!(content.contains("\"parameters\":"));
         assert!(!content.contains("{{CONTENT}}"));
         assert!(!content.contains("{{APP_VERSION}}"));
@@ -100,7 +107,7 @@ mod tests {
         ));
         let features = DocumentFeature::from(&doc);
         let content = build(&doc, &features);
-        assert!(content.contains("<meta name=\"features\" content=\"base, code_block\">"));
+        assert!(content.contains("<meta name=\"features\" content=\"core, code_block\">"));
         assert!(!content.contains("{{FEATURES}}"));
     }
 }
