@@ -4,6 +4,7 @@ use crate::core::constants::{APP_VERSION, LICENSE_URL, REPOSITORY_URL};
 use crate::core::document::{Document, DocumentElement};
 use crate::core::document_json::document_to_json;
 use crate::core::feature::DocumentFeature;
+use crate::core::utils::format_iso8601_utc;
 use crate::features::get_feature;
 
 /// Embedded base HTML template.
@@ -27,6 +28,7 @@ pub const TEMPLATE_HTML: &str = include_str!("../../resources/templates/template
 /// ```
 pub fn build(document: &Document, features: &DocumentFeature) -> String {
     let app_version_raw = APP_VERSION.strip_prefix('v').unwrap_or(APP_VERSION);
+    let created_at = format_iso8601_utc(std::time::SystemTime::now());
     let json_content = document_to_json(document);
     let text_element = DocumentElement::text(json_content);
     let html_content = match get_feature("core") {
@@ -46,6 +48,7 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
         .replace("{{APP_VERSION_RAW}}", app_version_raw)
         .replace("{{REPOSITORY_URL}}", REPOSITORY_URL)
         .replace("{{LICENSE_URL}}", LICENSE_URL)
+        .replace("{{CREATED_AT}}", &created_at)
         .replace("{{LANG_CODE}}", lang_code)
         .replace("{{FEATURES}}", &features_str)
         .replace("{{CONTENT}}", &html_content)
@@ -74,6 +77,7 @@ mod tests {
         assert!(!content.contains("{{APP_VERSION_RAW}}"));
         assert!(!content.contains("{{REPOSITORY_URL}}"));
         assert!(!content.contains("{{LICENSE_URL}}"));
+        assert!(!content.contains("{{CREATED_AT}}"));
         assert!(!content.contains("{{LANG_CODE}}"));
         assert!(!content.contains("{{FEATURES}}"));
     }
