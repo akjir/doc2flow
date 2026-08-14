@@ -23,6 +23,18 @@
   --bg-muted: #f8fafc;
   --bg-subtle: #f1f5f9;
 
+  /* Section Component Tokens */
+  --section-bg-surface: var(--bg-surface);
+  --section-bg-header: #317ab9;
+  --section-bg-header-hover: #25649b;
+  --section-bg-header-h1: #163a5c;
+  --section-bg-header-h1-hover: #102b45;
+  --section-color-header: #ffffff;
+  --section-color-subheading: #2e75b6;
+  --section-border-subheading: #d6e4f0;
+  --section-radius: 10px;
+  --section-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+
   /* Typography Sizing & Line Height */
   --txt-size-base: 14px;
   --txt-size-sm: 12px;
@@ -165,7 +177,162 @@ body {
   font-style: italic;
 }
 
-/* 5. Print Styles */
+/* 5. Section Components (section-*) */
+.section,
+.section-container {
+  background-color: var(--section-bg-surface);
+  border-radius: var(--section-radius);
+  margin-bottom: 14px;
+  box-shadow: var(--section-shadow);
+  overflow: hidden;
+}
+
+.section-header,
+.section > h1,
+.section > h2 {
+  background-color: var(--section-bg-header);
+  color: var(--section-color-header);
+  padding: 11px 18px;
+  font-size: 15px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  margin: 0;
+}
+
+.section-header:hover,
+.section > h1:hover,
+.section > h2:hover {
+  background-color: var(--section-bg-header-hover);
+}
+
+.section-header[role="button"]:focus-visible,
+.section > h1[role="button"]:focus-visible,
+.section > h2[role="button"]:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: -3px;
+}
+
+.section-header-h1,
+.section > h1,
+.section[data-level="1"] > h1 {
+  background-color: var(--section-bg-header-h1);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.section-header-h1:hover,
+.section > h1:hover,
+.section[data-level="1"] > h1:hover {
+  background-color: var(--section-bg-header-h1-hover);
+}
+
+.section-no-toggle,
+.section-header.no-toggle,
+.section-header.section-no-toggle,
+.section > h1.no-toggle,
+.section > h2.no-toggle {
+  cursor: default;
+}
+
+.section-no-toggle:hover,
+.section-header.no-toggle:hover,
+.section-header.section-no-toggle:hover,
+.section > h2.no-toggle:hover {
+  background-color: var(--section-bg-header);
+}
+
+.section-header-h1.no-toggle:hover,
+.section-header-h1.section-no-toggle:hover,
+.section > h1.no-toggle:hover,
+.section[data-level="1"] > h1.no-toggle:hover {
+  background-color: var(--section-bg-header-h1);
+}
+
+.section-no-toggle .section-toggler,
+.section-header.no-toggle .section-toggler,
+.section-header.section-no-toggle .section-toggler,
+.no-toggle .section-toggler {
+  display: none !important;
+}
+
+.section-toggler {
+  font-size: 16px;
+  margin-left: 10px;
+  transition: transform 0.2s ease;
+}
+
+.section-body {
+  padding: 14px 18px;
+}
+
+.section-body:empty,
+.section-body:not(:has(*)) {
+  display: none;
+}
+
+.section-body.collapsed,
+.section-body.section-collapsed {
+  display: none;
+}
+
+/* Nested Subsections (Level 3+) & Subheadings */
+.section-subheading,
+.section-body h3,
+.section-body h4,
+.section-body h5,
+.section-body h6,
+.section[data-level="3"] > h3,
+.section[data-level="4"] > h4,
+.section[data-level="5"] > h5,
+.section[data-level="6"] > h6 {
+  background-color: transparent;
+  color: var(--section-color-subheading);
+  font-size: 12.5px;
+  font-weight: bold;
+  margin: 14px 0 7px;
+  padding: 0 0 4px 0;
+  border-bottom: 1px solid var(--section-border-subheading);
+  cursor: default;
+  display: block;
+}
+
+.section-subheading:hover,
+.section-body h3:hover,
+.section-body h4:hover,
+.section-body h5:hover,
+.section-body h6:hover,
+.section[data-level="3"] > h3:hover,
+.section[data-level="4"] > h4:hover,
+.section[data-level="5"] > h5:hover,
+.section[data-level="6"] > h6:hover {
+  background-color: transparent;
+}
+
+.section-body > .section,
+.section[data-level="3"],
+.section[data-level="4"],
+.section[data-level="5"],
+.section[data-level="6"] {
+  background-color: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  margin-bottom: 10px;
+  overflow: visible;
+}
+
+.section-body > .section > .section-body,
+.section[data-level="3"] > .section-body,
+.section[data-level="4"] > .section-body,
+.section[data-level="5"] > .section-body,
+.section[data-level="6"] > .section-body {
+  padding: 0;
+}
+
+/* 6. Print Styles */
 @media print {
   body {
     background-color: #ffffff !important;
@@ -196,5 +363,40 @@ body {
     color: #000000 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+
+  /* Section Print Styles */
+  .section,
+  .section-container {
+    display: block !important;
+    box-shadow: none !important;
+    border: 1px solid #cccccc !important;
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+
+  .section-body > .section,
+  .section[data-level="3"],
+  .section[data-level="4"],
+  .section[data-level="5"],
+  .section[data-level="6"] {
+    border: none !important;
+  }
+
+  .section-header,
+  .section > h1,
+  .section > h2 {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    cursor: default;
+  }
+
+  .section-body.collapsed,
+  .section-body.section-collapsed {
+    display: block !important;
+  }
+
+  .section-toggler {
+    display: none !important;
   }
 }

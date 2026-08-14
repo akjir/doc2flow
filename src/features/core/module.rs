@@ -99,6 +99,11 @@ mod tests {
         let css = feature.css().expect("core css should exist");
         assert!(css.contains("--bg-body:"));
         assert!(css.contains(".txt-default"));
+        assert!(css.contains(".section"));
+        assert!(css.contains(".section-header"));
+        assert!(css.contains(".section-body"));
+        assert!(css.contains(".section-subheading"));
+        assert!(css.contains("--section-bg-header:"));
     }
 
     #[test]
