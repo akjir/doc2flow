@@ -70,7 +70,7 @@ if [ "$EXAMPLES_ONLY" = false ]; then
         echo "==> Building Legacy TypeScript..."
         (cd web && npm run build:legacy)
     else
-        echo "==> Building TypeScript (placeholder: core pipeline)..."
+        echo "==> Building TypeScript..."
         (cd web && npm run build)
     fi
 

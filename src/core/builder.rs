@@ -20,25 +20,31 @@ fn append_indented(out: &mut String, text: &str) {
     }
 }
 
-/// Assembles active CSS stylesheets from core and enabled features indented with 4 spaces.
+/// Assembles active CSS stylesheets and JavaScript client scripts from core and enabled features.
 ///
-/// Core CSS is always included first, followed by active features in canonical order.
+/// Returns a tuple of `(css, javascript)` strings indented with 4 spaces.
 ///
 /// # Examples
 ///
 /// ```
-/// use doc2flow::core::builder::assemble_styles;
+/// use doc2flow::core::builder::assemble_assets;
 /// use doc2flow::core::feature::DocumentFeature;
 ///
 /// let features = DocumentFeature::default();
-/// let css = assemble_styles(&features);
+/// let (css, js) = assemble_assets(&features);
 /// assert!(css.contains("    --bg-body:"));
+/// assert!(js.contains("    window.d2f"));
 /// ```
-pub fn assemble_styles(features: &DocumentFeature) -> String {
-    let mut out = String::with_capacity(12288);
+pub fn assemble_assets(features: &DocumentFeature) -> (String, String) {
+    let mut css_out = String::with_capacity(12288);
+    let mut js_out = String::with_capacity(4096);
+
     if let Some(feature) = get_feature("core") {
         if let Some(css) = feature.css() {
-            append_indented(&mut out, css);
+            append_indented(&mut css_out, css);
+        }
+        if let Some(js) = feature.javascript() {
+            append_indented(&mut js_out, js);
         }
     }
 
@@ -55,13 +61,54 @@ pub fn assemble_styles(features: &DocumentFeature) -> String {
         if is_active {
             if let Some(feature) = get_feature(name) {
                 if let Some(css) = feature.css() {
-                    append_indented(&mut out, css);
+                    append_indented(&mut css_out, css);
+                }
+                if let Some(js) = feature.javascript() {
+                    append_indented(&mut js_out, js);
                 }
             }
         }
     }
 
-    out
+    (css_out, js_out)
+}
+
+/// Assembles active CSS stylesheets from core and enabled features indented with 4 spaces.
+///
+/// Core CSS is always included first, followed by active features in canonical order.
+///
+/// # Examples
+///
+/// ```
+/// use doc2flow::core::builder::assemble_styles;
+/// use doc2flow::core::feature::DocumentFeature;
+///
+/// let features = DocumentFeature::default();
+/// let css = assemble_styles(&features);
+/// assert!(css.contains("    --bg-body:"));
+/// ```
+pub fn assemble_styles(features: &DocumentFeature) -> String {
+    let (css, _) = assemble_assets(features);
+    css
+}
+
+/// Assembles active JavaScript client scripts from core and enabled features indented with 4 spaces.
+///
+/// Core JavaScript is always included first, followed by active features in canonical order.
+///
+/// # Examples
+///
+/// ```
+/// use doc2flow::core::builder::assemble_scripts;
+/// use doc2flow::core::feature::DocumentFeature;
+///
+/// let features = DocumentFeature::default();
+/// let js = assemble_scripts(&features);
+/// assert!(js.contains("    window.d2f"));
+/// ```
+pub fn assemble_scripts(features: &DocumentFeature) -> String {
+    let (_, js) = assemble_assets(features);
+    js
 }
 
 /// Builds output content from a structured [`Document`] and active [`DocumentFeature`] flags.
@@ -95,7 +142,11 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
         .map(String::as_str)
         .unwrap_or("");
     let features_str = features.to_features_string();
-    let css_content = assemble_styles(features);
+    let (css_content, js_content) = assemble_assets(features);
+    let i18n_json = match lang_code {
+        "de" => r#"{"lang":"de","reset":"Zurücksetzen","copy":"Kopieren"}"#,
+        _ => r#"{"lang":"en","reset":"Reset","copy":"Copy"}"#,
+    };
 
     let mut html_content = String::new();
     for element in document.header.iter().chain(document.body.iter()) {
@@ -112,6 +163,8 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
         .replace("{{TITLE}}", title)
         .replace("{{FEATURES}}", &features_str)
         .replace("{{CSS}}", &css_content)
+        .replace("{{JS}}", &js_content)
+        .replace("{{I18N_JSON}}", i18n_json)
         .replace("{{CONTENT}}", &html_content)
 }
 
@@ -198,10 +251,31 @@ mod tests {
         assert!(!content.contains("{{LANG_CODE}}"));
         assert!(!content.contains("{{FEATURES}}"));
         assert!(!content.contains("{{CSS}}"));
+        assert!(!content.contains("{{JS}}"));
+        assert!(!content.contains("{{I18N_JSON}}"));
         assert!(!content.contains("{{TITLE}}"));
         assert!(content.contains("<title></title>"));
         assert!(content.contains("--bg-body:"));
+        assert!(content.contains("window.d2f"));
+        assert!(content.contains("window.d2f.lang.dictionary = {\"lang\":\"en\""));
         assert!(!content.contains("--unknown-bg:"));
+    }
+
+    #[test]
+    fn test_assemble_assets_core_default() {
+        let features = DocumentFeature::default();
+        let (css, js) = assemble_assets(&features);
+        assert!(css.contains("    --bg-body:"));
+        assert!(css.contains("    .txt-default"));
+        assert!(js.contains("    window.d2f"));
+    }
+
+    #[test]
+    fn test_assemble_scripts_core_default() {
+        let features = DocumentFeature::default();
+        let js = assemble_scripts(&features);
+        assert!(js.contains("    window.d2f"));
+        assert!(js.contains("core"));
     }
 
     #[test]
@@ -241,6 +315,7 @@ mod tests {
         assert!(content.contains("    --unknown-bg:"));
         assert!(content.contains("    .unknown-default"));
         assert!(!content.contains("{{CSS}}"));
+        assert!(!content.contains("{{JS}}"));
     }
 
     #[test]
@@ -270,7 +345,9 @@ mod tests {
         let features = DocumentFeature::default();
         let content = build(&doc, &features);
         assert!(content.contains("<html lang=\"de\">"));
+        assert!(content.contains("window.d2f.lang.dictionary = {\"lang\":\"de\""));
         assert!(!content.contains("{{LANG_CODE}}"));
+        assert!(!content.contains("{{I18N_JSON}}"));
     }
 
     #[test]

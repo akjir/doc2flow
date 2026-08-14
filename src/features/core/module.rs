@@ -6,6 +6,9 @@ use crate::core::feature::Feature;
 /// Embedded core CSS styles for layout and components.
 pub const CSS: &str = include_str!("core.css");
 
+/// Embedded core JavaScript bundle for client runtime.
+pub const JS: &str = include_str!("core.js");
+
 /// Core feature renderer handling text, horizontal rules, and section elements.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct CoreFeature;
@@ -83,6 +86,11 @@ impl Feature for CoreFeature {
     /// Returns the embedded CSS stylesheet for the core feature.
     fn css(&self) -> Option<&'static str> {
         Some(CSS)
+    }
+
+    /// Returns the embedded JavaScript client script for the core feature.
+    fn javascript(&self) -> Option<&'static str> {
+        Some(JS)
     }
 }
 
@@ -475,6 +483,14 @@ mod tests {
         assert!(css.contains(".section-subheading"));
         assert!(css.contains("--section-bg-header:"));
         assert!(css.contains("hr {"));
+    }
+
+    #[test]
+    fn test_core_feature_javascript() {
+        let feature = CoreFeature::new();
+        let js = feature.javascript().expect("core javascript should exist");
+        assert!(js.contains("window.d2f"));
+        assert!(js.contains("core"));
     }
 
     #[test]

@@ -14,6 +14,7 @@
     "rootDir": "../src"
   },
   "include": [
+    "../src/features/**/*",
     "../src/legacy/core/web/**/*",
     "../src/legacy/features/**/*"
   ]

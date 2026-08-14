@@ -13,6 +13,11 @@ pub trait Feature {
     fn css(&self) -> Option<&'static str> {
         None
     }
+
+    /// Returns optional JavaScript client logic for this feature, defaulting to `None`.
+    fn javascript(&self) -> Option<&'static str> {
+        None
+    }
 }
 
 /// Feature detection flags for document AST elements.
@@ -523,5 +528,19 @@ mod tests {
         assert!(!features.is_empty());
         assert!(features.unknown);
         assert_eq!(features.to_features_string(), "core, unknown");
+    }
+
+    #[test]
+    fn test_feature_trait_default_methods() {
+        struct MinimalFeature;
+        impl Feature for MinimalFeature {
+            fn to_html(&self, _element: &DocumentElement, _content: &str, _indent: usize) -> String {
+                String::new()
+            }
+        }
+
+        let feature = MinimalFeature;
+        assert_eq!(feature.css(), None);
+        assert_eq!(feature.javascript(), None);
     }
 }

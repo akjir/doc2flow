@@ -136,7 +136,7 @@ d2f.exe --version
   * If a feature is omitted/disabled (`DocumentFeatures`), zero HTML elements, zero CSS rules, and zero JS/TS code for that feature are emitted in the rendered document.
 * **HTML UI Components & Builder Engine (`src/components.rs` & `src/core/builder.rs`):**
   * `src/components.rs`: Core-universal zero-allocation HTML UI building blocks (`out: &mut impl Write`). Feature-specific HTML components reside in their respective feature modules.
-  * `src/core/builder.rs`: Central HTML page orchestrator, dynamic feature style assembler (`assemble_styles`), and script bundle assembler (`assemble_scripts`).
+  * `src/core/builder.rs`: Central HTML page orchestrator, dynamic feature asset assembler (`assemble_assets`, `assemble_styles`, `assemble_scripts`).
 * **Constants Architecture & Encapsulation Rules:**
   * **Feature-Specific Constants (Strict Encapsulation):** Constants used exclusively by an individual feature (e.g. CSS class names, frontmatter keys, selector strings, feature-internal default values) MUST be defined directly in the respective `src/legacy/features/<feature_name>/module.rs` (or private submodules). Distributing feature constants across central files or dumpsters is strictly prohibited to eliminate tight coupling.
   * **Global System Constants (`src/legacy/core/constants.rs`):** Reserved exclusively for application-wide, feature-independent system metadata and global core defaults (e.g. `APP_NAME`, `CLI_BANNER`, `APP_VERSION`, `REPOSITORY_URL`, `LICENSE_TERMS`, `LICENSE_URL`, global system/I/O limits).
