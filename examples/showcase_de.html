@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+206.a3d641c.dev">
-  <meta name="version" content="0.9.4+206.a3d641c.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+207.cdeb7c8.dev">
+  <meta name="version" content="0.9.4+207.cdeb7c8.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-14T18:13:06Z">
+  <meta name="dcterms.created" content="2026-08-14T18:53:51Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, bullet_list_item, check_box_item, code_block, image, ordered_list_item, shoutout, table">
   <title>Doc2Flow Deutscher Showcase</title>
@@ -28,8 +28,11 @@
       --txt-color-heading: #163a5c;
       --txt-color-link: #2e75b6;
       --txt-color-link-hover: #163a5c;
-      --txt-color-code: #24292f;
-      --txt-bg-code: #f0f2f5;
+
+      /* Code Tokens */
+      --code-bg: #f0f2f5;
+      --code-border: #d0d7de;
+      --code-color: #24292f;
 
       /* Background Colors */
       --bg-body: #eef2f7;
@@ -142,12 +145,13 @@
 
     .txt-code {
       font-family: var(--font-mono);
-      font-size: 0.9em;
-      color: var(--txt-color-code);
-      background-color: var(--txt-bg-code);
-      padding: 2px 5px;
+      font-size: inherit;
+      line-height: inherit;
+      color: var(--code-color);
+      background-color: var(--code-bg);
+      padding: 0 4px;
       border-radius: 3px;
-      border: 1px solid rgba(0, 0, 0, 0.08);
+      border: 1px solid var(--code-border);
     }
 
     .txt-link {
@@ -169,6 +173,10 @@
       font-style: italic;
     }
 
+    .txt-strike {
+      text-decoration: line-through;
+    }
+
     /* Base text element formatting inside text content */
     .txt-content a,
     .txt-default a {
@@ -185,12 +193,13 @@
     .txt-content code,
     .txt-default code {
       font-family: var(--font-mono);
-      font-size: 0.9em;
-      color: var(--txt-color-code);
-      background-color: var(--txt-bg-code);
-      padding: 1px 4px;
+      font-size: inherit;
+      line-height: inherit;
+      color: var(--code-color);
+      background-color: var(--code-bg);
+      padding: 0 4px;
       border-radius: 3px;
-      border: 1px solid rgba(0, 0, 0, 0.08);
+      border: 1px solid var(--code-border);
     }
 
     .txt-content strong,
@@ -205,6 +214,13 @@
     .txt-content i,
     .txt-default i {
       font-style: italic;
+    }
+
+    .txt-content s,
+    .txt-default s,
+    .txt-content del,
+    .txt-default del {
+      text-decoration: line-through;
     }
 
     /* 6. Section Components (section-*) */
@@ -394,11 +410,19 @@
       .txt-code,
       .txt-content code,
       .txt-default code {
-        border: 1px solid #d0d7de !important;
-        background-color: #f6f8fa !important;
+        border: 1px solid var(--code-border) !important;
+        background-color: var(--code-bg) !important;
         color: #000000 !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+      }
+
+      .txt-strike,
+      .txt-content s,
+      .txt-default s,
+      .txt-content del,
+      .txt-default del {
+        text-decoration: none !important;
       }
 
       hr {
@@ -455,10 +479,7 @@
 
     /* 1. Base Variables & Tokens */
     :root {
-      /* Code Element Colors & Layout */
-      --code-bg: #f0f2f5;
-      --code-border: #d0d7de;
-      --code-color: #24292f;
+      /* Code Block Tokens */
       --code-font-size: 11.5px;
       --code-line-height: 1.6;
       --code-radius: 10px;
@@ -493,7 +514,7 @@
     @media print {
       .code-default {
         background-color: var(--code-bg) !important;
-        border: 1px solid #d0d7de !important;
+        border: 1px solid var(--code-border) !important;
         color: #000000 !important;
         print-color-adjust: exact;
         white-space: pre-wrap;
@@ -507,9 +528,6 @@
   <header class="doc-header">
   </header>
   <main class="doc-body">
-    <p class="txt-default">
-      [Variables]
-    </p>
     <section class="section" data-level="1">
       <h1>Teil 1: Systemeinrichtung & Vorbereitung</h1>
       <div class="section-body">
@@ -619,7 +637,7 @@
       <h2>Abschnitt 4: Informationslisten</h2>
       <div class="section-body">
           <p class="txt-default">
-            Hauptaufgabe & Systemüberwachung
+            Hauptaufgabe &amp; Systemüberwachung
           </p>
           <p class="txt-default">
             Unterpunkt A 1: Dienststatus abfragen

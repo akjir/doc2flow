@@ -8,63 +8,65 @@ language: "en"
 
 # Introduction to Stellar Evolution
 
-Stellar evolution is the process by which a star changes over the course of time. Depending on the mass of the star, its lifetime can range from a few million years for the most massive to trillions of years for the least massive.
+The term **stellar evolution** describes the continuous astrophysical process by which a star undergoes radical structural changes over its lifetime. Stars are not ~~static, eternal celestial spheres~~, but dynamic thermodynamic systems spanning lifetimes from a few million years for massive stars to *trillions of years* for low-mass red dwarfs.
 
 ## Stellar Formation
 
-Stars are born inside giant, dense clouds of interstellar gas and dust.
+All stars originate inside cold, dense regions known as *giant molecular clouds* (GMCs) where temperatures drop below `T < 20 K`.
 
 ### Molecular Clouds
 
-Cold interstellar clouds consisting primarily of molecular hydrogen (H₂) provide the raw material for new stars.
+Cold interstellar clouds consisting primarily of molecular hydrogen (`H2`) and helium (`He`) provide the raw material for stellar birth.
 
-- Gravitational instability causes fragments to collapse.
-- Core temperatures rise as gravitational energy converts into thermal energy.
+- Gravitational instability causes fragments to collapse when the *Jeans mass* (`M_J`) threshold is exceeded.
+- Core temperatures rise as gravitational potential energy converts into thermal kinetic energy.
 
-> Note: Dense cores inside molecular clouds are the primary birthplaces of low- and high-mass stars.
+Dense cloud cores do not remain ~~uniform static nebulae~~; instead, localized gravitational perturbations trigger runaway contraction.
 
 ### Protostar Phase
 
-As a collapsing core gains mass, it becomes a protostar surrounded by an accretion disk.
+As a collapsing core accretes surrounding matter, it forms a central **protostar** surrounded by a circumstellar accretion disk with angular momentum conservation.
 
-- Core contraction reaches central temperatures of roughly 10^7 K.
-- Ignition of hydrogen fusion marks the transition to a zero-age main sequence star.
+- Core contraction reaches central temperatures exceeding `T_core >= 1.0e7 K`.
+- Ignition of self-sustaining hydrogen thermonuclear fusion marks the transition into a *zero-age main sequence* (`ZAMS`) star.
 
 ## Main Sequence Stage
 
-The main sequence is the longest stage of a star's life cycle, where hydrogen fuses into helium in its core.
+The **main sequence** represents the longest and most stable phase of a star's evolutionary journey, fueled by the core conversion of hydrogen into helium via `4 ¹H -> ⁴He + 2e⁺ + 2νₑ`.
 
 ### Nuclear Fusion
 
-Energy generation in main-sequence stars relies on hydrogen burning processes:
+Energy generation in main-sequence stars relies on two distinct hydrogen burning mechanisms:
 
-- **Proton-Proton Chain:** Dominates in low-mass stars like our Sun.
-- **CNO Cycle:** Dominates in stars with masses greater than 1.3 solar masses.
+- **Proton-Proton Chain:** Dominates in low-mass stars like our Sun (`M <= 1.3 M_sun`) with core temperature around `1.5e7 K`.
+- **CNO Cycle:** Dominates in higher-mass stars (`M > 1.3 M_sun`) where carbon, nitrogen, and oxygen catalyze fusion.
 
->? Tip: Higher mass stars burn through their fuel at exponentially faster rates than low-mass stars.
+Energy output scales dramatically with mass according to the mass-luminosity relation `L \propto M^{3.5}`, meaning high-mass stars exhaust their core fuel at *exponentially faster* rates than ~~long-lived red dwarfs~~.
 
 ### Hydrostatic Equilibrium
 
-A main sequence star remains stable due to a continuous balance between inwards gravitational contraction and outwards thermal pressure.
+A star maintains structural stability through **hydrostatic equilibrium**, an exact dynamic balance between the *inward pull* of gravity and the *outward push* of radiative and thermal gas pressure.
 
->! Important: Any disruption to this equilibrium leads to structural expansion or core contraction.
+When core hydrogen is exhausted, the core is no longer sustained by ~~thermal radiation pressure~~, leading directly to core contraction and envelope expansion into a giant branch star.
 
 ## Stellar Remnants
 
-When core hydrogen fuel is exhausted, stars evolve off the main sequence into final remnant stages.
+Final stellar remnants depend fundamentally on the progenitor's initial mass and whether the core exceeds the ***Chandrasekhar limit*** (`M_Ch \approx 1.44 M_sun`).
 
 ### White Dwarfs
 
-Low- to intermediate-mass stars (M ≤ 8 solar masses) shed their outer layers as planetary nebulae and leave behind dense cores.
+Low- to intermediate-mass progenitors (`M <= 8 M_sun`) shed their outer gaseous envelopes as picturesque *planetary nebulae*, leaving behind an ultra-dense **white dwarf** remnant.
 
-- Composed mainly of carbon and oxygen.
-- Supported against gravitational collapse by electron degeneracy pressure.
+- Composed primarily of degenerate carbon and oxygen ions.
+- Supported against catastrophic gravitational collapse by quantum **electron degeneracy pressure**.
+
+White dwarfs contain no ~~active thermonuclear furnace~~; they radiate residual stored thermal energy until cooling into hypothetical *black dwarfs*.
 
 ### Neutron Stars and Black Holes
 
-Massive stars (M > 8 solar masses) end their lives in violent supernova explosions.
+Massive progenitors (`M > 8 M_sun`) undergo catastrophic core collapse, culminating in violent `Type II` **core-collapse supernovae**.
 
-- **Neutron Stars:** Extremely dense remnants supported by neutron degeneracy pressure.
-- **Black Holes:** Remnants where core gravity overcomes all degeneracy pressures, forming a singularity.
+- **Neutron Stars:** Ultra-dense stellar remnants supported by **neutron degeneracy pressure** up to the ***Tolman-Oppenheimer-Volkoff (TOV) limit*** (`M_TOV \approx 2.17 M_sun`).
+- **Black Holes:** Extreme remnants where gravitational collapse overcomes all degeneracy forces, compressing matter into a gravitational singularity bounded by an event horizon at the Schwarzschild radius `R_s = 2GM/c^2`.
 
->!!! Caution: Supernova events release immense amounts of radiation and energetic particles across surrounding interstellar space.
+Supernova nucleosynthesis disperses heavy elements across interstellar space, replacing ~~pristine hydrogen-helium gas~~ with enriched matter for future stellar generations.

@@ -14,8 +14,11 @@
   --txt-color-heading: #163a5c;
   --txt-color-link: #2e75b6;
   --txt-color-link-hover: #163a5c;
-  --txt-color-code: #24292f;
-  --txt-bg-code: #f0f2f5;
+
+  /* Code Tokens */
+  --code-bg: #f0f2f5;
+  --code-border: #d0d7de;
+  --code-color: #24292f;
 
   /* Background Colors */
   --bg-body: #eef2f7;
@@ -128,12 +131,13 @@ hr {
 
 .txt-code {
   font-family: var(--font-mono);
-  font-size: 0.9em;
-  color: var(--txt-color-code);
-  background-color: var(--txt-bg-code);
-  padding: 2px 5px;
+  font-size: inherit;
+  line-height: inherit;
+  color: var(--code-color);
+  background-color: var(--code-bg);
+  padding: 0 4px;
   border-radius: 3px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--code-border);
 }
 
 .txt-link {
@@ -155,6 +159,10 @@ hr {
   font-style: italic;
 }
 
+.txt-strike {
+  text-decoration: line-through;
+}
+
 /* Base text element formatting inside text content */
 .txt-content a,
 .txt-default a {
@@ -171,12 +179,13 @@ hr {
 .txt-content code,
 .txt-default code {
   font-family: var(--font-mono);
-  font-size: 0.9em;
-  color: var(--txt-color-code);
-  background-color: var(--txt-bg-code);
-  padding: 1px 4px;
+  font-size: inherit;
+  line-height: inherit;
+  color: var(--code-color);
+  background-color: var(--code-bg);
+  padding: 0 4px;
   border-radius: 3px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--code-border);
 }
 
 .txt-content strong,
@@ -191,6 +200,13 @@ hr {
 .txt-content i,
 .txt-default i {
   font-style: italic;
+}
+
+.txt-content s,
+.txt-default s,
+.txt-content del,
+.txt-default del {
+  text-decoration: line-through;
 }
 
 /* 6. Section Components (section-*) */
@@ -380,11 +396,19 @@ hr {
   .txt-code,
   .txt-content code,
   .txt-default code {
-    border: 1px solid #d0d7de !important;
-    background-color: #f6f8fa !important;
+    border: 1px solid var(--code-border) !important;
+    background-color: var(--code-bg) !important;
     color: #000000 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+
+  .txt-strike,
+  .txt-content s,
+  .txt-default s,
+  .txt-content del,
+  .txt-default del {
+    text-decoration: none !important;
   }
 
   hr {

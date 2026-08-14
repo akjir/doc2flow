@@ -88,9 +88,9 @@ mod tests {
     fn test_code_feature_css() {
         let feature = CodeFeature::new();
         let css = feature.css().expect("code css should exist");
-        assert!(css.contains("--code-bg:"));
-        assert!(css.contains("--code-border:"));
-        assert!(css.contains("--code-color:"));
+        assert!(css.contains("--code-font-size:"));
+        assert!(css.contains("--code-line-height:"));
+        assert!(css.contains("--code-radius:"));
         assert!(css.contains(".code-default"));
     }
 

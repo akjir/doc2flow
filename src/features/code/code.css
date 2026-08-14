@@ -4,10 +4,7 @@
 
 /* 1. Base Variables & Tokens */
 :root {
-  /* Code Element Colors & Layout */
-  --code-bg: #f0f2f5;
-  --code-border: #d0d7de;
-  --code-color: #24292f;
+  /* Code Block Tokens */
   --code-font-size: 11.5px;
   --code-line-height: 1.6;
   --code-radius: 10px;
@@ -42,7 +39,7 @@
 @media print {
   .code-default {
     background-color: var(--code-bg) !important;
-    border: 1px solid #d0d7de !important;
+    border: 1px solid var(--code-border) !important;
     color: #000000 !important;
     print-color-adjust: exact;
     white-space: pre-wrap;

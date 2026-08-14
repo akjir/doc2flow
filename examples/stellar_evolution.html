@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+206.a3d641c.dev">
-  <meta name="version" content="0.9.4+206.a3d641c.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+207.cdeb7c8.dev">
+  <meta name="version" content="0.9.4+207.cdeb7c8.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-14T18:13:06Z">
+  <meta name="dcterms.created" content="2026-08-14T18:53:51Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
-  <meta name="features" content="core, bullet_list_item, shoutout">
+  <meta name="features" content="core, bullet_list_item">
   <title>Stellar Evolution Overview</title>
   <style>
     /* ==========================================================================
@@ -28,8 +28,11 @@
       --txt-color-heading: #163a5c;
       --txt-color-link: #2e75b6;
       --txt-color-link-hover: #163a5c;
-      --txt-color-code: #24292f;
-      --txt-bg-code: #f0f2f5;
+
+      /* Code Tokens */
+      --code-bg: #f0f2f5;
+      --code-border: #d0d7de;
+      --code-color: #24292f;
 
       /* Background Colors */
       --bg-body: #eef2f7;
@@ -142,12 +145,13 @@
 
     .txt-code {
       font-family: var(--font-mono);
-      font-size: 0.9em;
-      color: var(--txt-color-code);
-      background-color: var(--txt-bg-code);
-      padding: 2px 5px;
+      font-size: inherit;
+      line-height: inherit;
+      color: var(--code-color);
+      background-color: var(--code-bg);
+      padding: 0 4px;
       border-radius: 3px;
-      border: 1px solid rgba(0, 0, 0, 0.08);
+      border: 1px solid var(--code-border);
     }
 
     .txt-link {
@@ -169,6 +173,10 @@
       font-style: italic;
     }
 
+    .txt-strike {
+      text-decoration: line-through;
+    }
+
     /* Base text element formatting inside text content */
     .txt-content a,
     .txt-default a {
@@ -185,12 +193,13 @@
     .txt-content code,
     .txt-default code {
       font-family: var(--font-mono);
-      font-size: 0.9em;
-      color: var(--txt-color-code);
-      background-color: var(--txt-bg-code);
-      padding: 1px 4px;
+      font-size: inherit;
+      line-height: inherit;
+      color: var(--code-color);
+      background-color: var(--code-bg);
+      padding: 0 4px;
       border-radius: 3px;
-      border: 1px solid rgba(0, 0, 0, 0.08);
+      border: 1px solid var(--code-border);
     }
 
     .txt-content strong,
@@ -205,6 +214,13 @@
     .txt-content i,
     .txt-default i {
       font-style: italic;
+    }
+
+    .txt-content s,
+    .txt-default s,
+    .txt-content del,
+    .txt-default del {
+      text-decoration: line-through;
     }
 
     /* 6. Section Components (section-*) */
@@ -394,11 +410,19 @@
       .txt-code,
       .txt-content code,
       .txt-default code {
-        border: 1px solid #d0d7de !important;
-        background-color: #f6f8fa !important;
+        border: 1px solid var(--code-border) !important;
+        background-color: var(--code-bg) !important;
         color: #000000 !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+      }
+
+      .txt-strike,
+      .txt-content s,
+      .txt-default s,
+      .txt-content del,
+      .txt-default del {
+        text-decoration: none !important;
       }
 
       hr {
@@ -459,7 +483,7 @@
       <h1>Introduction to Stellar Evolution</h1>
       <div class="section-body">
         <p class="txt-default">
-          Stellar evolution is the process by which a star changes over the course of time. Depending on the mass of the star, its lifetime can range from a few million years for the most massive to trillions of years for the least massive.
+          The term <strong>stellar evolution</strong> describes the continuous astrophysical process by which a star undergoes radical structural changes over its lifetime. Stars are not <s>static, eternal celestial spheres</s>, but dynamic thermodynamic systems spanning lifetimes from a few million years for massive stars to <em>trillions of years</em> for low-mass red dwarfs.
         </p>
       </div>
     </section>
@@ -467,33 +491,36 @@
       <h2>Stellar Formation</h2>
       <div class="section-body">
         <p class="txt-default">
-          Stars are born inside giant, dense clouds of interstellar gas and dust.
+          All stars originate inside cold, dense regions known as <em>giant molecular clouds</em> (GMCs) where temperatures drop below <code>T &lt; 20 K</code>.
         </p>
         <section class="section" data-level="3">
           <h3>Molecular Clouds</h3>
           <div class="section-body">
             <p class="txt-default">
-              Cold interstellar clouds consisting primarily of molecular hydrogen (H₂) provide the raw material for new stars.
+              Cold interstellar clouds consisting primarily of molecular hydrogen (<code>H2</code>) and helium (<code>He</code>) provide the raw material for stellar birth.
             </p>
               <p class="txt-default">
-                Gravitational instability causes fragments to collapse.
+                Gravitational instability causes fragments to collapse when the <em>Jeans mass</em> (<code>M_J</code>) threshold is exceeded.
               </p>
               <p class="txt-default">
-                Core temperatures rise as gravitational energy converts into thermal energy.
+                Core temperatures rise as gravitational potential energy converts into thermal kinetic energy.
               </p>
+            <p class="txt-default">
+              Dense cloud cores do not remain <s>uniform static nebulae</s>; instead, localized gravitational perturbations trigger runaway contraction.
+            </p>
           </div>
         </section>
         <section class="section" data-level="3">
           <h3>Protostar Phase</h3>
           <div class="section-body">
             <p class="txt-default">
-              As a collapsing core gains mass, it becomes a protostar surrounded by an accretion disk.
+              As a collapsing core accretes surrounding matter, it forms a central <strong>protostar</strong> surrounded by a circumstellar accretion disk with angular momentum conservation.
             </p>
               <p class="txt-default">
-                Core contraction reaches central temperatures of roughly 10^7 K.
+                Core contraction reaches central temperatures exceeding <code>T_core &gt;= 1.0e7 K</code>.
               </p>
               <p class="txt-default">
-                Ignition of hydrogen fusion marks the transition to a zero-age main sequence star.
+                Ignition of self-sustaining hydrogen thermonuclear fusion marks the transition into a <em>zero-age main sequence</em> (<code>ZAMS</code>) star.
               </p>
           </div>
         </section>
@@ -503,27 +530,33 @@
       <h2>Main Sequence Stage</h2>
       <div class="section-body">
         <p class="txt-default">
-          The main sequence is the longest stage of a star's life cycle, where hydrogen fuses into helium in its core.
+          The <strong>main sequence</strong> represents the longest and most stable phase of a star&#39;s evolutionary journey, fueled by the core conversion of hydrogen into helium via <code>4 ¹H -&gt; ⁴He + 2e⁺ + 2νₑ</code>.
         </p>
         <section class="section" data-level="3">
           <h3>Nuclear Fusion</h3>
           <div class="section-body">
             <p class="txt-default">
-              Energy generation in main-sequence stars relies on hydrogen burning processes:
+              Energy generation in main-sequence stars relies on two distinct hydrogen burning mechanisms:
             </p>
               <p class="txt-default">
-                **Proton-Proton Chain:** Dominates in low-mass stars like our Sun.
+                <strong>Proton-Proton Chain:</strong> Dominates in low-mass stars like our Sun (<code>M &lt;= 1.3 M_sun</code>) with core temperature around <code>1.5e7 K</code>.
               </p>
               <p class="txt-default">
-                **CNO Cycle:** Dominates in stars with masses greater than 1.3 solar masses.
+                <strong>CNO Cycle:</strong> Dominates in higher-mass stars (<code>M &gt; 1.3 M_sun</code>) where carbon, nitrogen, and oxygen catalyze fusion.
               </p>
+            <p class="txt-default">
+              Energy output scales dramatically with mass according to the mass-luminosity relation <code>L \propto M^{3.5}</code>, meaning high-mass stars exhaust their core fuel at <em>exponentially faster</em> rates than <s>long-lived red dwarfs</s>.
+            </p>
           </div>
         </section>
         <section class="section" data-level="3">
           <h3>Hydrostatic Equilibrium</h3>
           <div class="section-body">
             <p class="txt-default">
-              A main sequence star remains stable due to a continuous balance between inwards gravitational contraction and outwards thermal pressure.
+              A star maintains structural stability through <strong>hydrostatic equilibrium</strong>, an exact dynamic balance between the <em>inward pull</em> of gravity and the <em>outward push</em> of radiative and thermal gas pressure.
+            </p>
+            <p class="txt-default">
+              When core hydrogen is exhausted, the core is no longer sustained by <s>thermal radiation pressure</s>, leading directly to core contraction and envelope expansion into a giant branch star.
             </p>
           </div>
         </section>
@@ -533,34 +566,40 @@
       <h2>Stellar Remnants</h2>
       <div class="section-body">
         <p class="txt-default">
-          When core hydrogen fuel is exhausted, stars evolve off the main sequence into final remnant stages.
+          Final stellar remnants depend fundamentally on the progenitor&#39;s initial mass and whether the core exceeds the <strong><em>Chandrasekhar limit</em></strong> (<code>M_Ch \approx 1.44 M_sun</code>).
         </p>
         <section class="section" data-level="3">
           <h3>White Dwarfs</h3>
           <div class="section-body">
             <p class="txt-default">
-              Low- to intermediate-mass stars (M ≤ 8 solar masses) shed their outer layers as planetary nebulae and leave behind dense cores.
+              Low- to intermediate-mass progenitors (<code>M &lt;= 8 M_sun</code>) shed their outer gaseous envelopes as picturesque <em>planetary nebulae</em>, leaving behind an ultra-dense <strong>white dwarf</strong> remnant.
             </p>
               <p class="txt-default">
-                Composed mainly of carbon and oxygen.
+                Composed primarily of degenerate carbon and oxygen ions.
               </p>
               <p class="txt-default">
-                Supported against gravitational collapse by electron degeneracy pressure.
+                Supported against catastrophic gravitational collapse by quantum <strong>electron degeneracy pressure</strong>.
               </p>
+            <p class="txt-default">
+              White dwarfs contain no <s>active thermonuclear furnace</s>; they radiate residual stored thermal energy until cooling into hypothetical <em>black dwarfs</em>.
+            </p>
           </div>
         </section>
         <section class="section" data-level="3">
           <h3>Neutron Stars and Black Holes</h3>
           <div class="section-body">
             <p class="txt-default">
-              Massive stars (M > 8 solar masses) end their lives in violent supernova explosions.
+              Massive progenitors (<code>M &gt; 8 M_sun</code>) undergo catastrophic core collapse, culminating in violent <code>Type II</code> <strong>core-collapse supernovae</strong>.
             </p>
               <p class="txt-default">
-                **Neutron Stars:** Extremely dense remnants supported by neutron degeneracy pressure.
+                <strong>Neutron Stars:</strong> Ultra-dense stellar remnants supported by <strong>neutron degeneracy pressure</strong> up to the <strong><em>Tolman-Oppenheimer-Volkoff (TOV) limit</em></strong> (<code>M_TOV \approx 2.17 M_sun</code>).
               </p>
               <p class="txt-default">
-                **Black Holes:** Remnants where core gravity overcomes all degeneracy pressures, forming a singularity.
+                <strong>Black Holes:</strong> Extreme remnants where gravitational collapse overcomes all degeneracy forces, compressing matter into a gravitational singularity bounded by an event horizon at the Schwarzschild radius <code>R_s = 2GM/c^2</code>.
               </p>
+            <p class="txt-default">
+              Supernova nucleosynthesis disperses heavy elements across interstellar space, replacing <s>pristine hydrogen-helium gas</s> with enriched matter for future stellar generations.
+            </p>
           </div>
         </section>
       </div>

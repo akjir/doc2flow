@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added inline text formatting (bold, italic, strikethrough, inline code) for text paragraph elements in the core pipeline.
 - Added support for markdown horizontal rule dividers (`---`, `----`, etc.) in the core pipeline.
 - Added modular code feature slice for syntax and fenced code block rendering.
 - Added support for optional header layout (`header: "flex"`) rendering a structured banner card with logo, title, and subtitle before sections.
@@ -15,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated starter template (`templates/template.md`) with GFM table support, variables table documentation, and sample code variable usage.
 
 ### Changed
+- Deduplicated shared code styling tokens across core and code stylesheets.
 - Aligned Markdown section hierarchy so H1 and H2 act as top-level sections that accept only H3 child sections.
 
 ### Removed

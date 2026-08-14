@@ -7,12 +7,13 @@ language: "en"
 numbered_sections: true
 ---
 
-[Variables]
+:::variables
 | Variable | Value |
 | --- | --- |
 | SERVER_NAME | prod-srv-01 |
 | PORT | 8080 |
 | API_KEY | secret-key-en-12345 |
+:::
 
 # Part 1: System Setup & Preparation
 
