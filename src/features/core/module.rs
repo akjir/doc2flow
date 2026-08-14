@@ -98,6 +98,7 @@ mod tests {
         let feature = CoreFeature::new();
         let css = feature.css().expect("core css should exist");
         assert!(css.contains("--bg-body:"));
+        assert!(css.contains(".doc-body"));
         assert!(css.contains(".txt-default"));
         assert!(css.contains(".section"));
         assert!(css.contains(".section-header"));

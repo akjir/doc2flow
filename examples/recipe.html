@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+203.2e9b83d.dev">
-  <meta name="version" content="0.9.4+203.2e9b83d.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+204.848f2c6.dev">
+  <meta name="version" content="0.9.4+204.848f2c6.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-14T17:24:38Z">
+  <meta name="dcterms.created" content="2026-08-14T17:33:50Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, shoutout, table">
   <title>Classic Chocolate Fudge Cake Recipe</title>
@@ -36,6 +36,9 @@
       --bg-surface: #ffffff;
       --bg-muted: #f8fafc;
       --bg-subtle: #f1f5f9;
+
+      /* Layout Tokens */
+      --layout-max-width: 840px;
 
       /* Section Component Tokens */
       --section-bg-surface: var(--bg-surface);
@@ -74,7 +77,14 @@
       -moz-osx-font-smoothing: grayscale;
     }
 
-    /* 3. Background Classes (bg-*) */
+    /* 3. Layout & Document Body */
+    .doc-body {
+      max-width: var(--layout-max-width);
+      margin: 20px auto;
+      padding: 0 14px 60px;
+    }
+
+    /* 4. Background Classes (bg-*) */
     .bg-body {
       background-color: var(--bg-body);
     }
@@ -91,7 +101,7 @@
       background-color: var(--bg-subtle);
     }
 
-    /* 4. Text Content & Components (txt-*) */
+    /* 5. Text Content & Components (txt-*) */
     .txt-default {
       font-family: var(--font-sans);
       font-size: var(--txt-size-base);
@@ -191,7 +201,7 @@
       font-style: italic;
     }
 
-    /* 5. Section Components (section-*) */
+    /* 6. Section Components (section-*) */
     .section,
     .section-container {
       background-color: var(--section-bg-surface);
@@ -346,13 +356,19 @@
       padding: 0;
     }
 
-    /* 6. Print Styles */
+    /* 7. Print Styles */
     @media print {
       body {
         background-color: #ffffff !important;
         color: #000000 !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+      }
+
+      .doc-body {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
       }
 
       .bg-body,
@@ -412,6 +428,13 @@
 
       .section-toggler {
         display: none !important;
+      }
+    }
+
+    /* 8. Responsive Styles */
+    @media (max-width: 600px) {
+      .doc-body {
+        padding: 0 10px 40px;
       }
     }
   </style>
