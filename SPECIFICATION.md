@@ -198,6 +198,7 @@ doc2flow/
 │   │   ├── bullet_list_item/ # Bullet list item feature
 │   │   ├── code/             # Code block feature
 │   │   ├── core/             # Core base feature (text & section styling)
+│   │   ├── ordered_list_item/# Ordered list item feature
 │   │   └── unknown/          # Fallback unknown feature
 │   └── legacy/               # Isolated legacy conversion subsystem
 │       ├── mod.rs            # Legacy subsystem root

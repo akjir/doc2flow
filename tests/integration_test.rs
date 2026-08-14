@@ -1117,4 +1117,24 @@ fn test_bullet_list_item_pipeline_integration() {
     assert!(content.contains("        <div class=\"item item-bullet\" style=\"--indent: 1;\">\n          <span class=\"bullet-marker\">&bull;</span>\n          <span class=\"bullet-content\">\n            Nested bullet <strong>item</strong> with <code>code</code>\n          </span>\n        </div>"));
 }
 
+#[test]
+fn test_ordered_list_item_pipeline_integration() {
+    let input = "---\ntitle: \"Ordered Pipeline Test\"\n---\n# Ordered Section\n\n1. First ordered step\n2. Second **ordered** step\n  1. Sub-step alpha\n    1. Sub-sub-step roman";
+    let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
+    let features = doc2flow::core::DocumentFeature::from(&document);
+    assert!(features.ordered_list_item);
+    assert_eq!(features.to_features_string(), "core, ordered_list_item");
+    let content = doc2flow::core::builder::build(&document, &features);
+    assert!(content.contains("<title>Ordered Pipeline Test</title>"));
+    assert!(content.contains("<meta name=\"features\" content=\"core, ordered_list_item\">"));
+    assert!(content.contains("--order-marker-color:"));
+    assert!(content.contains(".order-marker"));
+    assert!(content.contains(".order-content"));
+    assert!(content.contains("        <div class=\"item item-order\">\n          <span class=\"order-marker\">1.</span>\n          <span class=\"order-content\">\n            First ordered step\n          </span>\n        </div>"));
+    assert!(content.contains("        <div class=\"item item-order\">\n          <span class=\"order-marker\">2.</span>\n          <span class=\"order-content\">\n            Second <strong>ordered</strong> step\n          </span>\n        </div>"));
+    assert!(content.contains("        <div class=\"item item-order\" style=\"--indent: 1;\">\n          <span class=\"order-marker\">a.</span>\n          <span class=\"order-content\">\n            Sub-step alpha\n          </span>\n        </div>"));
+    assert!(content.contains("        <div class=\"item item-order\" style=\"--indent: 2;\">\n          <span class=\"order-marker\">i.</span>\n          <span class=\"order-content\">\n            Sub-sub-step roman\n          </span>\n        </div>"));
+}
+
+
 

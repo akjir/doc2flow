@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+209.533d6dc.dev">
-  <meta name="version" content="0.9.4+209.533d6dc.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+210.d2028b2.dev">
+  <meta name="version" content="0.9.4+210.d2028b2.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-14T20:12:39Z">
+  <meta name="dcterms.created" content="2026-08-14T20:22:20Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, bullet_list_item, check_box_item, code_block, image, ordered_list_item, shoutout, table">
   <title>Doc2Flow Deutscher Showcase</title>
@@ -776,6 +776,112 @@
         -webkit-print-color-adjust: exact;
       }
     }
+    /* ==========================================================================
+       Doc2Flow - Ordered List Item Feature Styles
+       ========================================================================== */
+
+    /* 1. Base Variables & Tokens */
+    :root {
+      /* Order Marker Tokens */
+      --order-marker-color: #2e75b6;
+      --order-marker-font-size: 13px;
+      --order-marker-min-width: 14px;
+    }
+
+    /* 2. Order Item Component (order-*) */
+    .order-marker {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-start;
+      min-width: var(--order-marker-min-width, 14px);
+      width: auto;
+      height: 14px;
+      margin-top: 3px;
+      color: var(--order-marker-color);
+      font-size: var(--order-marker-font-size);
+      font-weight: bold;
+      line-height: 1;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .order-content {
+      flex: 1;
+      min-width: 0;
+      font-family: var(--font-sans, Arial, sans-serif);
+      font-size: var(--txt-size-base, 14px);
+      line-height: var(--txt-line-height, 1.5);
+      color: var(--txt-color-default, #444444);
+      word-break: break-word;
+    }
+
+    .order-content a {
+      color: var(--txt-color-link, #2e75b6);
+      text-decoration: none;
+      transition: color 0.15s ease, text-decoration 0.15s ease;
+    }
+
+    .order-content a:hover {
+      color: var(--txt-color-link-hover, #163a5c);
+      text-decoration: underline;
+    }
+
+    .order-content code {
+      font-family: var(--font-mono, 'Courier New', monospace);
+      font-size: inherit;
+      line-height: inherit;
+      color: var(--code-color, #24292f);
+      background-color: var(--code-bg, #f0f2f5);
+      padding: 0 4px;
+      border-radius: 3px;
+      border: 1px solid var(--code-border, #d0d7de);
+    }
+
+    .order-content strong,
+    .order-content b {
+      font-weight: 600;
+    }
+
+    .order-content em,
+    .order-content i {
+      font-style: italic;
+    }
+
+    .order-content s,
+    .order-content del {
+      text-decoration: line-through;
+    }
+
+    /* 3. Print Styles */
+    @media print {
+      .order-marker {
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .order-content {
+        color: #000000 !important;
+      }
+
+      .order-content a {
+        color: #000000 !important;
+        text-decoration: underline !important;
+      }
+
+      .order-content code {
+        border: 1px solid var(--code-border, #d0d7de) !important;
+        background-color: var(--code-bg, #f0f2f5) !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .order-content s,
+      .order-content del {
+        text-decoration: none !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -838,16 +944,18 @@
                   Netzwerk und Stromversorgung anschließen
                 </span>
               </div>
-              <div class="item item-text">
-                <span class="item-content">
-                  Primäres Netzwerkkabel in Port 1 einstecken
-                </span>
-              </div>
-              <div class="item item-text">
-                <span class="item-content">
-                  Redundantes Netzwerkkabel in Port 2 einstecken
-                </span>
-              </div>
+            <div class="item item-order" style="--indent: 1;">
+              <span class="order-marker">a.</span>
+              <span class="order-content">
+                Primäres Netzwerkkabel in Port 1 einstecken
+              </span>
+            </div>
+            <div class="item item-order" style="--indent: 1;">
+              <span class="order-marker">b.</span>
+              <span class="order-content">
+                Redundantes Netzwerkkabel in Port 2 einstecken
+              </span>
+            </div>
               <div class="item item-text">
                 <span class="item-content">
                   Initialer Einschalttest abgeschlossen
@@ -930,16 +1038,18 @@
             Hauptaufgabe &amp; Systemüberwachung
           </span>
         </div>
-          <div class="item item-text">
-            <span class="item-content">
-              Unterpunkt A 1: Dienststatus abfragen
-            </span>
-          </div>
-          <div class="item item-text">
-            <span class="item-content">
-              Unterpunkt A 2: Fehlerprotokoll analysieren
-            </span>
-          </div>
+        <div class="item item-order" style="--indent: 1;">
+          <span class="order-marker">a.</span>
+          <span class="order-content">
+            Unterpunkt A 1: Dienststatus abfragen
+          </span>
+        </div>
+        <div class="item item-order" style="--indent: 1;">
+          <span class="order-marker">b.</span>
+          <span class="order-content">
+            Unterpunkt A 2: Fehlerprotokoll analysieren
+          </span>
+        </div>
         <div class="item item-bullet">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
@@ -968,11 +1078,12 @@
               Abnahme durch Administrator
             </span>
           </div>
-          <div class="item item-text">
-            <span class="item-content">
-              Sequenzieller Hauptschritt 1
-            </span>
-          </div>
+        <div class="item item-order">
+          <span class="order-marker">1.</span>
+          <span class="order-content">
+            Sequenzieller Hauptschritt 1
+          </span>
+        </div>
         <div class="item item-bullet" style="--indent: 2;">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
@@ -990,16 +1101,18 @@
             2. Sequenzieller Hauptschritt 2
           </span>
         </div>
-          <div class="item item-text">
-            <span class="item-content">
-              Detaillierter Teilverlauf 2.a
-            </span>
-          </div>
-          <div class="item item-text">
-            <span class="item-content">
-              Detaillierter Teilverlauf 2.b
-            </span>
-          </div>
+        <div class="item item-order" style="--indent: 2;">
+          <span class="order-marker">i.</span>
+          <span class="order-content">
+            Detaillierter Teilverlauf 2.a
+          </span>
+        </div>
+        <div class="item item-order" style="--indent: 2;">
+          <span class="order-marker">ii.</span>
+          <span class="order-content">
+            Detaillierter Teilverlauf 2.b
+          </span>
+        </div>
         <div class="item item-text">
           <span class="item-content">
             3. Sequenzieller Hauptschritt 3

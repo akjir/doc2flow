@@ -9,6 +9,9 @@ pub mod code;
 #[path = "core/module.rs"]
 pub mod core;
 
+#[path = "ordered_list_item/module.rs"]
+pub mod ordered_list_item;
+
 #[path = "unknown/module.rs"]
 pub mod unknown;
 
@@ -16,6 +19,7 @@ use crate::core::feature::Feature;
 pub use bullet_list_item::BulletListItemFeature;
 pub use code::CodeFeature;
 pub use core::CoreFeature;
+pub use ordered_list_item::OrderedListItemFeature;
 pub use unknown::UnknownFeature;
 
 /// Static instance of the bullet list item feature to avoid runtime allocations.
@@ -26,6 +30,9 @@ static CODE_FEATURE: CodeFeature = CodeFeature;
 
 /// Static instance of the core feature to avoid runtime allocations.
 static CORE_FEATURE: CoreFeature = CoreFeature;
+
+/// Static instance of the ordered list item feature to avoid runtime allocations.
+static ORDERED_LIST_ITEM_FEATURE: OrderedListItemFeature = OrderedListItemFeature;
 
 /// Static instance of the unknown feature to avoid runtime allocations.
 static UNKNOWN_FEATURE: UnknownFeature = UnknownFeature;
@@ -41,6 +48,7 @@ static UNKNOWN_FEATURE: UnknownFeature = UnknownFeature;
 /// assert!(get_feature("code").is_some());
 /// assert!(get_feature("code_block").is_some());
 /// assert!(get_feature("core").is_some());
+/// assert!(get_feature("ordered_list_item").is_some());
 /// assert!(get_feature("unknown").is_some());
 /// assert!(get_feature("non_existent").is_none());
 /// ```
@@ -49,6 +57,7 @@ pub fn get_feature(name: &str) -> Option<&'static dyn Feature> {
         "bullet_list_item" => Some(&BULLET_LIST_ITEM_FEATURE),
         "code" | "code_block" => Some(&CODE_FEATURE),
         "core" => Some(&CORE_FEATURE),
+        "ordered_list_item" => Some(&ORDERED_LIST_ITEM_FEATURE),
         "unknown" => Some(&UNKNOWN_FEATURE),
         _ => None,
     }
@@ -92,6 +101,18 @@ mod tests {
         assert_eq!(
             core_feature.to_html(&element, "", 1),
             "  <div class=\"item item-text\">\n    <span class=\"item-content\">\n      Hello\n    </span>\n  </div>\n"
+        );
+    }
+
+    #[test]
+    fn test_get_feature_returns_ordered_list_item() {
+        let ordered_feature =
+            get_feature("ordered_list_item").expect("ordered_list_item feature should exist");
+        let element =
+            DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Ordered item"));
+        assert_eq!(
+            ordered_feature.to_html(&element, "", 1),
+            "  <div class=\"item item-order\">\n    <span class=\"order-marker\">1.</span>\n    <span class=\"order-content\">\n      Ordered item\n    </span>\n  </div>\n"
         );
     }
 
