@@ -23,20 +23,20 @@ pub trait Feature {
 /// Feature detection flags for document AST elements.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct DocumentFeature {
-    /// Indicates whether bullet list items are present.
-    pub bullet_list_item: bool,
-    /// Indicates whether checkbox items are present.
-    pub check_box_item: bool,
+    /// Indicates whether bullet lists are present.
+    pub bullet_list: bool,
     /// Indicates whether code blocks are present.
     pub code_block: bool,
     /// Indicates whether images are present.
     pub image: bool,
-    /// Indicates whether ordered list items are present.
-    pub ordered_list_item: bool,
+    /// Indicates whether ordered lists are present.
+    pub ordered_list: bool,
     /// Indicates whether shoutout callouts are present.
     pub shoutout: bool,
     /// Indicates whether tables are present.
     pub table: bool,
+    /// Indicates whether task items are present.
+    pub task: bool,
     /// Indicates whether unrecognized unknown elements are present.
     pub unknown: bool,
 }
@@ -54,38 +54,38 @@ impl DocumentFeature {
     /// ```
     pub const fn new() -> Self {
         Self {
-            bullet_list_item: false,
-            check_box_item: false,
+            bullet_list: false,
             code_block: false,
             image: false,
-            ordered_list_item: false,
+            ordered_list: false,
             shoutout: false,
             table: false,
+            task: false,
             unknown: false,
         }
     }
 
     /// Returns `true` if all feature flags are enabled.
     pub const fn is_all(self) -> bool {
-        self.bullet_list_item
-            && self.check_box_item
+        self.bullet_list
             && self.code_block
             && self.image
-            && self.ordered_list_item
+            && self.ordered_list
             && self.shoutout
             && self.table
+            && self.task
             && self.unknown
     }
 
     /// Returns `true` if no feature flags are enabled.
     pub const fn is_empty(self) -> bool {
-        !self.bullet_list_item
-            && !self.check_box_item
+        !self.bullet_list
             && !self.code_block
             && !self.image
-            && !self.ordered_list_item
+            && !self.ordered_list
             && !self.shoutout
             && !self.table
+            && !self.task
             && !self.unknown
     }
 
@@ -108,11 +108,8 @@ impl DocumentFeature {
     pub fn to_features_string(&self) -> String {
         let mut out = String::with_capacity(96);
         out.push_str("core");
-        if self.bullet_list_item {
-            out.push_str(", bullet_list_item");
-        }
-        if self.check_box_item {
-            out.push_str(", check_box_item");
+        if self.bullet_list {
+            out.push_str(", bullet_list");
         }
         if self.code_block {
             out.push_str(", code_block");
@@ -120,14 +117,17 @@ impl DocumentFeature {
         if self.image {
             out.push_str(", image");
         }
-        if self.ordered_list_item {
-            out.push_str(", ordered_list_item");
+        if self.ordered_list {
+            out.push_str(", ordered_list");
         }
         if self.shoutout {
             out.push_str(", shoutout");
         }
         if self.table {
             out.push_str(", table");
+        }
+        if self.task {
+            out.push_str(", task");
         }
         if self.unknown {
             out.push_str(", unknown");
@@ -190,7 +190,7 @@ fn scan_element(element: &DocumentElement, features: &mut DocumentFeature) {
             content,
             ..
         } => {
-            features.bullet_list_item = true;
+            features.bullet_list = true;
             scan_element(content, features);
             scan_elements(children, features);
         }
@@ -199,7 +199,7 @@ fn scan_element(element: &DocumentElement, features: &mut DocumentFeature) {
             content,
             ..
         } => {
-            features.check_box_item = true;
+            features.task = true;
             scan_element(content, features);
             scan_elements(children, features);
         }
@@ -214,7 +214,7 @@ fn scan_element(element: &DocumentElement, features: &mut DocumentFeature) {
             content,
             ..
         } => {
-            features.ordered_list_item = true;
+            features.ordered_list = true;
             scan_element(content, features);
             scan_elements(children, features);
         }
@@ -265,18 +265,15 @@ mod tests {
         let mut doc = Document::new();
         doc.push_header(DocumentElement::text("Header text"));
         doc.push_body(DocumentElement::bullet_list_item(
-            0,
             DocumentElement::text("Bullet"),
         ));
         doc.push_body(DocumentElement::check_box_item(
-            0,
             true,
             DocumentElement::text("Task"),
         ));
         doc.push_body(DocumentElement::code_block(Some("rust"), "fn main() {}"));
         doc.push_body(DocumentElement::image("alt", "image.png"));
         doc.push_body(DocumentElement::ordered_list_item(
-            0,
             1,
             DocumentElement::text("Ordered"),
         ));
@@ -297,11 +294,11 @@ mod tests {
         let features = DocumentFeature::from(&doc);
         assert!(!features.is_empty());
         assert!(features.is_all());
-        assert!(features.bullet_list_item);
-        assert!(features.check_box_item);
+        assert!(features.bullet_list);
+        assert!(features.task);
         assert!(features.code_block);
         assert!(features.image);
-        assert!(features.ordered_list_item);
+        assert!(features.ordered_list);
         assert!(features.shoutout);
         assert!(features.table);
         assert!(features.unknown);
@@ -334,9 +331,9 @@ mod tests {
     #[test]
     fn test_deeply_nested_recursive_traversal() {
         let text_child = DocumentElement::text("Deepest item");
-        let checkbox_child = DocumentElement::check_box_item(2, true, text_child);
-        let ordered_child = DocumentElement::ordered_list_item(1, 1, checkbox_child);
-        let bullet_child = DocumentElement::bullet_list_item(0, ordered_child);
+        let checkbox_child = DocumentElement::check_box_item(true, text_child);
+        let ordered_child = DocumentElement::ordered_list_item(1, checkbox_child);
+        let bullet_child = DocumentElement::bullet_list_item(ordered_child);
         let section = DocumentElement::section(1, "Nested Section", vec![bullet_child]);
         let directive = DocumentElement::block_directive("custom_block", vec![section]);
 
@@ -346,9 +343,9 @@ mod tests {
         let features = DocumentFeature::from(&doc);
         assert!(!features.is_empty());
         assert!(!features.is_all());
-        assert!(features.bullet_list_item);
-        assert!(features.ordered_list_item);
-        assert!(features.check_box_item);
+        assert!(features.bullet_list);
+        assert!(features.ordered_list);
+        assert!(features.task);
         assert!(!features.image);
         assert!(!features.code_block);
         assert!(!features.table);
@@ -360,18 +357,15 @@ mod tests {
     fn test_early_exit_short_circuit() {
         let mut doc = Document::new();
         doc.push_header(DocumentElement::bullet_list_item(
-            0,
             DocumentElement::text("A"),
         ));
         doc.push_header(DocumentElement::check_box_item(
-            0,
             true,
             DocumentElement::text("B"),
         ));
         doc.push_header(DocumentElement::code_block(None::<String>, "C"));
         doc.push_header(DocumentElement::image("D", "d.png"));
         doc.push_header(DocumentElement::ordered_list_item(
-            0,
             1,
             DocumentElement::text("E"),
         ));
@@ -402,11 +396,11 @@ mod tests {
         assert_eq!(features, DocumentFeature::default());
         assert!(features.is_empty());
         assert!(!features.is_all());
-        assert!(!features.bullet_list_item);
-        assert!(!features.check_box_item);
+        assert!(!features.bullet_list);
+        assert!(!features.task);
         assert!(!features.code_block);
         assert!(!features.image);
-        assert!(!features.ordered_list_item);
+        assert!(!features.ordered_list);
         assert!(!features.shoutout);
         assert!(!features.table);
         assert!(!features.unknown);
@@ -416,13 +410,12 @@ mod tests {
     fn test_partial_features_matches() {
         let mut single_feature_doc = Document::new();
         single_feature_doc.push_body(DocumentElement::bullet_list_item(
-            0,
             DocumentElement::text("Only bullet"),
         ));
         let single_features = DocumentFeature::from(&single_feature_doc);
         assert!(!single_features.is_empty());
         assert!(!single_features.is_all());
-        assert!(single_features.bullet_list_item);
+        assert!(single_features.bullet_list);
         assert!(!single_features.code_block);
         assert!(!single_features.table);
         assert!(!single_features.unknown);
@@ -443,17 +436,14 @@ mod tests {
 
         let mut six_features_doc = Document::new();
         six_features_doc.push_body(DocumentElement::bullet_list_item(
-            0,
             DocumentElement::text("A"),
         ));
         six_features_doc.push_body(DocumentElement::check_box_item(
-            0,
             false,
             DocumentElement::text("B"),
         ));
         six_features_doc.push_body(DocumentElement::code_block(None::<String>, "C"));
         six_features_doc.push_body(DocumentElement::ordered_list_item(
-            0,
             1,
             DocumentElement::text("D"),
         ));
@@ -464,10 +454,10 @@ mod tests {
         assert!(!six_features.is_empty());
         assert!(!six_features.is_all());
         assert!(!six_features.image);
-        assert!(six_features.bullet_list_item);
-        assert!(six_features.check_box_item);
+        assert!(six_features.bullet_list);
+        assert!(six_features.task);
         assert!(six_features.code_block);
-        assert!(six_features.ordered_list_item);
+        assert!(six_features.ordered_list);
         assert!(six_features.shoutout);
         assert!(six_features.table);
         assert!(!six_features.unknown);
@@ -476,16 +466,16 @@ mod tests {
     #[test]
     fn test_to_features_string_all() {
         let features = DocumentFeature {
-            bullet_list_item: true,
-            check_box_item: true,
+            bullet_list: true,
             code_block: true,
             image: true,
-            ordered_list_item: true,
+            ordered_list: true,
             shoutout: true,
             table: true,
+            task: true,
             unknown: true,
         };
-        let expected = "core, bullet_list_item, check_box_item, code_block, image, ordered_list_item, shoutout, table, unknown";
+        let expected = "core, bullet_list, code_block, image, ordered_list, shoutout, table, task, unknown";
         assert_eq!(features.to_features_string(), expected);
         assert_eq!(to_features_string(&features), expected);
         assert_eq!(features.to_string(), expected);
@@ -494,23 +484,23 @@ mod tests {
     #[test]
     fn test_to_features_string_combinations() {
         let mut features = DocumentFeature::default();
-        features.bullet_list_item = true;
+        features.bullet_list = true;
         features.table = true;
         assert_eq!(
             features.to_features_string(),
-            "core, bullet_list_item, table"
+            "core, bullet_list, table"
         );
 
         features.image = true;
         assert_eq!(
             features.to_features_string(),
-            "core, bullet_list_item, image, table"
+            "core, bullet_list, image, table"
         );
 
         features.unknown = true;
         assert_eq!(
             features.to_features_string(),
-            "core, bullet_list_item, image, table, unknown"
+            "core, bullet_list, image, table, unknown"
         );
     }
 

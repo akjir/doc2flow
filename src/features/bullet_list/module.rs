@@ -1,55 +1,48 @@
-//! Ordered list item vertical slice feature module.
-
-use std::fmt::Write as _;
+//! Bullet list vertical slice feature module.
 
 use crate::core::document::DocumentElement;
 use crate::core::feature::Feature;
 
-/// Embedded ordered list item CSS stylesheet.
-pub const CSS: &str = include_str!("ordered_list_item.css");
+/// Embedded bullet list CSS stylesheet.
+pub const CSS: &str = include_str!("bullet_list.css");
 
-/// Ordered list item feature renderer handling numbered and ordered list items.
+/// Bullet list feature renderer handling bullet and unordered list items.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
-pub struct OrderedListItemFeature;
+pub struct BulletListFeature;
 
-impl OrderedListItemFeature {
-    /// Creates a new ordered list item feature instance.
+impl BulletListFeature {
+    /// Creates a new bullet list feature instance.
     ///
     /// # Examples
     ///
     /// ```
-    /// use doc2flow::features::ordered_list_item::OrderedListItemFeature;
+    /// use doc2flow::features::bullet_list::BulletListFeature;
     ///
-    /// let feature = OrderedListItemFeature::new();
+    /// let feature = BulletListFeature::new();
     /// ```
     pub const fn new() -> Self {
         Self
     }
 }
 
-impl Feature for OrderedListItemFeature {
-    /// Converts an ordered list item document element into an HTML string representation.
+impl Feature for BulletListFeature {
+    /// Converts a bullet list item document element into an HTML string representation.
     ///
     /// # Examples
     ///
     /// ```
     /// use doc2flow::core::document::DocumentElement;
     /// use doc2flow::core::feature::Feature;
-    /// use doc2flow::features::ordered_list_item::OrderedListItemFeature;
+    /// use doc2flow::features::bullet_list::BulletListFeature;
     ///
-    /// let feature = OrderedListItemFeature::new();
-    /// let elem = DocumentElement::ordered_list_item(0, 1, DocumentElement::text("First item"));
+    /// let feature = BulletListFeature::new();
+    /// let elem = DocumentElement::bullet_list_item(DocumentElement::text("List item"));
     /// let html = feature.to_html(&elem, "", 1);
-    /// assert!(html.contains("class=\"item item-order\""));
+    /// assert!(html.contains("class=\"item item-bullet\""));
     /// ```
     fn to_html(&self, element: &DocumentElement, _content: &str, indent: usize) -> String {
         match element {
-            DocumentElement::OrderedListItem {
-                content,
-                depth,
-                position,
-                ..
-            } => {
+            DocumentElement::BulletListItem { content, .. } => {
                 let spaces = indent * 2;
                 let inner_spaces = (indent + 1) * 2;
                 let content_len = match content.as_ref() {
@@ -61,22 +54,13 @@ impl Feature for OrderedListItemFeature {
                     content_len + _content.len() + spaces * 2 + inner_spaces * 2 + 128,
                 );
                 push_indent(&mut out, indent);
-
-                if *depth > 0 {
-                    out.push_str("<div class=\"item item-order\" style=\"--indent: ");
-                    let _ = write!(out, "{depth}");
-                    out.push_str(";\">\n");
-                } else {
-                    out.push_str("<div class=\"item item-order\">\n");
-                }
+                out.push_str("<div class=\"item item-bullet\">\n");
 
                 push_indent(&mut out, indent + 1);
-                out.push_str("<span class=\"order-marker\">");
-                format_marker_into(&mut out, *depth, *position);
-                out.push_str("</span>\n");
+                out.push_str("<span class=\"bullet-marker\">&bull;</span>\n");
 
                 push_indent(&mut out, indent + 1);
-                out.push_str("<span class=\"order-content\">\n");
+                out.push_str("<span class=\"bullet-content\">\n");
 
                 match content.as_ref() {
                     DocumentElement::Text(text) => {
@@ -110,85 +94,9 @@ impl Feature for OrderedListItemFeature {
         }
     }
 
-    /// Returns the embedded CSS stylesheet for the ordered list item feature.
+    /// Returns the embedded CSS stylesheet for the bullet list feature.
     fn css(&self) -> Option<&'static str> {
         Some(CSS)
-    }
-}
-
-/// Formats the ordered list item marker based on list depth and position.
-fn format_marker_into(out: &mut String, depth: usize, position: usize) {
-    match depth % 3 {
-        0 => {
-            let _ = write!(out, "{position}.");
-        }
-        1 => {
-            format_alpha_into(out, position);
-            out.push('.');
-        }
-        _ => {
-            format_roman_into(out, position);
-            out.push('.');
-        }
-    }
-}
-
-/// Formats a 1-based number to alphabetic representation into a destination buffer.
-fn format_alpha_into(out: &mut String, mut n: usize) {
-    if n == 0 {
-        out.push('a');
-        return;
-    }
-    if n <= 26 {
-        const ALPHAS: &[u8; 26] = b"abcdefghijklmnopqrstuvwxyz";
-        out.push(ALPHAS[n - 1] as char);
-        return;
-    }
-    let mut buf = [0u8; 16];
-    let mut pos = 16;
-    while n > 0 {
-        n -= 1;
-        pos -= 1;
-        buf[pos] = b'a' + (n % 26) as u8;
-        n /= 26;
-    }
-    if let Ok(s) = std::str::from_utf8(&buf[pos..]) {
-        out.push_str(s);
-    }
-}
-
-/// Formats a 1-based number to lowercase Roman numerals into a destination buffer.
-fn format_roman_into(out: &mut String, n: usize) {
-    if n == 0 {
-        out.push('i');
-        return;
-    }
-    if (1..=10).contains(&n) {
-        const ROMANS: &[&str; 10] = &["i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"];
-        out.push_str(ROMANS[n - 1]);
-        return;
-    }
-    const ROMAN_MAPPING: [(usize, &str); 13] = [
-        (1000, "m"),
-        (900, "cm"),
-        (500, "d"),
-        (400, "cd"),
-        (100, "c"),
-        (90, "xc"),
-        (50, "l"),
-        (40, "xl"),
-        (10, "x"),
-        (9, "ix"),
-        (5, "v"),
-        (4, "iv"),
-        (1, "i"),
-    ];
-    let mut num = n;
-    for (val, sym) in ROMAN_MAPPING {
-        while num >= val {
-            out.push_str(sym);
-            num -= val;
-        }
     }
 }
 
@@ -564,38 +472,39 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ordered_list_item_empty_for_unsupported_elements() {
-        let feature = OrderedListItemFeature::new();
+    fn test_bullet_list_empty_for_unsupported_elements() {
+        let feature = BulletListFeature::new();
         let text = DocumentElement::text("Regular text");
         assert_eq!(feature.to_html(&text, "", 0), "");
     }
 
     #[test]
-    fn test_ordered_list_item_feature_constructor_new() {
-        let feature = OrderedListItemFeature::new();
-        assert_eq!(feature, OrderedListItemFeature);
+    fn test_bullet_list_feature_constructor_new() {
+        let feature = BulletListFeature::new();
+        assert_eq!(feature, BulletListFeature);
     }
 
     #[test]
-    fn test_ordered_list_item_feature_css() {
-        let feature = OrderedListItemFeature::new();
-        let css = feature.css().expect("ordered list item css should exist");
-        assert!(css.contains("--order-marker-color:"));
-        assert!(css.contains(".order-marker"));
-        assert!(css.contains(".order-content"));
+    fn test_bullet_list_feature_css() {
+        let feature = BulletListFeature::new();
+        let css = feature.css().expect("bullet list css should exist");
+        assert!(css.contains("--bullet-marker-color:"));
+        assert!(css.contains(".bullet-marker"));
+        assert!(css.contains(".bullet-content"));
     }
 
     #[test]
-    fn test_ordered_list_item_renders_root_depth() {
-        let feature = OrderedListItemFeature::new();
-        let element =
-            DocumentElement::ordered_list_item(0, 1, DocumentElement::text("First numbered item"));
+    fn test_bullet_list_renders_image_content() {
+        let feature = BulletListFeature::new();
+        let element = DocumentElement::bullet_list_item(
+            DocumentElement::image("Alt text", "path/to/image.png"),
+        );
         let html = feature.to_html(&element, "", 1);
         let expected = concat!(
-            "  <div class=\"item item-order\">\n",
-            "    <span class=\"order-marker\">1.</span>\n",
-            "    <span class=\"order-content\">\n",
-            "      First numbered item\n",
+            "  <div class=\"item item-bullet\">\n",
+            "    <span class=\"bullet-marker\">&bull;</span>\n",
+            "    <span class=\"bullet-content\">\n",
+            "      <img src=\"path/to/image.png\" alt=\"Alt text\" />\n",
             "    </span>\n",
             "  </div>\n"
         );
@@ -603,16 +512,33 @@ mod tests {
     }
 
     #[test]
-    fn test_ordered_list_item_renders_nested_depth_1_alpha() {
-        let feature = OrderedListItemFeature::new();
-        let element =
-            DocumentElement::ordered_list_item(1, 2, DocumentElement::text("Nested sub-item"));
+    fn test_bullet_list_renders_inline_formatting() {
+        let feature = BulletListFeature::new();
+        let element = DocumentElement::bullet_list_item(
+            DocumentElement::text("Item with **bold**, *italic*, ~~strike~~, and `code` span"),
+        );
+        let html = feature.to_html(&element, "", 0);
+        let expected = concat!(
+            "<div class=\"item item-bullet\">\n",
+            "  <span class=\"bullet-marker\">&bull;</span>\n",
+            "  <span class=\"bullet-content\">\n",
+            "    Item with <strong>bold</strong>, <em>italic</em>, <s>strike</s>, and <code>code</code> span\n",
+            "  </span>\n",
+            "</div>\n"
+        );
+        assert_eq!(html, expected);
+    }
+
+    #[test]
+    fn test_bullet_list_renders_with_indent() {
+        let feature = BulletListFeature::new();
+        let element = DocumentElement::bullet_list_item(DocumentElement::text("Nested level 2 item"));
         let html = feature.to_html(&element, "", 2);
         let expected = concat!(
-            "    <div class=\"item item-order\" style=\"--indent: 1;\">\n",
-            "      <span class=\"order-marker\">b.</span>\n",
-            "      <span class=\"order-content\">\n",
-            "        Nested sub-item\n",
+            "    <div class=\"item item-bullet\">\n",
+            "      <span class=\"bullet-marker\">&bull;</span>\n",
+            "      <span class=\"bullet-content\">\n",
+            "        Nested level 2 item\n",
             "      </span>\n",
             "    </div>\n"
         );
@@ -620,143 +546,12 @@ mod tests {
     }
 
     #[test]
-    fn test_ordered_list_item_renders_nested_depth_2_roman() {
-        let feature = OrderedListItemFeature::new();
-        let element =
-            DocumentElement::ordered_list_item(2, 3, DocumentElement::text("Sub-sub-item"));
-        let html = feature.to_html(&element, "", 0);
-        let expected = concat!(
-            "<div class=\"item item-order\" style=\"--indent: 2;\">\n",
-            "  <span class=\"order-marker\">iii.</span>\n",
-            "  <span class=\"order-content\">\n",
-            "    Sub-sub-item\n",
-            "  </span>\n",
-            "</div>\n"
-        );
-        assert_eq!(html, expected);
-    }
-
-    #[test]
-    fn test_ordered_list_item_renders_nested_depth_3_numeric() {
-        let feature = OrderedListItemFeature::new();
-        let element =
-            DocumentElement::ordered_list_item(3, 4, DocumentElement::text("Deep numeric item"));
-        let html = feature.to_html(&element, "", 1);
-        let expected = concat!(
-            "  <div class=\"item item-order\" style=\"--indent: 3;\">\n",
-            "    <span class=\"order-marker\">4.</span>\n",
-            "    <span class=\"order-content\">\n",
-            "      Deep numeric item\n",
-            "    </span>\n",
-            "  </div>\n"
-        );
-        assert_eq!(html, expected);
-    }
-
-    #[test]
-    fn test_ordered_list_item_renders_image_content() {
-        let feature = OrderedListItemFeature::new();
-        let element = DocumentElement::ordered_list_item(
-            1,
-            1,
-            DocumentElement::image("Diagram preview", "images/diagram.png"),
-        );
-        let html = feature.to_html(&element, "", 1);
-        let expected = concat!(
-            "  <div class=\"item item-order\" style=\"--indent: 1;\">\n",
-            "    <span class=\"order-marker\">a.</span>\n",
-            "    <span class=\"order-content\">\n",
-            "      <img src=\"images/diagram.png\" alt=\"Diagram preview\" />\n",
-            "    </span>\n",
-            "  </div>\n"
-        );
-        assert_eq!(html, expected);
-    }
-
-    #[test]
-    fn test_ordered_list_item_renders_inline_formatting() {
-        let feature = OrderedListItemFeature::new();
-        let element = DocumentElement::ordered_list_item(
-            0,
-            2,
-            DocumentElement::text(
-                "Step with **bold**, *italic*, ~~strike~~, `code`, and <special> & characters",
-            ),
-        );
-        let html = feature.to_html(&element, "", 0);
-        let expected = concat!(
-            "<div class=\"item item-order\">\n",
-            "  <span class=\"order-marker\">2.</span>\n",
-            "  <span class=\"order-content\">\n",
-            "    Step with <strong>bold</strong>, <em>italic</em>, <s>strike</s>, <code>code</code>, and &lt;special&gt; &amp; characters\n",
-            "  </span>\n",
-            "</div>\n"
-        );
-        assert_eq!(html, expected);
-    }
-
-    #[test]
-    fn test_format_alpha_and_roman_boundary_cases() {
-        let mut buf = String::new();
-
-        format_alpha_into(&mut buf, 0);
-        assert_eq!(buf, "a");
-        buf.clear();
-
-        format_alpha_into(&mut buf, 1);
-        assert_eq!(buf, "a");
-        buf.clear();
-
-        format_alpha_into(&mut buf, 26);
-        assert_eq!(buf, "z");
-        buf.clear();
-
-        format_alpha_into(&mut buf, 27);
-        assert_eq!(buf, "aa");
-        buf.clear();
-
-        format_alpha_into(&mut buf, 52);
-        assert_eq!(buf, "az");
-        buf.clear();
-
-        format_alpha_into(&mut buf, 53);
-        assert_eq!(buf, "ba");
-        buf.clear();
-
-        format_alpha_into(&mut buf, 702);
-        assert_eq!(buf, "zz");
-        buf.clear();
-
-        format_alpha_into(&mut buf, 703);
-        assert_eq!(buf, "aaa");
-        buf.clear();
-
-        format_roman_into(&mut buf, 0);
-        assert_eq!(buf, "i");
-        buf.clear();
-
-        format_roman_into(&mut buf, 1);
-        assert_eq!(buf, "i");
-        buf.clear();
-
-        format_roman_into(&mut buf, 4);
-        assert_eq!(buf, "iv");
-        buf.clear();
-
-        format_roman_into(&mut buf, 9);
-        assert_eq!(buf, "ix");
-        buf.clear();
-
-        format_roman_into(&mut buf, 10);
-        assert_eq!(buf, "x");
-        buf.clear();
-
-        format_roman_into(&mut buf, 1984);
-        assert_eq!(buf, "mcmlxxxiv");
-        buf.clear();
-
-        format_roman_into(&mut buf, 3999);
-        assert_eq!(buf, "mmmcmxcix");
-        buf.clear();
+    fn test_bullet_list_renders_with_children() {
+        let feature = BulletListFeature::new();
+        let element = DocumentElement::bullet_list_item(DocumentElement::text("Parent item"));
+        let child_html = "    <div class=\"item item-bullet\">\n      <span class=\"bullet-marker\">&bull;</span>\n      <span class=\"bullet-content\">\n        Child item\n      </span>\n    </div>\n";
+        let html = feature.to_html(&element, child_html, 1);
+        let expected_prefix = "  <div class=\"item item-bullet\">\n    <span class=\"bullet-marker\">&bull;</span>\n    <span class=\"bullet-content\">\n      Parent item\n    </span>\n  </div>\n";
+        assert_eq!(html, format!("{expected_prefix}{child_html}"));
     }
 }

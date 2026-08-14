@@ -49,13 +49,13 @@ pub fn assemble_assets(features: &DocumentFeature) -> (String, String) {
     }
 
     for (name, is_active) in [
-        ("bullet_list_item", features.bullet_list_item),
-        ("check_box_item", features.check_box_item),
+        ("bullet_list", features.bullet_list),
         ("code_block", features.code_block),
         ("image", features.image),
-        ("ordered_list_item", features.ordered_list_item),
+        ("ordered_list", features.ordered_list),
         ("shoutout", features.shoutout),
         ("table", features.table),
+        ("task", features.task),
         ("unknown", features.unknown),
     ] {
         if is_active {
@@ -196,14 +196,14 @@ pub fn render_element(element: &DocumentElement, indent: usize) -> String {
             for child in children {
                 inner.push_str(&render_element(child, indent));
             }
-            ("bullet_list_item", inner)
+            ("bullet_list", inner)
         }
         DocumentElement::CheckBoxItem { children, .. } => {
             let mut inner = String::new();
             for child in children {
                 inner.push_str(&render_element(child, indent));
             }
-            ("check_box_item", inner)
+            ("task", inner)
         }
         DocumentElement::CodeBlock { .. } => ("code_block", String::new()),
         DocumentElement::HorizontalRule => ("core", String::new()),
@@ -213,7 +213,7 @@ pub fn render_element(element: &DocumentElement, indent: usize) -> String {
             for child in children {
                 inner.push_str(&render_element(child, indent));
             }
-            ("ordered_list_item", inner)
+            ("ordered_list", inner)
         }
         DocumentElement::Section { children, .. } => {
             let mut inner = String::new();
@@ -482,6 +482,44 @@ mod tests {
         let hr = DocumentElement::horizontal_rule();
         assert_eq!(render_element(&hr, 1), "  <hr />\n");
         assert_eq!(render_element(&hr, 2), "    <hr />\n");
+    }
+
+    #[test]
+    fn test_render_element_bullet_list_item() {
+        let mut bullet = DocumentElement::bullet_list_item(DocumentElement::text("Parent bullet"));
+        let child = DocumentElement::bullet_list_item(DocumentElement::text("Child bullet"));
+        bullet.push_child(child).unwrap();
+
+        let html = render_element(&bullet, 1);
+        assert!(html.contains("<div class=\"item item-bullet\">\n    <span class=\"bullet-marker\">&bull;</span>"));
+        assert!(html.contains("Parent bullet"));
+        assert!(html.contains("Child bullet"));
+    }
+
+    #[test]
+    fn test_render_element_check_box_item() {
+        let mut check = DocumentElement::check_box_item(true, DocumentElement::text("Done task"));
+        let child = DocumentElement::check_box_item(false, DocumentElement::text("Sub task"));
+        check.push_child(child).unwrap();
+
+        let html = render_element(&check, 1);
+        assert!(html.contains("<div class=\"item item-check checked\">"));
+        assert!(html.contains("<input type=\"checkbox\" class=\"check-box\" checked />"));
+        assert!(html.contains("<input type=\"checkbox\" class=\"check-box\" />"));
+        assert!(html.contains("Done task"));
+        assert!(html.contains("Sub task"));
+    }
+
+    #[test]
+    fn test_render_element_ordered_list_item() {
+        let mut order = DocumentElement::ordered_list_item(1, DocumentElement::text("First step"));
+        let child = DocumentElement::ordered_list_item(1, DocumentElement::text("Sub step"));
+        order.push_child(child).unwrap();
+
+        let html = render_element(&order, 1);
+        assert!(html.contains("<div class=\"item item-order\">\n    <span class=\"order-marker\">1.</span>"));
+        assert!(html.contains("First step"));
+        assert!(html.contains("Sub step"));
     }
 
     #[test]

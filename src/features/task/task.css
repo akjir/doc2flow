@@ -1,0 +1,65 @@
+/* ==========================================================================
+   Doc2Flow - Task Feature Styles
+   ========================================================================== */
+
+/* 1. Base Variables & Tokens */
+:root {
+  /* Check Marker Tokens */
+  --check-marker-size: 15px;
+  --check-accent-color: var(--color-primary, #2e75b6);
+  --check-muted-color: #8c8c8c;
+}
+
+/* 2. Check Item Component (check-*) */
+.check-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--check-marker-size, 15px);
+  width: auto;
+  height: var(--check-marker-size, 15px);
+  margin-top: 2px;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.check-box {
+  width: var(--check-marker-size, 15px);
+  height: var(--check-marker-size, 15px);
+  min-width: var(--check-marker-size, 15px);
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--check-accent-color);
+}
+
+.check-content {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-sans, Arial, sans-serif);
+  font-size: var(--txt-size-base, 14px);
+  line-height: var(--txt-line-height, 1.5);
+  color: var(--txt-color-default, #444444);
+  word-break: break-word;
+}
+
+.item-check.checked .check-content {
+  text-decoration: line-through;
+  color: var(--check-muted-color);
+}
+
+/* 3. Print Styles */
+@media print {
+  .check-marker {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .check-content {
+    color: #000000 !important;
+  }
+
+  .item-check.checked .check-content {
+    text-decoration: none !important;
+    color: #000000 !important;
+  }
+}

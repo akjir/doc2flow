@@ -1,51 +1,49 @@
-//! Bullet list item vertical slice feature module.
-
-use std::fmt::Write as _;
+//! Task vertical slice feature module.
 
 use crate::core::document::DocumentElement;
 use crate::core::feature::Feature;
 
-/// Embedded bullet list item CSS stylesheet.
-pub const CSS: &str = include_str!("bullet_list_item.css");
+/// Embedded task CSS stylesheet.
+pub const CSS: &str = include_str!("task.css");
 
-/// Bullet list item feature renderer handling bullet and unordered list items.
+/// Task feature renderer handling task items and checkboxes.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
-pub struct BulletListItemFeature;
+pub struct TaskFeature;
 
-impl BulletListItemFeature {
-    /// Creates a new bullet list item feature instance.
+impl TaskFeature {
+    /// Creates a new task feature instance.
     ///
     /// # Examples
     ///
     /// ```
-    /// use doc2flow::features::bullet_list_item::BulletListItemFeature;
+    /// use doc2flow::features::task::TaskFeature;
     ///
-    /// let feature = BulletListItemFeature::new();
+    /// let feature = TaskFeature::new();
     /// ```
     pub const fn new() -> Self {
         Self
     }
 }
 
-impl Feature for BulletListItemFeature {
-    /// Converts a bullet list item document element into an HTML string representation.
+impl Feature for TaskFeature {
+    /// Converts a checkbox list item document element into an HTML string representation.
     ///
     /// # Examples
     ///
     /// ```
     /// use doc2flow::core::document::DocumentElement;
     /// use doc2flow::core::feature::Feature;
-    /// use doc2flow::features::bullet_list_item::BulletListItemFeature;
+    /// use doc2flow::features::task::TaskFeature;
     ///
-    /// let feature = BulletListItemFeature::new();
-    /// let elem = DocumentElement::bullet_list_item(0, DocumentElement::text("List item"));
+    /// let feature = TaskFeature::new();
+    /// let elem = DocumentElement::check_box_item(false, DocumentElement::text("Todo task"));
     /// let html = feature.to_html(&elem, "", 1);
-    /// assert!(html.contains("class=\"item item-bullet\""));
+    /// assert!(html.contains("class=\"item item-check\""));
     /// ```
     fn to_html(&self, element: &DocumentElement, _content: &str, indent: usize) -> String {
         match element {
-            DocumentElement::BulletListItem {
-                content, depth, ..
+            DocumentElement::CheckBoxItem {
+                checked, content, ..
             } => {
                 let spaces = indent * 2;
                 let inner_spaces = (indent + 1) * 2;
@@ -55,23 +53,29 @@ impl Feature for BulletListItemFeature {
                 };
 
                 let mut out = String::with_capacity(
-                    content_len + _content.len() + spaces * 2 + inner_spaces * 2 + 128,
+                    content_len + _content.len() + spaces * 2 + inner_spaces * 2 + 160,
                 );
                 push_indent(&mut out, indent);
 
-                if *depth > 0 {
-                    out.push_str("<div class=\"item item-bullet\" style=\"--indent: ");
-                    let _ = write!(out, "{depth}");
-                    out.push_str(";\">\n");
+                if *checked {
+                    out.push_str("<div class=\"item item-check checked\">\n");
                 } else {
-                    out.push_str("<div class=\"item item-bullet\">\n");
+                    out.push_str("<div class=\"item item-check\">\n");
                 }
 
                 push_indent(&mut out, indent + 1);
-                out.push_str("<span class=\"bullet-marker\">&bull;</span>\n");
+                out.push_str("<span class=\"check-marker\">\n");
+                push_indent(&mut out, indent + 2);
+                if *checked {
+                    out.push_str("<input type=\"checkbox\" class=\"check-box\" checked />\n");
+                } else {
+                    out.push_str("<input type=\"checkbox\" class=\"check-box\" />\n");
+                }
+                push_indent(&mut out, indent + 1);
+                out.push_str("</span>\n");
 
                 push_indent(&mut out, indent + 1);
-                out.push_str("<span class=\"bullet-content\">\n");
+                out.push_str("<span class=\"check-content\">\n");
 
                 match content.as_ref() {
                     DocumentElement::Text(text) => {
@@ -105,9 +109,14 @@ impl Feature for BulletListItemFeature {
         }
     }
 
-    /// Returns the embedded CSS stylesheet for the bullet list item feature.
+    /// Returns the embedded CSS stylesheet for the task feature.
     fn css(&self) -> Option<&'static str> {
         Some(CSS)
+    }
+
+    /// Returns JavaScript logic for the task feature.
+    fn javascript(&self) -> Option<&'static str> {
+        None
     }
 }
 
@@ -483,39 +492,86 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_bullet_list_item_empty_for_unsupported_elements() {
-        let feature = BulletListItemFeature::new();
+    fn test_task_empty_for_unsupported_elements() {
+        let feature = TaskFeature::new();
         let text = DocumentElement::text("Regular text");
         assert_eq!(feature.to_html(&text, "", 0), "");
     }
 
     #[test]
-    fn test_bullet_list_item_feature_constructor_new() {
-        let feature = BulletListItemFeature::new();
-        assert_eq!(feature, BulletListItemFeature);
+    fn test_task_feature_constructor_new() {
+        let feature = TaskFeature::new();
+        assert_eq!(feature, TaskFeature);
     }
 
     #[test]
-    fn test_bullet_list_item_feature_css() {
-        let feature = BulletListItemFeature::new();
-        let css = feature.css().expect("bullet list item css should exist");
-        assert!(css.contains("--bullet-marker-color:"));
-        assert!(css.contains(".bullet-marker"));
-        assert!(css.contains(".bullet-content"));
+    fn test_task_feature_css() {
+        let feature = TaskFeature::new();
+        let css = feature.css().expect("task css should exist");
+        assert!(css.contains(".check-marker"));
+        assert!(css.contains(".check-box"));
+        assert!(css.contains(".check-content"));
+        assert!(css.contains(".item-check.checked"));
     }
 
     #[test]
-    fn test_bullet_list_item_renders_image_content() {
-        let feature = BulletListItemFeature::new();
-        let element = DocumentElement::bullet_list_item(
-            1,
+    fn test_task_feature_javascript() {
+        let feature = TaskFeature::new();
+        assert_eq!(feature.javascript(), None);
+    }
+
+    #[test]
+    fn test_task_renders_unchecked() {
+        let feature = TaskFeature::new();
+        let element =
+            DocumentElement::check_box_item(false, DocumentElement::text("Pending task"));
+        let html = feature.to_html(&element, "", 1);
+        let expected = concat!(
+            "  <div class=\"item item-check\">\n",
+            "    <span class=\"check-marker\">\n",
+            "      <input type=\"checkbox\" class=\"check-box\" />\n",
+            "    </span>\n",
+            "    <span class=\"check-content\">\n",
+            "      Pending task\n",
+            "    </span>\n",
+            "  </div>\n"
+        );
+        assert_eq!(html, expected);
+    }
+
+    #[test]
+    fn test_task_renders_checked() {
+        let feature = TaskFeature::new();
+        let element =
+            DocumentElement::check_box_item(true, DocumentElement::text("Completed task"));
+        let html = feature.to_html(&element, "", 1);
+        let expected = concat!(
+            "  <div class=\"item item-check checked\">\n",
+            "    <span class=\"check-marker\">\n",
+            "      <input type=\"checkbox\" class=\"check-box\" checked />\n",
+            "    </span>\n",
+            "    <span class=\"check-content\">\n",
+            "      Completed task\n",
+            "    </span>\n",
+            "  </div>\n"
+        );
+        assert_eq!(html, expected);
+    }
+
+    #[test]
+    fn test_task_renders_image_content() {
+        let feature = TaskFeature::new();
+        let element = DocumentElement::check_box_item(
+            false,
             DocumentElement::image("Alt text", "path/to/image.png"),
         );
         let html = feature.to_html(&element, "", 1);
         let expected = concat!(
-            "  <div class=\"item item-bullet\" style=\"--indent: 1;\">\n",
-            "    <span class=\"bullet-marker\">&bull;</span>\n",
-            "    <span class=\"bullet-content\">\n",
+            "  <div class=\"item item-check\">\n",
+            "    <span class=\"check-marker\">\n",
+            "      <input type=\"checkbox\" class=\"check-box\" />\n",
+            "    </span>\n",
+            "    <span class=\"check-content\">\n",
             "      <img src=\"path/to/image.png\" alt=\"Alt text\" />\n",
             "    </span>\n",
             "  </div>\n"
@@ -524,17 +580,19 @@ mod tests {
     }
 
     #[test]
-    fn test_bullet_list_item_renders_inline_formatting() {
-        let feature = BulletListItemFeature::new();
-        let element = DocumentElement::bullet_list_item(
-            0,
+    fn test_task_renders_inline_formatting() {
+        let feature = TaskFeature::new();
+        let element = DocumentElement::check_box_item(
+            true,
             DocumentElement::text("Item with **bold**, *italic*, ~~strike~~, and `code` span"),
         );
         let html = feature.to_html(&element, "", 0);
         let expected = concat!(
-            "<div class=\"item item-bullet\">\n",
-            "  <span class=\"bullet-marker\">&bull;</span>\n",
-            "  <span class=\"bullet-content\">\n",
+            "<div class=\"item item-check checked\">\n",
+            "  <span class=\"check-marker\">\n",
+            "    <input type=\"checkbox\" class=\"check-box\" checked />\n",
+            "  </span>\n",
+            "  <span class=\"check-content\">\n",
             "    Item with <strong>bold</strong>, <em>italic</em>, <s>strike</s>, and <code>code</code> span\n",
             "  </span>\n",
             "</div>\n"
@@ -543,34 +601,12 @@ mod tests {
     }
 
     #[test]
-    fn test_bullet_list_item_renders_nested_depth() {
-        let feature = BulletListItemFeature::new();
-        let element = DocumentElement::bullet_list_item(2, DocumentElement::text("Nested level 2 item"));
-        let html = feature.to_html(&element, "", 2);
-        let expected = concat!(
-            "    <div class=\"item item-bullet\" style=\"--indent: 2;\">\n",
-            "      <span class=\"bullet-marker\">&bull;</span>\n",
-            "      <span class=\"bullet-content\">\n",
-            "        Nested level 2 item\n",
-            "      </span>\n",
-            "    </div>\n"
-        );
-        assert_eq!(html, expected);
-    }
-
-    #[test]
-    fn test_bullet_list_item_renders_root_depth() {
-        let feature = BulletListItemFeature::new();
-        let element = DocumentElement::bullet_list_item(0, DocumentElement::text("Simple bullet item"));
-        let html = feature.to_html(&element, "", 1);
-        let expected = concat!(
-            "  <div class=\"item item-bullet\">\n",
-            "    <span class=\"bullet-marker\">&bull;</span>\n",
-            "    <span class=\"bullet-content\">\n",
-            "      Simple bullet item\n",
-            "    </span>\n",
-            "  </div>\n"
-        );
-        assert_eq!(html, expected);
+    fn test_task_renders_with_children() {
+        let feature = TaskFeature::new();
+        let element = DocumentElement::check_box_item(false, DocumentElement::text("Parent task"));
+        let child_html = "    <div class=\"item item-check\">\n      <span class=\"check-marker\">\n        <input type=\"checkbox\" class=\"check-box\" />\n      </span>\n      <span class=\"check-content\">\n        Child task\n      </span>\n    </div>\n";
+        let html = feature.to_html(&element, child_html, 1);
+        let expected_prefix = "  <div class=\"item item-check\">\n    <span class=\"check-marker\">\n      <input type=\"checkbox\" class=\"check-box\" />\n    </span>\n    <span class=\"check-content\">\n      Parent task\n    </span>\n  </div>\n";
+        assert_eq!(html, format!("{expected_prefix}{child_html}"));
     }
 }

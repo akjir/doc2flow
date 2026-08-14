@@ -188,17 +188,17 @@ doc2flow/
 │   │   ├── builder.rs        # Document builder engine
 │   │   ├── constants.rs      # System constants and application metadata
 │   │   ├── document.rs       # Document AST data structures
-│   │   ├── document_json.rs  # AST serialization and development inspection
 │   │   ├── error.rs          # Compiler-style diagnostic error reporting
 │   │   ├── feature.rs        # Document AST feature detection
 │   │   ├── markdown.rs       # Zero-alloc Markdown parser
 │   │   └── utils/            # Core filesystem and encoding utilities
 │   ├── features/             # Modular vertical slice feature modules
 │   │   ├── mod.rs            # Feature registry and exports
-│   │   ├── bullet_list_item/ # Bullet list item feature
+│   │   ├── bullet_list/      # Bullet list feature
 │   │   ├── code/             # Code block feature
 │   │   ├── core/             # Core base feature (text & section styling)
-│   │   ├── ordered_list_item/# Ordered list item feature
+│   │   ├── ordered_list/     # Ordered list feature
+│   │   ├── task/             # Task checkbox feature
 │   │   └── unknown/          # Fallback unknown feature
 │   └── legacy/               # Isolated legacy conversion subsystem
 │       ├── mod.rs            # Legacy subsystem root

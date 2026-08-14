@@ -1026,16 +1026,27 @@ title: "Image Fallback Test"
 fn test_core_parser_integration() {
     let input = "---\ntitle: \"Integration\"\n---\n# Heading\n\nSome text";
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parsing failed");
-    let output = doc2flow::core::document_to_json(&document);
-    assert!(output.contains("\"parameters\": {"));
-    assert!(output.contains("\"title\": \"Integration\""));
-    assert!(output.contains("\"header\": ["));
-    assert!(output.contains("\"body\": ["));
-    assert!(output.contains("\"kind\": \"section\""));
-    assert!(output.contains("\"level\": 1"));
-    assert!(output.contains("\"title\": \"Heading\""));
-    assert!(output.contains("\"kind\": \"text\""));
-    assert!(output.contains("\"content\": \"Some text\""));
+    assert_eq!(
+        document.parameters.get("title").map(String::as_str),
+        Some("Integration")
+    );
+    assert_eq!(document.body.len(), 1);
+    match &document.body[0] {
+        doc2flow::core::DocumentElement::Section {
+            level,
+            title,
+            children,
+        } => {
+            assert_eq!(*level, 1);
+            assert_eq!(title, "Heading");
+            assert_eq!(children.len(), 1);
+            assert_eq!(
+                children[0],
+                doc2flow::core::DocumentElement::text("Some text")
+            );
+        }
+        _ => panic!("expected section element"),
+    }
 }
 
 #[test]
@@ -1061,9 +1072,9 @@ fn test_parser_and_builder_pipeline_integration() {
     let input = "---\ntitle: \"Pipeline Test\"\n---\n# Pipeline Heading\n\nContent paragraph\n\n- [ ] Task item";
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
     let features = doc2flow::core::DocumentFeature::from(&document);
-    assert!(features.check_box_item);
+    assert!(features.task);
     assert!(!features.table);
-    assert_eq!(features.to_features_string(), "core, check_box_item");
+    assert_eq!(features.to_features_string(), "core, task");
     let content = doc2flow::core::builder::build(&document, &features);
     assert!(!content.as_bytes().is_empty());
     assert!(content.contains("      <h1>Pipeline Heading</h1>"));
@@ -1073,7 +1084,7 @@ fn test_parser_and_builder_pipeline_integration() {
         )
     );
     assert!(content.contains("<title>Pipeline Test</title>"));
-    assert!(content.contains("<meta name=\"features\" content=\"core, check_box_item\">"));
+    assert!(content.contains("<meta name=\"features\" content=\"core, task\">"));
     assert!(!content.contains("{{FEATURES}}"));
     assert!(!content.contains("{{TITLE}}"));
 }
@@ -1102,38 +1113,57 @@ fn test_core_horizontal_rule_pipeline_integration() {
 }
 
 #[test]
-fn test_bullet_list_item_pipeline_integration() {
+fn test_bullet_list_pipeline_integration() {
     let input = "---\ntitle: \"Bullet Pipeline Test\"\n---\n# List Section\n\n- Root bullet item\n  - Nested bullet **item** with `code`";
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
     let features = doc2flow::core::DocumentFeature::from(&document);
-    assert!(features.bullet_list_item);
-    assert_eq!(features.to_features_string(), "core, bullet_list_item");
+    assert!(features.bullet_list);
+    assert_eq!(features.to_features_string(), "core, bullet_list");
     let content = doc2flow::core::builder::build(&document, &features);
     assert!(content.contains("<title>Bullet Pipeline Test</title>"));
-    assert!(content.contains("<meta name=\"features\" content=\"core, bullet_list_item\">"));
+    assert!(content.contains("<meta name=\"features\" content=\"core, bullet_list\">"));
     assert!(content.contains("--bullet-marker-color:"));
     assert!(content.contains(".bullet-marker"));
     assert!(content.contains("        <div class=\"item item-bullet\">\n          <span class=\"bullet-marker\">&bull;</span>\n          <span class=\"bullet-content\">\n            Root bullet item\n          </span>\n        </div>"));
-    assert!(content.contains("        <div class=\"item item-bullet\" style=\"--indent: 1;\">\n          <span class=\"bullet-marker\">&bull;</span>\n          <span class=\"bullet-content\">\n            Nested bullet <strong>item</strong> with <code>code</code>\n          </span>\n        </div>"));
+    assert!(content.contains("        <div class=\"item item-bullet\">\n          <span class=\"bullet-marker\">&bull;</span>\n          <span class=\"bullet-content\">\n            Nested bullet <strong>item</strong> with <code>code</code>\n          </span>\n        </div>"));
 }
 
 #[test]
-fn test_ordered_list_item_pipeline_integration() {
+fn test_ordered_list_pipeline_integration() {
     let input = "---\ntitle: \"Ordered Pipeline Test\"\n---\n# Ordered Section\n\n1. First ordered step\n2. Second **ordered** step\n  1. Sub-step alpha\n    1. Sub-sub-step roman";
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
     let features = doc2flow::core::DocumentFeature::from(&document);
-    assert!(features.ordered_list_item);
-    assert_eq!(features.to_features_string(), "core, ordered_list_item");
+    assert!(features.ordered_list);
+    assert_eq!(features.to_features_string(), "core, ordered_list");
     let content = doc2flow::core::builder::build(&document, &features);
     assert!(content.contains("<title>Ordered Pipeline Test</title>"));
-    assert!(content.contains("<meta name=\"features\" content=\"core, ordered_list_item\">"));
+    assert!(content.contains("<meta name=\"features\" content=\"core, ordered_list\">"));
     assert!(content.contains("--order-marker-color:"));
     assert!(content.contains(".order-marker"));
     assert!(content.contains(".order-content"));
     assert!(content.contains("        <div class=\"item item-order\">\n          <span class=\"order-marker\">1.</span>\n          <span class=\"order-content\">\n            First ordered step\n          </span>\n        </div>"));
     assert!(content.contains("        <div class=\"item item-order\">\n          <span class=\"order-marker\">2.</span>\n          <span class=\"order-content\">\n            Second <strong>ordered</strong> step\n          </span>\n        </div>"));
-    assert!(content.contains("        <div class=\"item item-order\" style=\"--indent: 1;\">\n          <span class=\"order-marker\">a.</span>\n          <span class=\"order-content\">\n            Sub-step alpha\n          </span>\n        </div>"));
-    assert!(content.contains("        <div class=\"item item-order\" style=\"--indent: 2;\">\n          <span class=\"order-marker\">i.</span>\n          <span class=\"order-content\">\n            Sub-sub-step roman\n          </span>\n        </div>"));
+    assert!(content.contains("        <div class=\"item item-order\">\n          <span class=\"order-marker\">1.</span>\n          <span class=\"order-content\">\n            Sub-step alpha\n          </span>\n        </div>"));
+    assert!(content.contains("        <div class=\"item item-order\">\n          <span class=\"order-marker\">1.</span>\n          <span class=\"order-content\">\n            Sub-sub-step roman\n          </span>\n        </div>"));
+}
+
+#[test]
+fn test_task_pipeline_integration() {
+    let input = "---\ntitle: \"Checkbox Pipeline Test\"\n---\n# Checkbox Section\n\n- [ ] Pending task\n- [x] Done **task** with `code`\n  - [ ] Sub-task";
+    let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
+    let features = doc2flow::core::DocumentFeature::from(&document);
+    assert!(features.task);
+    assert_eq!(features.to_features_string(), "core, task");
+    let content = doc2flow::core::builder::build(&document, &features);
+    assert!(content.contains("<title>Checkbox Pipeline Test</title>"));
+    assert!(content.contains("<meta name=\"features\" content=\"core, task\">"));
+    assert!(content.contains(".check-marker"));
+    assert!(content.contains(".check-box"));
+    assert!(content.contains(".check-content"));
+    assert!(content.contains(".item-check.checked"));
+    assert!(content.contains("        <div class=\"item item-check\">\n          <span class=\"check-marker\">\n            <input type=\"checkbox\" class=\"check-box\" />\n          </span>\n          <span class=\"check-content\">\n            Pending task\n          </span>\n        </div>"));
+    assert!(content.contains("        <div class=\"item item-check checked\">\n          <span class=\"check-marker\">\n            <input type=\"checkbox\" class=\"check-box\" checked />\n          </span>\n          <span class=\"check-content\">\n            Done <strong>task</strong> with <code>code</code>\n          </span>\n        </div>"));
+    assert!(content.contains("        <div class=\"item item-check\">\n          <span class=\"check-marker\">\n            <input type=\"checkbox\" class=\"check-box\" />\n          </span>\n          <span class=\"check-content\">\n            Sub-task\n          </span>\n        </div>"));
 }
 
 

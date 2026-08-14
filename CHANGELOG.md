@@ -8,7 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Added modular bullet list item feature slice for unordered list element rendering and nested indentation.
+- Added modular task feature slice for task checklist rendering and state presentation.
+- Added modular ordered list feature slice for numbered list element rendering.
+- Added modular bullet list feature slice for unordered list element rendering and nested indentation.
 - Added inline text formatting (bold, italic, strikethrough, inline code) for text paragraph elements in the core pipeline.
 - Added support for markdown horizontal rule dividers (`---`, `----`, etc.) in the core pipeline.
 - Added modular code feature slice for syntax and fenced code block rendering.

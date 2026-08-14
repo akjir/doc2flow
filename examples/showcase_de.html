@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+211.c7b61e5.dev">
-  <meta name="version" content="0.9.4+211.c7b61e5.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+212.1742a55.dev">
+  <meta name="version" content="0.9.4+212.1742a55.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-14T20:46:12Z">
+  <meta name="dcterms.created" content="2026-08-14T21:30:52Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
-  <meta name="features" content="core, bullet_list_item, check_box_item, code_block, image, ordered_list_item, shoutout, table">
+  <meta name="features" content="core, bullet_list, code_block, image, ordered_list, shoutout, table, task">
   <title>Doc2Flow Deutscher Showcase</title>
   <style>
     /* ==========================================================================
@@ -623,7 +623,7 @@
       }
     }
     /* ==========================================================================
-       Doc2Flow - Bullet List Item Feature Styles
+       Doc2Flow - Bullet List Feature Styles
        ========================================================================== */
 
     /* 1. Base Variables & Tokens */
@@ -777,7 +777,7 @@
       }
     }
     /* ==========================================================================
-       Doc2Flow - Ordered List Item Feature Styles
+       Doc2Flow - Ordered List Feature Styles
        ========================================================================== */
 
     /* 1. Base Variables & Tokens */
@@ -882,6 +882,71 @@
         text-decoration: none !important;
       }
     }
+    /* ==========================================================================
+       Doc2Flow - Task Feature Styles
+       ========================================================================== */
+
+    /* 1. Base Variables & Tokens */
+    :root {
+      /* Check Marker Tokens */
+      --check-marker-size: 15px;
+      --check-accent-color: var(--color-primary, #2e75b6);
+      --check-muted-color: #8c8c8c;
+    }
+
+    /* 2. Check Item Component (check-*) */
+    .check-marker {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: var(--check-marker-size, 15px);
+      width: auto;
+      height: var(--check-marker-size, 15px);
+      margin-top: 2px;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .check-box {
+      width: var(--check-marker-size, 15px);
+      height: var(--check-marker-size, 15px);
+      min-width: var(--check-marker-size, 15px);
+      margin: 0;
+      cursor: pointer;
+      accent-color: var(--check-accent-color);
+    }
+
+    .check-content {
+      flex: 1;
+      min-width: 0;
+      font-family: var(--font-sans, Arial, sans-serif);
+      font-size: var(--txt-size-base, 14px);
+      line-height: var(--txt-line-height, 1.5);
+      color: var(--txt-color-default, #444444);
+      word-break: break-word;
+    }
+
+    .item-check.checked .check-content {
+      text-decoration: line-through;
+      color: var(--check-muted-color);
+    }
+
+    /* 3. Print Styles */
+    @media print {
+      .check-marker {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .check-content {
+        color: #000000 !important;
+      }
+
+      .item-check.checked .check-content {
+        text-decoration: none !important;
+        color: #000000 !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -894,6 +959,14 @@
         <div class="item item-text">
           <span class="text-content">
             Dieser übergeordnete Abschnitt beschreibt die grundlegende Systemkonfiguration. Aufgaben in H1-Abschnitten besitzen keinen eigenen Badge-Indikator, fließen aber voll in die Gesamtfortschrittsanzeige ein.
+          </span>
+        </div>
+        <div class="item item-check checked">
+          <span class="check-marker">
+            <input type="checkbox" class="check-box" checked />
+          </span>
+          <span class="check-content">
+            Allgemeine Sicherheitsunterweisung für Techniker durchgeführt
           </span>
         </div>
       </div>
@@ -919,16 +992,56 @@
                 Dieser beliebige Textabsatz beschreibt die vorbereitenden Schritte, die erfüllt sein müssen, bevor einzelne Aufgaben als erledigt markiert werden.
               </span>
             </div>
-            <div class="item item-order" style="--indent: 1;">
-              <span class="order-marker">a.</span>
+            <div class="item item-check">
+              <span class="check-marker">
+                <input type="checkbox" class="check-box" />
+              </span>
+              <span class="check-content">
+                Hardware auspacken und Komponenten überprüfen
+              </span>
+            </div>
+            <div class="item item-check">
+              <span class="check-marker">
+                <input type="checkbox" class="check-box" />
+              </span>
+              <span class="check-content">
+                Vollständigkeit des Zubehörs kontrollieren
+              </span>
+            </div>
+            <div class="item item-check checked">
+              <span class="check-marker">
+                <input type="checkbox" class="check-box" checked />
+              </span>
+              <span class="check-content">
+                Gehäuse auf Transportschäden prüfen
+              </span>
+            </div>
+            <div class="item item-check">
+              <span class="check-marker">
+                <input type="checkbox" class="check-box" />
+              </span>
+              <span class="check-content">
+                Netzwerk und Stromversorgung anschließen
+              </span>
+            </div>
+            <div class="item item-order">
+              <span class="order-marker">1.</span>
               <span class="order-content">
                 Primäres Netzwerkkabel in Port 1 einstecken
               </span>
             </div>
-            <div class="item item-order" style="--indent: 1;">
-              <span class="order-marker">b.</span>
+            <div class="item item-order">
+              <span class="order-marker">2.</span>
               <span class="order-content">
                 Redundantes Netzwerkkabel in Port 2 einstecken
+              </span>
+            </div>
+            <div class="item item-check checked">
+              <span class="check-marker">
+                <input type="checkbox" class="check-box" checked />
+              </span>
+              <span class="check-content">
+                Initialer Einschalttest abgeschlossen
               </span>
             </div>
             <div class="item item-text">
@@ -941,6 +1054,30 @@
         <section class="section" data-level="3">
           <h3>Software-Konfiguration</h3>
           <div class="section-body">
+            <div class="item item-check">
+              <span class="check-marker">
+                <input type="checkbox" class="check-box" />
+              </span>
+              <span class="check-content">
+                Neueste Systemupdates installieren
+              </span>
+            </div>
+            <div class="item item-check">
+              <span class="check-marker">
+                <input type="checkbox" class="check-box" />
+              </span>
+              <span class="check-content">
+                Firewall-Regeln gemäß Unternehmensrichtlinie konfigurieren
+              </span>
+            </div>
+            <div class="item item-check checked">
+              <span class="check-marker">
+                <input type="checkbox" class="check-box" checked />
+              </span>
+              <span class="check-content">
+                Fernzugriffs-Dienst überprüfen
+              </span>
+            </div>
           </div>
         </section>
       </div>
@@ -993,14 +1130,14 @@
             Hauptaufgabe &amp; Systemüberwachung
           </span>
         </div>
-        <div class="item item-order" style="--indent: 1;">
-          <span class="order-marker">a.</span>
+        <div class="item item-order">
+          <span class="order-marker">1.</span>
           <span class="order-content">
             Unterpunkt A 1: Dienststatus abfragen
           </span>
         </div>
-        <div class="item item-order" style="--indent: 1;">
-          <span class="order-marker">b.</span>
+        <div class="item item-order">
+          <span class="order-marker">2.</span>
           <span class="order-content">
             Unterpunkt A 2: Fehlerprotokoll analysieren
           </span>
@@ -1011,16 +1148,32 @@
             Vorgehensweise bei Wartungsarbeiten
           </span>
         </div>
-        <div class="item item-bullet" style="--indent: 2;">
+        <div class="item item-check">
+          <span class="check-marker">
+            <input type="checkbox" class="check-box" />
+          </span>
+          <span class="check-content">
+            Testlauf vorbereiten
+          </span>
+        </div>
+        <div class="item item-bullet">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
             Detailprüfung Parameter X
           </span>
         </div>
-        <div class="item item-bullet" style="--indent: 2;">
+        <div class="item item-bullet">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
             Detailprüfung Parameter Y
+          </span>
+        </div>
+        <div class="item item-check checked">
+          <span class="check-marker">
+            <input type="checkbox" class="check-box" checked />
+          </span>
+          <span class="check-content">
+            Abnahme durch Administrator
           </span>
         </div>
         <div class="item item-order">
@@ -1029,13 +1182,13 @@
             Sequenzieller Hauptschritt 1
           </span>
         </div>
-        <div class="item item-bullet" style="--indent: 1;">
+        <div class="item item-bullet">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
             Untergeordneter Prüfschritt 1.1
           </span>
         </div>
-        <div class="item item-bullet" style="--indent: 1;">
+        <div class="item item-bullet">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
             Untergeordneter Prüfschritt 1.2
@@ -1047,14 +1200,14 @@
             Sequenzieller Hauptschritt 2
           </span>
         </div>
-        <div class="item item-order" style="--indent: 1;">
-          <span class="order-marker">a.</span>
+        <div class="item item-order">
+          <span class="order-marker">1.</span>
           <span class="order-content">
             Detaillierter Teilverlauf 2.a
           </span>
         </div>
-        <div class="item item-order" style="--indent: 1;">
-          <span class="order-marker">b.</span>
+        <div class="item item-order">
+          <span class="order-marker">2.</span>
           <span class="order-content">
             Detaillierter Teilverlauf 2.b
           </span>
