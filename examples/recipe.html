@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+208.4f7b0bd.dev">
-  <meta name="version" content="0.9.4+208.4f7b0bd.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+209.533d6dc.dev">
+  <meta name="version" content="0.9.4+209.533d6dc.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-14T19:32:20Z">
+  <meta name="dcterms.created" content="2026-08-14T20:12:39Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, shoutout, table">
   <title>Classic Chocolate Fudge Cake Recipe</title>
@@ -54,6 +54,13 @@
       --section-border-subheading: #d6e4f0;
       --section-radius: 10px;
       --section-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+
+      /* Item Component Tokens */
+      --item-hover-bg: #f5f9ff;
+      --item-done-bg: #f0f9f0;
+      --item-guide-color: #cbd5e1;
+      --item-indent-size: 18px;
+      --item-radius: 6px;
 
       /* Typography Sizing & Line Height */
       --txt-size-base: 14px;
@@ -223,7 +230,111 @@
       text-decoration: line-through;
     }
 
-    /* 6. Section Components (section-*) */
+    /* 6. Item Components (item-*) */
+    .item {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 3px 8px;
+      border-radius: var(--item-radius);
+      margin-bottom: 2px;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+      margin-left: calc(var(--indent, 0) * var(--item-indent-size));
+      position: relative;
+    }
+
+    .item:hover {
+      background-color: var(--item-hover-bg);
+    }
+
+    .item.checked,
+    .item.item-done,
+    .item.done {
+      background-color: var(--item-done-bg);
+    }
+
+    .item[style*="--indent"]::before {
+      content: "";
+      position: absolute;
+      left: -4px;
+      top: 4px;
+      bottom: 4px;
+      width: 2px;
+      background-color: var(--item-guide-color);
+      border-radius: 1px;
+      opacity: 0.7;
+    }
+
+    .item:first-child,
+    *:not(.item) + .item {
+      margin-top: 3px;
+    }
+
+    .item:last-child,
+    .item:not(:has(+ .item)) {
+      margin-bottom: 6px;
+    }
+
+    .item-content,
+    .item-text {
+      flex: 1;
+      min-width: 0;
+      font-family: var(--font-sans);
+      font-size: var(--txt-size-base);
+      line-height: var(--txt-line-height);
+      color: var(--txt-color-default);
+      word-break: break-word;
+    }
+
+    .item-content a,
+    .item-text a {
+      color: var(--txt-color-link);
+      text-decoration: none;
+      transition: color 0.15s ease, text-decoration 0.15s ease;
+    }
+
+    .item-content a:hover,
+    .item-text a:hover {
+      color: var(--txt-color-link-hover);
+      text-decoration: underline;
+    }
+
+    .item-content code,
+    .item-text code {
+      font-family: var(--font-mono);
+      font-size: inherit;
+      line-height: inherit;
+      color: var(--code-color);
+      background-color: var(--code-bg);
+      padding: 0 4px;
+      border-radius: 3px;
+      border: 1px solid var(--code-border);
+    }
+
+    .item-content strong,
+    .item-text strong,
+    .item-content b,
+    .item-text b {
+      font-weight: 600;
+    }
+
+    .item-content em,
+    .item-text em,
+    .item-content i,
+    .item-text i {
+      font-style: italic;
+    }
+
+    .item-content s,
+    .item-text s,
+    .item-content del,
+    .item-text del {
+      text-decoration: line-through;
+    }
+
+    /* 7. Section Components (section-*) */
     .section,
     .section-container {
       background-color: var(--section-bg-surface);
@@ -421,8 +532,46 @@
       .txt-content s,
       .txt-default s,
       .txt-content del,
-      .txt-default del {
+      .txt-default del,
+      .item-content s,
+      .item-text s,
+      .item-content del,
+      .item-text del {
         text-decoration: none !important;
+      }
+
+      .item-content a,
+      .item-text a {
+        color: #000000 !important;
+        text-decoration: underline !important;
+      }
+
+      .item-content code,
+      .item-text code {
+        border: 1px solid var(--code-border) !important;
+        background-color: var(--code-bg) !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      /* Item Print Styles */
+      .item {
+        background-color: transparent !important;
+        margin-left: calc(var(--indent, 0) * 16px) !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+
+      .item[style*="--indent"]::before {
+        background-color: #cccccc !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .item-content,
+      .item-text {
+        color: #000000 !important;
       }
 
       hr {
@@ -482,33 +631,41 @@
     <section class="section" data-level="1">
       <h1>Recipe Overview</h1>
       <div class="section-body">
-        <p class="txt-default">
-          This recipe produces a rich, moist two-layer chocolate fudge cake topped with silky chocolate ganache frosting.
-        </p>
+        <div class="item item-text">
+          <span class="item-content">
+            This recipe produces a rich, moist two-layer chocolate fudge cake topped with silky chocolate ganache frosting.
+          </span>
+        </div>
       </div>
     </section>
     <section class="section" data-level="2">
       <h2>Ingredients & Quantities</h2>
       <div class="section-body">
-        <p class="txt-default">
-          The table below lists all required ingredients split by dry and wet components.
-        </p>
+        <div class="item item-text">
+          <span class="item-content">
+            The table below lists all required ingredients split by dry and wet components.
+          </span>
+        </div>
       </div>
     </section>
     <section class="section" data-level="2">
       <h2>Baking & Preparation Timings</h2>
       <div class="section-body">
-        <p class="txt-default">
-          Follow these timing parameters and temperature settings for accurate baking.
-        </p>
+        <div class="item item-text">
+          <span class="item-content">
+            Follow these timing parameters and temperature settings for accurate baking.
+          </span>
+        </div>
       </div>
     </section>
     <section class="section" data-level="2">
       <h2>Nutritional Summary</h2>
       <div class="section-body">
-        <p class="txt-default">
-          Estimated nutritional values per serving (based on 12 equal slices).
-        </p>
+        <div class="item item-text">
+          <span class="item-content">
+            Estimated nutritional values per serving (based on 12 equal slices).
+          </span>
+        </div>
       </div>
     </section>
   </main><!-- doc-body -->

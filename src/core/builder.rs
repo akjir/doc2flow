@@ -180,7 +180,7 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
 ///
 /// let element = DocumentElement::text("Hello world");
 /// let html = render_element(&element, 1);
-/// assert_eq!(html, "  <p class=\"txt-default\">\n    Hello world\n  </p>\n");
+/// assert_eq!(html, "  <div class=\"item item-text\">\n    <span class=\"item-content\">\n      Hello world\n    </span>\n  </div>\n");
 /// ```
 pub fn render_element(element: &DocumentElement, indent: usize) -> String {
     let (feature_name, inner_content) = match element {
@@ -240,7 +240,7 @@ mod tests {
         assert!(content.contains("<html lang=\"en\">"));
         assert!(content.contains("<meta name=\"features\" content=\"core\">"));
         assert!(
-            content.contains("    <p class=\"txt-default\">\n      Document body text\n    </p>")
+            content.contains("    <div class=\"item item-text\">\n      <span class=\"item-content\">\n        Document body text\n      </span>\n    </div>")
         );
         assert!(!content.contains("{{CONTENT}}"));
         assert!(!content.contains("{{APP_VERSION}}"));
@@ -378,7 +378,7 @@ mod tests {
         let text = DocumentElement::text("Sample paragraph text");
         assert_eq!(
             render_element(&text, 1),
-            "  <p class=\"txt-default\">\n    Sample paragraph text\n  </p>\n"
+            "  <div class=\"item item-text\">\n    <span class=\"item-content\">\n      Sample paragraph text\n    </span>\n  </div>\n"
         );
     }
 
@@ -405,12 +405,16 @@ mod tests {
             "  <section class=\"section\" data-level=\"2\">\n",
             "    <h2>Details</h2>\n",
             "    <div class=\"section-body\">\n",
-            "      <p class=\"txt-default\">\n",
-            "        First paragraph\n",
-            "      </p>\n",
-            "      <p class=\"txt-default\">\n",
-            "        Second paragraph\n",
-            "      </p>\n",
+            "      <div class=\"item item-text\">\n",
+            "        <span class=\"item-content\">\n",
+            "          First paragraph\n",
+            "        </span>\n",
+            "      </div>\n",
+            "      <div class=\"item item-text\">\n",
+            "        <span class=\"item-content\">\n",
+            "          Second paragraph\n",
+            "        </span>\n",
+            "      </div>\n",
             "    </div>\n",
             "  </section>\n"
         );
@@ -429,9 +433,11 @@ mod tests {
             "      <section class=\"section\" data-level=\"3\">\n",
             "        <h3>Inner</h3>\n",
             "        <div class=\"section-body\">\n",
-            "          <p class=\"txt-default\">\n",
-            "            Inner content\n",
-            "          </p>\n",
+            "          <div class=\"item item-text\">\n",
+            "            <span class=\"item-content\">\n",
+            "              Inner content\n",
+            "            </span>\n",
+            "          </div>\n",
             "        </div>\n",
             "      </section>\n",
             "    </div>\n",
@@ -477,7 +483,7 @@ mod tests {
         );
         assert_eq!(
             render_element(&directive, 1),
-            "    <p class=\"txt-default\">\n      Directive child\n    </p>\n"
+            "    <div class=\"item item-text\">\n      <span class=\"item-content\">\n        Directive child\n      </span>\n    </div>\n"
         );
     }
 }

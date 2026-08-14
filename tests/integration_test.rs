@@ -1069,7 +1069,7 @@ fn test_parser_and_builder_pipeline_integration() {
     assert!(content.contains("      <h1>Pipeline Heading</h1>"));
     assert!(
         content.contains(
-            "        <p class=\"txt-default\">\n          Content paragraph\n        </p>"
+            "        <div class=\"item item-text\">\n          <span class=\"item-content\">\n            Content paragraph\n          </span>\n        </div>"
         )
     );
     assert!(content.contains("<title>Pipeline Test</title>"));
@@ -1090,13 +1090,31 @@ fn test_core_horizontal_rule_pipeline_integration() {
     assert!(content.contains("      <h1>Main Heading</h1>"));
     assert!(
         content.contains(
-            "        <p class=\"txt-default\">\n          Paragraph before\n        </p>"
+            "        <div class=\"item item-text\">\n          <span class=\"item-content\">\n            Paragraph before\n          </span>\n        </div>"
         )
     );
     assert!(content.contains("        <hr />"));
     assert!(
         content
-            .contains("        <p class=\"txt-default\">\n          Paragraph after\n        </p>")
+            .contains("        <div class=\"item item-text\">\n          <span class=\"item-content\">\n            Paragraph after\n          </span>\n        </div>")
     );
     assert!(content.contains("hr {\n      border: none;"));
 }
+
+#[test]
+fn test_bullet_list_item_pipeline_integration() {
+    let input = "---\ntitle: \"Bullet Pipeline Test\"\n---\n# List Section\n\n- Root bullet item\n  - Nested bullet **item** with `code`";
+    let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
+    let features = doc2flow::core::DocumentFeature::from(&document);
+    assert!(features.bullet_list_item);
+    assert_eq!(features.to_features_string(), "core, bullet_list_item");
+    let content = doc2flow::core::builder::build(&document, &features);
+    assert!(content.contains("<title>Bullet Pipeline Test</title>"));
+    assert!(content.contains("<meta name=\"features\" content=\"core, bullet_list_item\">"));
+    assert!(content.contains("--bullet-marker-color:"));
+    assert!(content.contains(".bullet-marker"));
+    assert!(content.contains("        <div class=\"item item-bullet\">\n          <span class=\"bullet-marker\">&bull;</span>\n          <span class=\"bullet-content\">\n            Root bullet item\n          </span>\n        </div>"));
+    assert!(content.contains("        <div class=\"item item-bullet\" style=\"--indent: 1;\">\n          <span class=\"bullet-marker\">&bull;</span>\n          <span class=\"bullet-content\">\n            Nested bullet <strong>item</strong> with <code>code</code>\n          </span>\n        </div>"));
+}
+
+

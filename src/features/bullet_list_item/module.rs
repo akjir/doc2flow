@@ -1,100 +1,117 @@
-//! Core vertical slice feature module.
+//! Bullet list item vertical slice feature module.
+
+use std::fmt::Write as _;
 
 use crate::core::document::DocumentElement;
 use crate::core::feature::Feature;
 
-/// Embedded core CSS styles for layout and components.
-pub const CSS: &str = include_str!("core.css");
+/// Embedded bullet list item CSS stylesheet.
+pub const CSS: &str = include_str!("bullet_list_item.css");
 
-/// Embedded core JavaScript bundle for client runtime.
-pub const JS: &str = include_str!("core.js");
-
-/// Core feature renderer handling text, horizontal rules, and section elements.
+/// Bullet list item feature renderer handling bullet and unordered list items.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
-pub struct CoreFeature;
+pub struct BulletListItemFeature;
 
-impl CoreFeature {
-    /// Creates a new core feature instance.
+impl BulletListItemFeature {
+    /// Creates a new bullet list item feature instance.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use doc2flow::features::bullet_list_item::BulletListItemFeature;
+    ///
+    /// let feature = BulletListItemFeature::new();
+    /// ```
     pub const fn new() -> Self {
         Self
     }
 }
 
-impl Feature for CoreFeature {
-    /// Converts a document element and inner content into an HTML string representation.
-    fn to_html(&self, element: &DocumentElement, content: &str, indent: usize) -> String {
+impl Feature for BulletListItemFeature {
+    /// Converts a bullet list item document element into an HTML string representation.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use doc2flow::core::document::DocumentElement;
+    /// use doc2flow::core::feature::Feature;
+    /// use doc2flow::features::bullet_list_item::BulletListItemFeature;
+    ///
+    /// let feature = BulletListItemFeature::new();
+    /// let elem = DocumentElement::bullet_list_item(0, DocumentElement::text("List item"));
+    /// let html = feature.to_html(&elem, "", 1);
+    /// assert!(html.contains("class=\"item item-bullet\""));
+    /// ```
+    fn to_html(&self, element: &DocumentElement, _content: &str, indent: usize) -> String {
         match element {
-            DocumentElement::HorizontalRule => {
-                let spaces = indent * 2;
-                let mut out = String::with_capacity(spaces + 8);
-                push_indent(&mut out, indent);
-                out.push_str("<hr />\n");
-                out
-            }
-            DocumentElement::Section { level, title, .. } => {
+            DocumentElement::BulletListItem { content, depth } => {
                 let spaces = indent * 2;
                 let inner_spaces = (indent + 1) * 2;
-                let mut out = String::with_capacity(
-                    title.len() + content.len() + spaces * 2 + inner_spaces * 3 + 128,
-                );
-                push_indent(&mut out, indent);
-                out.push_str("<section class=\"section\" data-level=\"");
-                out.push_str(&level.to_string());
-                out.push_str("\">\n");
+                let content_len = match content.as_ref() {
+                    DocumentElement::Text(text) => text.len() * 2,
+                    _ => _content.len(),
+                };
 
-                push_indent(&mut out, indent + 1);
-                out.push_str("<h");
-                out.push_str(&level.to_string());
-                out.push('>');
-                out.push_str(title);
-                out.push_str("</h");
-                out.push_str(&level.to_string());
-                out.push_str(">\n");
-
-                push_indent(&mut out, indent + 1);
-                out.push_str("<div class=\"section-body\">\n");
-
-                out.push_str(content);
-
-                push_indent(&mut out, indent + 1);
-                out.push_str("</div>\n");
-
-                push_indent(&mut out, indent);
-                out.push_str("</section>\n");
-                out
-            }
-            DocumentElement::Text(text) => {
-                let spaces = indent * 2;
-                let inner_spaces = (indent + 1) * 2;
                 let mut out =
-                    String::with_capacity(text.len() * 2 + spaces * 2 + inner_spaces * 2 + 64);
+                    String::with_capacity(content_len + spaces * 2 + inner_spaces * 2 + 128);
                 push_indent(&mut out, indent);
-                out.push_str("<div class=\"item item-text\">\n");
-                push_indent(&mut out, indent + 1);
-                out.push_str("<span class=\"item-content\">\n");
-                for line in text.lines() {
-                    push_indent(&mut out, indent + 2);
-                    format_inline_into(&mut out, line);
-                    out.push('\n');
+
+                if *depth > 0 {
+                    out.push_str("<div class=\"item item-bullet\" style=\"--indent: ");
+                    let _ = write!(out, "{depth}");
+                    out.push_str(";\">\n");
+                } else {
+                    out.push_str("<div class=\"item item-bullet\">\n");
                 }
+
+                push_indent(&mut out, indent + 1);
+                out.push_str("<span class=\"bullet-marker\">&bull;</span>\n");
+
+                push_indent(&mut out, indent + 1);
+                out.push_str("<span class=\"bullet-content\">\n");
+
+                match content.as_ref() {
+                    DocumentElement::Text(text) => {
+                        for line in text.lines() {
+                            push_indent(&mut out, indent + 2);
+                            format_inline_into(&mut out, line);
+                            out.push('\n');
+                        }
+                    }
+                    DocumentElement::Image { alt, url } => {
+                        push_indent(&mut out, indent + 2);
+                        out.push_str("<img src=\"");
+                        escape_html_into(&mut out, url);
+                        out.push_str("\" alt=\"");
+                        escape_html_into(&mut out, alt);
+                        out.push_str("\" />\n");
+                    }
+                    _ => {
+                        if !_content.is_empty() {
+                            for line in _content.lines() {
+                                push_indent(&mut out, indent + 2);
+                                out.push_str(line.trim());
+                                out.push('\n');
+                            }
+                        }
+                    }
+                }
+
                 push_indent(&mut out, indent + 1);
                 out.push_str("</span>\n");
+
                 push_indent(&mut out, indent);
                 out.push_str("</div>\n");
+
                 out
             }
             _ => String::new(),
         }
     }
 
-    /// Returns the embedded CSS stylesheet for the core feature.
+    /// Returns the embedded CSS stylesheet for the bullet list item feature.
     fn css(&self) -> Option<&'static str> {
         Some(CSS)
-    }
-
-    /// Returns the embedded JavaScript client script for the core feature.
-    fn javascript(&self) -> Option<&'static str> {
-        Some(JS)
     }
 }
 
@@ -470,205 +487,94 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_core_feature_css() {
-        let feature = CoreFeature::new();
-        let css = feature.css().expect("core css should exist");
-        assert!(css.contains("--bg-body:"));
-        assert!(css.contains("--code-bg:"));
-        assert!(css.contains("--code-border:"));
-        assert!(css.contains("--code-color:"));
-        assert!(css.contains("--item-hover-bg:"));
-        assert!(css.contains("--item-done-bg:"));
-        assert!(css.contains(".doc-body"));
-        assert!(css.contains(".item"));
-        assert!(css.contains(".item-content"));
-        assert!(css.contains(".txt-default"));
-        assert!(css.contains(".txt-code"));
-        assert!(css.contains(".txt-strike"));
-        assert!(css.contains(".section"));
-        assert!(css.contains(".section-header"));
-        assert!(css.contains(".section-body"));
-        assert!(css.contains(".section-subheading"));
-        assert!(css.contains("--section-bg-header:"));
-        assert!(css.contains("hr {"));
+    fn test_bullet_list_item_empty_for_unsupported_elements() {
+        let feature = BulletListItemFeature::new();
+        let text = DocumentElement::text("Regular text");
+        assert_eq!(feature.to_html(&text, "", 0), "");
     }
 
     #[test]
-    fn test_core_feature_javascript() {
-        let feature = CoreFeature::new();
-        let js = feature.javascript().expect("core javascript should exist");
-        assert!(js.contains("window.d2f"));
-        assert!(js.contains("core"));
+    fn test_bullet_list_item_feature_constructor_new() {
+        let feature = BulletListItemFeature::new();
+        assert_eq!(feature, BulletListItemFeature);
     }
 
     #[test]
-    fn test_core_feature_empty_for_unsupported_elements() {
-        let feature = CoreFeature::new();
-        let code = DocumentElement::code_block(Some("rust"), "fn main() {}");
-        assert_eq!(feature.to_html(&code, "", 0), "");
+    fn test_bullet_list_item_feature_css() {
+        let feature = BulletListItemFeature::new();
+        let css = feature.css().expect("bullet list item css should exist");
+        assert!(css.contains("--bullet-marker-color:"));
+        assert!(css.contains(".bullet-marker"));
+        assert!(css.contains(".bullet-content"));
     }
 
     #[test]
-    fn test_core_feature_escapes_plain_text_html_entities() {
-        let feature = CoreFeature::new();
-        let elem = DocumentElement::text("5 < 10 & 20 > 15 \"quoted\" 'single'");
-        assert_eq!(
-            feature.to_html(&elem, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    5 &lt; 10 &amp; 20 &gt; 15 &quot;quoted&quot; &#39;single&#39;\n  </span>\n</div>\n"
-        );
-    }
-
-    #[test]
-    fn test_core_feature_inline_code_escapes_html_and_preserves_literals() {
-        let feature = CoreFeature::new();
-        let elem = DocumentElement::text("Example `<div class=\"box\"> && **not bold**</div>` here.");
-        assert_eq!(
-            feature.to_html(&elem, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    Example <code>&lt;div class=&quot;box&quot;&gt; &amp;&amp; **not bold**&lt;/div&gt;</code> here.\n  </span>\n</div>\n"
-        );
-    }
-
-    #[test]
-    fn test_core_feature_nested_formatting() {
-        let feature = CoreFeature::new();
-        let elem = DocumentElement::text("Formatted ~~**bold strikethrough**~~ with `code`.");
-        assert_eq!(
-            feature.to_html(&elem, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    Formatted <s><strong>bold strikethrough</strong></s> with <code>code</code>.\n  </span>\n</div>\n"
-        );
-    }
-
-    #[test]
-    fn test_core_feature_preserves_intra_word_underscores() {
-        let feature = CoreFeature::new();
-        let elem = DocumentElement::text("Host {{SERVER_NAME}}:{{PORT}} with key {{API_KEY}}.");
-        assert_eq!(
-            feature.to_html(&elem, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    Host {{SERVER_NAME}}:{{PORT}} with key {{API_KEY}}.\n  </span>\n</div>\n"
-        );
-    }
-
-    #[test]
-    fn test_core_feature_renders_bold_and_italic_combined() {
-        let feature = CoreFeature::new();
-        let elem = DocumentElement::text("This is ***bold and italic*** text.");
-        assert_eq!(
-            feature.to_html(&elem, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    This is <strong><em>bold and italic</em></strong> text.\n  </span>\n</div>\n"
-        );
-
-        let elem_underscores = DocumentElement::text("This is ___bold and italic___ text.");
-        assert_eq!(
-            feature.to_html(&elem_underscores, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    This is <strong><em>bold and italic</em></strong> text.\n  </span>\n</div>\n"
-        );
-    }
-
-    #[test]
-    fn test_core_feature_renders_bold_asterisks_and_underscores() {
-        let feature = CoreFeature::new();
-        let elem_asterisk = DocumentElement::text("This is **bold** text.");
-        assert_eq!(
-            feature.to_html(&elem_asterisk, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    This is <strong>bold</strong> text.\n  </span>\n</div>\n"
-        );
-
-        let elem_underscore = DocumentElement::text("This is __bold__ text.");
-        assert_eq!(
-            feature.to_html(&elem_underscore, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    This is <strong>bold</strong> text.\n  </span>\n</div>\n"
-        );
-    }
-
-    #[test]
-    fn test_core_feature_renders_horizontal_rule() {
-        let feature = CoreFeature::new();
-        let element = DocumentElement::horizontal_rule();
-        assert_eq!(feature.to_html(&element, "", 0), "<hr />\n");
-        assert_eq!(feature.to_html(&element, "", 1), "  <hr />\n");
-        assert_eq!(feature.to_html(&element, "", 2), "    <hr />\n");
-    }
-
-    #[test]
-    fn test_core_feature_renders_inline_code_and_strips_backticks() {
-        let feature = CoreFeature::new();
-        let elem = DocumentElement::text("Run `cargo test --all` now.");
-        assert_eq!(
-            feature.to_html(&elem, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    Run <code>cargo test --all</code> now.\n  </span>\n</div>\n"
-        );
-    }
-
-    #[test]
-    fn test_core_feature_renders_italic_asterisks_and_underscores() {
-        let feature = CoreFeature::new();
-        let elem_asterisk = DocumentElement::text("This is *italic* text.");
-        assert_eq!(
-            feature.to_html(&elem_asterisk, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    This is <em>italic</em> text.\n  </span>\n</div>\n"
-        );
-
-        let elem_underscore = DocumentElement::text("This is _italic_ text.");
-        assert_eq!(
-            feature.to_html(&elem_underscore, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    This is <em>italic</em> text.\n  </span>\n</div>\n"
-        );
-    }
-
-    #[test]
-    fn test_core_feature_renders_plain_text() {
-        let feature = CoreFeature::new();
-        let element = DocumentElement::text("Hello, world!");
-        assert_eq!(
-            feature.to_html(&element, "", 1),
-            "  <div class=\"item item-text\">\n    <span class=\"item-content\">\n      Hello, world!\n    </span>\n  </div>\n"
-        );
-    }
-
-    #[test]
-    fn test_core_feature_renders_section_with_content() {
-        let feature = CoreFeature::new();
-        let section = DocumentElement::section(
+    fn test_bullet_list_item_renders_image_content() {
+        let feature = BulletListItemFeature::new();
+        let element = DocumentElement::bullet_list_item(
             1,
-            "Overview",
-            vec![DocumentElement::text("Section body content")],
+            DocumentElement::image("Alt text", "path/to/image.png"),
         );
-        let child_html =
-            "        <div class=\"item item-text\">\n          <span class=\"item-content\">\n            Section body content\n          </span>\n        </div>\n";
-        let html = feature.to_html(&section, child_html, 2);
+        let html = feature.to_html(&element, "", 1);
         let expected = concat!(
-            "    <section class=\"section\" data-level=\"1\">\n",
-            "      <h1>Overview</h1>\n",
-            "      <div class=\"section-body\">\n",
-            "        <div class=\"item item-text\">\n",
-            "          <span class=\"item-content\">\n",
-            "            Section body content\n",
-            "          </span>\n",
-            "        </div>\n",
-            "      </div>\n",
-            "    </section>\n"
+            "  <div class=\"item item-bullet\" style=\"--indent: 1;\">\n",
+            "    <span class=\"bullet-marker\">&bull;</span>\n",
+            "    <span class=\"bullet-content\">\n",
+            "      <img src=\"path/to/image.png\" alt=\"Alt text\" />\n",
+            "    </span>\n",
+            "  </div>\n"
         );
         assert_eq!(html, expected);
     }
 
     #[test]
-    fn test_core_feature_renders_strikethrough() {
-        let feature = CoreFeature::new();
-        let elem = DocumentElement::text("Replaces ~~legacy procedures~~ with modern.");
-        assert_eq!(
-            feature.to_html(&elem, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    Replaces <s>legacy procedures</s> with modern.\n  </span>\n</div>\n"
+    fn test_bullet_list_item_renders_inline_formatting() {
+        let feature = BulletListItemFeature::new();
+        let element = DocumentElement::bullet_list_item(
+            0,
+            DocumentElement::text("Item with **bold**, *italic*, ~~strike~~, and `code` span"),
         );
+        let html = feature.to_html(&element, "", 0);
+        let expected = concat!(
+            "<div class=\"item item-bullet\">\n",
+            "  <span class=\"bullet-marker\">&bull;</span>\n",
+            "  <span class=\"bullet-content\">\n",
+            "    Item with <strong>bold</strong>, <em>italic</em>, <s>strike</s>, and <code>code</code> span\n",
+            "  </span>\n",
+            "</div>\n"
+        );
+        assert_eq!(html, expected);
     }
 
     #[test]
-    fn test_core_feature_unclosed_delimiters() {
-        let feature = CoreFeature::new();
-        let elem = DocumentElement::text("Unclosed **bold and ~~strike and `code");
-        assert_eq!(
-            feature.to_html(&elem, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    Unclosed **bold and ~~strike and `code\n  </span>\n</div>\n"
+    fn test_bullet_list_item_renders_nested_depth() {
+        let feature = BulletListItemFeature::new();
+        let element = DocumentElement::bullet_list_item(2, DocumentElement::text("Nested level 2 item"));
+        let html = feature.to_html(&element, "", 2);
+        let expected = concat!(
+            "    <div class=\"item item-bullet\" style=\"--indent: 2;\">\n",
+            "      <span class=\"bullet-marker\">&bull;</span>\n",
+            "      <span class=\"bullet-content\">\n",
+            "        Nested level 2 item\n",
+            "      </span>\n",
+            "    </div>\n"
         );
+        assert_eq!(html, expected);
+    }
+
+    #[test]
+    fn test_bullet_list_item_renders_root_depth() {
+        let feature = BulletListItemFeature::new();
+        let element = DocumentElement::bullet_list_item(0, DocumentElement::text("Simple bullet item"));
+        let html = feature.to_html(&element, "", 1);
+        let expected = concat!(
+            "  <div class=\"item item-bullet\">\n",
+            "    <span class=\"bullet-marker\">&bull;</span>\n",
+            "    <span class=\"bullet-content\">\n",
+            "      Simple bullet item\n",
+            "    </span>\n",
+            "  </div>\n"
+        );
+        assert_eq!(html, expected);
     }
 }
-

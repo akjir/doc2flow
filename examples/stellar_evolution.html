@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+208.4f7b0bd.dev">
-  <meta name="version" content="0.9.4+208.4f7b0bd.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+209.533d6dc.dev">
+  <meta name="version" content="0.9.4+209.533d6dc.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-14T19:32:20Z">
+  <meta name="dcterms.created" content="2026-08-14T20:12:39Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, bullet_list_item">
   <title>Stellar Evolution Overview</title>
@@ -54,6 +54,13 @@
       --section-border-subheading: #d6e4f0;
       --section-radius: 10px;
       --section-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+
+      /* Item Component Tokens */
+      --item-hover-bg: #f5f9ff;
+      --item-done-bg: #f0f9f0;
+      --item-guide-color: #cbd5e1;
+      --item-indent-size: 18px;
+      --item-radius: 6px;
 
       /* Typography Sizing & Line Height */
       --txt-size-base: 14px;
@@ -223,7 +230,111 @@
       text-decoration: line-through;
     }
 
-    /* 6. Section Components (section-*) */
+    /* 6. Item Components (item-*) */
+    .item {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 3px 8px;
+      border-radius: var(--item-radius);
+      margin-bottom: 2px;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+      margin-left: calc(var(--indent, 0) * var(--item-indent-size));
+      position: relative;
+    }
+
+    .item:hover {
+      background-color: var(--item-hover-bg);
+    }
+
+    .item.checked,
+    .item.item-done,
+    .item.done {
+      background-color: var(--item-done-bg);
+    }
+
+    .item[style*="--indent"]::before {
+      content: "";
+      position: absolute;
+      left: -4px;
+      top: 4px;
+      bottom: 4px;
+      width: 2px;
+      background-color: var(--item-guide-color);
+      border-radius: 1px;
+      opacity: 0.7;
+    }
+
+    .item:first-child,
+    *:not(.item) + .item {
+      margin-top: 3px;
+    }
+
+    .item:last-child,
+    .item:not(:has(+ .item)) {
+      margin-bottom: 6px;
+    }
+
+    .item-content,
+    .item-text {
+      flex: 1;
+      min-width: 0;
+      font-family: var(--font-sans);
+      font-size: var(--txt-size-base);
+      line-height: var(--txt-line-height);
+      color: var(--txt-color-default);
+      word-break: break-word;
+    }
+
+    .item-content a,
+    .item-text a {
+      color: var(--txt-color-link);
+      text-decoration: none;
+      transition: color 0.15s ease, text-decoration 0.15s ease;
+    }
+
+    .item-content a:hover,
+    .item-text a:hover {
+      color: var(--txt-color-link-hover);
+      text-decoration: underline;
+    }
+
+    .item-content code,
+    .item-text code {
+      font-family: var(--font-mono);
+      font-size: inherit;
+      line-height: inherit;
+      color: var(--code-color);
+      background-color: var(--code-bg);
+      padding: 0 4px;
+      border-radius: 3px;
+      border: 1px solid var(--code-border);
+    }
+
+    .item-content strong,
+    .item-text strong,
+    .item-content b,
+    .item-text b {
+      font-weight: 600;
+    }
+
+    .item-content em,
+    .item-text em,
+    .item-content i,
+    .item-text i {
+      font-style: italic;
+    }
+
+    .item-content s,
+    .item-text s,
+    .item-content del,
+    .item-text del {
+      text-decoration: line-through;
+    }
+
+    /* 7. Section Components (section-*) */
     .section,
     .section-container {
       background-color: var(--section-bg-surface);
@@ -421,8 +532,46 @@
       .txt-content s,
       .txt-default s,
       .txt-content del,
-      .txt-default del {
+      .txt-default del,
+      .item-content s,
+      .item-text s,
+      .item-content del,
+      .item-text del {
         text-decoration: none !important;
+      }
+
+      .item-content a,
+      .item-text a {
+        color: #000000 !important;
+        text-decoration: underline !important;
+      }
+
+      .item-content code,
+      .item-text code {
+        border: 1px solid var(--code-border) !important;
+        background-color: var(--code-bg) !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      /* Item Print Styles */
+      .item {
+        background-color: transparent !important;
+        margin-left: calc(var(--indent, 0) * 16px) !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+
+      .item[style*="--indent"]::before {
+        background-color: #cccccc !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .item-content,
+      .item-text {
+        color: #000000 !important;
       }
 
       hr {
@@ -473,6 +622,111 @@
         padding: 0 10px 40px;
       }
     }
+    /* ==========================================================================
+       Doc2Flow - Bullet List Item Feature Styles
+       ========================================================================== */
+
+    /* 1. Base Variables & Tokens */
+    :root {
+      /* Bullet Marker Tokens */
+      --bullet-marker-color: #2e75b6;
+      --bullet-marker-font-size: 13px;
+    }
+
+    /* 2. Bullet Item Component (bullet-*) */
+    .bullet-marker {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 14px;
+      width: auto;
+      height: 14px;
+      margin-top: 3px;
+      color: var(--bullet-marker-color);
+      font-size: var(--bullet-marker-font-size);
+      font-weight: bold;
+      line-height: 1;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .bullet-content {
+      flex: 1;
+      min-width: 0;
+      font-family: var(--font-sans, Arial, sans-serif);
+      font-size: var(--txt-size-base, 14px);
+      line-height: var(--txt-line-height, 1.5);
+      color: var(--txt-color-default, #444444);
+      word-break: break-word;
+    }
+
+    .bullet-content a {
+      color: var(--txt-color-link, #2e75b6);
+      text-decoration: none;
+      transition: color 0.15s ease, text-decoration 0.15s ease;
+    }
+
+    .bullet-content a:hover {
+      color: var(--txt-color-link-hover, #163a5c);
+      text-decoration: underline;
+    }
+
+    .bullet-content code {
+      font-family: var(--font-mono, 'Courier New', monospace);
+      font-size: inherit;
+      line-height: inherit;
+      color: var(--code-color, #24292f);
+      background-color: var(--code-bg, #f0f2f5);
+      padding: 0 4px;
+      border-radius: 3px;
+      border: 1px solid var(--code-border, #d0d7de);
+    }
+
+    .bullet-content strong,
+    .bullet-content b {
+      font-weight: 600;
+    }
+
+    .bullet-content em,
+    .bullet-content i {
+      font-style: italic;
+    }
+
+    .bullet-content s,
+    .bullet-content del {
+      text-decoration: line-through;
+    }
+
+    /* 3. Print Styles */
+    @media print {
+      .bullet-marker {
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .bullet-content {
+        color: #000000 !important;
+      }
+
+      .bullet-content a {
+        color: #000000 !important;
+        text-decoration: underline !important;
+      }
+
+      .bullet-content code {
+        border: 1px solid var(--code-border, #d0d7de) !important;
+        background-color: var(--code-bg, #f0f2f5) !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .bullet-content s,
+      .bullet-content del {
+        text-decoration: none !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -482,46 +736,68 @@
     <section class="section" data-level="1">
       <h1>Introduction to Stellar Evolution</h1>
       <div class="section-body">
-        <p class="txt-default">
-          The term <strong>stellar evolution</strong> describes the continuous astrophysical process by which a star undergoes radical structural changes over its lifetime. Stars are not <s>static, eternal celestial spheres</s>, but dynamic thermodynamic systems spanning lifetimes from a few million years for massive stars to <em>trillions of years</em> for low-mass red dwarfs.
-        </p>
+        <div class="item item-text">
+          <span class="item-content">
+            The term <strong>stellar evolution</strong> describes the continuous astrophysical process by which a star undergoes radical structural changes over its lifetime. Stars are not <s>static, eternal celestial spheres</s>, but dynamic thermodynamic systems spanning lifetimes from a few million years for massive stars to <em>trillions of years</em> for low-mass red dwarfs.
+          </span>
+        </div>
       </div>
     </section>
     <section class="section" data-level="2">
       <h2>Stellar Formation</h2>
       <div class="section-body">
-        <p class="txt-default">
-          All stars originate inside cold, dense regions known as <em>giant molecular clouds</em> (GMCs) where temperatures drop below <code>T &lt; 20 K</code>.
-        </p>
+        <div class="item item-text">
+          <span class="item-content">
+            All stars originate inside cold, dense regions known as <em>giant molecular clouds</em> (GMCs) where temperatures drop below <code>T &lt; 20 K</code>.
+          </span>
+        </div>
         <section class="section" data-level="3">
           <h3>Molecular Clouds</h3>
           <div class="section-body">
-            <p class="txt-default">
-              Cold interstellar clouds consisting primarily of molecular hydrogen (<code>H2</code>) and helium (<code>He</code>) provide the raw material for stellar birth.
-            </p>
-              <p class="txt-default">
+            <div class="item item-text">
+              <span class="item-content">
+                Cold interstellar clouds consisting primarily of molecular hydrogen (<code>H2</code>) and helium (<code>He</code>) provide the raw material for stellar birth.
+              </span>
+            </div>
+            <div class="item item-bullet">
+              <span class="bullet-marker">&bull;</span>
+              <span class="bullet-content">
                 Gravitational instability causes fragments to collapse when the <em>Jeans mass</em> (<code>M_J</code>) threshold is exceeded.
-              </p>
-              <p class="txt-default">
+              </span>
+            </div>
+            <div class="item item-bullet">
+              <span class="bullet-marker">&bull;</span>
+              <span class="bullet-content">
                 Core temperatures rise as gravitational potential energy converts into thermal kinetic energy.
-              </p>
-            <p class="txt-default">
-              Dense cloud cores do not remain <s>uniform static nebulae</s>; instead, localized gravitational perturbations trigger runaway contraction.
-            </p>
+              </span>
+            </div>
+            <div class="item item-text">
+              <span class="item-content">
+                Dense cloud cores do not remain <s>uniform static nebulae</s>; instead, localized gravitational perturbations trigger runaway contraction.
+              </span>
+            </div>
           </div>
         </section>
         <section class="section" data-level="3">
           <h3>Protostar Phase</h3>
           <div class="section-body">
-            <p class="txt-default">
-              As a collapsing core accretes surrounding matter, it forms a central <strong>protostar</strong> surrounded by a circumstellar accretion disk with angular momentum conservation.
-            </p>
-              <p class="txt-default">
+            <div class="item item-text">
+              <span class="item-content">
+                As a collapsing core accretes surrounding matter, it forms a central <strong>protostar</strong> surrounded by a circumstellar accretion disk with angular momentum conservation.
+              </span>
+            </div>
+            <div class="item item-bullet">
+              <span class="bullet-marker">&bull;</span>
+              <span class="bullet-content">
                 Core contraction reaches central temperatures exceeding <code>T_core &gt;= 1.0e7 K</code>.
-              </p>
-              <p class="txt-default">
+              </span>
+            </div>
+            <div class="item item-bullet">
+              <span class="bullet-marker">&bull;</span>
+              <span class="bullet-content">
                 Ignition of self-sustaining hydrogen thermonuclear fusion marks the transition into a <em>zero-age main sequence</em> (<code>ZAMS</code>) star.
-              </p>
+              </span>
+            </div>
           </div>
         </section>
       </div>
@@ -529,35 +805,51 @@
     <section class="section" data-level="2">
       <h2>Main Sequence Stage</h2>
       <div class="section-body">
-        <p class="txt-default">
-          The <strong>main sequence</strong> represents the longest and most stable phase of a star&#39;s evolutionary journey, fueled by the core conversion of hydrogen into helium via <code>4 ¹H -&gt; ⁴He + 2e⁺ + 2νₑ</code>.
-        </p>
+        <div class="item item-text">
+          <span class="item-content">
+            The <strong>main sequence</strong> represents the longest and most stable phase of a star&#39;s evolutionary journey, fueled by the core conversion of hydrogen into helium via <code>4 ¹H -&gt; ⁴He + 2e⁺ + 2νₑ</code>.
+          </span>
+        </div>
         <section class="section" data-level="3">
           <h3>Nuclear Fusion</h3>
           <div class="section-body">
-            <p class="txt-default">
-              Energy generation in main-sequence stars relies on two distinct hydrogen burning mechanisms:
-            </p>
-              <p class="txt-default">
+            <div class="item item-text">
+              <span class="item-content">
+                Energy generation in main-sequence stars relies on two distinct hydrogen burning mechanisms:
+              </span>
+            </div>
+            <div class="item item-bullet">
+              <span class="bullet-marker">&bull;</span>
+              <span class="bullet-content">
                 <strong>Proton-Proton Chain:</strong> Dominates in low-mass stars like our Sun (<code>M &lt;= 1.3 M_sun</code>) with core temperature around <code>1.5e7 K</code>.
-              </p>
-              <p class="txt-default">
+              </span>
+            </div>
+            <div class="item item-bullet">
+              <span class="bullet-marker">&bull;</span>
+              <span class="bullet-content">
                 <strong>CNO Cycle:</strong> Dominates in higher-mass stars (<code>M &gt; 1.3 M_sun</code>) where carbon, nitrogen, and oxygen catalyze fusion.
-              </p>
-            <p class="txt-default">
-              Energy output scales dramatically with mass according to the mass-luminosity relation <code>L \propto M^{3.5}</code>, meaning high-mass stars exhaust their core fuel at <em>exponentially faster</em> rates than <s>long-lived red dwarfs</s>.
-            </p>
+              </span>
+            </div>
+            <div class="item item-text">
+              <span class="item-content">
+                Energy output scales dramatically with mass according to the mass-luminosity relation <code>L \propto M^{3.5}</code>, meaning high-mass stars exhaust their core fuel at <em>exponentially faster</em> rates than <s>long-lived red dwarfs</s>.
+              </span>
+            </div>
           </div>
         </section>
         <section class="section" data-level="3">
           <h3>Hydrostatic Equilibrium</h3>
           <div class="section-body">
-            <p class="txt-default">
-              A star maintains structural stability through <strong>hydrostatic equilibrium</strong>, an exact dynamic balance between the <em>inward pull</em> of gravity and the <em>outward push</em> of radiative and thermal gas pressure.
-            </p>
-            <p class="txt-default">
-              When core hydrogen is exhausted, the core is no longer sustained by <s>thermal radiation pressure</s>, leading directly to core contraction and envelope expansion into a giant branch star.
-            </p>
+            <div class="item item-text">
+              <span class="item-content">
+                A star maintains structural stability through <strong>hydrostatic equilibrium</strong>, an exact dynamic balance between the <em>inward pull</em> of gravity and the <em>outward push</em> of radiative and thermal gas pressure.
+              </span>
+            </div>
+            <div class="item item-text">
+              <span class="item-content">
+                When core hydrogen is exhausted, the core is no longer sustained by <s>thermal radiation pressure</s>, leading directly to core contraction and envelope expansion into a giant branch star.
+              </span>
+            </div>
           </div>
         </section>
       </div>
@@ -565,41 +857,63 @@
     <section class="section" data-level="2">
       <h2>Stellar Remnants</h2>
       <div class="section-body">
-        <p class="txt-default">
-          Final stellar remnants depend fundamentally on the progenitor&#39;s initial mass and whether the core exceeds the <strong><em>Chandrasekhar limit</em></strong> (<code>M_Ch \approx 1.44 M_sun</code>).
-        </p>
+        <div class="item item-text">
+          <span class="item-content">
+            Final stellar remnants depend fundamentally on the progenitor&#39;s initial mass and whether the core exceeds the <strong><em>Chandrasekhar limit</em></strong> (<code>M_Ch \approx 1.44 M_sun</code>).
+          </span>
+        </div>
         <section class="section" data-level="3">
           <h3>White Dwarfs</h3>
           <div class="section-body">
-            <p class="txt-default">
-              Low- to intermediate-mass progenitors (<code>M &lt;= 8 M_sun</code>) shed their outer gaseous envelopes as picturesque <em>planetary nebulae</em>, leaving behind an ultra-dense <strong>white dwarf</strong> remnant.
-            </p>
-              <p class="txt-default">
+            <div class="item item-text">
+              <span class="item-content">
+                Low- to intermediate-mass progenitors (<code>M &lt;= 8 M_sun</code>) shed their outer gaseous envelopes as picturesque <em>planetary nebulae</em>, leaving behind an ultra-dense <strong>white dwarf</strong> remnant.
+              </span>
+            </div>
+            <div class="item item-bullet">
+              <span class="bullet-marker">&bull;</span>
+              <span class="bullet-content">
                 Composed primarily of degenerate carbon and oxygen ions.
-              </p>
-              <p class="txt-default">
+              </span>
+            </div>
+            <div class="item item-bullet">
+              <span class="bullet-marker">&bull;</span>
+              <span class="bullet-content">
                 Supported against catastrophic gravitational collapse by quantum <strong>electron degeneracy pressure</strong>.
-              </p>
-            <p class="txt-default">
-              White dwarfs contain no <s>active thermonuclear furnace</s>; they radiate residual stored thermal energy until cooling into hypothetical <em>black dwarfs</em>.
-            </p>
+              </span>
+            </div>
+            <div class="item item-text">
+              <span class="item-content">
+                White dwarfs contain no <s>active thermonuclear furnace</s>; they radiate residual stored thermal energy until cooling into hypothetical <em>black dwarfs</em>.
+              </span>
+            </div>
           </div>
         </section>
         <section class="section" data-level="3">
           <h3>Neutron Stars and Black Holes</h3>
           <div class="section-body">
-            <p class="txt-default">
-              Massive progenitors (<code>M &gt; 8 M_sun</code>) undergo catastrophic core collapse, culminating in violent <code>Type II</code> <strong>core-collapse supernovae</strong>.
-            </p>
-              <p class="txt-default">
+            <div class="item item-text">
+              <span class="item-content">
+                Massive progenitors (<code>M &gt; 8 M_sun</code>) undergo catastrophic core collapse, culminating in violent <code>Type II</code> <strong>core-collapse supernovae</strong>.
+              </span>
+            </div>
+            <div class="item item-bullet">
+              <span class="bullet-marker">&bull;</span>
+              <span class="bullet-content">
                 <strong>Neutron Stars:</strong> Ultra-dense stellar remnants supported by <strong>neutron degeneracy pressure</strong> up to the <strong><em>Tolman-Oppenheimer-Volkoff (TOV) limit</em></strong> (<code>M_TOV \approx 2.17 M_sun</code>).
-              </p>
-              <p class="txt-default">
+              </span>
+            </div>
+            <div class="item item-bullet">
+              <span class="bullet-marker">&bull;</span>
+              <span class="bullet-content">
                 <strong>Black Holes:</strong> Extreme remnants where gravitational collapse overcomes all degeneracy forces, compressing matter into a gravitational singularity bounded by an event horizon at the Schwarzschild radius <code>R_s = 2GM/c^2</code>.
-              </p>
-            <p class="txt-default">
-              Supernova nucleosynthesis disperses heavy elements across interstellar space, replacing <s>pristine hydrogen-helium gas</s> with enriched matter for future stellar generations.
-            </p>
+              </span>
+            </div>
+            <div class="item item-text">
+              <span class="item-content">
+                Supernova nucleosynthesis disperses heavy elements across interstellar space, replacing <s>pristine hydrogen-helium gas</s> with enriched matter for future stellar generations.
+              </span>
+            </div>
           </div>
         </section>
       </div>

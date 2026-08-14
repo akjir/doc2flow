@@ -1,5 +1,8 @@
 //! Central feature registry exposing available vertical slices.
 
+#[path = "bullet_list_item/module.rs"]
+pub mod bullet_list_item;
+
 #[path = "code/module.rs"]
 pub mod code;
 
@@ -10,9 +13,13 @@ pub mod core;
 pub mod unknown;
 
 use crate::core::feature::Feature;
+pub use bullet_list_item::BulletListItemFeature;
 pub use code::CodeFeature;
 pub use core::CoreFeature;
 pub use unknown::UnknownFeature;
+
+/// Static instance of the bullet list item feature to avoid runtime allocations.
+static BULLET_LIST_ITEM_FEATURE: BulletListItemFeature = BulletListItemFeature;
 
 /// Static instance of the code feature to avoid runtime allocations.
 static CODE_FEATURE: CodeFeature = CodeFeature;
@@ -30,6 +37,7 @@ static UNKNOWN_FEATURE: UnknownFeature = UnknownFeature;
 /// ```
 /// use doc2flow::features::get_feature;
 ///
+/// assert!(get_feature("bullet_list_item").is_some());
 /// assert!(get_feature("code").is_some());
 /// assert!(get_feature("code_block").is_some());
 /// assert!(get_feature("core").is_some());
@@ -38,6 +46,7 @@ static UNKNOWN_FEATURE: UnknownFeature = UnknownFeature;
 /// ```
 pub fn get_feature(name: &str) -> Option<&'static dyn Feature> {
     match name {
+        "bullet_list_item" => Some(&BULLET_LIST_ITEM_FEATURE),
         "code" | "code_block" => Some(&CODE_FEATURE),
         "core" => Some(&CORE_FEATURE),
         "unknown" => Some(&UNKNOWN_FEATURE),
@@ -49,6 +58,16 @@ pub fn get_feature(name: &str) -> Option<&'static dyn Feature> {
 mod tests {
     use super::*;
     use crate::core::document::DocumentElement;
+
+    #[test]
+    fn test_get_feature_returns_bullet_list_item() {
+        let bullet_feature = get_feature("bullet_list_item").expect("bullet_list_item feature should exist");
+        let element = DocumentElement::bullet_list_item(0, DocumentElement::text("Bullet item"));
+        assert_eq!(
+            bullet_feature.to_html(&element, "", 1),
+            "  <div class=\"item item-bullet\">\n    <span class=\"bullet-marker\">&bull;</span>\n    <span class=\"bullet-content\">\n      Bullet item\n    </span>\n  </div>\n"
+        );
+    }
 
     #[test]
     fn test_get_feature_returns_code() {
@@ -72,7 +91,7 @@ mod tests {
         let element = DocumentElement::text("Hello");
         assert_eq!(
             core_feature.to_html(&element, "", 1),
-            "  <p class=\"txt-default\">\n    Hello\n  </p>\n"
+            "  <div class=\"item item-text\">\n    <span class=\"item-content\">\n      Hello\n    </span>\n  </div>\n"
         );
     }
 

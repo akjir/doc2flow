@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+208.4f7b0bd.dev">
-  <meta name="version" content="0.9.4+208.4f7b0bd.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+209.533d6dc.dev">
+  <meta name="version" content="0.9.4+209.533d6dc.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-14T19:32:20Z">
+  <meta name="dcterms.created" content="2026-08-14T20:12:39Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, bullet_list_item, check_box_item, code_block, image, ordered_list_item, shoutout, table">
   <title>Doc2Flow English Showcase</title>
@@ -54,6 +54,13 @@
       --section-border-subheading: #d6e4f0;
       --section-radius: 10px;
       --section-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+
+      /* Item Component Tokens */
+      --item-hover-bg: #f5f9ff;
+      --item-done-bg: #f0f9f0;
+      --item-guide-color: #cbd5e1;
+      --item-indent-size: 18px;
+      --item-radius: 6px;
 
       /* Typography Sizing & Line Height */
       --txt-size-base: 14px;
@@ -223,7 +230,111 @@
       text-decoration: line-through;
     }
 
-    /* 6. Section Components (section-*) */
+    /* 6. Item Components (item-*) */
+    .item {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 3px 8px;
+      border-radius: var(--item-radius);
+      margin-bottom: 2px;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+      margin-left: calc(var(--indent, 0) * var(--item-indent-size));
+      position: relative;
+    }
+
+    .item:hover {
+      background-color: var(--item-hover-bg);
+    }
+
+    .item.checked,
+    .item.item-done,
+    .item.done {
+      background-color: var(--item-done-bg);
+    }
+
+    .item[style*="--indent"]::before {
+      content: "";
+      position: absolute;
+      left: -4px;
+      top: 4px;
+      bottom: 4px;
+      width: 2px;
+      background-color: var(--item-guide-color);
+      border-radius: 1px;
+      opacity: 0.7;
+    }
+
+    .item:first-child,
+    *:not(.item) + .item {
+      margin-top: 3px;
+    }
+
+    .item:last-child,
+    .item:not(:has(+ .item)) {
+      margin-bottom: 6px;
+    }
+
+    .item-content,
+    .item-text {
+      flex: 1;
+      min-width: 0;
+      font-family: var(--font-sans);
+      font-size: var(--txt-size-base);
+      line-height: var(--txt-line-height);
+      color: var(--txt-color-default);
+      word-break: break-word;
+    }
+
+    .item-content a,
+    .item-text a {
+      color: var(--txt-color-link);
+      text-decoration: none;
+      transition: color 0.15s ease, text-decoration 0.15s ease;
+    }
+
+    .item-content a:hover,
+    .item-text a:hover {
+      color: var(--txt-color-link-hover);
+      text-decoration: underline;
+    }
+
+    .item-content code,
+    .item-text code {
+      font-family: var(--font-mono);
+      font-size: inherit;
+      line-height: inherit;
+      color: var(--code-color);
+      background-color: var(--code-bg);
+      padding: 0 4px;
+      border-radius: 3px;
+      border: 1px solid var(--code-border);
+    }
+
+    .item-content strong,
+    .item-text strong,
+    .item-content b,
+    .item-text b {
+      font-weight: 600;
+    }
+
+    .item-content em,
+    .item-text em,
+    .item-content i,
+    .item-text i {
+      font-style: italic;
+    }
+
+    .item-content s,
+    .item-text s,
+    .item-content del,
+    .item-text del {
+      text-decoration: line-through;
+    }
+
+    /* 7. Section Components (section-*) */
     .section,
     .section-container {
       background-color: var(--section-bg-surface);
@@ -421,8 +532,46 @@
       .txt-content s,
       .txt-default s,
       .txt-content del,
-      .txt-default del {
+      .txt-default del,
+      .item-content s,
+      .item-text s,
+      .item-content del,
+      .item-text del {
         text-decoration: none !important;
+      }
+
+      .item-content a,
+      .item-text a {
+        color: #000000 !important;
+        text-decoration: underline !important;
+      }
+
+      .item-content code,
+      .item-text code {
+        border: 1px solid var(--code-border) !important;
+        background-color: var(--code-bg) !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      /* Item Print Styles */
+      .item {
+        background-color: transparent !important;
+        margin-left: calc(var(--indent, 0) * 16px) !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+
+      .item[style*="--indent"]::before {
+        background-color: #cccccc !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .item-content,
+      .item-text {
+        color: #000000 !important;
       }
 
       hr {
@@ -471,6 +620,111 @@
     @media (max-width: 600px) {
       .doc-body {
         padding: 0 10px 40px;
+      }
+    }
+    /* ==========================================================================
+       Doc2Flow - Bullet List Item Feature Styles
+       ========================================================================== */
+
+    /* 1. Base Variables & Tokens */
+    :root {
+      /* Bullet Marker Tokens */
+      --bullet-marker-color: #2e75b6;
+      --bullet-marker-font-size: 13px;
+    }
+
+    /* 2. Bullet Item Component (bullet-*) */
+    .bullet-marker {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 14px;
+      width: auto;
+      height: 14px;
+      margin-top: 3px;
+      color: var(--bullet-marker-color);
+      font-size: var(--bullet-marker-font-size);
+      font-weight: bold;
+      line-height: 1;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .bullet-content {
+      flex: 1;
+      min-width: 0;
+      font-family: var(--font-sans, Arial, sans-serif);
+      font-size: var(--txt-size-base, 14px);
+      line-height: var(--txt-line-height, 1.5);
+      color: var(--txt-color-default, #444444);
+      word-break: break-word;
+    }
+
+    .bullet-content a {
+      color: var(--txt-color-link, #2e75b6);
+      text-decoration: none;
+      transition: color 0.15s ease, text-decoration 0.15s ease;
+    }
+
+    .bullet-content a:hover {
+      color: var(--txt-color-link-hover, #163a5c);
+      text-decoration: underline;
+    }
+
+    .bullet-content code {
+      font-family: var(--font-mono, 'Courier New', monospace);
+      font-size: inherit;
+      line-height: inherit;
+      color: var(--code-color, #24292f);
+      background-color: var(--code-bg, #f0f2f5);
+      padding: 0 4px;
+      border-radius: 3px;
+      border: 1px solid var(--code-border, #d0d7de);
+    }
+
+    .bullet-content strong,
+    .bullet-content b {
+      font-weight: 600;
+    }
+
+    .bullet-content em,
+    .bullet-content i {
+      font-style: italic;
+    }
+
+    .bullet-content s,
+    .bullet-content del {
+      text-decoration: line-through;
+    }
+
+    /* 3. Print Styles */
+    @media print {
+      .bullet-marker {
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .bullet-content {
+        color: #000000 !important;
+      }
+
+      .bullet-content a {
+        color: #000000 !important;
+        text-decoration: underline !important;
+      }
+
+      .bullet-content code {
+        border: 1px solid var(--code-border, #d0d7de) !important;
+        background-color: var(--code-bg, #f0f2f5) !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .bullet-content s,
+      .bullet-content del {
+        text-decoration: none !important;
       }
     }
     /* ==========================================================================
@@ -531,20 +785,26 @@
     <section class="section" data-level="1">
       <h1>Part 1: System Setup & Preparation</h1>
       <div class="section-body">
-        <p class="txt-default">
-          This top-level section describes the basic system configuration. Tasks within H1 sections do not display an individual badge indicator, but contribute fully to the overall progress tracking.
-        </p>
-          <p class="txt-default">
-            General safety briefing for technicians completed
-          </p>
+        <div class="item item-text">
+          <span class="item-content">
+            This top-level section describes the basic system configuration. Tasks within H1 sections do not display an individual badge indicator, but contribute fully to the overall progress tracking.
+          </span>
+        </div>
+          <div class="item item-text">
+            <span class="item-content">
+              General safety briefing for technicians completed
+            </span>
+          </div>
       </div>
     </section>
     <section class="section" data-level="2">
       <h2>Section 1: Overview & Guidelines</h2>
       <div class="section-body">
-        <p class="txt-default">
-          This is an arbitrary text paragraph in the section body. It provides general instructions and information for the operator to review before starting the procedure.
-        </p>
+        <div class="item item-text">
+          <span class="item-content">
+            This is an arbitrary text paragraph in the section body. It provides general instructions and information for the operator to review before starting the procedure.
+          </span>
+        </div>
       </div>
     </section>
     <section class="section" data-level="2">
@@ -553,47 +813,71 @@
         <section class="section" data-level="3">
           <h3>Setup & Preparation</h3>
           <div class="section-body">
-            <p class="txt-default">
-              This arbitrary text paragraph describes the preliminary setup steps that must be fulfilled before marking individual items as completed.
-            </p>
-              <p class="txt-default">
-                Unpack hardware and verify components
-              </p>
-              <p class="txt-default">
-                Inspect accessory completeness
-              </p>
-              <p class="txt-default">
-                Check casing for transport damage
-              </p>
-              <p class="txt-default">
-                Connect network and power supply
-              </p>
-              <p class="txt-default">
-                Plug primary network cable into Port 1
-              </p>
-              <p class="txt-default">
-                Plug redundant network cable into Port 2
-              </p>
-              <p class="txt-default">
-                Initial power-on check completed
-              </p>
-            <p class="txt-default">
-              [External System Documentation](https://example.com/docs)
-            </p>
+            <div class="item item-text">
+              <span class="item-content">
+                This arbitrary text paragraph describes the preliminary setup steps that must be fulfilled before marking individual items as completed.
+              </span>
+            </div>
+              <div class="item item-text">
+                <span class="item-content">
+                  Unpack hardware and verify components
+                </span>
+              </div>
+              <div class="item item-text">
+                <span class="item-content">
+                  Inspect accessory completeness
+                </span>
+              </div>
+              <div class="item item-text">
+                <span class="item-content">
+                  Check casing for transport damage
+                </span>
+              </div>
+              <div class="item item-text">
+                <span class="item-content">
+                  Connect network and power supply
+                </span>
+              </div>
+              <div class="item item-text">
+                <span class="item-content">
+                  Plug primary network cable into Port 1
+                </span>
+              </div>
+              <div class="item item-text">
+                <span class="item-content">
+                  Plug redundant network cable into Port 2
+                </span>
+              </div>
+              <div class="item item-text">
+                <span class="item-content">
+                  Initial power-on check completed
+                </span>
+              </div>
+            <div class="item item-text">
+              <span class="item-content">
+                [External System Documentation](https://example.com/docs)
+              </span>
+            </div>
           </div>
         </section>
         <section class="section" data-level="3">
           <h3>Software Configuration</h3>
           <div class="section-body">
-              <p class="txt-default">
-                Install latest system updates
-              </p>
-              <p class="txt-default">
-                Configure firewall rules according to company policy
-              </p>
-              <p class="txt-default">
-                Verify remote access service
-              </p>
+              <div class="item item-text">
+                <span class="item-content">
+                  Install latest system updates
+                </span>
+              </div>
+              <div class="item item-text">
+                <span class="item-content">
+                  Configure firewall rules according to company policy
+                </span>
+              </div>
+              <div class="item item-text">
+                <span class="item-content">
+                  Verify remote access service
+                </span>
+              </div>
           </div>
         </section>
       </div>
@@ -609,9 +893,11 @@
         <section class="section" data-level="3">
           <h3>System Registry Settings</h3>
           <div class="section-body">
-            <p class="txt-default">
-              The following configuration snippet must be applied to disable automatic updates:
-            </p>
+            <div class="item item-text">
+              <span class="item-content">
+                The following configuration snippet must be applied to disable automatic updates:
+              </span>
+            </div>
             <pre class="code-default"><code>[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate]
 &quot;DisableWindowsUpdateAccess&quot;=dword:00000001
 &quot;Server&quot;=&quot;{{SERVER_NAME}}&quot;</code></pre>
@@ -626,9 +912,11 @@
         <section class="section" data-level="3">
           <h3>System Components & Specifications</h3>
           <div class="section-body">
-            <p class="txt-default">
-              The table below outlines the hardware specifications of the installed system components:
-            </p>
+            <div class="item item-text">
+              <span class="item-content">
+                The table below outlines the hardware specifications of the installed system components:
+              </span>
+            </div>
           </div>
         </section>
       </div>
@@ -636,51 +924,87 @@
     <section class="section" data-level="2">
       <h2>Section 4: Informational Lists</h2>
       <div class="section-body">
-          <p class="txt-default">
+        <div class="item item-bullet">
+          <span class="bullet-marker">&bull;</span>
+          <span class="bullet-content">
             Main task &amp; system monitoring
-          </p>
-          <p class="txt-default">
-            Sub-item A 1: Query service status
-          </p>
-          <p class="txt-default">
-            Sub-item A 2: Analyze error log
-          </p>
-          <p class="txt-default">
+          </span>
+        </div>
+          <div class="item item-text">
+            <span class="item-content">
+              Sub-item A 1: Query service status
+            </span>
+          </div>
+          <div class="item item-text">
+            <span class="item-content">
+              Sub-item A 2: Analyze error log
+            </span>
+          </div>
+        <div class="item item-bullet">
+          <span class="bullet-marker">&bull;</span>
+          <span class="bullet-content">
             Procedure for maintenance tasks
-          </p>
-          <p class="txt-default">
-            Prepare test run
-          </p>
-          <p class="txt-default">
+          </span>
+        </div>
+          <div class="item item-text">
+            <span class="item-content">
+              Prepare test run
+            </span>
+          </div>
+        <div class="item item-bullet" style="--indent: 3;">
+          <span class="bullet-marker">&bull;</span>
+          <span class="bullet-content">
             Detailed parameter check X
-          </p>
-          <p class="txt-default">
+          </span>
+        </div>
+        <div class="item item-bullet" style="--indent: 3;">
+          <span class="bullet-marker">&bull;</span>
+          <span class="bullet-content">
             Detailed parameter check Y
-          </p>
-          <p class="txt-default">
-            Approval by system administrator
-          </p>
-          <p class="txt-default">
-            Sequential main step 1
-          </p>
-          <p class="txt-default">
+          </span>
+        </div>
+          <div class="item item-text">
+            <span class="item-content">
+              Approval by system administrator
+            </span>
+          </div>
+          <div class="item item-text">
+            <span class="item-content">
+              Sequential main step 1
+            </span>
+          </div>
+        <div class="item item-bullet" style="--indent: 2;">
+          <span class="bullet-marker">&bull;</span>
+          <span class="bullet-content">
             Subordinate verification step 1.1
-          </p>
-          <p class="txt-default">
+          </span>
+        </div>
+        <div class="item item-bullet" style="--indent: 2;">
+          <span class="bullet-marker">&bull;</span>
+          <span class="bullet-content">
             Subordinate verification step 1.2
-          </p>
-        <p class="txt-default">
-          2. Sequential main step 2
-        </p>
-          <p class="txt-default">
-            Detailed sub-procedure 2.a
-          </p>
-          <p class="txt-default">
-            Detailed sub-procedure 2.b
-          </p>
-        <p class="txt-default">
-          3. Sequential main step 3
-        </p>
+          </span>
+        </div>
+        <div class="item item-text">
+          <span class="item-content">
+            2. Sequential main step 2
+          </span>
+        </div>
+          <div class="item item-text">
+            <span class="item-content">
+              Detailed sub-procedure 2.a
+            </span>
+          </div>
+          <div class="item item-text">
+            <span class="item-content">
+              Detailed sub-procedure 2.b
+            </span>
+          </div>
+        <div class="item item-text">
+          <span class="item-content">
+            3. Sequential main step 3
+          </span>
+        </div>
         <hr />
       </div>
     </section>

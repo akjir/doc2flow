@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added modular bullet list item feature slice for unordered list element rendering and nested indentation.
 - Added inline text formatting (bold, italic, strikethrough, inline code) for text paragraph elements in the core pipeline.
 - Added support for markdown horizontal rule dividers (`---`, `----`, etc.) in the core pipeline.
 - Added modular code feature slice for syntax and fenced code block rendering.
@@ -16,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated starter template (`templates/template.md`) with GFM table support, variables table documentation, and sample code variable usage.
 
 ### Changed
+- Unified document item hover and interaction styling under `item-` prefix in core stylesheet.
 - Deduplicated shared code styling tokens across core and code stylesheets.
 - Aligned Markdown section hierarchy so H1 and H2 act as top-level sections that accept only H3 child sections.
 

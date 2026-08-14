@@ -1,0 +1,105 @@
+/* ==========================================================================
+   Doc2Flow - Bullet List Item Feature Styles
+   ========================================================================== */
+
+/* 1. Base Variables & Tokens */
+:root {
+  /* Bullet Marker Tokens */
+  --bullet-marker-color: #2e75b6;
+  --bullet-marker-font-size: 13px;
+}
+
+/* 2. Bullet Item Component (bullet-*) */
+.bullet-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 14px;
+  width: auto;
+  height: 14px;
+  margin-top: 3px;
+  color: var(--bullet-marker-color);
+  font-size: var(--bullet-marker-font-size);
+  font-weight: bold;
+  line-height: 1;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.bullet-content {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-sans, Arial, sans-serif);
+  font-size: var(--txt-size-base, 14px);
+  line-height: var(--txt-line-height, 1.5);
+  color: var(--txt-color-default, #444444);
+  word-break: break-word;
+}
+
+.bullet-content a {
+  color: var(--txt-color-link, #2e75b6);
+  text-decoration: none;
+  transition: color 0.15s ease, text-decoration 0.15s ease;
+}
+
+.bullet-content a:hover {
+  color: var(--txt-color-link-hover, #163a5c);
+  text-decoration: underline;
+}
+
+.bullet-content code {
+  font-family: var(--font-mono, 'Courier New', monospace);
+  font-size: inherit;
+  line-height: inherit;
+  color: var(--code-color, #24292f);
+  background-color: var(--code-bg, #f0f2f5);
+  padding: 0 4px;
+  border-radius: 3px;
+  border: 1px solid var(--code-border, #d0d7de);
+}
+
+.bullet-content strong,
+.bullet-content b {
+  font-weight: 600;
+}
+
+.bullet-content em,
+.bullet-content i {
+  font-style: italic;
+}
+
+.bullet-content s,
+.bullet-content del {
+  text-decoration: line-through;
+}
+
+/* 3. Print Styles */
+@media print {
+  .bullet-marker {
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .bullet-content {
+    color: #000000 !important;
+  }
+
+  .bullet-content a {
+    color: #000000 !important;
+    text-decoration: underline !important;
+  }
+
+  .bullet-content code {
+    border: 1px solid var(--code-border, #d0d7de) !important;
+    background-color: var(--code-bg, #f0f2f5) !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .bullet-content s,
+  .bullet-content del {
+    text-decoration: none !important;
+  }
+}

@@ -195,6 +195,7 @@ doc2flow/
 │   │   └── utils/            # Core filesystem and encoding utilities
 │   ├── features/             # Modular vertical slice feature modules
 │   │   ├── mod.rs            # Feature registry and exports
+│   │   ├── bullet_list_item/ # Bullet list item feature
 │   │   ├── code/             # Code block feature
 │   │   ├── core/             # Core base feature (text & section styling)
 │   │   └── unknown/          # Fallback unknown feature
