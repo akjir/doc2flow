@@ -185,22 +185,12 @@ fn scan_element(element: &DocumentElement, features: &mut DocumentFeature) {
         | DocumentElement::Section { children, .. } => {
             scan_elements(children, features);
         }
-        DocumentElement::BulletListItem {
-            children,
-            content,
-            ..
-        } => {
+        DocumentElement::BulletListItem { children, .. } => {
             features.bullet_list = true;
-            scan_element(content, features);
             scan_elements(children, features);
         }
-        DocumentElement::CheckBoxItem {
-            children,
-            content,
-            ..
-        } => {
+        DocumentElement::CheckBoxItem { children, .. } => {
             features.task = true;
-            scan_element(content, features);
             scan_elements(children, features);
         }
         DocumentElement::CodeBlock { .. } => {
@@ -209,13 +199,8 @@ fn scan_element(element: &DocumentElement, features: &mut DocumentFeature) {
         DocumentElement::Image { .. } => {
             features.image = true;
         }
-        DocumentElement::OrderedListItem {
-            children,
-            content,
-            ..
-        } => {
+        DocumentElement::OrderedListItem { children, .. } => {
             features.ordered_list = true;
-            scan_element(content, features);
             scan_elements(children, features);
         }
         DocumentElement::Shoutout { .. } => {
@@ -241,7 +226,7 @@ fn scan_elements(elements: &[DocumentElement], features: &mut DocumentFeature) {
     }
 }
 
-/// Returns a comma-separated list of enabled feature identifiers starting with `"core"`.
+/// Converts a [`DocumentFeature`] configuration into a formatted feature summary string.
 ///
 /// # Examples
 ///
@@ -264,19 +249,11 @@ mod tests {
     fn test_all_features_present() {
         let mut doc = Document::new();
         doc.push_header(DocumentElement::text("Header text"));
-        doc.push_body(DocumentElement::bullet_list_item(
-            DocumentElement::text("Bullet"),
-        ));
-        doc.push_body(DocumentElement::check_box_item(
-            true,
-            DocumentElement::text("Task"),
-        ));
+        doc.push_body(DocumentElement::bullet_list_item("Bullet"));
+        doc.push_body(DocumentElement::check_box_item(true, "Task"));
         doc.push_body(DocumentElement::code_block(Some("rust"), "fn main() {}"));
         doc.push_body(DocumentElement::image("alt", "image.png"));
-        doc.push_body(DocumentElement::ordered_list_item(
-            1,
-            DocumentElement::text("Ordered"),
-        ));
+        doc.push_body(DocumentElement::ordered_list_item(1, "Ordered"));
         doc.push_body(DocumentElement::section(
             1,
             "Section 1",
@@ -330,10 +307,11 @@ mod tests {
 
     #[test]
     fn test_deeply_nested_recursive_traversal() {
-        let text_child = DocumentElement::text("Deepest item");
-        let checkbox_child = DocumentElement::check_box_item(true, text_child);
-        let ordered_child = DocumentElement::ordered_list_item(1, checkbox_child);
-        let bullet_child = DocumentElement::bullet_list_item(ordered_child);
+        let checkbox_child = DocumentElement::check_box_item(true, "Deepest item");
+        let mut ordered_child = DocumentElement::ordered_list_item(1, "Ordered item");
+        ordered_child.push_child(checkbox_child).unwrap();
+        let mut bullet_child = DocumentElement::bullet_list_item("Bullet item");
+        bullet_child.push_child(ordered_child).unwrap();
         let section = DocumentElement::section(1, "Nested Section", vec![bullet_child]);
         let directive = DocumentElement::block_directive("custom_block", vec![section]);
 
@@ -356,19 +334,11 @@ mod tests {
     #[test]
     fn test_early_exit_short_circuit() {
         let mut doc = Document::new();
-        doc.push_header(DocumentElement::bullet_list_item(
-            DocumentElement::text("A"),
-        ));
-        doc.push_header(DocumentElement::check_box_item(
-            true,
-            DocumentElement::text("B"),
-        ));
+        doc.push_header(DocumentElement::bullet_list_item("A"));
+        doc.push_header(DocumentElement::check_box_item(true, "B"));
         doc.push_header(DocumentElement::code_block(None::<String>, "C"));
         doc.push_header(DocumentElement::image("D", "d.png"));
-        doc.push_header(DocumentElement::ordered_list_item(
-            1,
-            DocumentElement::text("E"),
-        ));
+        doc.push_header(DocumentElement::ordered_list_item(1, "E"));
         doc.push_header(DocumentElement::shoutout(ShoutoutElementKind::Caution, "G"));
         doc.push_header(DocumentElement::table(vec![], vec![]));
         doc.push_header(DocumentElement::unknown("H"));
@@ -409,9 +379,7 @@ mod tests {
     #[test]
     fn test_partial_features_matches() {
         let mut single_feature_doc = Document::new();
-        single_feature_doc.push_body(DocumentElement::bullet_list_item(
-            DocumentElement::text("Only bullet"),
-        ));
+        single_feature_doc.push_body(DocumentElement::bullet_list_item("Only bullet"));
         let single_features = DocumentFeature::from(&single_feature_doc);
         assert!(!single_features.is_empty());
         assert!(!single_features.is_all());
@@ -435,18 +403,10 @@ mod tests {
         assert!(!multi_features.unknown);
 
         let mut six_features_doc = Document::new();
-        six_features_doc.push_body(DocumentElement::bullet_list_item(
-            DocumentElement::text("A"),
-        ));
-        six_features_doc.push_body(DocumentElement::check_box_item(
-            false,
-            DocumentElement::text("B"),
-        ));
+        six_features_doc.push_body(DocumentElement::bullet_list_item("A"));
+        six_features_doc.push_body(DocumentElement::check_box_item(false, "B"));
         six_features_doc.push_body(DocumentElement::code_block(None::<String>, "C"));
-        six_features_doc.push_body(DocumentElement::ordered_list_item(
-            1,
-            DocumentElement::text("D"),
-        ));
+        six_features_doc.push_body(DocumentElement::ordered_list_item(1, "D"));
         six_features_doc.push_body(DocumentElement::section(1, "E", vec![]));
         six_features_doc.push_body(DocumentElement::shoutout(ShoutoutElementKind::Tip, "F"));
         six_features_doc.push_body(DocumentElement::table(vec![], vec![]));

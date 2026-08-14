@@ -453,8 +453,8 @@ mod tests {
 
     #[test]
     fn test_render_element_bullet_list_item() {
-        let mut bullet = DocumentElement::bullet_list_item(DocumentElement::text("Parent bullet"));
-        let child = DocumentElement::bullet_list_item(DocumentElement::text("Child bullet"));
+        let mut bullet = DocumentElement::bullet_list_item("Parent bullet");
+        let child = DocumentElement::bullet_list_item("Child bullet");
         bullet.push_child(child).unwrap();
 
         let html = render_element(&bullet, 1);
@@ -468,8 +468,8 @@ mod tests {
 
     #[test]
     fn test_render_element_check_box_item() {
-        let mut check = DocumentElement::check_box_item(true, DocumentElement::text("Done task"));
-        let child = DocumentElement::check_box_item(false, DocumentElement::text("Sub task"));
+        let mut check = DocumentElement::check_box_item(true, "Done task");
+        let child = DocumentElement::check_box_item(false, "Sub task");
         check.push_child(child).unwrap();
 
         let html = render_element(&check, 1);
@@ -483,8 +483,8 @@ mod tests {
 
     #[test]
     fn test_render_element_ordered_list_item() {
-        let mut order = DocumentElement::ordered_list_item(1, DocumentElement::text("First step"));
-        let child = DocumentElement::ordered_list_item(1, DocumentElement::text("Sub step"));
+        let mut order = DocumentElement::ordered_list_item(1, "First step");
+        let child = DocumentElement::ordered_list_item(1, "Sub step");
         order.push_child(child).unwrap();
 
         let html = render_element(&order, 1);

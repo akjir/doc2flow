@@ -2,6 +2,7 @@
 
 use crate::core::document::DocumentElement;
 use crate::core::feature::Feature;
+use crate::core::format::{escape_html_into, push_indent};
 
 /// Embedded code CSS styles for code blocks.
 pub const CSS: &str = include_str!("code.css");
@@ -37,40 +38,6 @@ impl Feature for CodeFeature {
     /// Returns the embedded CSS stylesheet for the code feature.
     fn css(&self) -> Option<&'static str> {
         Some(CSS)
-    }
-}
-
-/// Escapes special HTML characters in a string into the destination buffer.
-fn escape_html_into(out: &mut String, s: &str) {
-    let mut last_idx = 0;
-    let bytes = s.as_bytes();
-
-    for (i, &b) in bytes.iter().enumerate() {
-        let escape = match b {
-            b'&' => "&amp;",
-            b'<' => "&lt;",
-            b'>' => "&gt;",
-            b'"' => "&quot;",
-            b'\'' => "&#39;",
-            _ => continue,
-        };
-
-        if i > last_idx {
-            out.push_str(&s[last_idx..i]);
-        }
-        out.push_str(escape);
-        last_idx = i + 1;
-    }
-
-    if last_idx < s.len() {
-        out.push_str(&s[last_idx..]);
-    }
-}
-
-/// Appends leading whitespace indentation to a buffer based on the specified indent level.
-fn push_indent(out: &mut String, indent: usize) {
-    for _ in 0..indent {
-        out.push_str("  ");
     }
 }
 

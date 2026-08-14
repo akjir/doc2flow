@@ -65,8 +65,8 @@ pub enum DocumentElement {
     BulletListItem {
         /// Nested child list items.
         children: Vec<DocumentElement>,
-        /// Child document element content.
-        content: Box<DocumentElement>,
+        /// Child list item text content.
+        content: String,
     },
     /// Checkbox list item element with checked status and child content.
     CheckBoxItem {
@@ -74,8 +74,8 @@ pub enum DocumentElement {
         checked: bool,
         /// Nested child list items.
         children: Vec<DocumentElement>,
-        /// Child document element content.
-        content: Box<DocumentElement>,
+        /// Child list item text content.
+        content: String,
     },
     /// Fenced code block with optional language specifier and content.
     CodeBlock {
@@ -97,8 +97,8 @@ pub enum DocumentElement {
     OrderedListItem {
         /// Nested child list items.
         children: Vec<DocumentElement>,
-        /// Child document element content.
-        content: Box<DocumentElement>,
+        /// Child list item text content.
+        content: String,
         /// 1-based sequential position within the list at this depth.
         position: usize,
     },
@@ -141,19 +141,19 @@ impl DocumentElement {
     }
 
     /// Creates a new bullet list item document element with child content.
-    pub fn bullet_list_item(content: DocumentElement) -> Self {
+    pub fn bullet_list_item(content: impl Into<String>) -> Self {
         Self::BulletListItem {
             children: Vec::new(),
-            content: Box::new(content),
+            content: content.into(),
         }
     }
 
     /// Creates a new checkbox list item document element with checked state and child content.
-    pub fn check_box_item(checked: bool, content: DocumentElement) -> Self {
+    pub fn check_box_item(checked: bool, content: impl Into<String>) -> Self {
         Self::CheckBoxItem {
             checked,
             children: Vec::new(),
-            content: Box::new(content),
+            content: content.into(),
         }
     }
 
@@ -189,10 +189,10 @@ impl DocumentElement {
     }
 
     /// Creates a new ordered list item document element with position and child content.
-    pub fn ordered_list_item(position: usize, content: DocumentElement) -> Self {
+    pub fn ordered_list_item(position: usize, content: impl Into<String>) -> Self {
         Self::OrderedListItem {
             children: Vec::new(),
-            content: Box::new(content),
+            content: content.into(),
             position,
         }
     }
@@ -364,7 +364,7 @@ mod tests {
             }
         );
 
-        let child2 = DocumentElement::bullet_list_item(DocumentElement::text("List item"));
+        let child2 = DocumentElement::bullet_list_item("List item");
         assert!(directive.push_child(child2.clone()).is_ok());
 
         assert_eq!(
@@ -378,12 +378,12 @@ mod tests {
 
     #[test]
     fn test_bullet_list_item_creation() {
-        let elem = DocumentElement::bullet_list_item(DocumentElement::text("Nested item"));
+        let elem = DocumentElement::bullet_list_item("Nested item");
         assert_eq!(
             elem,
             DocumentElement::BulletListItem {
                 children: Vec::new(),
-                content: Box::new(DocumentElement::text("Nested item")),
+                content: "Nested item".into(),
             }
         );
     }
@@ -391,24 +391,24 @@ mod tests {
     #[test]
     fn test_check_box_item_creation() {
         let unchecked =
-            DocumentElement::check_box_item(false, DocumentElement::text("Pending task"));
+            DocumentElement::check_box_item(false, "Pending task");
         assert_eq!(
             unchecked,
             DocumentElement::CheckBoxItem {
                 checked: false,
                 children: Vec::new(),
-                content: Box::new(DocumentElement::text("Pending task")),
+                content: "Pending task".into(),
             }
         );
 
         let checked =
-            DocumentElement::check_box_item(true, DocumentElement::text("Completed subtask"));
+            DocumentElement::check_box_item(true, "Completed subtask");
         assert_eq!(
             checked,
             DocumentElement::CheckBoxItem {
                 checked: true,
                 children: Vec::new(),
-                content: Box::new(DocumentElement::text("Completed subtask")),
+                content: "Completed subtask".into(),
             }
         );
     }
@@ -504,13 +504,13 @@ mod tests {
     #[test]
     fn test_list_items_push_child_allowed_and_forbidden() {
         let mut bullet =
-            DocumentElement::bullet_list_item(DocumentElement::text("Parent bullet"));
+            DocumentElement::bullet_list_item("Parent bullet");
         let child_bullet =
-            DocumentElement::bullet_list_item(DocumentElement::text("Child bullet"));
+            DocumentElement::bullet_list_item("Child bullet");
         let child_order =
-            DocumentElement::ordered_list_item(1, DocumentElement::text("Child order"));
+            DocumentElement::ordered_list_item(1, "Child order");
         let child_check =
-            DocumentElement::check_box_item(false, DocumentElement::text("Child check"));
+            DocumentElement::check_box_item(false, "Child check");
 
         assert!(bullet.push_child(child_bullet.clone()).is_ok());
         assert!(bullet.push_child(child_order.clone()).is_ok());
@@ -520,12 +520,12 @@ mod tests {
         assert!(bullet.push_child(DocumentElement::horizontal_rule()).is_err());
 
         let mut order =
-            DocumentElement::ordered_list_item(1, DocumentElement::text("Parent order"));
+            DocumentElement::ordered_list_item(1, "Parent order");
         assert!(order.push_child(child_bullet.clone()).is_ok());
         assert!(order.push_child(DocumentElement::text("Non-list item")).is_err());
 
         let mut check =
-            DocumentElement::check_box_item(false, DocumentElement::text("Parent check"));
+            DocumentElement::check_box_item(false, "Parent check");
         assert!(check.push_child(child_order).is_ok());
         assert!(check.push_child(DocumentElement::text("Non-list item")).is_err());
     }
@@ -540,23 +540,23 @@ mod tests {
     #[test]
     fn test_ordered_list_item_creation() {
         let root_item =
-            DocumentElement::ordered_list_item(1, DocumentElement::text("First item"));
+            DocumentElement::ordered_list_item(1, "First item");
         assert_eq!(
             root_item,
             DocumentElement::OrderedListItem {
                 children: Vec::new(),
-                content: Box::new(DocumentElement::text("First item")),
+                content: "First item".into(),
                 position: 1,
             }
         );
 
         let nested_item =
-            DocumentElement::ordered_list_item(5, DocumentElement::text("Deep item"));
+            DocumentElement::ordered_list_item(5, "Deep item");
         assert_eq!(
             nested_item,
             DocumentElement::OrderedListItem {
                 children: Vec::new(),
-                content: Box::new(DocumentElement::text("Deep item")),
+                content: "Deep item".into(),
                 position: 5,
             }
         );

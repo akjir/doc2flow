@@ -275,20 +275,29 @@ hr {
 }
 
 .text-content a,
-.item-text a {
+.item-text a,
+.bullet-content a,
+.order-content a,
+.check-content a {
   color: var(--txt-color-link);
   text-decoration: none;
   transition: color 0.15s ease, text-decoration 0.15s ease;
 }
 
 .text-content a:hover,
-.item-text a:hover {
+.item-text a:hover,
+.bullet-content a:hover,
+.order-content a:hover,
+.check-content a:hover {
   color: var(--txt-color-link-hover);
   text-decoration: underline;
 }
 
 .text-content code,
-.item-text code {
+.item-text code,
+.bullet-content code,
+.order-content code,
+.check-content code {
   font-family: var(--font-mono);
   font-size: inherit;
   line-height: inherit;
@@ -301,22 +310,40 @@ hr {
 
 .text-content strong,
 .item-text strong,
+.bullet-content strong,
+.order-content strong,
+.check-content strong,
 .text-content b,
-.item-text b {
+.item-text b,
+.bullet-content b,
+.order-content b,
+.check-content b {
   font-weight: 600;
 }
 
 .text-content em,
 .item-text em,
+.bullet-content em,
+.order-content em,
+.check-content em,
 .text-content i,
-.item-text i {
+.item-text i,
+.bullet-content i,
+.order-content i,
+.check-content i {
   font-style: italic;
 }
 
 .text-content s,
 .item-text s,
+.bullet-content s,
+.order-content s,
+.check-content s,
 .text-content del,
-.item-text del {
+.item-text del,
+.bullet-content del,
+.order-content del,
+.check-content del {
   text-decoration: line-through;
 }
 
@@ -521,19 +548,31 @@ hr {
   .txt-default del,
   .text-content s,
   .item-text s,
+  .bullet-content s,
+  .order-content s,
+  .check-content s,
   .text-content del,
-  .item-text del {
+  .item-text del,
+  .bullet-content del,
+  .order-content del,
+  .check-content del {
     text-decoration: none !important;
   }
 
   .text-content a,
-  .item-text a {
+  .item-text a,
+  .bullet-content a,
+  .order-content a,
+  .check-content a {
     color: #000000 !important;
     text-decoration: underline !important;
   }
 
   .text-content code,
-  .item-text code {
+  .item-text code,
+  .bullet-content code,
+  .order-content code,
+  .check-content code {
     border: 1px solid var(--code-border) !important;
     background-color: var(--code-bg) !important;
     color: #000000 !important;

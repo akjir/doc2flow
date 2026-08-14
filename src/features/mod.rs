@@ -80,7 +80,7 @@ mod tests {
     #[test]
     fn test_get_feature_returns_bullet_list() {
         let bullet_feature = get_feature("bullet_list").expect("bullet_list feature should exist");
-        let element = DocumentElement::bullet_list_item(DocumentElement::text("Bullet item"));
+        let element = DocumentElement::bullet_list_item("Bullet item");
         assert_eq!(
             bullet_feature.to_html(&element, "", 1, 0),
             "  <div class=\"item item-bullet\">\n    <span class=\"bullet-marker\">&bull;</span>\n    <span class=\"bullet-content\">\n      Bullet item\n    </span>\n  </div>\n"
@@ -90,14 +90,13 @@ mod tests {
     #[test]
     fn test_get_feature_returns_task() {
         let task_feature = get_feature("task").expect("task feature should exist");
-        let unchecked =
-            DocumentElement::check_box_item(false, DocumentElement::text("Pending task"));
+        let unchecked = DocumentElement::check_box_item(false, "Pending task");
         assert_eq!(
             task_feature.to_html(&unchecked, "", 1, 0),
             "  <div class=\"item item-check\">\n    <span class=\"check-marker\">\n      <input type=\"checkbox\" class=\"check-box\" />\n    </span>\n    <span class=\"check-content\">\n      Pending task\n    </span>\n  </div>\n"
         );
 
-        let checked = DocumentElement::check_box_item(true, DocumentElement::text("Done task"));
+        let checked = DocumentElement::check_box_item(true, "Done task");
         assert_eq!(
             task_feature.to_html(&checked, "", 1, 0),
             "  <div class=\"item item-check checked\">\n    <span class=\"check-marker\">\n      <input type=\"checkbox\" class=\"check-box\" checked />\n    </span>\n    <span class=\"check-content\">\n      Done task\n    </span>\n  </div>\n"
@@ -134,7 +133,7 @@ mod tests {
     fn test_get_feature_returns_ordered_list() {
         let ordered_feature =
             get_feature("ordered_list").expect("ordered_list feature should exist");
-        let element = DocumentElement::ordered_list_item(1, DocumentElement::text("Ordered item"));
+        let element = DocumentElement::ordered_list_item(1, "Ordered item");
         assert_eq!(
             ordered_feature.to_html(&element, "", 1, 0),
             "  <div class=\"item item-order\">\n    <span class=\"order-marker\">1.</span>\n    <span class=\"order-content\">\n      Ordered item\n    </span>\n  </div>\n"

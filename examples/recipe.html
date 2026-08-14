@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+213.fa1e3a4.dev">
-  <meta name="version" content="0.9.4+213.fa1e3a4.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+214.4901505.dev">
+  <meta name="version" content="0.9.4+214.4901505.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-14T21:58:15Z">
+  <meta name="dcterms.created" content="2026-08-14T22:24:17Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, shoutout, table">
   <title>Classic Chocolate Fudge Cake Recipe</title>
@@ -289,20 +289,29 @@
     }
 
     .text-content a,
-    .item-text a {
+    .item-text a,
+    .bullet-content a,
+    .order-content a,
+    .check-content a {
       color: var(--txt-color-link);
       text-decoration: none;
       transition: color 0.15s ease, text-decoration 0.15s ease;
     }
 
     .text-content a:hover,
-    .item-text a:hover {
+    .item-text a:hover,
+    .bullet-content a:hover,
+    .order-content a:hover,
+    .check-content a:hover {
       color: var(--txt-color-link-hover);
       text-decoration: underline;
     }
 
     .text-content code,
-    .item-text code {
+    .item-text code,
+    .bullet-content code,
+    .order-content code,
+    .check-content code {
       font-family: var(--font-mono);
       font-size: inherit;
       line-height: inherit;
@@ -315,22 +324,40 @@
 
     .text-content strong,
     .item-text strong,
+    .bullet-content strong,
+    .order-content strong,
+    .check-content strong,
     .text-content b,
-    .item-text b {
+    .item-text b,
+    .bullet-content b,
+    .order-content b,
+    .check-content b {
       font-weight: 600;
     }
 
     .text-content em,
     .item-text em,
+    .bullet-content em,
+    .order-content em,
+    .check-content em,
     .text-content i,
-    .item-text i {
+    .item-text i,
+    .bullet-content i,
+    .order-content i,
+    .check-content i {
       font-style: italic;
     }
 
     .text-content s,
     .item-text s,
+    .bullet-content s,
+    .order-content s,
+    .check-content s,
     .text-content del,
-    .item-text del {
+    .item-text del,
+    .bullet-content del,
+    .order-content del,
+    .check-content del {
       text-decoration: line-through;
     }
 
@@ -535,19 +562,31 @@
       .txt-default del,
       .text-content s,
       .item-text s,
+      .bullet-content s,
+      .order-content s,
+      .check-content s,
       .text-content del,
-      .item-text del {
+      .item-text del,
+      .bullet-content del,
+      .order-content del,
+      .check-content del {
         text-decoration: none !important;
       }
 
       .text-content a,
-      .item-text a {
+      .item-text a,
+      .bullet-content a,
+      .order-content a,
+      .check-content a {
         color: #000000 !important;
         text-decoration: underline !important;
       }
 
       .text-content code,
-      .item-text code {
+      .item-text code,
+      .bullet-content code,
+      .order-content code,
+      .check-content code {
         border: 1px solid var(--code-border) !important;
         background-color: var(--code-bg) !important;
         color: #000000 !important;

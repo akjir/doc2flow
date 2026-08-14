@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+213.fa1e3a4.dev">
-  <meta name="version" content="0.9.4+213.fa1e3a4.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+214.4901505.dev">
+  <meta name="version" content="0.9.4+214.4901505.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-14T21:58:15Z">
+  <meta name="dcterms.created" content="2026-08-14T22:24:17Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, bullet_list, code_block, image, ordered_list, shoutout, table, task">
   <title>Doc2Flow English Showcase</title>
@@ -289,20 +289,29 @@
     }
 
     .text-content a,
-    .item-text a {
+    .item-text a,
+    .bullet-content a,
+    .order-content a,
+    .check-content a {
       color: var(--txt-color-link);
       text-decoration: none;
       transition: color 0.15s ease, text-decoration 0.15s ease;
     }
 
     .text-content a:hover,
-    .item-text a:hover {
+    .item-text a:hover,
+    .bullet-content a:hover,
+    .order-content a:hover,
+    .check-content a:hover {
       color: var(--txt-color-link-hover);
       text-decoration: underline;
     }
 
     .text-content code,
-    .item-text code {
+    .item-text code,
+    .bullet-content code,
+    .order-content code,
+    .check-content code {
       font-family: var(--font-mono);
       font-size: inherit;
       line-height: inherit;
@@ -315,22 +324,40 @@
 
     .text-content strong,
     .item-text strong,
+    .bullet-content strong,
+    .order-content strong,
+    .check-content strong,
     .text-content b,
-    .item-text b {
+    .item-text b,
+    .bullet-content b,
+    .order-content b,
+    .check-content b {
       font-weight: 600;
     }
 
     .text-content em,
     .item-text em,
+    .bullet-content em,
+    .order-content em,
+    .check-content em,
     .text-content i,
-    .item-text i {
+    .item-text i,
+    .bullet-content i,
+    .order-content i,
+    .check-content i {
       font-style: italic;
     }
 
     .text-content s,
     .item-text s,
+    .bullet-content s,
+    .order-content s,
+    .check-content s,
     .text-content del,
-    .item-text del {
+    .item-text del,
+    .bullet-content del,
+    .order-content del,
+    .check-content del {
       text-decoration: line-through;
     }
 
@@ -535,19 +562,31 @@
       .txt-default del,
       .text-content s,
       .item-text s,
+      .bullet-content s,
+      .order-content s,
+      .check-content s,
       .text-content del,
-      .item-text del {
+      .item-text del,
+      .bullet-content del,
+      .order-content del,
+      .check-content del {
         text-decoration: none !important;
       }
 
       .text-content a,
-      .item-text a {
+      .item-text a,
+      .bullet-content a,
+      .order-content a,
+      .check-content a {
         color: #000000 !important;
         text-decoration: underline !important;
       }
 
       .text-content code,
-      .item-text code {
+      .item-text code,
+      .bullet-content code,
+      .order-content code,
+      .check-content code {
         border: 1px solid var(--code-border) !important;
         background-color: var(--code-bg) !important;
         color: #000000 !important;
@@ -660,43 +699,6 @@
       word-break: break-word;
     }
 
-    .bullet-content a {
-      color: var(--txt-color-link, #2e75b6);
-      text-decoration: none;
-      transition: color 0.15s ease, text-decoration 0.15s ease;
-    }
-
-    .bullet-content a:hover {
-      color: var(--txt-color-link-hover, #163a5c);
-      text-decoration: underline;
-    }
-
-    .bullet-content code {
-      font-family: var(--font-mono, 'Courier New', monospace);
-      font-size: inherit;
-      line-height: inherit;
-      color: var(--code-color, #24292f);
-      background-color: var(--code-bg, #f0f2f5);
-      padding: 0 4px;
-      border-radius: 3px;
-      border: 1px solid var(--code-border, #d0d7de);
-    }
-
-    .bullet-content strong,
-    .bullet-content b {
-      font-weight: 600;
-    }
-
-    .bullet-content em,
-    .bullet-content i {
-      font-style: italic;
-    }
-
-    .bullet-content s,
-    .bullet-content del {
-      text-decoration: line-through;
-    }
-
     /* 3. Print Styles */
     @media print {
       .bullet-marker {
@@ -707,24 +709,6 @@
 
       .bullet-content {
         color: #000000 !important;
-      }
-
-      .bullet-content a {
-        color: #000000 !important;
-        text-decoration: underline !important;
-      }
-
-      .bullet-content code {
-        border: 1px solid var(--code-border, #d0d7de) !important;
-        background-color: var(--code-bg, #f0f2f5) !important;
-        color: #000000 !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-
-      .bullet-content s,
-      .bullet-content del {
-        text-decoration: none !important;
       }
     }
     /* ==========================================================================
@@ -815,43 +799,6 @@
       word-break: break-word;
     }
 
-    .order-content a {
-      color: var(--txt-color-link, #2e75b6);
-      text-decoration: none;
-      transition: color 0.15s ease, text-decoration 0.15s ease;
-    }
-
-    .order-content a:hover {
-      color: var(--txt-color-link-hover, #163a5c);
-      text-decoration: underline;
-    }
-
-    .order-content code {
-      font-family: var(--font-mono, 'Courier New', monospace);
-      font-size: inherit;
-      line-height: inherit;
-      color: var(--code-color, #24292f);
-      background-color: var(--code-bg, #f0f2f5);
-      padding: 0 4px;
-      border-radius: 3px;
-      border: 1px solid var(--code-border, #d0d7de);
-    }
-
-    .order-content strong,
-    .order-content b {
-      font-weight: 600;
-    }
-
-    .order-content em,
-    .order-content i {
-      font-style: italic;
-    }
-
-    .order-content s,
-    .order-content del {
-      text-decoration: line-through;
-    }
-
     /* 3. Print Styles */
     @media print {
       .order-marker {
@@ -862,24 +809,6 @@
 
       .order-content {
         color: #000000 !important;
-      }
-
-      .order-content a {
-        color: #000000 !important;
-        text-decoration: underline !important;
-      }
-
-      .order-content code {
-        border: 1px solid var(--code-border, #d0d7de) !important;
-        background-color: var(--code-bg, #f0f2f5) !important;
-        color: #000000 !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-
-      .order-content s,
-      .order-content del {
-        text-decoration: none !important;
       }
     }
     /* ==========================================================================

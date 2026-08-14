@@ -2,6 +2,7 @@
 
 use crate::core::document::DocumentElement;
 use crate::core::feature::Feature;
+use crate::core::format::push_indent;
 
 /// Embedded unknown CSS styles for fallback elements.
 pub const CSS: &str = include_str!("unknown.css");
@@ -14,13 +15,6 @@ impl UnknownFeature {
     /// Creates a new unknown feature instance.
     pub const fn new() -> Self {
         Self
-    }
-}
-
-/// Appends leading whitespace indentation to a buffer based on the specified indent level.
-fn push_indent(out: &mut String, indent: usize) {
-    for _ in 0..indent {
-        out.push_str("  ");
     }
 }
 
