@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added automatic SVG fallback placeholder display for broken or unreachable external image loads.
 - Updated starter template (`templates/template.md`) with GFM table support, variables table documentation, and sample code variable usage.
 
+### Changed
+- Aligned Markdown section hierarchy so H1 and H2 act as top-level sections that accept only H3 child sections.
+
 ### Removed
 - Removed Table of Contents (TOC) feature and table_of_contents frontmatter option.
 

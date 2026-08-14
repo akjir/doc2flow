@@ -1,11 +1,13 @@
 //! Markdown parser without external dependencies.
 
+use std::mem;
+
 use crate::core::document::{Document, DocumentElement, ShoutoutElementKind, TableAlignment};
 use crate::core::error::{DiagnosticError, build_caret_annotation};
 use crate::core::{Error, Result};
 
 /// State tracker for filtering HTML comments across lines.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 struct CommentFilterState {
     /// Indicates whether parsing is currently within a multi-line HTML comment block.
     in_comment: bool,
@@ -63,7 +65,7 @@ impl CommentFilterState {
 }
 
 /// Frontmatter parsing lifecycle state.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum FrontmatterPhase {
     /// Seeking opening frontmatter delimiter `---`.
     SeekingStart,
@@ -75,18 +77,14 @@ enum FrontmatterPhase {
 
 /// Constructs a standardized diagnostic error for invalid block directive names.
 fn build_invalid_block_directive_name_err(line_number: usize, line_snippet: &str) -> Error {
-    let snippet = if line_snippet.is_empty() {
-        ""
-    } else {
-        line_snippet
-    };
-    let carets = build_caret_annotation(1, snippet.len().max(1), snippet.len().max(1));
+    let carets =
+        build_caret_annotation(1, line_snippet.len().max(1), line_snippet.len().max(1));
     DiagnosticError {
         message: "invalid block directive name".into(),
         file_path: "<input>".into(),
         line_number,
         col_number: 1,
-        line_snippet: snippet.into(),
+        line_snippet: line_snippet.into(),
         annotation_carets: carets,
         annotation_text: "directive name must contain only alphanumeric characters (a-z, 0-9)"
             .into(),
@@ -98,18 +96,14 @@ fn build_invalid_block_directive_name_err(line_number: usize, line_snippet: &str
 
 /// Constructs a standardized diagnostic error for missing block directive names.
 fn build_missing_block_directive_name_err(line_number: usize, line_snippet: &str) -> Error {
-    let snippet = if line_snippet.is_empty() {
-        ""
-    } else {
-        line_snippet
-    };
-    let carets = build_caret_annotation(1, snippet.len().max(1), snippet.len().max(1));
+    let carets =
+        build_caret_annotation(1, line_snippet.len().max(1), line_snippet.len().max(1));
     DiagnosticError {
         message: "missing block directive name".into(),
         file_path: "<input>".into(),
         line_number,
         col_number: 1,
-        line_snippet: snippet.into(),
+        line_snippet: line_snippet.into(),
         annotation_carets: carets,
         annotation_text: "expected directive name after colons".into(),
         help_text: "provide an alphanumeric name for the block directive, e.g. ':::variables'."
@@ -120,18 +114,14 @@ fn build_missing_block_directive_name_err(line_number: usize, line_snippet: &str
 
 /// Constructs a standardized diagnostic error for missing frontmatter delimiters.
 fn build_missing_frontmatter_err(line_number: usize, line_snippet: &str) -> Error {
-    let snippet = if line_snippet.is_empty() {
-        ""
-    } else {
-        line_snippet
-    };
-    let carets = build_caret_annotation(1, snippet.len().max(1), snippet.len().max(1));
+    let carets =
+        build_caret_annotation(1, line_snippet.len().max(1), line_snippet.len().max(1));
     DiagnosticError {
         message: "missing frontmatter delimiter '---'".into(),
         file_path: "<input>".into(),
         line_number,
         col_number: 1,
-        line_snippet: snippet.into(),
+        line_snippet: line_snippet.into(),
         annotation_carets: carets,
         annotation_text: "expected '---' to begin frontmatter".into(),
         help_text: "document must begin with frontmatter enclosed by '---' delimiters.".into(),
@@ -141,18 +131,14 @@ fn build_missing_frontmatter_err(line_number: usize, line_snippet: &str) -> Erro
 
 /// Constructs a standardized diagnostic error for nested block directives.
 fn build_nested_block_directive_err(line_number: usize, line_snippet: &str) -> Error {
-    let snippet = if line_snippet.is_empty() {
-        ""
-    } else {
-        line_snippet
-    };
-    let carets = build_caret_annotation(1, snippet.len().max(1), snippet.len().max(1));
+    let carets =
+        build_caret_annotation(1, line_snippet.len().max(1), line_snippet.len().max(1));
     DiagnosticError {
         message: "nested block directives are not supported".into(),
         file_path: "<input>".into(),
         line_number,
         col_number: 1,
-        line_snippet: snippet.into(),
+        line_snippet: line_snippet.into(),
         annotation_carets: carets,
         annotation_text: "nested block directive opening found here".into(),
         help_text: "close the active block directive with ':::' before starting a new one.".into(),
@@ -162,91 +148,19 @@ fn build_nested_block_directive_err(line_number: usize, line_snippet: &str) -> E
 
 /// Constructs a standardized diagnostic error for unclosed block directives.
 fn build_unclosed_block_directive_err(line_number: usize, line_snippet: &str) -> Error {
-    let snippet = if line_snippet.is_empty() {
-        ""
-    } else {
-        line_snippet
-    };
-    let carets = build_caret_annotation(1, snippet.len().max(3), snippet.len().max(3));
+    let carets =
+        build_caret_annotation(1, line_snippet.len().max(3), line_snippet.len().max(3));
     DiagnosticError {
         message: "unclosed block directive".into(),
         file_path: "<input>".into(),
         line_number,
         col_number: 1,
-        line_snippet: snippet.into(),
+        line_snippet: line_snippet.into(),
         annotation_carets: carets,
         annotation_text: "block directive starting here is never closed".into(),
         help_text: "close the block directive with a closing ':::' line.".into(),
     }
     .into()
-}
-
-/// Returns the heading level if the element is a Section.
-fn get_section_level(elem: &DocumentElement) -> usize {
-    match elem {
-        DocumentElement::Section { level, .. } => *level,
-        _ => 0,
-    }
-}
-
-/// Parses a markdown heading line into its normalized section level (1, 2, or 3) and title.
-fn parse_heading_line(line: &str) -> Option<(usize, &str)> {
-    let trimmed = line.trim_start();
-    if !trimmed.starts_with('#') {
-        return None;
-    }
-    let hash_count = trimmed.bytes().take_while(|&b| b == b'#').count();
-    let rest = &trimmed[hash_count..];
-    if rest.is_empty() {
-        let level = match hash_count {
-            1 => 1,
-            2 => 2,
-            _ => 3,
-        };
-        Some((level, ""))
-    } else if rest.starts_with([' ', '\t']) {
-        let level = match hash_count {
-            1 => 1,
-            2 => 2,
-            _ => 3,
-        };
-        Some((level, rest.trim()))
-    } else {
-        None
-    }
-}
-
-/// Unwinds closed sections from the stack and adds the new section to the hierarchy.
-fn push_section(
-    doc: &mut Document,
-    section_stack: &mut Vec<DocumentElement>,
-    level: usize,
-    title: &str,
-) {
-    while let Some(top) = section_stack.last() {
-        if get_section_level(top) >= level {
-            let popped = section_stack.pop().unwrap();
-            if let Some(parent) = section_stack.last_mut() {
-                parent.push_child(popped);
-            } else {
-                doc.push_body(popped);
-            }
-        } else {
-            break;
-        }
-    }
-    section_stack.push(DocumentElement::section(level, title, Vec::new()));
-}
-
-/// Unwinds all active sections on the stack into their parent containers or document body.
-fn flush_section_stack(doc: &mut Document, section_stack: &mut Vec<DocumentElement>) {
-    while let Some(popped) = section_stack.pop() {
-        if let Some(parent) = section_stack.last_mut() {
-            parent.push_child(popped);
-        } else {
-            doc.push_body(popped);
-        }
-    }
 }
 
 /// Classifies a non-table line and appends it to target buffer or document body.
@@ -334,6 +248,25 @@ fn classify_and_push_line(
             block_children,
             DocumentElement::unknown(trimmed),
         );
+    }
+}
+
+/// Unwinds all active sections on the stack into their parent containers or document body.
+fn flush_section_stack(doc: &mut Document, section_stack: &mut Vec<DocumentElement>) {
+    while let Some(popped) = section_stack.pop() {
+        if let Some(parent) = section_stack.last_mut() {
+            let _ = parent.push_child(popped);
+        } else {
+            doc.push_body(popped);
+        }
+    }
+}
+
+/// Returns the heading level if the element is a Section.
+fn get_section_level(elem: &DocumentElement) -> usize {
+    match elem {
+        DocumentElement::Section { level, .. } => *level,
+        _ => 0,
     }
 }
 
@@ -509,8 +442,8 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
 
                     if in_block_directive {
                         if rest.is_empty() {
-                            let children = std::mem::take(&mut block_children);
-                            let name = std::mem::take(&mut block_name);
+                            let children = mem::take(&mut block_children);
+                            let name = mem::take(&mut block_name);
                             push_element(
                                 &mut doc,
                                 &mut section_stack,
@@ -704,6 +637,28 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
     }
 }
 
+/// Parses a markdown heading line into its normalized section level (1, 2, or 3) and title.
+fn parse_heading_line(line: &str) -> Option<(usize, &str)> {
+    let trimmed = line.trim_start();
+    if !trimmed.starts_with('#') {
+        return None;
+    }
+    let hash_count = trimmed.bytes().take_while(|&b| b == b'#').count();
+    let rest = &trimmed[hash_count..];
+    let level = match hash_count {
+        1 => 1,
+        2 => 2,
+        _ => 3,
+    };
+    if rest.is_empty() {
+        Some((level, ""))
+    } else if rest.starts_with([' ', '\t']) {
+        Some((level, rest.trim()))
+    } else {
+        None
+    }
+}
+
 /// Parses a standalone image markdown pattern `![alt](url)` into alt text and url slices.
 fn parse_image(input: &str) -> Option<(&str, &str)> {
     let trimmed = input.trim();
@@ -800,7 +755,7 @@ fn parse_table_alignment(cell: &str) -> Option<TableAlignment> {
         inner
     };
 
-    if inner.is_empty() || !inner.chars().all(|c| c == '-') {
+    if inner.is_empty() || !inner.bytes().all(|b| b == b'-') {
         return None;
     }
 
@@ -835,18 +790,17 @@ fn parse_table_delimiter_row(line: &str) -> Option<Vec<TableAlignment>> {
         return None;
     }
 
-    let raw_cells: Vec<&str> = inner.split('|').collect();
-    if raw_cells.is_empty() {
-        return None;
-    }
-
-    let mut alignments = Vec::with_capacity(raw_cells.len());
-    for raw_cell in raw_cells {
+    let mut alignments = Vec::with_capacity(inner.matches('|').count() + 1);
+    for raw_cell in inner.split('|') {
         let align = parse_table_alignment(raw_cell)?;
         alignments.push(align);
     }
 
-    Some(alignments)
+    if alignments.is_empty() {
+        None
+    } else {
+        Some(alignments)
+    }
 }
 
 /// Parses a markdown table row into trimmed cell string contents, unescaping escaped pipes (`\|`).
@@ -864,7 +818,7 @@ fn parse_table_row(line: &str) -> Vec<String> {
         inner
     };
 
-    let mut cells = Vec::new();
+    let mut cells = Vec::with_capacity(inner.matches('|').count() + 1);
     let mut current_cell = String::with_capacity(32);
     let mut chars = inner.chars().peekable();
 
@@ -900,10 +854,42 @@ fn push_element(
     if in_block {
         block_children.push(elem);
     } else if let Some(active_section) = section_stack.last_mut() {
-        active_section.push_child(elem);
+        let _ = active_section.push_child(elem);
     } else {
         doc.push_body(elem);
     }
+}
+
+/// Unwinds closed sections from the stack and adds the new section to the hierarchy.
+fn push_section(
+    doc: &mut Document,
+    section_stack: &mut Vec<DocumentElement>,
+    level: usize,
+    title: &str,
+) {
+    if level == 1 || level == 2 {
+        while let Some(popped) = section_stack.pop() {
+            if let Some(parent) = section_stack.last_mut() {
+                let _ = parent.push_child(popped);
+            } else {
+                doc.push_body(popped);
+            }
+        }
+    } else {
+        while let Some(top) = section_stack.last() {
+            if get_section_level(top) >= level {
+                let popped = section_stack.pop().unwrap();
+                if let Some(parent) = section_stack.last_mut() {
+                    let _ = parent.push_child(popped);
+                } else {
+                    doc.push_body(popped);
+                }
+            } else {
+                break;
+            }
+        }
+    }
+    section_stack.push(DocumentElement::section(level, title, Vec::new()));
 }
 
 /// Trims leading and trailing empty lines from a slice of code lines.
@@ -2264,82 +2250,131 @@ mod tests {
         let md = "---\ntitle: \"Sections Doc\"\n---\nIntro text\n\n# Section 1\nText in 1\n\n## Section 1.1\nText in 1.1\n\n### Section 1.1.1\nText in 1.1.1\n\n#### Section 1.1.2 Capped\nText in 1.1.2\n\n########## Section 1.1.3 Capped\nText in 1.1.3\n\n## Section 1.2\nText in 1.2\n\n# Section 2\nText in 2";
         let doc = parse_d2f_markdown(md).unwrap();
 
-        assert_eq!(doc.body.len(), 3);
+        assert_eq!(doc.body.len(), 5);
         // Intro text
         assert_eq!(doc.body[0], DocumentElement::text("Intro text"));
 
-        // Section 1 (Level 1)
+        // Section 1 (Level 1) - closes when Level 2 starts
+        assert_eq!(
+            doc.body[1],
+            DocumentElement::section(1, "Section 1", vec![DocumentElement::text("Text in 1")])
+        );
+
+        // Section 1.1 (Level 2) - receives Level 3 children
         if let DocumentElement::Section {
             level,
             title,
             children,
-        } = &doc.body[1]
+        } = &doc.body[2]
         {
-            assert_eq!(*level, 1);
-            assert_eq!(title, "Section 1");
-            assert_eq!(children.len(), 3);
-            assert_eq!(children[0], DocumentElement::text("Text in 1"));
+            assert_eq!(*level, 2);
+            assert_eq!(title, "Section 1.1");
+            assert_eq!(children.len(), 4);
+            assert_eq!(children[0], DocumentElement::text("Text in 1.1"));
 
-            // Section 1.1 (Level 2)
-            if let DocumentElement::Section {
-                level: l2_1,
-                title: t2_1,
-                children: ch2_1,
-            } = &children[1]
-            {
-                assert_eq!(*l2_1, 2);
-                assert_eq!(t2_1, "Section 1.1");
-                assert_eq!(ch2_1.len(), 4);
-                assert_eq!(ch2_1[0], DocumentElement::text("Text in 1.1"));
-
-                // Section 1.1.1 (Level 3)
-                assert_eq!(
-                    ch2_1[1],
-                    DocumentElement::section(
-                        3,
-                        "Section 1.1.1",
-                        vec![DocumentElement::text("Text in 1.1.1")]
-                    )
-                );
-                // Section 1.1.2 (Level 3, capped from 4)
-                assert_eq!(
-                    ch2_1[2],
-                    DocumentElement::section(
-                        3,
-                        "Section 1.1.2 Capped",
-                        vec![DocumentElement::text("Text in 1.1.2")]
-                    )
-                );
-                // Section 1.1.3 (Level 3, capped from 10)
-                assert_eq!(
-                    ch2_1[3],
-                    DocumentElement::section(
-                        3,
-                        "Section 1.1.3 Capped",
-                        vec![DocumentElement::text("Text in 1.1.3")]
-                    )
-                );
-            } else {
-                panic!("expected Section 1.1");
-            }
-
-            // Section 1.2 (Level 2)
+            // Section 1.1.1 (Level 3)
+            assert_eq!(
+                children[1],
+                DocumentElement::section(
+                    3,
+                    "Section 1.1.1",
+                    vec![DocumentElement::text("Text in 1.1.1")]
+                )
+            );
+            // Section 1.1.2 (Level 3, capped from 4)
             assert_eq!(
                 children[2],
                 DocumentElement::section(
-                    2,
-                    "Section 1.2",
-                    vec![DocumentElement::text("Text in 1.2")]
+                    3,
+                    "Section 1.1.2 Capped",
+                    vec![DocumentElement::text("Text in 1.1.2")]
+                )
+            );
+            // Section 1.1.3 (Level 3, capped from 10)
+            assert_eq!(
+                children[3],
+                DocumentElement::section(
+                    3,
+                    "Section 1.1.3 Capped",
+                    vec![DocumentElement::text("Text in 1.1.3")]
                 )
             );
         } else {
-            panic!("expected Section 1");
+            panic!("expected Section 1.1");
         }
+
+        // Section 1.2 (Level 2)
+        assert_eq!(
+            doc.body[3],
+            DocumentElement::section(2, "Section 1.2", vec![DocumentElement::text("Text in 1.2")])
+        );
 
         // Section 2 (Level 1)
         assert_eq!(
-            doc.body[2],
+            doc.body[4],
             DocumentElement::section(1, "Section 2", vec![DocumentElement::text("Text in 2")])
+        );
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_h1_and_h2_with_h3_children() {
+        let md = "---\ntitle: \"H1 and H2 with H3\"\n---\n# Level 1 Heading\nL1 Body\n### Subheading in L1\nSub 1 Body\n\n## Level 2 Heading\nL2 Body\n### Subheading in L2\nSub 2 Body";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 2);
+
+        // Level 1 Section with H3 child
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::section(
+                1,
+                "Level 1 Heading",
+                vec![
+                    DocumentElement::text("L1 Body"),
+                    DocumentElement::section(
+                        3,
+                        "Subheading in L1",
+                        vec![DocumentElement::text("Sub 1 Body")]
+                    )
+                ]
+            )
+        );
+
+        // Level 2 Section with H3 child
+        assert_eq!(
+            doc.body[1],
+            DocumentElement::section(
+                2,
+                "Level 2 Heading",
+                vec![
+                    DocumentElement::text("L2 Body"),
+                    DocumentElement::section(
+                        3,
+                        "Subheading in L2",
+                        vec![DocumentElement::text("Sub 2 Body")]
+                    )
+                ]
+            )
+        );
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_consecutive_h3_sections() {
+        let md = "---\ntitle: \"Consecutive H3\"\n---\n# Main\n### Sub 1\nText 1\n### Sub 2\nText 2\n### Sub 3\nText 3";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 1);
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::section(
+                1,
+                "Main",
+                vec![
+                    DocumentElement::section(3, "Sub 1", vec![DocumentElement::text("Text 1")]),
+                    DocumentElement::section(3, "Sub 2", vec![DocumentElement::text("Text 2")]),
+                    DocumentElement::section(3, "Sub 3", vec![DocumentElement::text("Text 3")]),
+                ]
+            )
         );
     }
 

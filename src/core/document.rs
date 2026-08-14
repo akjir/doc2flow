@@ -3,6 +3,8 @@
 use std::collections::HashMap;
 use std::fmt::{self, Display, Formatter};
 
+use crate::core::error::{Error, Result};
+
 /// Represents a parsed document tree.
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct Document {
@@ -214,13 +216,42 @@ impl DocumentElement {
         Self::Unknown(content.into())
     }
 
-    /// Appends a child element if this element is a container (section or block directive).
-    pub fn push_child(&mut self, child: Self) {
+    /// Appends a child element to this container element.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error`] if adding to a non-container or if nesting rules are violated.
+    pub fn push_child(&mut self, child: Self) -> Result<()> {
         match self {
-            Self::BlockDirective { children, .. } | Self::Section { children, .. } => {
-                children.push(child);
+            Self::Section {
+                level: parent_level,
+                children,
+                ..
+            } => {
+                if let Self::Section {
+                    level: child_level, ..
+                } = &child
+                {
+                    if (*parent_level == 1 || *parent_level == 2) && *child_level == 3 {
+                        children.push(child);
+                        Ok(())
+                    } else {
+                        Err(Error::Message(format!(
+                            "cannot add h{child_level} section to h{parent_level} section"
+                        )))
+                    }
+                } else {
+                    children.push(child);
+                    Ok(())
+                }
             }
-            _ => {}
+            Self::BlockDirective { children, .. } => {
+                children.push(child);
+                Ok(())
+            }
+            _ => Err(Error::Message(
+                "cannot add child to non-container element".into(),
+            )),
         }
     }
 }
@@ -309,7 +340,7 @@ mod tests {
         );
 
         let child2 = DocumentElement::bullet_list_item(0, DocumentElement::text("List item"));
-        directive.push_child(child2.clone());
+        assert!(directive.push_child(child2.clone()).is_ok());
 
         assert_eq!(
             directive,
@@ -383,7 +414,7 @@ mod tests {
 
         let mut section = DocumentElement::section(1, "Heading", Vec::new());
         let child = DocumentElement::unknown("Child node");
-        section.push_child(child.clone());
+        assert!(section.push_child(child.clone()).is_ok());
         assert_eq!(
             section,
             DocumentElement::Section {
@@ -424,6 +455,13 @@ mod tests {
     }
 
     #[test]
+    fn test_non_container_push_child_error() {
+        let mut text_elem = DocumentElement::text("Plain text");
+        let child = DocumentElement::text("Other text");
+        assert!(text_elem.push_child(child).is_err());
+    }
+
+    #[test]
     fn test_ordered_list_item_creation() {
         let root_item = DocumentElement::ordered_list_item(0, 1, DocumentElement::text("First item"));
         assert_eq!(
@@ -444,6 +482,59 @@ mod tests {
                 position: 5,
             }
         );
+    }
+
+    #[test]
+    fn test_section_push_child_allowed_permutations() {
+        // H3 can be added to H1
+        let mut h1 = DocumentElement::section(1, "H1", Vec::new());
+        let h3_a = DocumentElement::section(3, "H3 A", Vec::new());
+        assert!(h1.push_child(h3_a).is_ok());
+
+        // H3 can be added to H2
+        let mut h2 = DocumentElement::section(2, "H2", Vec::new());
+        let h3_b = DocumentElement::section(3, "H3 B", Vec::new());
+        assert!(h2.push_child(h3_b).is_ok());
+
+        // Non-section elements can be added to H1, H2, and H3
+        let mut h3 = DocumentElement::section(3, "H3", Vec::new());
+        assert!(h1.push_child(DocumentElement::text("Text in H1")).is_ok());
+        assert!(h2.push_child(DocumentElement::text("Text in H2")).is_ok());
+        assert!(h3.push_child(DocumentElement::text("Text in H3")).is_ok());
+    }
+
+    #[test]
+    fn test_section_push_child_forbidden_permutations() {
+        // H2 into H2 -> error
+        let mut h2_parent = DocumentElement::section(2, "H2 Parent", Vec::new());
+        let h2_child = DocumentElement::section(2, "H2 Child", Vec::new());
+        assert!(h2_parent.push_child(h2_child).is_err());
+
+        // H2 into H1 -> error
+        let mut h1_parent = DocumentElement::section(1, "H1 Parent", Vec::new());
+        let h2_child2 = DocumentElement::section(2, "H2 Child", Vec::new());
+        assert!(h1_parent.push_child(h2_child2).is_err());
+
+        // H1 into H1 -> error
+        let h1_child = DocumentElement::section(1, "H1 Child", Vec::new());
+        assert!(h1_parent.push_child(h1_child).is_err());
+
+        // H1 into H2 -> error
+        let h1_child2 = DocumentElement::section(1, "H1 Child", Vec::new());
+        assert!(h2_parent.push_child(h1_child2).is_err());
+
+        // H3 into H3 -> error
+        let mut h3_parent = DocumentElement::section(3, "H3 Parent", Vec::new());
+        let h3_child = DocumentElement::section(3, "H3 Child", Vec::new());
+        assert!(h3_parent.push_child(h3_child).is_err());
+
+        // H1 into H3 -> error
+        let h1_child3 = DocumentElement::section(1, "H1 Child", Vec::new());
+        assert!(h3_parent.push_child(h1_child3).is_err());
+
+        // H2 into H3 -> error
+        let h2_child3 = DocumentElement::section(2, "H2 Child", Vec::new());
+        assert!(h3_parent.push_child(h2_child3).is_err());
     }
 
     #[test]

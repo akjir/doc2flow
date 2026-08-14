@@ -338,14 +338,14 @@ mod tests {
     #[test]
     fn test_render_element_nested_sections() {
         let inner_section =
-            DocumentElement::section(2, "Inner", vec![DocumentElement::text("Inner content")]);
+            DocumentElement::section(3, "Inner", vec![DocumentElement::text("Inner content")]);
         let outer_section = DocumentElement::section(1, "Outer", vec![inner_section]);
         let expected = concat!(
             "  <section class=\"section\" data-level=\"1\">\n",
             "    <h1>Outer</h1>\n",
             "    <div class=\"section-body\">\n",
-            "      <section class=\"section\" data-level=\"2\">\n",
-            "        <h2>Inner</h2>\n",
+            "      <section class=\"section\" data-level=\"3\">\n",
+            "        <h3>Inner</h3>\n",
             "        <div class=\"section-body\">\n",
             "          <p class=\"txt-default\">\n",
             "            Inner content\n",
