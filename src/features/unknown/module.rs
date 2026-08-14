@@ -18,8 +18,8 @@ impl UnknownFeature {
 }
 
 impl Feature for UnknownFeature {
-    /// Converts a document element into an HTML string representation.
-    fn to_html(&self, element: &DocumentElement) -> String {
+    /// Converts a document element and inner content into an HTML string representation.
+    fn to_html(&self, element: &DocumentElement, _content: &str) -> String {
         match element {
             DocumentElement::Unknown(text) => {
                 let mut out = String::with_capacity(text.len() + 32);
@@ -55,7 +55,7 @@ mod tests {
         let feature = UnknownFeature::new();
         let element = DocumentElement::unknown("Unrecognized raw markdown line");
         assert_eq!(
-            feature.to_html(&element),
+            feature.to_html(&element, ""),
             "<p class=\"unknown-default\">Unrecognized raw markdown line</p>"
         );
     }
@@ -64,6 +64,6 @@ mod tests {
     fn test_unknown_feature_empty_for_unsupported_elements() {
         let feature = UnknownFeature::new();
         let text = DocumentElement::text("Regular text");
-        assert_eq!(feature.to_html(&text), "");
+        assert_eq!(feature.to_html(&text, ""), "");
     }
 }

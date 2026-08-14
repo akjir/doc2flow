@@ -3,128 +3,222 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+197.cf26808.dev">
-  <meta name="version" content="0.9.4+197.cf26808.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+200.00bd48e.dev">
+  <meta name="version" content="0.9.4+200.00bd48e.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-13T21:30:44Z">
+  <meta name="dcterms.created" content="2026-08-14T16:34:03Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, code_block, table">
-  <title>{{TITLE}}</title>
+  <title>Microservice Deployment & Infrastructure Setup</title>
   <style>
-    {{CSS}}
+    /* ==========================================================================
+       Doc2Flow - Core Feature Styles (Default Text & Backgrounds)
+       ========================================================================== */
+
+    /* 1. Base Variables & Tokens */
+    :root {
+      /* Fonts */
+      --font-sans: Arial, sans-serif;
+      --font-mono: 'Courier New', monospace;
+
+      /* Typography Colors */
+      --txt-color-default: #444444;
+      --txt-color-muted: #8c959f;
+      --txt-color-heading: #163a5c;
+      --txt-color-link: #2e75b6;
+      --txt-color-link-hover: #163a5c;
+      --txt-color-code: #24292f;
+      --txt-bg-code: #f0f2f5;
+
+      /* Background Colors */
+      --bg-body: #eef2f7;
+      --bg-surface: #ffffff;
+      --bg-muted: #f8fafc;
+      --bg-subtle: #f1f5f9;
+
+      /* Typography Sizing & Line Height */
+      --txt-size-base: 14px;
+      --txt-size-sm: 12px;
+      --txt-size-xs: 11px;
+      --txt-size-lg: 16px;
+      --txt-line-height: 1.5;
+    }
+
+    /* 2. Global Resets & Defaults */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      font-size: var(--txt-size-base);
+      line-height: var(--txt-line-height);
+      color: var(--txt-color-default);
+      background-color: var(--bg-body);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* 3. Background Classes (bg-*) */
+    .bg-body {
+      background-color: var(--bg-body);
+    }
+
+    .bg-surface {
+      background-color: var(--bg-surface);
+    }
+
+    .bg-muted {
+      background-color: var(--bg-muted);
+    }
+
+    .bg-subtle {
+      background-color: var(--bg-subtle);
+    }
+
+    /* 4. Text Content & Components (txt-*) */
+    .txt-default {
+      font-family: var(--font-sans);
+      font-size: var(--txt-size-base);
+      line-height: var(--txt-line-height);
+      color: var(--txt-color-default);
+    }
+
+    .txt-content {
+      flex: 1;
+      min-width: 0;
+      font-size: 13px;
+      line-height: var(--txt-line-height);
+      color: var(--txt-color-default);
+      word-break: break-word;
+    }
+
+    .txt-lead {
+      font-size: var(--txt-size-lg);
+      line-height: 1.6;
+      color: var(--txt-color-default);
+    }
+
+    .txt-muted {
+      color: var(--txt-color-muted);
+      font-size: var(--txt-size-sm);
+    }
+
+    .txt-small {
+      font-size: var(--txt-size-sm);
+      line-height: 1.4;
+    }
+
+    .txt-code {
+      font-family: var(--font-mono);
+      font-size: 0.9em;
+      color: var(--txt-color-code);
+      background-color: var(--txt-bg-code);
+      padding: 2px 5px;
+      border-radius: 3px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .txt-link {
+      color: var(--txt-color-link);
+      text-decoration: none;
+      transition: color 0.15s ease, text-decoration 0.15s ease;
+    }
+
+    .txt-link:hover {
+      color: var(--txt-color-link-hover);
+      text-decoration: underline;
+    }
+
+    .txt-bold {
+      font-weight: bold;
+    }
+
+    .txt-italic {
+      font-style: italic;
+    }
+
+    /* Base text element formatting inside text content */
+    .txt-content a,
+    .txt-default a {
+      color: var(--txt-color-link);
+      text-decoration: none;
+    }
+
+    .txt-content a:hover,
+    .txt-default a:hover {
+      color: var(--txt-color-link-hover);
+      text-decoration: underline;
+    }
+
+    .txt-content code,
+    .txt-default code {
+      font-family: var(--font-mono);
+      font-size: 0.9em;
+      color: var(--txt-color-code);
+      background-color: var(--txt-bg-code);
+      padding: 1px 4px;
+      border-radius: 3px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .txt-content strong,
+    .txt-default strong,
+    .txt-content b,
+    .txt-default b {
+      font-weight: 600;
+    }
+
+    .txt-content em,
+    .txt-default em,
+    .txt-content i,
+    .txt-default i {
+      font-style: italic;
+    }
+
+    /* 5. Print Styles */
+    @media print {
+      body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .bg-body,
+      .bg-surface,
+      .bg-muted,
+      .bg-subtle {
+        background-color: transparent !important;
+      }
+
+      .txt-link,
+      .txt-content a,
+      .txt-default a {
+        color: #000000 !important;
+        text-decoration: underline !important;
+      }
+
+      .txt-code,
+      .txt-content code,
+      .txt-default code {
+        border: 1px solid #d0d7de !important;
+        background-color: #f6f8fa !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
   </style>
 </head>
 <body>
   <header class="doc-header">
   </header>
   <main class="doc-body">
-    <p class="txt-default">{
-  "parameters": {
-    "date": "2026-08-02",
-    "header": "flex",
-    "language": "en",
-    "title": "Microservice Deployment & Infrastructure Setup",
-    "version": "1.0.0"
-  },
-  "header": [
-  ],
-  "body": [
-    {
-      "kind": "text",
-      "content": "[Variables]"
-    },
-    {
-      "kind": "table",
-      "alignments": ["none", "none"],
-      "rows": [
-        ["Variable", "Value"],
-        ["SYSTEM", "prod-server"],
-        ["PORT", "8080"],
-        ["DB_HOST", "db.internal.net"],
-        ["APP_ENV", "production"],
-        ["UNUSED_METRIC_PORT", "9090"]
-      ]
-    },
-    {
-      "kind": "section",
-      "level": 1,
-      "title": "Microservice Deployment Procedure",
-      "children": [
-        {
-          "kind": "text",
-          "content": "This document outlines the automated deployment workflow for our cloud microservice stack. Dynamic variable substitution replaces placeholders matching `{{VARIABLE_NAME}}` when copying code snippets to your clipboard."
-        },
-        {
-          "kind": "section",
-          "level": 3,
-          "title": "Initial Environment Verification",
-          "children": [
-            {
-              "kind": "text",
-              "content": "Verify connectivity to the primary application server before beginning deployment:"
-            },
-            {
-              "kind": "code_block",
-              "language": "bash",
-              "content": "ping -c 3 {{SYSTEM}}.local"
-            }
-          ]
-        },
-        {
-          "kind": "section",
-          "level": 2,
-          "title": "Database Initialization & Migration",
-          "children": [
-            {
-              "kind": "text",
-              "content": "Check the readiness of the primary database host:"
-            },
-            {
-              "kind": "code_block",
-              "language": "bash",
-              "content": "pg_isready -h {{DB_HOST}} -p 5432 -U postgres"
-            },
-            {
-              "kind": "text",
-              "content": "Configure the application database instance environment settings:"
-            },
-            {
-              "kind": "code_block",
-              "language": "sql",
-              "content": "ALTER DATABASE app_db SET configuration.environment = '{{APP_ENV}}';"
-            }
-          ]
-        },
-        {
-          "kind": "section",
-          "level": 2,
-          "title": "Service Container Deployment",
-          "children": [
-            {
-              "kind": "text",
-              "content": "Spin up the API microservice container on the designated port:"
-            },
-            {
-              "kind": "code_block",
-              "language": "bash",
-              "content": "docker run -d --name api-service -e ENV={{APP_ENV}} -p {{PORT}}:8080 acme/api-service:latest"
-            },
-            {
-              "kind": "text",
-              "content": "Perform an automated health check against the newly deployed service:"
-            },
-            {
-              "kind": "code_block",
-              "language": "bash",
-              "content": "curl -f -H \"Authorization: Bearer {{AUTH_TOKEN}}\" https://{{SYSTEM}}.local:{{PORT}}/api/v1/health"
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}</p>
+    <p class="txt-default">[Variables]</p><section class="section" data-level="1"><h1>Microservice Deployment Procedure</h1><div class="section-body"><p class="txt-default">This document outlines the automated deployment workflow for our cloud microservice stack. Dynamic variable substitution replaces placeholders matching `{{VARIABLE_NAME}}` when copying code snippets to your clipboard.</p><section class="section" data-level="3"><h3>Initial Environment Verification</h3><div class="section-body"><p class="txt-default">Verify connectivity to the primary application server before beginning deployment:</p></div></section><section class="section" data-level="2"><h2>Database Initialization & Migration</h2><div class="section-body"><p class="txt-default">Check the readiness of the primary database host:</p><p class="txt-default">Configure the application database instance environment settings:</p></div></section><section class="section" data-level="2"><h2>Service Container Deployment</h2><div class="section-body"><p class="txt-default">Spin up the API microservice container on the designated port:</p><p class="txt-default">Perform an automated health check against the newly deployed service:</p></div></section></div></section>
   </main><!-- doc-body -->
   <script>
     window.d2f = window.d2f || {};

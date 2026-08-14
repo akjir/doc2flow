@@ -2,7 +2,6 @@
 
 use crate::core::constants::{APP_VERSION, LICENSE_URL, REPOSITORY_URL};
 use crate::core::document::{Document, DocumentElement};
-use crate::core::document_json::document_to_json;
 use crate::core::feature::DocumentFeature;
 use crate::core::utils::format_iso8601_utc;
 use crate::features::get_feature;
@@ -84,12 +83,6 @@ pub fn assemble_styles(features: &DocumentFeature) -> String {
 pub fn build(document: &Document, features: &DocumentFeature) -> String {
     let app_version_raw = APP_VERSION.strip_prefix('v').unwrap_or(APP_VERSION);
     let created_at = format_iso8601_utc(std::time::SystemTime::now());
-    let json_content = document_to_json(document);
-    let text_element = DocumentElement::text(json_content);
-    let html_content = match get_feature("core") {
-        Some(feature) => feature.to_html(&text_element),
-        None => String::new(),
-    };
     let lang_code = document
         .parameters
         .get("language")
@@ -104,6 +97,11 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
     let features_str = features.to_features_string();
     let css_content = assemble_styles(features);
 
+    let mut html_content = String::new();
+    for element in document.header.iter().chain(document.body.iter()) {
+        html_content.push_str(&render_element(element));
+    }
+
     TEMPLATE_HTML
         .replace("{{APP_VERSION}}", APP_VERSION)
         .replace("{{APP_VERSION_RAW}}", app_version_raw)
@@ -117,13 +115,67 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
         .replace("{{CONTENT}}", &html_content)
 }
 
+/// Renders a document element and its children into an HTML string representation.
+///
+/// Recursively processes nested child elements and delegates to registered feature renderers.
+///
+/// # Examples
+///
+/// ```
+/// use doc2flow::core::builder::render_element;
+/// use doc2flow::core::document::DocumentElement;
+///
+/// let element = DocumentElement::text("Hello world");
+/// let html = render_element(&element);
+/// assert_eq!(html, "<p class=\"txt-default\">Hello world</p>");
+/// ```
+pub fn render_element(element: &DocumentElement) -> String {
+    let (feature_name, inner_content) = match element {
+        DocumentElement::BlockDirective { children, name } => {
+            let mut inner = String::new();
+            for child in children {
+                inner.push_str(&render_element(child));
+            }
+            (name.as_str(), inner)
+        }
+        DocumentElement::BulletListItem { content, .. } => {
+            ("bullet_list_item", render_element(content))
+        }
+        DocumentElement::CheckBoxItem { content, .. } => {
+            ("check_box_item", render_element(content))
+        }
+        DocumentElement::CodeBlock { .. } => ("code_block", String::new()),
+        DocumentElement::Image { .. } => ("image", String::new()),
+        DocumentElement::OrderedListItem { content, .. } => {
+            ("ordered_list_item", render_element(content))
+        }
+        DocumentElement::Section { children, .. } => {
+            let mut inner = String::new();
+            for child in children {
+                inner.push_str(&render_element(child));
+            }
+            ("core", inner)
+        }
+        DocumentElement::Shoutout { .. } => ("shoutout", String::new()),
+        DocumentElement::Table { .. } => ("table", String::new()),
+        DocumentElement::Text(_) => ("core", String::new()),
+        DocumentElement::Unknown(_) => ("unknown", String::new()),
+    };
+
+    match get_feature(feature_name) {
+        Some(feature) => feature.to_html(element, &inner_content),
+        None => inner_content,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_builder_build_as_ref_u8() {
-        let doc = Document::new();
+        let mut doc = Document::new();
+        doc.push_body(DocumentElement::text("Document body text"));
         let features = DocumentFeature::default();
         let content = build(&doc, &features);
         assert!(!content.as_bytes().is_empty());
@@ -133,8 +185,7 @@ mod tests {
         assert!(content.contains(LICENSE_URL));
         assert!(content.contains("<html lang=\"en\">"));
         assert!(content.contains("<meta name=\"features\" content=\"core\">"));
-        assert!(content.contains("<p class=\"txt-default\">"));
-        assert!(content.contains("\"parameters\":"));
+        assert!(content.contains("<p class=\"txt-default\">Document body text</p>"));
         assert!(!content.contains("{{CONTENT}}"));
         assert!(!content.contains("{{APP_VERSION}}"));
         assert!(!content.contains("{{APP_VERSION_RAW}}"));
@@ -180,6 +231,7 @@ mod tests {
         let features = DocumentFeature::from(&doc);
         let content = build(&doc, &features);
         assert!(content.contains("<meta name=\"features\" content=\"core, unknown\">"));
+        assert!(content.contains("<p class=\"unknown-default\">unrecognized</p>"));
         assert!(content.contains("    --bg-body:"));
         assert!(content.contains("    --unknown-bg:"));
         assert!(content.contains("    .unknown-default"));
@@ -237,5 +289,61 @@ mod tests {
         let content = build(&doc, &features);
         assert!(content.contains("<meta name=\"features\" content=\"core, code_block\">"));
         assert!(!content.contains("{{FEATURES}}"));
+    }
+
+    #[test]
+    fn test_render_element_text() {
+        let text = DocumentElement::text("Sample paragraph text");
+        assert_eq!(
+            render_element(&text),
+            "<p class=\"txt-default\">Sample paragraph text</p>"
+        );
+    }
+
+    #[test]
+    fn test_render_element_unknown() {
+        let unknown = DocumentElement::unknown("Unrecognized markdown");
+        assert_eq!(
+            render_element(&unknown),
+            "<p class=\"unknown-default\">Unrecognized markdown</p>"
+        );
+    }
+
+    #[test]
+    fn test_render_element_section_with_children() {
+        let section = DocumentElement::section(
+            2,
+            "Details",
+            vec![
+                DocumentElement::text("First paragraph"),
+                DocumentElement::text("Second paragraph"),
+            ],
+        );
+        let expected = "<section class=\"section\" data-level=\"2\"><h2>Details</h2><div class=\"section-body\"><p class=\"txt-default\">First paragraph</p><p class=\"txt-default\">Second paragraph</p></div></section>";
+        assert_eq!(render_element(&section), expected);
+    }
+
+    #[test]
+    fn test_render_element_nested_sections() {
+        let inner_section =
+            DocumentElement::section(2, "Inner", vec![DocumentElement::text("Inner content")]);
+        let outer_section = DocumentElement::section(1, "Outer", vec![inner_section]);
+        let expected = "<section class=\"section\" data-level=\"1\"><h1>Outer</h1><div class=\"section-body\"><section class=\"section\" data-level=\"2\"><h2>Inner</h2><div class=\"section-body\"><p class=\"txt-default\">Inner content</p></div></section></div></section>";
+        assert_eq!(render_element(&outer_section), expected);
+    }
+
+    #[test]
+    fn test_render_element_unregistered_feature_fallback() {
+        let code_block = DocumentElement::code_block(Some("rust"), "fn main() {}");
+        assert_eq!(render_element(&code_block), "");
+
+        let directive = DocumentElement::block_directive(
+            "unregistered_directive",
+            vec![DocumentElement::text("Directive child")],
+        );
+        assert_eq!(
+            render_element(&directive),
+            "<p class=\"txt-default\">Directive child</p>"
+        );
     }
 }

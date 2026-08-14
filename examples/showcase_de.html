@@ -3,472 +3,257 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+197.cf26808.dev">
-  <meta name="version" content="0.9.4+197.cf26808.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+200.00bd48e.dev">
+  <meta name="version" content="0.9.4+200.00bd48e.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-13T21:30:44Z">
+  <meta name="dcterms.created" content="2026-08-14T16:34:03Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
-  <meta name="features" content="core, bullet_list_item, check_box_item, code_block, image, ordered_list_item, shoutout, table">
-  <title>{{TITLE}}</title>
+  <meta name="features" content="core, bullet_list_item, check_box_item, code_block, image, ordered_list_item, shoutout, table, unknown">
+  <title>Doc2Flow Deutscher Showcase</title>
   <style>
-    {{CSS}}
+    /* ==========================================================================
+       Doc2Flow - Core Feature Styles (Default Text & Backgrounds)
+       ========================================================================== */
+
+    /* 1. Base Variables & Tokens */
+    :root {
+      /* Fonts */
+      --font-sans: Arial, sans-serif;
+      --font-mono: 'Courier New', monospace;
+
+      /* Typography Colors */
+      --txt-color-default: #444444;
+      --txt-color-muted: #8c959f;
+      --txt-color-heading: #163a5c;
+      --txt-color-link: #2e75b6;
+      --txt-color-link-hover: #163a5c;
+      --txt-color-code: #24292f;
+      --txt-bg-code: #f0f2f5;
+
+      /* Background Colors */
+      --bg-body: #eef2f7;
+      --bg-surface: #ffffff;
+      --bg-muted: #f8fafc;
+      --bg-subtle: #f1f5f9;
+
+      /* Typography Sizing & Line Height */
+      --txt-size-base: 14px;
+      --txt-size-sm: 12px;
+      --txt-size-xs: 11px;
+      --txt-size-lg: 16px;
+      --txt-line-height: 1.5;
+    }
+
+    /* 2. Global Resets & Defaults */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      font-size: var(--txt-size-base);
+      line-height: var(--txt-line-height);
+      color: var(--txt-color-default);
+      background-color: var(--bg-body);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* 3. Background Classes (bg-*) */
+    .bg-body {
+      background-color: var(--bg-body);
+    }
+
+    .bg-surface {
+      background-color: var(--bg-surface);
+    }
+
+    .bg-muted {
+      background-color: var(--bg-muted);
+    }
+
+    .bg-subtle {
+      background-color: var(--bg-subtle);
+    }
+
+    /* 4. Text Content & Components (txt-*) */
+    .txt-default {
+      font-family: var(--font-sans);
+      font-size: var(--txt-size-base);
+      line-height: var(--txt-line-height);
+      color: var(--txt-color-default);
+    }
+
+    .txt-content {
+      flex: 1;
+      min-width: 0;
+      font-size: 13px;
+      line-height: var(--txt-line-height);
+      color: var(--txt-color-default);
+      word-break: break-word;
+    }
+
+    .txt-lead {
+      font-size: var(--txt-size-lg);
+      line-height: 1.6;
+      color: var(--txt-color-default);
+    }
+
+    .txt-muted {
+      color: var(--txt-color-muted);
+      font-size: var(--txt-size-sm);
+    }
+
+    .txt-small {
+      font-size: var(--txt-size-sm);
+      line-height: 1.4;
+    }
+
+    .txt-code {
+      font-family: var(--font-mono);
+      font-size: 0.9em;
+      color: var(--txt-color-code);
+      background-color: var(--txt-bg-code);
+      padding: 2px 5px;
+      border-radius: 3px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .txt-link {
+      color: var(--txt-color-link);
+      text-decoration: none;
+      transition: color 0.15s ease, text-decoration 0.15s ease;
+    }
+
+    .txt-link:hover {
+      color: var(--txt-color-link-hover);
+      text-decoration: underline;
+    }
+
+    .txt-bold {
+      font-weight: bold;
+    }
+
+    .txt-italic {
+      font-style: italic;
+    }
+
+    /* Base text element formatting inside text content */
+    .txt-content a,
+    .txt-default a {
+      color: var(--txt-color-link);
+      text-decoration: none;
+    }
+
+    .txt-content a:hover,
+    .txt-default a:hover {
+      color: var(--txt-color-link-hover);
+      text-decoration: underline;
+    }
+
+    .txt-content code,
+    .txt-default code {
+      font-family: var(--font-mono);
+      font-size: 0.9em;
+      color: var(--txt-color-code);
+      background-color: var(--txt-bg-code);
+      padding: 1px 4px;
+      border-radius: 3px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .txt-content strong,
+    .txt-default strong,
+    .txt-content b,
+    .txt-default b {
+      font-weight: 600;
+    }
+
+    .txt-content em,
+    .txt-default em,
+    .txt-content i,
+    .txt-default i {
+      font-style: italic;
+    }
+
+    /* 5. Print Styles */
+    @media print {
+      body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .bg-body,
+      .bg-surface,
+      .bg-muted,
+      .bg-subtle {
+        background-color: transparent !important;
+      }
+
+      .txt-link,
+      .txt-content a,
+      .txt-default a {
+        color: #000000 !important;
+        text-decoration: underline !important;
+      }
+
+      .txt-code,
+      .txt-content code,
+      .txt-default code {
+        border: 1px solid #d0d7de !important;
+        background-color: #f6f8fa !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+    /* ==========================================================================
+       Doc2Flow - Unknown Feature Styles (Fallback Element)
+       ========================================================================== */
+
+    /* 1. Base Variables & Tokens */
+    :root {
+      /* Unknown Element Colors */
+      --unknown-bg: #fee2e2;
+      --unknown-border: #ef4444;
+      --unknown-color: #991b1b;
+    }
+
+    /* 2. Unknown Fallback Component (unknown-*) */
+    .unknown-default {
+      font-family: var(--font-sans, Arial, sans-serif);
+      font-size: var(--txt-size-base, 14px);
+      line-height: var(--txt-line-height, 1.5);
+      color: var(--unknown-color);
+      background-color: var(--unknown-bg);
+      border: 1px solid var(--unknown-border);
+      border-radius: 4px;
+      padding: 8px 12px;
+      margin: 8px 0;
+    }
+
+    /* 3. Print Styles */
+    @media print {
+      .unknown-default {
+        border: 1px solid #000000 !important;
+        background-color: #fee2e2 !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
   </style>
 </head>
 <body>
   <header class="doc-header">
   </header>
   <main class="doc-body">
-    <p class="txt-default">{
-  "parameters": {
-    "date": "25.07.2026",
-    "language": "de",
-    "numbered_sections": "true",
-    "subtitle": "Umfassendes Testdokument für alle aktuellen und zukünftigen Funktionen",
-    "title": "Doc2Flow Deutscher Showcase",
-    "version": "1.0.0"
-  },
-  "header": [
-  ],
-  "body": [
-    {
-      "kind": "text",
-      "content": "[Variables]"
-    },
-    {
-      "kind": "table",
-      "alignments": ["none", "none"],
-      "rows": [
-        ["Variable", "Value"],
-        ["SERVER_NAME", "prod-srv-de-01"],
-        ["PORT", "8080"],
-        ["API_KEY", "secret-key-de-12345"]
-      ]
-    },
-    {
-      "kind": "section",
-      "level": 1,
-      "title": "Teil 1: Systemeinrichtung & Vorbereitung",
-      "children": [
-        {
-          "kind": "text",
-          "content": "Dieser übergeordnete Abschnitt beschreibt die grundlegende Systemkonfiguration. Aufgaben in H1-Abschnitten besitzen keinen eigenen Badge-Indikator, fließen aber voll in die Gesamtfortschrittsanzeige ein."
-        },
-        {
-          "kind": "check_box_item",
-          "depth": 0,
-          "checked": true,
-          "content": {
-            "kind": "text",
-            "content": "Allgemeine Sicherheitsunterweisung für Techniker durchgeführt"
-          }
-        },
-        {
-          "kind": "section",
-          "level": 2,
-          "title": "Abschnitt 1: Übersicht & Richtlinien",
-          "children": [
-            {
-              "kind": "text",
-              "content": "Dies ist ein beliebiger Textabsatz im Abschnitts-Hauptteil. Er liefert allgemeine Anweisungen und Informationen für den Bearbeiter, die vor Beginn des Verfahrens durchgelesen werden sollten."
-            },
-            {
-              "kind": "image",
-              "alt": "Beispiel Systemdiagramm",
-              "url": "../resources/images/example1.jpg"
-            },
-            {
-              "kind": "image",
-              "alt": "Externes Remote-Bild",
-              "url": "https://picsum.photos/600/300"
-            },
-            {
-              "kind": "image",
-              "alt": "Fehlerhaftes externes Bild",
-              "url": "https://invalid-host-doc2flow.test/broken-image.jpg"
-            },
-            {
-              "kind": "shoutout",
-              "subkind": "note",
-              "content": "Dies ist eine neutrale Hinweis-Box mit Standard-Kontext."
-            },
-            {
-              "kind": "shoutout",
-              "subkind": "tip",
-              "content": "Dies ist eine grüne Tipp-Box mit Empfehlungen oder Best Practices."
-            },
-            {
-              "kind": "shoutout",
-              "subkind": "important",
-              "content": "Dies ist eine violette Wichtig-Box, die auf kritische Anforderungen hinweist."
-            },
-            {
-              "kind": "shoutout",
-              "subkind": "warning",
-              "content": "Dies ist eine gelbe Warnung-Box, die zur Vorsicht bei potenziellen Problemen rät."
-            },
-            {
-              "kind": "shoutout",
-              "subkind": "caution",
-              "content": "Dies ist eine rote Achtung-Box, die vor gefährlichen Aktionen oder Datenverlust warnt."
-            },
-            {
-              "kind": "shoutout",
-              "subkind": "note",
-              "content": "Dies ist eine mehrzeilige Hinweis-Box mit detaillierten Hintergrundinformationen und umfassenden Anweisungen für den Endbenutzer. Sie erstreckt sich über mehrere Sätze, um einen flüssigen Textumbruch und eine saubere Ausrichtung in visuellen Hinweisfeldern zu demonstrieren."
-            }
-          ]
-        },
-        {
-          "kind": "section",
-          "level": 2,
-          "title": "Abschnitt 2: Aufgaben-Checkliste",
-          "children": [
-            {
-              "kind": "section",
-              "level": 3,
-              "title": "Einrichtung & Vorbereitung",
-              "children": [
-                {
-                  "kind": "text",
-                  "content": "Dieser beliebige Textabsatz beschreibt die vorbereitenden Schritte, die erfüllt sein müssen, bevor einzelne Aufgaben als erledigt markiert werden."
-                },
-                {
-                  "kind": "check_box_item",
-                  "depth": 0,
-                  "checked": false,
-                  "content": {
-                    "kind": "text",
-                    "content": "Hardware auspacken und Komponenten überprüfen"
-                  }
-                },
-                {
-                  "kind": "check_box_item",
-                  "depth": 1,
-                  "checked": false,
-                  "content": {
-                    "kind": "text",
-                    "content": "Vollständigkeit des Zubehörs kontrollieren"
-                  }
-                },
-                {
-                  "kind": "check_box_item",
-                  "depth": 1,
-                  "checked": true,
-                  "content": {
-                    "kind": "text",
-                    "content": "Gehäuse auf Transportschäden prüfen"
-                  }
-                },
-                {
-                  "kind": "check_box_item",
-                  "depth": 0,
-                  "checked": false,
-                  "content": {
-                    "kind": "text",
-                    "content": "Netzwerk und Stromversorgung anschließen"
-                  }
-                },
-                {
-                  "kind": "ordered_list_item",
-                  "depth": 1,
-                  "position": 1,
-                  "content": {
-                    "kind": "text",
-                    "content": "Primäres Netzwerkkabel in Port 1 einstecken"
-                  }
-                },
-                {
-                  "kind": "ordered_list_item",
-                  "depth": 1,
-                  "position": 2,
-                  "content": {
-                    "kind": "text",
-                    "content": "Redundantes Netzwerkkabel in Port 2 einstecken"
-                  }
-                },
-                {
-                  "kind": "check_box_item",
-                  "depth": 0,
-                  "checked": true,
-                  "content": {
-                    "kind": "text",
-                    "content": "Initialer Einschalttest abgeschlossen"
-                  }
-                },
-                {
-                  "kind": "text",
-                  "content": "[Externe Systemdokumentation](https://example.com/docs)"
-                },
-                {
-                  "kind": "image",
-                  "alt": "Systemspezifikation PDF herunterladen",
-                  "url": "https://example.com/dateien/spezifikation.pdf"
-                }
-              ]
-            },
-            {
-              "kind": "section",
-              "level": 3,
-              "title": "Software-Konfiguration",
-              "children": [
-                {
-                  "kind": "check_box_item",
-                  "depth": 0,
-                  "checked": false,
-                  "content": {
-                    "kind": "text",
-                    "content": "Neueste Systemupdates installieren"
-                  }
-                },
-                {
-                  "kind": "check_box_item",
-                  "depth": 0,
-                  "checked": false,
-                  "content": {
-                    "kind": "text",
-                    "content": "Firewall-Regeln gemäß Unternehmensrichtlinie konfigurieren"
-                  }
-                },
-                {
-                  "kind": "check_box_item",
-                  "depth": 0,
-                  "checked": true,
-                  "content": {
-                    "kind": "text",
-                    "content": "Fernzugriffs-Dienst überprüfen"
-                  }
-                },
-                {
-                  "kind": "image",
-                  "alt": "Software-Konfiguration Screenshots",
-                  "url": "../resources/images/example2.jpg"
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "kind": "section",
-      "level": 1,
-      "title": "Teil 2: Wartung & Systemreferenz",
-      "children": [
-        {
-          "kind": "section",
-          "level": 2,
-          "title": "Abschnitt 3: Referenz & Code-Blöcke",
-          "children": [
-            {
-              "kind": "section",
-              "level": 3,
-              "title": "System-Registrierungseinstellungen",
-              "children": [
-                {
-                  "kind": "text",
-                  "content": "Der folgende Konfigurationsauszug muss angewendet werden, um automatische Updates zu deaktivieren:"
-                },
-                {
-                  "kind": "code_block",
-                  "language": "ini",
-                  "content": "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate]\n\"DisableWindowsUpdateAccess\"=dword:00000001\n\"Server\"=\"{{SERVER_NAME}}\""
-                }
-              ]
-            },
-            {
-              "kind": "section",
-              "level": 3,
-              "title": "Unbeschrifteter Skript-Block",
-              "children": [
-                {
-                  "kind": "code_block",
-                  "language": null,
-                  "content": "echo \"Doc2Flow Showcase-Umgebung {{SERVER_NAME}}:{{PORT}} mit Schlüssel {{API_KEY}} wird initialisiert...\""
-                }
-              ]
-            },
-            {
-              "kind": "section",
-              "level": 3,
-              "title": "Systemkomponenten & Spezifikationen",
-              "children": [
-                {
-                  "kind": "text",
-                  "content": "Die folgende Tabelle enthält die Spezifikationen der installierten Hardwarekomponenten:"
-                },
-                {
-                  "kind": "table",
-                  "alignments": ["none", "none", "none", "none"],
-                  "rows": [
-                    ["Komponente", "Modell", "Status", "Kapazität"],
-                    ["Hauptprozessor", "Intel Xeon E-2388G", "Aktiv", "8 Kerne / 16 Threads"],
-                    ["Arbeitsspeicher", "DDR4 ECC Registered", "Optimal", "64 GB (2x 32 GB)"],
-                    ["Primärspeicher", "NVMe SSD PCIe 4.0", "Normal", "2 TB RAID 1"],
-                    ["Netzwerkschnittstelle", "Dual 10GbE SFP+", "Verbunden", "10 Gbps"]
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "kind": "section",
-          "level": 2,
-          "title": "Abschnitt 4: Informationslisten",
-          "children": [
-            {
-              "kind": "bullet_list_item",
-              "depth": 0,
-              "content": {
-                "kind": "text",
-                "content": "Hauptaufgabe & Systemüberwachung"
-              }
-            },
-            {
-              "kind": "ordered_list_item",
-              "depth": 1,
-              "position": 1,
-              "content": {
-                "kind": "text",
-                "content": "Unterpunkt A 1: Dienststatus abfragen"
-              }
-            },
-            {
-              "kind": "ordered_list_item",
-              "depth": 1,
-              "position": 2,
-              "content": {
-                "kind": "text",
-                "content": "Unterpunkt A 2: Fehlerprotokoll analysieren"
-              }
-            },
-            {
-              "kind": "bullet_list_item",
-              "depth": 0,
-              "content": {
-                "kind": "text",
-                "content": "Vorgehensweise bei Wartungsarbeiten"
-              }
-            },
-            {
-              "kind": "check_box_item",
-              "depth": 1,
-              "checked": false,
-              "content": {
-                "kind": "text",
-                "content": "Testlauf vorbereiten"
-              }
-            },
-            {
-              "kind": "bullet_list_item",
-              "depth": 3,
-              "content": {
-                "kind": "text",
-                "content": "Detailprüfung Parameter X"
-              }
-            },
-            {
-              "kind": "bullet_list_item",
-              "depth": 3,
-              "content": {
-                "kind": "text",
-                "content": "Detailprüfung Parameter Y"
-              }
-            },
-            {
-              "kind": "check_box_item",
-              "depth": 1,
-              "checked": true,
-              "content": {
-                "kind": "text",
-                "content": "Abnahme durch Administrator"
-              }
-            },
-            {
-              "kind": "ordered_list_item",
-              "depth": 0,
-              "position": 1,
-              "content": {
-                "kind": "text",
-                "content": "Sequenzieller Hauptschritt 1"
-              }
-            },
-            {
-              "kind": "bullet_list_item",
-              "depth": 2,
-              "content": {
-                "kind": "text",
-                "content": "Untergeordneter Prüfschritt 1.1"
-              }
-            },
-            {
-              "kind": "bullet_list_item",
-              "depth": 2,
-              "content": {
-                "kind": "text",
-                "content": "Untergeordneter Prüfschritt 1.2"
-              }
-            },
-            {
-              "kind": "text",
-              "content": "2. Sequenzieller Hauptschritt 2"
-            },
-            {
-              "kind": "ordered_list_item",
-              "depth": 2,
-              "position": 1,
-              "content": {
-                "kind": "text",
-                "content": "Detaillierter Teilverlauf 2.a"
-              }
-            },
-            {
-              "kind": "ordered_list_item",
-              "depth": 2,
-              "position": 2,
-              "content": {
-                "kind": "text",
-                "content": "Detaillierter Teilverlauf 2.b"
-              }
-            },
-            {
-              "kind": "text",
-              "content": "3. Sequenzieller Hauptschritt 3"
-            },
-            {
-              "kind": "unknown",
-              "content": "---"
-            },
-            {
-              "kind": "image",
-              "alt": "System-Informationsübersicht",
-              "url": "../resources/images/example3.jpg"
-            },
-            {
-              "kind": "image",
-              "alt": "Weißes Testbild mit Rahmen",
-              "url": "../resources/images/example4.png"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "kind": "section",
-      "level": 1,
-      "title": "Leerer Hauptabschnitt",
-      "children": [
-        {
-          "kind": "section",
-          "level": 2,
-          "title": "Leerer Unterabschnitt",
-          "children": []
-        }
-      ]
-    }
-  ]
-}</p>
+    <p class="txt-default">[Variables]</p><section class="section" data-level="1"><h1>Teil 1: Systemeinrichtung & Vorbereitung</h1><div class="section-body"><p class="txt-default">Dieser übergeordnete Abschnitt beschreibt die grundlegende Systemkonfiguration. Aufgaben in H1-Abschnitten besitzen keinen eigenen Badge-Indikator, fließen aber voll in die Gesamtfortschrittsanzeige ein.</p><p class="txt-default">Allgemeine Sicherheitsunterweisung für Techniker durchgeführt</p><section class="section" data-level="2"><h2>Abschnitt 1: Übersicht & Richtlinien</h2><div class="section-body"><p class="txt-default">Dies ist ein beliebiger Textabsatz im Abschnitts-Hauptteil. Er liefert allgemeine Anweisungen und Informationen für den Bearbeiter, die vor Beginn des Verfahrens durchgelesen werden sollten.</p></div></section><section class="section" data-level="2"><h2>Abschnitt 2: Aufgaben-Checkliste</h2><div class="section-body"><section class="section" data-level="3"><h3>Einrichtung & Vorbereitung</h3><div class="section-body"><p class="txt-default">Dieser beliebige Textabsatz beschreibt die vorbereitenden Schritte, die erfüllt sein müssen, bevor einzelne Aufgaben als erledigt markiert werden.</p><p class="txt-default">Hardware auspacken und Komponenten überprüfen</p><p class="txt-default">Vollständigkeit des Zubehörs kontrollieren</p><p class="txt-default">Gehäuse auf Transportschäden prüfen</p><p class="txt-default">Netzwerk und Stromversorgung anschließen</p><p class="txt-default">Primäres Netzwerkkabel in Port 1 einstecken</p><p class="txt-default">Redundantes Netzwerkkabel in Port 2 einstecken</p><p class="txt-default">Initialer Einschalttest abgeschlossen</p><p class="txt-default">[Externe Systemdokumentation](https://example.com/docs)</p></div></section><section class="section" data-level="3"><h3>Software-Konfiguration</h3><div class="section-body"><p class="txt-default">Neueste Systemupdates installieren</p><p class="txt-default">Firewall-Regeln gemäß Unternehmensrichtlinie konfigurieren</p><p class="txt-default">Fernzugriffs-Dienst überprüfen</p></div></section></div></section></div></section><section class="section" data-level="1"><h1>Teil 2: Wartung & Systemreferenz</h1><div class="section-body"><section class="section" data-level="2"><h2>Abschnitt 3: Referenz & Code-Blöcke</h2><div class="section-body"><section class="section" data-level="3"><h3>System-Registrierungseinstellungen</h3><div class="section-body"><p class="txt-default">Der folgende Konfigurationsauszug muss angewendet werden, um automatische Updates zu deaktivieren:</p></div></section><section class="section" data-level="3"><h3>Unbeschrifteter Skript-Block</h3><div class="section-body"></div></section><section class="section" data-level="3"><h3>Systemkomponenten & Spezifikationen</h3><div class="section-body"><p class="txt-default">Die folgende Tabelle enthält die Spezifikationen der installierten Hardwarekomponenten:</p></div></section></div></section><section class="section" data-level="2"><h2>Abschnitt 4: Informationslisten</h2><div class="section-body"><p class="txt-default">Hauptaufgabe & Systemüberwachung</p><p class="txt-default">Unterpunkt A 1: Dienststatus abfragen</p><p class="txt-default">Unterpunkt A 2: Fehlerprotokoll analysieren</p><p class="txt-default">Vorgehensweise bei Wartungsarbeiten</p><p class="txt-default">Testlauf vorbereiten</p><p class="txt-default">Detailprüfung Parameter X</p><p class="txt-default">Detailprüfung Parameter Y</p><p class="txt-default">Abnahme durch Administrator</p><p class="txt-default">Sequenzieller Hauptschritt 1</p><p class="txt-default">Untergeordneter Prüfschritt 1.1</p><p class="txt-default">Untergeordneter Prüfschritt 1.2</p><p class="txt-default">2. Sequenzieller Hauptschritt 2</p><p class="txt-default">Detaillierter Teilverlauf 2.a</p><p class="txt-default">Detaillierter Teilverlauf 2.b</p><p class="txt-default">3. Sequenzieller Hauptschritt 3</p><p class="unknown-default">---</p></div></section></div></section><section class="section" data-level="1"><h1>Leerer Hauptabschnitt</h1><div class="section-body"><section class="section" data-level="2"><h2>Leerer Unterabschnitt</h2><div class="section-body"></div></section></div></section>
   </main><!-- doc-body -->
   <script>
     window.d2f = window.d2f || {};

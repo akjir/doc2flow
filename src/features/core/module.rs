@@ -18,8 +18,8 @@ impl CoreFeature {
 }
 
 impl Feature for CoreFeature {
-    /// Converts a document element into an HTML string representation.
-    fn to_html(&self, element: &DocumentElement) -> String {
+    /// Converts a document element and inner content into an HTML string representation.
+    fn to_html(&self, element: &DocumentElement, content: &str) -> String {
         match element {
             DocumentElement::Text(text) => {
                 let mut out = String::with_capacity(text.len() + 32);
@@ -29,11 +29,11 @@ impl Feature for CoreFeature {
                 out
             }
             DocumentElement::Section {
-                children,
                 level,
                 title,
+                ..
             } => {
-                let mut out = String::with_capacity(title.len() + 128);
+                let mut out = String::with_capacity(title.len() + content.len() + 128);
                 out.push_str("<section class=\"section\" data-level=\"");
                 out.push_str(&level.to_string());
                 out.push_str("\"><h");
@@ -43,9 +43,7 @@ impl Feature for CoreFeature {
                 out.push_str("</h");
                 out.push_str(&level.to_string());
                 out.push_str("><div class=\"section-body\">");
-                for child in children {
-                    out.push_str(&self.to_html(child));
-                }
+                out.push_str(content);
                 out.push_str("</div></section>");
                 out
             }
@@ -76,20 +74,20 @@ mod tests {
         let feature = CoreFeature::new();
         let element = DocumentElement::text("Hello, world!");
         assert_eq!(
-            feature.to_html(&element),
+            feature.to_html(&element, ""),
             "<p class=\"txt-default\">Hello, world!</p>"
         );
     }
 
     #[test]
-    fn test_core_feature_renders_section_placeholder() {
+    fn test_core_feature_renders_section_with_content() {
         let feature = CoreFeature::new();
         let section = DocumentElement::section(
             1,
             "Overview",
             vec![DocumentElement::text("Section body content")],
         );
-        let html = feature.to_html(&section);
+        let html = feature.to_html(&section, "<p class=\"txt-default\">Section body content</p>");
         assert_eq!(
             html,
             "<section class=\"section\" data-level=\"1\"><h1>Overview</h1><div class=\"section-body\"><p class=\"txt-default\">Section body content</p></div></section>"
@@ -100,6 +98,6 @@ mod tests {
     fn test_core_feature_empty_for_unsupported_elements() {
         let feature = CoreFeature::new();
         let code = DocumentElement::code_block(Some("rust"), "fn main() {}");
-        assert_eq!(feature.to_html(&code), "");
+        assert_eq!(feature.to_html(&code, ""), "");
     }
 }

@@ -1066,8 +1066,8 @@ fn test_parser_and_builder_pipeline_integration() {
     assert_eq!(features.to_features_string(), "core, check_box_item");
     let content = doc2flow::core::builder::build(&document, &features);
     assert!(!content.as_bytes().is_empty());
-    assert!(content.contains("\"title\": \"Pipeline Test\""));
-    assert!(content.contains("\"title\": \"Pipeline Heading\""));
+    assert!(content.contains("<h1>Pipeline Heading</h1>"));
+    assert!(content.contains("<p class=\"txt-default\">Content paragraph</p>"));
     assert!(content.contains("<title>Pipeline Test</title>"));
     assert!(content.contains("<meta name=\"features\" content=\"core, check_box_item\">"));
     assert!(!content.contains("{{FEATURES}}"));

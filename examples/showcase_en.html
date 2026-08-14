@@ -3,472 +3,257 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+197.cf26808.dev">
-  <meta name="version" content="0.9.4+197.cf26808.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+200.00bd48e.dev">
+  <meta name="version" content="0.9.4+200.00bd48e.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-13T21:30:44Z">
+  <meta name="dcterms.created" content="2026-08-14T16:34:03Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
-  <meta name="features" content="core, bullet_list_item, check_box_item, code_block, image, ordered_list_item, shoutout, table">
-  <title>{{TITLE}}</title>
+  <meta name="features" content="core, bullet_list_item, check_box_item, code_block, image, ordered_list_item, shoutout, table, unknown">
+  <title>Doc2Flow English Showcase</title>
   <style>
-    {{CSS}}
+    /* ==========================================================================
+       Doc2Flow - Core Feature Styles (Default Text & Backgrounds)
+       ========================================================================== */
+
+    /* 1. Base Variables & Tokens */
+    :root {
+      /* Fonts */
+      --font-sans: Arial, sans-serif;
+      --font-mono: 'Courier New', monospace;
+
+      /* Typography Colors */
+      --txt-color-default: #444444;
+      --txt-color-muted: #8c959f;
+      --txt-color-heading: #163a5c;
+      --txt-color-link: #2e75b6;
+      --txt-color-link-hover: #163a5c;
+      --txt-color-code: #24292f;
+      --txt-bg-code: #f0f2f5;
+
+      /* Background Colors */
+      --bg-body: #eef2f7;
+      --bg-surface: #ffffff;
+      --bg-muted: #f8fafc;
+      --bg-subtle: #f1f5f9;
+
+      /* Typography Sizing & Line Height */
+      --txt-size-base: 14px;
+      --txt-size-sm: 12px;
+      --txt-size-xs: 11px;
+      --txt-size-lg: 16px;
+      --txt-line-height: 1.5;
+    }
+
+    /* 2. Global Resets & Defaults */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      font-size: var(--txt-size-base);
+      line-height: var(--txt-line-height);
+      color: var(--txt-color-default);
+      background-color: var(--bg-body);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* 3. Background Classes (bg-*) */
+    .bg-body {
+      background-color: var(--bg-body);
+    }
+
+    .bg-surface {
+      background-color: var(--bg-surface);
+    }
+
+    .bg-muted {
+      background-color: var(--bg-muted);
+    }
+
+    .bg-subtle {
+      background-color: var(--bg-subtle);
+    }
+
+    /* 4. Text Content & Components (txt-*) */
+    .txt-default {
+      font-family: var(--font-sans);
+      font-size: var(--txt-size-base);
+      line-height: var(--txt-line-height);
+      color: var(--txt-color-default);
+    }
+
+    .txt-content {
+      flex: 1;
+      min-width: 0;
+      font-size: 13px;
+      line-height: var(--txt-line-height);
+      color: var(--txt-color-default);
+      word-break: break-word;
+    }
+
+    .txt-lead {
+      font-size: var(--txt-size-lg);
+      line-height: 1.6;
+      color: var(--txt-color-default);
+    }
+
+    .txt-muted {
+      color: var(--txt-color-muted);
+      font-size: var(--txt-size-sm);
+    }
+
+    .txt-small {
+      font-size: var(--txt-size-sm);
+      line-height: 1.4;
+    }
+
+    .txt-code {
+      font-family: var(--font-mono);
+      font-size: 0.9em;
+      color: var(--txt-color-code);
+      background-color: var(--txt-bg-code);
+      padding: 2px 5px;
+      border-radius: 3px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .txt-link {
+      color: var(--txt-color-link);
+      text-decoration: none;
+      transition: color 0.15s ease, text-decoration 0.15s ease;
+    }
+
+    .txt-link:hover {
+      color: var(--txt-color-link-hover);
+      text-decoration: underline;
+    }
+
+    .txt-bold {
+      font-weight: bold;
+    }
+
+    .txt-italic {
+      font-style: italic;
+    }
+
+    /* Base text element formatting inside text content */
+    .txt-content a,
+    .txt-default a {
+      color: var(--txt-color-link);
+      text-decoration: none;
+    }
+
+    .txt-content a:hover,
+    .txt-default a:hover {
+      color: var(--txt-color-link-hover);
+      text-decoration: underline;
+    }
+
+    .txt-content code,
+    .txt-default code {
+      font-family: var(--font-mono);
+      font-size: 0.9em;
+      color: var(--txt-color-code);
+      background-color: var(--txt-bg-code);
+      padding: 1px 4px;
+      border-radius: 3px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .txt-content strong,
+    .txt-default strong,
+    .txt-content b,
+    .txt-default b {
+      font-weight: 600;
+    }
+
+    .txt-content em,
+    .txt-default em,
+    .txt-content i,
+    .txt-default i {
+      font-style: italic;
+    }
+
+    /* 5. Print Styles */
+    @media print {
+      body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .bg-body,
+      .bg-surface,
+      .bg-muted,
+      .bg-subtle {
+        background-color: transparent !important;
+      }
+
+      .txt-link,
+      .txt-content a,
+      .txt-default a {
+        color: #000000 !important;
+        text-decoration: underline !important;
+      }
+
+      .txt-code,
+      .txt-content code,
+      .txt-default code {
+        border: 1px solid #d0d7de !important;
+        background-color: #f6f8fa !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+    /* ==========================================================================
+       Doc2Flow - Unknown Feature Styles (Fallback Element)
+       ========================================================================== */
+
+    /* 1. Base Variables & Tokens */
+    :root {
+      /* Unknown Element Colors */
+      --unknown-bg: #fee2e2;
+      --unknown-border: #ef4444;
+      --unknown-color: #991b1b;
+    }
+
+    /* 2. Unknown Fallback Component (unknown-*) */
+    .unknown-default {
+      font-family: var(--font-sans, Arial, sans-serif);
+      font-size: var(--txt-size-base, 14px);
+      line-height: var(--txt-line-height, 1.5);
+      color: var(--unknown-color);
+      background-color: var(--unknown-bg);
+      border: 1px solid var(--unknown-border);
+      border-radius: 4px;
+      padding: 8px 12px;
+      margin: 8px 0;
+    }
+
+    /* 3. Print Styles */
+    @media print {
+      .unknown-default {
+        border: 1px solid #000000 !important;
+        background-color: #fee2e2 !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
   </style>
 </head>
 <body>
   <header class="doc-header">
   </header>
   <main class="doc-body">
-    <p class="txt-default">{
-  "parameters": {
-    "date": "2026-07-25",
-    "language": "en",
-    "numbered_sections": "true",
-    "subtitle": "Comprehensive test document for all present and future features",
-    "title": "Doc2Flow English Showcase",
-    "version": "1.0.0"
-  },
-  "header": [
-  ],
-  "body": [
-    {
-      "kind": "text",
-      "content": "[Variables]"
-    },
-    {
-      "kind": "table",
-      "alignments": ["none", "none"],
-      "rows": [
-        ["Variable", "Value"],
-        ["SERVER_NAME", "prod-srv-01"],
-        ["PORT", "8080"],
-        ["API_KEY", "secret-key-en-12345"]
-      ]
-    },
-    {
-      "kind": "section",
-      "level": 1,
-      "title": "Part 1: System Setup & Preparation",
-      "children": [
-        {
-          "kind": "text",
-          "content": "This top-level section describes the basic system configuration. Tasks within H1 sections do not display an individual badge indicator, but contribute fully to the overall progress tracking."
-        },
-        {
-          "kind": "check_box_item",
-          "depth": 0,
-          "checked": true,
-          "content": {
-            "kind": "text",
-            "content": "General safety briefing for technicians completed"
-          }
-        },
-        {
-          "kind": "section",
-          "level": 2,
-          "title": "Section 1: Overview & Guidelines",
-          "children": [
-            {
-              "kind": "text",
-              "content": "This is an arbitrary text paragraph in the section body. It provides general instructions and information for the operator to review before starting the procedure."
-            },
-            {
-              "kind": "image",
-              "alt": "Example System Architecture",
-              "url": "../resources/images/example1.jpg"
-            },
-            {
-              "kind": "image",
-              "alt": "External Remote Image",
-              "url": "https://picsum.photos/600/300"
-            },
-            {
-              "kind": "image",
-              "alt": "Broken External Image",
-              "url": "https://invalid-host-doc2flow.test/broken-image.jpg"
-            },
-            {
-              "kind": "shoutout",
-              "subkind": "note",
-              "content": "This is a neutral Note callout box providing standard context."
-            },
-            {
-              "kind": "shoutout",
-              "subkind": "tip",
-              "content": "This is a green Tip box offering recommendations or best practices."
-            },
-            {
-              "kind": "shoutout",
-              "subkind": "important",
-              "content": "This is a purple Important box highlighting critical requirements."
-            },
-            {
-              "kind": "shoutout",
-              "subkind": "warning",
-              "content": "This is a yellow Warning box advising caution for potential issues."
-            },
-            {
-              "kind": "shoutout",
-              "subkind": "caution",
-              "content": "This is a red Caution box warning against dangerous operations or data loss."
-            },
-            {
-              "kind": "shoutout",
-              "subkind": "note",
-              "content": "This is a multi-line callout box containing detailed background information and comprehensive instructions for the end user. It spans across multiple sentences to demonstrate fluid text wrapping and clean alignment within visual callout containers."
-            }
-          ]
-        },
-        {
-          "kind": "section",
-          "level": 2,
-          "title": "Section 2: Task Checklist",
-          "children": [
-            {
-              "kind": "section",
-              "level": 3,
-              "title": "Setup & Preparation",
-              "children": [
-                {
-                  "kind": "text",
-                  "content": "This arbitrary text paragraph describes the preliminary setup steps that must be fulfilled before marking individual items as completed."
-                },
-                {
-                  "kind": "check_box_item",
-                  "depth": 0,
-                  "checked": false,
-                  "content": {
-                    "kind": "text",
-                    "content": "Unpack hardware and verify components"
-                  }
-                },
-                {
-                  "kind": "check_box_item",
-                  "depth": 1,
-                  "checked": false,
-                  "content": {
-                    "kind": "text",
-                    "content": "Inspect accessory completeness"
-                  }
-                },
-                {
-                  "kind": "check_box_item",
-                  "depth": 1,
-                  "checked": true,
-                  "content": {
-                    "kind": "text",
-                    "content": "Check casing for transport damage"
-                  }
-                },
-                {
-                  "kind": "check_box_item",
-                  "depth": 0,
-                  "checked": false,
-                  "content": {
-                    "kind": "text",
-                    "content": "Connect network and power supply"
-                  }
-                },
-                {
-                  "kind": "ordered_list_item",
-                  "depth": 1,
-                  "position": 1,
-                  "content": {
-                    "kind": "text",
-                    "content": "Plug primary network cable into Port 1"
-                  }
-                },
-                {
-                  "kind": "ordered_list_item",
-                  "depth": 1,
-                  "position": 2,
-                  "content": {
-                    "kind": "text",
-                    "content": "Plug redundant network cable into Port 2"
-                  }
-                },
-                {
-                  "kind": "check_box_item",
-                  "depth": 0,
-                  "checked": true,
-                  "content": {
-                    "kind": "text",
-                    "content": "Initial power-on check completed"
-                  }
-                },
-                {
-                  "kind": "text",
-                  "content": "[External System Documentation](https://example.com/docs)"
-                },
-                {
-                  "kind": "image",
-                  "alt": "Download System Specification PDF",
-                  "url": "https://example.com/files/specification.pdf"
-                }
-              ]
-            },
-            {
-              "kind": "section",
-              "level": 3,
-              "title": "Software Configuration",
-              "children": [
-                {
-                  "kind": "check_box_item",
-                  "depth": 0,
-                  "checked": false,
-                  "content": {
-                    "kind": "text",
-                    "content": "Install latest system updates"
-                  }
-                },
-                {
-                  "kind": "check_box_item",
-                  "depth": 0,
-                  "checked": false,
-                  "content": {
-                    "kind": "text",
-                    "content": "Configure firewall rules according to company policy"
-                  }
-                },
-                {
-                  "kind": "check_box_item",
-                  "depth": 0,
-                  "checked": true,
-                  "content": {
-                    "kind": "text",
-                    "content": "Verify remote access service"
-                  }
-                },
-                {
-                  "kind": "image",
-                  "alt": "Software Configuration Overview",
-                  "url": "../resources/images/example2.jpg"
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "kind": "section",
-      "level": 1,
-      "title": "Part 2: Maintenance & System Reference",
-      "children": [
-        {
-          "kind": "section",
-          "level": 2,
-          "title": "Section 3: Reference & Code Blocks",
-          "children": [
-            {
-              "kind": "section",
-              "level": 3,
-              "title": "System Registry Settings",
-              "children": [
-                {
-                  "kind": "text",
-                  "content": "The following configuration snippet must be applied to disable automatic updates:"
-                },
-                {
-                  "kind": "code_block",
-                  "language": "ini",
-                  "content": "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate]\n\"DisableWindowsUpdateAccess\"=dword:00000001\n\"Server\"=\"{{SERVER_NAME}}\""
-                }
-              ]
-            },
-            {
-              "kind": "section",
-              "level": 3,
-              "title": "Unlabelled Script Block",
-              "children": [
-                {
-                  "kind": "code_block",
-                  "language": null,
-                  "content": "echo \"Initializing Doc2Flow showcase environment {{SERVER_NAME}}:{{PORT}} with key {{API_KEY}}...\""
-                }
-              ]
-            },
-            {
-              "kind": "section",
-              "level": 3,
-              "title": "System Components & Specifications",
-              "children": [
-                {
-                  "kind": "text",
-                  "content": "The table below outlines the hardware specifications of the installed system components:"
-                },
-                {
-                  "kind": "table",
-                  "alignments": ["none", "none", "none", "none"],
-                  "rows": [
-                    ["Component", "Model", "Status", "Capacity"],
-                    ["Central Processor", "Intel Xeon E-2388G", "Active", "8 Cores / 16 Threads"],
-                    ["System Memory", "DDR4 ECC Registered", "Optimal", "64 GB (2x 32 GB)"],
-                    ["Primary Storage", "NVMe SSD PCIe 4.0", "Normal", "2 TB RAID 1"],
-                    ["Network Interface", "Dual 10GbE SFP+", "Connected", "10 Gbps"]
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "kind": "section",
-          "level": 2,
-          "title": "Section 4: Informational Lists",
-          "children": [
-            {
-              "kind": "bullet_list_item",
-              "depth": 0,
-              "content": {
-                "kind": "text",
-                "content": "Main task & system monitoring"
-              }
-            },
-            {
-              "kind": "ordered_list_item",
-              "depth": 1,
-              "position": 1,
-              "content": {
-                "kind": "text",
-                "content": "Sub-item A 1: Query service status"
-              }
-            },
-            {
-              "kind": "ordered_list_item",
-              "depth": 1,
-              "position": 2,
-              "content": {
-                "kind": "text",
-                "content": "Sub-item A 2: Analyze error log"
-              }
-            },
-            {
-              "kind": "bullet_list_item",
-              "depth": 0,
-              "content": {
-                "kind": "text",
-                "content": "Procedure for maintenance tasks"
-              }
-            },
-            {
-              "kind": "check_box_item",
-              "depth": 1,
-              "checked": false,
-              "content": {
-                "kind": "text",
-                "content": "Prepare test run"
-              }
-            },
-            {
-              "kind": "bullet_list_item",
-              "depth": 3,
-              "content": {
-                "kind": "text",
-                "content": "Detailed parameter check X"
-              }
-            },
-            {
-              "kind": "bullet_list_item",
-              "depth": 3,
-              "content": {
-                "kind": "text",
-                "content": "Detailed parameter check Y"
-              }
-            },
-            {
-              "kind": "check_box_item",
-              "depth": 1,
-              "checked": true,
-              "content": {
-                "kind": "text",
-                "content": "Approval by system administrator"
-              }
-            },
-            {
-              "kind": "ordered_list_item",
-              "depth": 0,
-              "position": 1,
-              "content": {
-                "kind": "text",
-                "content": "Sequential main step 1"
-              }
-            },
-            {
-              "kind": "bullet_list_item",
-              "depth": 2,
-              "content": {
-                "kind": "text",
-                "content": "Subordinate verification step 1.1"
-              }
-            },
-            {
-              "kind": "bullet_list_item",
-              "depth": 2,
-              "content": {
-                "kind": "text",
-                "content": "Subordinate verification step 1.2"
-              }
-            },
-            {
-              "kind": "text",
-              "content": "2. Sequential main step 2"
-            },
-            {
-              "kind": "ordered_list_item",
-              "depth": 2,
-              "position": 1,
-              "content": {
-                "kind": "text",
-                "content": "Detailed sub-procedure 2.a"
-              }
-            },
-            {
-              "kind": "ordered_list_item",
-              "depth": 2,
-              "position": 2,
-              "content": {
-                "kind": "text",
-                "content": "Detailed sub-procedure 2.b"
-              }
-            },
-            {
-              "kind": "text",
-              "content": "3. Sequential main step 3"
-            },
-            {
-              "kind": "unknown",
-              "content": "---"
-            },
-            {
-              "kind": "image",
-              "alt": "System Information Overview",
-              "url": "../resources/images/example3.jpg"
-            },
-            {
-              "kind": "image",
-              "alt": "White Background Test Image",
-              "url": "../resources/images/example4.png"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "kind": "section",
-      "level": 1,
-      "title": "Empty Top-Level Section",
-      "children": [
-        {
-          "kind": "section",
-          "level": 2,
-          "title": "Empty Sub-Section",
-          "children": []
-        }
-      ]
-    }
-  ]
-}</p>
+    <p class="txt-default">[Variables]</p><section class="section" data-level="1"><h1>Part 1: System Setup & Preparation</h1><div class="section-body"><p class="txt-default">This top-level section describes the basic system configuration. Tasks within H1 sections do not display an individual badge indicator, but contribute fully to the overall progress tracking.</p><p class="txt-default">General safety briefing for technicians completed</p><section class="section" data-level="2"><h2>Section 1: Overview & Guidelines</h2><div class="section-body"><p class="txt-default">This is an arbitrary text paragraph in the section body. It provides general instructions and information for the operator to review before starting the procedure.</p></div></section><section class="section" data-level="2"><h2>Section 2: Task Checklist</h2><div class="section-body"><section class="section" data-level="3"><h3>Setup & Preparation</h3><div class="section-body"><p class="txt-default">This arbitrary text paragraph describes the preliminary setup steps that must be fulfilled before marking individual items as completed.</p><p class="txt-default">Unpack hardware and verify components</p><p class="txt-default">Inspect accessory completeness</p><p class="txt-default">Check casing for transport damage</p><p class="txt-default">Connect network and power supply</p><p class="txt-default">Plug primary network cable into Port 1</p><p class="txt-default">Plug redundant network cable into Port 2</p><p class="txt-default">Initial power-on check completed</p><p class="txt-default">[External System Documentation](https://example.com/docs)</p></div></section><section class="section" data-level="3"><h3>Software Configuration</h3><div class="section-body"><p class="txt-default">Install latest system updates</p><p class="txt-default">Configure firewall rules according to company policy</p><p class="txt-default">Verify remote access service</p></div></section></div></section></div></section><section class="section" data-level="1"><h1>Part 2: Maintenance & System Reference</h1><div class="section-body"><section class="section" data-level="2"><h2>Section 3: Reference & Code Blocks</h2><div class="section-body"><section class="section" data-level="3"><h3>System Registry Settings</h3><div class="section-body"><p class="txt-default">The following configuration snippet must be applied to disable automatic updates:</p></div></section><section class="section" data-level="3"><h3>Unlabelled Script Block</h3><div class="section-body"></div></section><section class="section" data-level="3"><h3>System Components & Specifications</h3><div class="section-body"><p class="txt-default">The table below outlines the hardware specifications of the installed system components:</p></div></section></div></section><section class="section" data-level="2"><h2>Section 4: Informational Lists</h2><div class="section-body"><p class="txt-default">Main task & system monitoring</p><p class="txt-default">Sub-item A 1: Query service status</p><p class="txt-default">Sub-item A 2: Analyze error log</p><p class="txt-default">Procedure for maintenance tasks</p><p class="txt-default">Prepare test run</p><p class="txt-default">Detailed parameter check X</p><p class="txt-default">Detailed parameter check Y</p><p class="txt-default">Approval by system administrator</p><p class="txt-default">Sequential main step 1</p><p class="txt-default">Subordinate verification step 1.1</p><p class="txt-default">Subordinate verification step 1.2</p><p class="txt-default">2. Sequential main step 2</p><p class="txt-default">Detailed sub-procedure 2.a</p><p class="txt-default">Detailed sub-procedure 2.b</p><p class="txt-default">3. Sequential main step 3</p><p class="unknown-default">---</p></div></section></div></section><section class="section" data-level="1"><h1>Empty Top-Level Section</h1><div class="section-body"><section class="section" data-level="2"><h2>Empty Sub-Section</h2><div class="section-body"></div></section></div></section>
   </main><!-- doc-body -->
   <script>
     window.d2f = window.d2f || {};
