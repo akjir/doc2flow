@@ -359,9 +359,28 @@ mod tests {
     }
 
     #[test]
-    fn test_render_element_unregistered_feature_fallback() {
+    fn test_assemble_styles_with_code_feature() {
+        let mut features = DocumentFeature::default();
+        features.code_block = true;
+        let css = assemble_styles(&features);
+        assert!(css.contains("    --bg-body:"));
+        assert!(css.contains("    --code-bg:"));
+        assert!(css.contains("    .code-default"));
+    }
+
+    #[test]
+    fn test_render_element_code_block() {
         let code_block = DocumentElement::code_block(Some("rust"), "fn main() {}");
-        assert_eq!(render_element(&code_block, 1), "");
+        assert_eq!(
+            render_element(&code_block, 1),
+            "  <pre class=\"code-default\"><code>fn main() {}</code></pre>\n"
+        );
+    }
+
+    #[test]
+    fn test_render_element_unregistered_feature_fallback() {
+        let image = DocumentElement::image("alt", "test.png");
+        assert_eq!(render_element(&image, 1), "");
 
         let directive = DocumentElement::block_directive(
             "unregistered_directive",

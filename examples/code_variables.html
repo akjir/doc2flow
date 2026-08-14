@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+204.848f2c6.dev">
-  <meta name="version" content="0.9.4+204.848f2c6.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+205.7e551e1.dev">
+  <meta name="version" content="0.9.4+205.7e551e1.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-14T17:33:50Z">
+  <meta name="dcterms.created" content="2026-08-14T17:53:44Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, code_block, table">
   <title>Microservice Deployment & Infrastructure Setup</title>
@@ -437,6 +437,58 @@
         padding: 0 10px 40px;
       }
     }
+    /* ==========================================================================
+       Doc2Flow - Code Feature Styles (Code Blocks)
+       ========================================================================== */
+
+    /* 1. Base Variables & Tokens */
+    :root {
+      /* Code Element Colors & Layout */
+      --code-bg: #f0f2f5;
+      --code-border: #d0d7de;
+      --code-color: #24292f;
+      --code-font-size: 11.5px;
+      --code-line-height: 1.6;
+      --code-radius: 10px;
+    }
+
+    /* 2. Code Component (code-*) */
+    .code-default {
+      background-color: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: var(--code-radius);
+      color: var(--code-color);
+      font-family: var(--font-mono, 'Courier New', monospace);
+      font-size: var(--code-font-size);
+      line-height: var(--code-line-height);
+      margin: 8px 0 12px;
+      overflow-x: auto;
+      padding: 12px 16px;
+      white-space: pre;
+    }
+
+    .code-default code {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      color: inherit;
+      font-family: inherit;
+      font-size: inherit;
+      padding: 0;
+    }
+
+    /* 3. Print Styles */
+    @media print {
+      .code-default {
+        background-color: var(--code-bg) !important;
+        border: 1px solid #d0d7de !important;
+        color: #000000 !important;
+        print-color-adjust: exact;
+        white-space: pre-wrap;
+        word-break: break-all;
+        -webkit-print-color-adjust: exact;
+      }
+    }
   </style>
 </head>
 <body>
@@ -458,6 +510,7 @@
             <p class="txt-default">
               Verify connectivity to the primary application server before beginning deployment:
             </p>
+            <pre class="code-default"><code>ping -c 3 {{SYSTEM}}.local</code></pre>
           </div>
         </section>
       </div>
@@ -468,9 +521,11 @@
         <p class="txt-default">
           Check the readiness of the primary database host:
         </p>
+        <pre class="code-default"><code>pg_isready -h {{DB_HOST}} -p 5432 -U postgres</code></pre>
         <p class="txt-default">
           Configure the application database instance environment settings:
         </p>
+        <pre class="code-default"><code>ALTER DATABASE app_db SET configuration.environment = &#39;{{APP_ENV}}&#39;;</code></pre>
       </div>
     </section>
     <section class="section" data-level="2">
@@ -479,9 +534,11 @@
         <p class="txt-default">
           Spin up the API microservice container on the designated port:
         </p>
+        <pre class="code-default"><code>docker run -d --name api-service -e ENV={{APP_ENV}} -p {{PORT}}:8080 acme/api-service:latest</code></pre>
         <p class="txt-default">
           Perform an automated health check against the newly deployed service:
         </p>
+        <pre class="code-default"><code>curl -f -H &quot;Authorization: Bearer {{AUTH_TOKEN}}&quot; https://{{SYSTEM}}.local:{{PORT}}/api/v1/health</code></pre>
       </div>
     </section>
   </main><!-- doc-body -->
