@@ -7,7 +7,7 @@ use crate::core::document::{Document, DocumentElement};
 /// Trait for document feature renderers converting AST elements to HTML.
 pub trait Feature {
     /// Converts a document element and inner content into an HTML string representation.
-    fn to_html(&self, element: &DocumentElement, content: &str, indent: usize) -> String;
+    fn to_html(&self, element: &DocumentElement, content: &str, indent: usize, depth: usize) -> String;
 
     /// Returns optional CSS stylesheet rules for this feature, defaulting to `None`.
     fn css(&self) -> Option<&'static str> {
@@ -539,7 +539,13 @@ mod tests {
     fn test_feature_trait_default_methods() {
         struct MinimalFeature;
         impl Feature for MinimalFeature {
-            fn to_html(&self, _element: &DocumentElement, _content: &str, _indent: usize) -> String {
+            fn to_html(
+                &self,
+                _element: &DocumentElement,
+                _content: &str,
+                _indent: usize,
+                _depth: usize,
+            ) -> String {
                 String::new()
             }
         }

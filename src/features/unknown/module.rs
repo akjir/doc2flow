@@ -26,7 +26,7 @@ fn push_indent(out: &mut String, indent: usize) {
 
 impl Feature for UnknownFeature {
     /// Converts a document element and inner content into an HTML string representation.
-    fn to_html(&self, element: &DocumentElement, _content: &str, indent: usize) -> String {
+    fn to_html(&self, element: &DocumentElement, _content: &str, indent: usize, _depth: usize) -> String {
         match element {
             DocumentElement::Unknown(text) => {
                 let spaces = indent * 2;
@@ -70,7 +70,7 @@ mod tests {
         let feature = UnknownFeature::new();
         let element = DocumentElement::unknown("Unrecognized raw markdown line");
         assert_eq!(
-            feature.to_html(&element, "", 1),
+            feature.to_html(&element, "", 1, 0),
             "  <p class=\"unknown-default\">\n    Unrecognized raw markdown line\n  </p>\n"
         );
     }
@@ -79,6 +79,6 @@ mod tests {
     fn test_unknown_feature_empty_for_unsupported_elements() {
         let feature = UnknownFeature::new();
         let text = DocumentElement::text("Regular text");
-        assert_eq!(feature.to_html(&text, "", 0), "");
+        assert_eq!(feature.to_html(&text, "", 0, 0), "");
     }
 }

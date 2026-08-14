@@ -73,44 +73,6 @@ pub fn assemble_assets(features: &DocumentFeature) -> (String, String) {
     (css_out, js_out)
 }
 
-/// Assembles active CSS stylesheets from core and enabled features indented with 4 spaces.
-///
-/// Core CSS is always included first, followed by active features in canonical order.
-///
-/// # Examples
-///
-/// ```
-/// use doc2flow::core::builder::assemble_styles;
-/// use doc2flow::core::feature::DocumentFeature;
-///
-/// let features = DocumentFeature::default();
-/// let css = assemble_styles(&features);
-/// assert!(css.contains("    --bg-body:"));
-/// ```
-pub fn assemble_styles(features: &DocumentFeature) -> String {
-    let (css, _) = assemble_assets(features);
-    css
-}
-
-/// Assembles active JavaScript client scripts from core and enabled features indented with 4 spaces.
-///
-/// Core JavaScript is always included first, followed by active features in canonical order.
-///
-/// # Examples
-///
-/// ```
-/// use doc2flow::core::builder::assemble_scripts;
-/// use doc2flow::core::feature::DocumentFeature;
-///
-/// let features = DocumentFeature::default();
-/// let js = assemble_scripts(&features);
-/// assert!(js.contains("    window.d2f"));
-/// ```
-pub fn assemble_scripts(features: &DocumentFeature) -> String {
-    let (_, js) = assemble_assets(features);
-    js
-}
-
 /// Builds output content from a structured [`Document`] and active [`DocumentFeature`] flags.
 ///
 /// Returns a formatted string implementing `AsRef<[u8]>`.
@@ -183,25 +145,30 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
 /// assert_eq!(html, "  <div class=\"item item-text\">\n    <span class=\"text-content\">\n      Hello world\n    </span>\n  </div>\n");
 /// ```
 pub fn render_element(element: &DocumentElement, indent: usize) -> String {
+    render_element_with_depth(element, indent, 0)
+}
+
+/// Renders a document element and its children with an explicit list nesting depth.
+fn render_element_with_depth(element: &DocumentElement, indent: usize, depth: usize) -> String {
     let (feature_name, inner_content) = match element {
         DocumentElement::BlockDirective { children, name } => {
             let mut inner = String::new();
             for child in children {
-                inner.push_str(&render_element(child, indent + 1));
+                inner.push_str(&render_element_with_depth(child, indent + 1, 0));
             }
             (name.as_str(), inner)
         }
         DocumentElement::BulletListItem { children, .. } => {
             let mut inner = String::new();
             for child in children {
-                inner.push_str(&render_element(child, indent));
+                inner.push_str(&render_element_with_depth(child, indent, depth + 1));
             }
             ("bullet_list", inner)
         }
         DocumentElement::CheckBoxItem { children, .. } => {
             let mut inner = String::new();
             for child in children {
-                inner.push_str(&render_element(child, indent));
+                inner.push_str(&render_element_with_depth(child, indent, depth + 1));
             }
             ("task", inner)
         }
@@ -211,14 +178,14 @@ pub fn render_element(element: &DocumentElement, indent: usize) -> String {
         DocumentElement::OrderedListItem { children, .. } => {
             let mut inner = String::new();
             for child in children {
-                inner.push_str(&render_element(child, indent));
+                inner.push_str(&render_element_with_depth(child, indent, depth + 1));
             }
             ("ordered_list", inner)
         }
         DocumentElement::Section { children, .. } => {
             let mut inner = String::new();
             for child in children {
-                inner.push_str(&render_element(child, indent + 2));
+                inner.push_str(&render_element_with_depth(child, indent + 2, 0));
             }
             ("core", inner)
         }
@@ -229,7 +196,7 @@ pub fn render_element(element: &DocumentElement, indent: usize) -> String {
     };
 
     match get_feature(feature_name) {
-        Some(feature) => feature.to_html(element, &inner_content, indent),
+        Some(feature) => feature.to_html(element, &inner_content, indent, depth),
         None => inner_content,
     }
 }
@@ -285,7 +252,7 @@ mod tests {
     #[test]
     fn test_assemble_scripts_core_default() {
         let features = DocumentFeature::default();
-        let js = assemble_scripts(&features);
+        let (_, js) = assemble_assets(&features);
         assert!(js.contains("    window.d2f"));
         assert!(js.contains("core"));
     }
@@ -293,7 +260,7 @@ mod tests {
     #[test]
     fn test_assemble_styles_core_default() {
         let features = DocumentFeature::default();
-        let css = assemble_styles(&features);
+        let (css, _) = assemble_assets(&features);
         assert!(css.contains("    --bg-body:"));
         assert!(css.contains("    .txt-default"));
         assert!(!css.contains("--unknown-bg:"));
@@ -304,7 +271,7 @@ mod tests {
     fn test_assemble_styles_with_unknown_feature() {
         let mut features = DocumentFeature::default();
         features.unknown = true;
-        let css = assemble_styles(&features);
+        let (css, _) = assemble_assets(&features);
         assert!(css.contains("    --bg-body:"));
         assert!(css.contains("    .txt-default"));
         assert!(css.contains("    --unknown-bg:"));
@@ -462,7 +429,7 @@ mod tests {
     fn test_assemble_styles_with_code_feature() {
         let mut features = DocumentFeature::default();
         features.code_block = true;
-        let css = assemble_styles(&features);
+        let (css, _) = assemble_assets(&features);
         assert!(css.contains("    --bg-body:"));
         assert!(css.contains("    --code-bg:"));
         assert!(css.contains("    .code-default"));
@@ -491,7 +458,10 @@ mod tests {
         bullet.push_child(child).unwrap();
 
         let html = render_element(&bullet, 1);
-        assert!(html.contains("<div class=\"item item-bullet\">\n    <span class=\"bullet-marker\">&bull;</span>"));
+        assert!(html.contains(
+            "<div class=\"item item-bullet\">\n    <span class=\"bullet-marker\">&bull;</span>"
+        ));
+        assert!(html.contains("<div class=\"item item-bullet\" style=\"--indent: 1;\">"));
         assert!(html.contains("Parent bullet"));
         assert!(html.contains("Child bullet"));
     }
@@ -504,6 +474,7 @@ mod tests {
 
         let html = render_element(&check, 1);
         assert!(html.contains("<div class=\"item item-check checked\">"));
+        assert!(html.contains("<div class=\"item item-check\" style=\"--indent: 1;\">"));
         assert!(html.contains("<input type=\"checkbox\" class=\"check-box\" checked />"));
         assert!(html.contains("<input type=\"checkbox\" class=\"check-box\" />"));
         assert!(html.contains("Done task"));
@@ -517,7 +488,10 @@ mod tests {
         order.push_child(child).unwrap();
 
         let html = render_element(&order, 1);
-        assert!(html.contains("<div class=\"item item-order\">\n    <span class=\"order-marker\">1.</span>"));
+        assert!(html.contains(
+            "<div class=\"item item-order\">\n    <span class=\"order-marker\">1.</span>"
+        ));
+        assert!(html.contains("<div class=\"item item-order\" style=\"--indent: 1;\">"));
         assert!(html.contains("First step"));
         assert!(html.contains("Sub step"));
     }

@@ -19,7 +19,7 @@ impl CodeFeature {
 
 impl Feature for CodeFeature {
     /// Converts a document element and inner content into an HTML string representation.
-    fn to_html(&self, element: &DocumentElement, _content: &str, indent: usize) -> String {
+    fn to_html(&self, element: &DocumentElement, _content: &str, indent: usize, _depth: usize) -> String {
         match element {
             DocumentElement::CodeBlock { content, .. } => {
                 let spaces = indent * 2;
@@ -100,7 +100,7 @@ mod tests {
         let element =
             DocumentElement::code_block(Some("rust"), "fn main() {\n    println!(\"hi\");\n}");
         assert_eq!(
-            feature.to_html(&element, "", 1),
+            feature.to_html(&element, "", 1, 0),
             "  <pre class=\"code-default\"><code>fn main() {\n    println!(&quot;hi&quot;);\n}</code></pre>\n"
         );
     }
@@ -111,7 +111,7 @@ mod tests {
         let element =
             DocumentElement::code_block(None::<String>, "<div class=\"foo\"> && 'bar'</div>");
         assert_eq!(
-            feature.to_html(&element, "", 2),
+            feature.to_html(&element, "", 2, 0),
             "    <pre class=\"code-default\"><code>&lt;div class=&quot;foo&quot;&gt; &amp;&amp; &#39;bar&#39;&lt;/div&gt;</code></pre>\n"
         );
     }
@@ -120,6 +120,6 @@ mod tests {
     fn test_code_feature_empty_for_unsupported_elements() {
         let feature = CodeFeature::new();
         let text = DocumentElement::text("Regular text");
-        assert_eq!(feature.to_html(&text, "", 0), "");
+        assert_eq!(feature.to_html(&text, "", 0, 0), "");
     }
 }

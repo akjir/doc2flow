@@ -39,10 +39,10 @@ impl Feature for OrderedListFeature {
     ///
     /// let feature = OrderedListFeature::new();
     /// let elem = DocumentElement::ordered_list_item(1, DocumentElement::text("First item"));
-    /// let html = feature.to_html(&elem, "", 1);
+    /// let html = feature.to_html(&elem, "", 1, 0);
     /// assert!(html.contains("class=\"item item-order\""));
     /// ```
-    fn to_html(&self, element: &DocumentElement, _content: &str, indent: usize) -> String {
+    fn to_html(&self, element: &DocumentElement, _content: &str, indent: usize, depth: usize) -> String {
         match element {
             DocumentElement::OrderedListItem {
                 content,
@@ -60,7 +60,11 @@ impl Feature for OrderedListFeature {
                     content_len + _content.len() + spaces * 2 + inner_spaces * 2 + 128,
                 );
                 push_indent(&mut out, indent);
-                out.push_str("<div class=\"item item-order\">\n");
+                out.push_str("<div class=\"item item-order\"");
+                if depth > 0 {
+                    let _ = write!(out, " style=\"--indent: {depth};\"");
+                }
+                out.push_str(">\n");
 
                 push_indent(&mut out, indent + 1);
                 out.push_str("<span class=\"order-marker\">");
@@ -483,7 +487,7 @@ mod tests {
     fn test_ordered_list_empty_for_unsupported_elements() {
         let feature = OrderedListFeature::new();
         let text = DocumentElement::text("Regular text");
-        assert_eq!(feature.to_html(&text, "", 0), "");
+        assert_eq!(feature.to_html(&text, "", 0, 0), "");
     }
 
     #[test]
@@ -506,7 +510,7 @@ mod tests {
         let feature = OrderedListFeature::new();
         let element =
             DocumentElement::ordered_list_item(1, DocumentElement::text("First numbered item"));
-        let html = feature.to_html(&element, "", 1);
+        let html = feature.to_html(&element, "", 1, 0);
         let expected = concat!(
             "  <div class=\"item item-order\">\n",
             "    <span class=\"order-marker\">1.</span>\n",
@@ -525,7 +529,7 @@ mod tests {
             1,
             DocumentElement::image("Diagram preview", "images/diagram.png"),
         );
-        let html = feature.to_html(&element, "", 1);
+        let html = feature.to_html(&element, "", 1, 0);
         let expected = concat!(
             "  <div class=\"item item-order\">\n",
             "    <span class=\"order-marker\">1.</span>\n",
@@ -546,7 +550,7 @@ mod tests {
                 "Step with **bold**, *italic*, ~~strike~~, `code`, and <special> & characters",
             ),
         );
-        let html = feature.to_html(&element, "", 0);
+        let html = feature.to_html(&element, "", 0, 0);
         let expected = concat!(
             "<div class=\"item item-order\">\n",
             "  <span class=\"order-marker\">2.</span>\n",
@@ -559,11 +563,30 @@ mod tests {
     }
 
     #[test]
+    fn test_ordered_list_renders_with_depth() {
+        let feature = OrderedListFeature::new();
+        let element = DocumentElement::ordered_list_item(
+            1,
+            DocumentElement::text("Sub-step item"),
+        );
+        let html = feature.to_html(&element, "", 2, 1);
+        let expected = concat!(
+            "    <div class=\"item item-order\" style=\"--indent: 1;\">\n",
+            "      <span class=\"order-marker\">1.</span>\n",
+            "      <span class=\"order-content\">\n",
+            "        Sub-step item\n",
+            "      </span>\n",
+            "    </div>\n"
+        );
+        assert_eq!(html, expected);
+    }
+
+    #[test]
     fn test_ordered_list_renders_with_children() {
         let feature = OrderedListFeature::new();
         let element = DocumentElement::ordered_list_item(1, DocumentElement::text("Parent order"));
-        let child_html = "    <div class=\"item item-order\">\n      <span class=\"order-marker\">1.</span>\n      <span class=\"order-content\">\n        Child item\n      </span>\n    </div>\n";
-        let html = feature.to_html(&element, child_html, 1);
+        let child_html = "    <div class=\"item item-order\" style=\"--indent: 1;\">\n      <span class=\"order-marker\">1.</span>\n      <span class=\"order-content\">\n        Child item\n      </span>\n    </div>\n";
+        let html = feature.to_html(&element, child_html, 1, 0);
         let expected_prefix = "  <div class=\"item item-order\">\n    <span class=\"order-marker\">1.</span>\n    <span class=\"order-content\">\n      Parent order\n    </span>\n  </div>\n";
         assert_eq!(html, format!("{expected_prefix}{child_html}"));
     }

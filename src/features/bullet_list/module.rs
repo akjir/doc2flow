@@ -1,5 +1,7 @@
 //! Bullet list vertical slice feature module.
 
+use std::fmt::Write as _;
+
 use crate::core::document::DocumentElement;
 use crate::core::feature::Feature;
 
@@ -37,10 +39,10 @@ impl Feature for BulletListFeature {
     ///
     /// let feature = BulletListFeature::new();
     /// let elem = DocumentElement::bullet_list_item(DocumentElement::text("List item"));
-    /// let html = feature.to_html(&elem, "", 1);
+    /// let html = feature.to_html(&elem, "", 1, 0);
     /// assert!(html.contains("class=\"item item-bullet\""));
     /// ```
-    fn to_html(&self, element: &DocumentElement, _content: &str, indent: usize) -> String {
+    fn to_html(&self, element: &DocumentElement, _content: &str, indent: usize, depth: usize) -> String {
         match element {
             DocumentElement::BulletListItem { content, .. } => {
                 let spaces = indent * 2;
@@ -54,7 +56,11 @@ impl Feature for BulletListFeature {
                     content_len + _content.len() + spaces * 2 + inner_spaces * 2 + 128,
                 );
                 push_indent(&mut out, indent);
-                out.push_str("<div class=\"item item-bullet\">\n");
+                out.push_str("<div class=\"item item-bullet\"");
+                if depth > 0 {
+                    let _ = write!(out, " style=\"--indent: {depth};\"");
+                }
+                out.push_str(">\n");
 
                 push_indent(&mut out, indent + 1);
                 out.push_str("<span class=\"bullet-marker\">&bull;</span>\n");
@@ -475,7 +481,7 @@ mod tests {
     fn test_bullet_list_empty_for_unsupported_elements() {
         let feature = BulletListFeature::new();
         let text = DocumentElement::text("Regular text");
-        assert_eq!(feature.to_html(&text, "", 0), "");
+        assert_eq!(feature.to_html(&text, "", 0, 0), "");
     }
 
     #[test]
@@ -499,7 +505,7 @@ mod tests {
         let element = DocumentElement::bullet_list_item(
             DocumentElement::image("Alt text", "path/to/image.png"),
         );
-        let html = feature.to_html(&element, "", 1);
+        let html = feature.to_html(&element, "", 1, 0);
         let expected = concat!(
             "  <div class=\"item item-bullet\">\n",
             "    <span class=\"bullet-marker\">&bull;</span>\n",
@@ -517,7 +523,7 @@ mod tests {
         let element = DocumentElement::bullet_list_item(
             DocumentElement::text("Item with **bold**, *italic*, ~~strike~~, and `code` span"),
         );
-        let html = feature.to_html(&element, "", 0);
+        let html = feature.to_html(&element, "", 0, 0);
         let expected = concat!(
             "<div class=\"item item-bullet\">\n",
             "  <span class=\"bullet-marker\">&bull;</span>\n",
@@ -533,7 +539,7 @@ mod tests {
     fn test_bullet_list_renders_with_indent() {
         let feature = BulletListFeature::new();
         let element = DocumentElement::bullet_list_item(DocumentElement::text("Nested level 2 item"));
-        let html = feature.to_html(&element, "", 2);
+        let html = feature.to_html(&element, "", 2, 0);
         let expected = concat!(
             "    <div class=\"item item-bullet\">\n",
             "      <span class=\"bullet-marker\">&bull;</span>\n",
@@ -546,11 +552,27 @@ mod tests {
     }
 
     #[test]
+    fn test_bullet_list_renders_with_depth() {
+        let feature = BulletListFeature::new();
+        let element = DocumentElement::bullet_list_item(DocumentElement::text("Indented child item"));
+        let html = feature.to_html(&element, "", 2, 1);
+        let expected = concat!(
+            "    <div class=\"item item-bullet\" style=\"--indent: 1;\">\n",
+            "      <span class=\"bullet-marker\">&bull;</span>\n",
+            "      <span class=\"bullet-content\">\n",
+            "        Indented child item\n",
+            "      </span>\n",
+            "    </div>\n"
+        );
+        assert_eq!(html, expected);
+    }
+
+    #[test]
     fn test_bullet_list_renders_with_children() {
         let feature = BulletListFeature::new();
         let element = DocumentElement::bullet_list_item(DocumentElement::text("Parent item"));
-        let child_html = "    <div class=\"item item-bullet\">\n      <span class=\"bullet-marker\">&bull;</span>\n      <span class=\"bullet-content\">\n        Child item\n      </span>\n    </div>\n";
-        let html = feature.to_html(&element, child_html, 1);
+        let child_html = "    <div class=\"item item-bullet\" style=\"--indent: 1;\">\n      <span class=\"bullet-marker\">&bull;</span>\n      <span class=\"bullet-content\">\n        Child item\n      </span>\n    </div>\n";
+        let html = feature.to_html(&element, child_html, 1, 0);
         let expected_prefix = "  <div class=\"item item-bullet\">\n    <span class=\"bullet-marker\">&bull;</span>\n    <span class=\"bullet-content\">\n      Parent item\n    </span>\n  </div>\n";
         assert_eq!(html, format!("{expected_prefix}{child_html}"));
     }

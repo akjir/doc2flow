@@ -1,5 +1,7 @@
 //! Task vertical slice feature module.
 
+use std::fmt::Write as _;
+
 use crate::core::document::DocumentElement;
 use crate::core::feature::Feature;
 
@@ -37,10 +39,10 @@ impl Feature for TaskFeature {
     ///
     /// let feature = TaskFeature::new();
     /// let elem = DocumentElement::check_box_item(false, DocumentElement::text("Todo task"));
-    /// let html = feature.to_html(&elem, "", 1);
+    /// let html = feature.to_html(&elem, "", 1, 0);
     /// assert!(html.contains("class=\"item item-check\""));
     /// ```
-    fn to_html(&self, element: &DocumentElement, _content: &str, indent: usize) -> String {
+    fn to_html(&self, element: &DocumentElement, _content: &str, indent: usize, depth: usize) -> String {
         match element {
             DocumentElement::CheckBoxItem {
                 checked, content, ..
@@ -58,10 +60,14 @@ impl Feature for TaskFeature {
                 push_indent(&mut out, indent);
 
                 if *checked {
-                    out.push_str("<div class=\"item item-check checked\">\n");
+                    out.push_str("<div class=\"item item-check checked\"");
                 } else {
-                    out.push_str("<div class=\"item item-check\">\n");
+                    out.push_str("<div class=\"item item-check\"");
                 }
+                if depth > 0 {
+                    let _ = write!(out, " style=\"--indent: {depth};\"");
+                }
+                out.push_str(">\n");
 
                 push_indent(&mut out, indent + 1);
                 out.push_str("<span class=\"check-marker\">\n");
@@ -495,7 +501,7 @@ mod tests {
     fn test_task_empty_for_unsupported_elements() {
         let feature = TaskFeature::new();
         let text = DocumentElement::text("Regular text");
-        assert_eq!(feature.to_html(&text, "", 0), "");
+        assert_eq!(feature.to_html(&text, "", 0, 0), "");
     }
 
     #[test]
@@ -525,7 +531,7 @@ mod tests {
         let feature = TaskFeature::new();
         let element =
             DocumentElement::check_box_item(false, DocumentElement::text("Pending task"));
-        let html = feature.to_html(&element, "", 1);
+        let html = feature.to_html(&element, "", 1, 0);
         let expected = concat!(
             "  <div class=\"item item-check\">\n",
             "    <span class=\"check-marker\">\n",
@@ -544,7 +550,7 @@ mod tests {
         let feature = TaskFeature::new();
         let element =
             DocumentElement::check_box_item(true, DocumentElement::text("Completed task"));
-        let html = feature.to_html(&element, "", 1);
+        let html = feature.to_html(&element, "", 1, 0);
         let expected = concat!(
             "  <div class=\"item item-check checked\">\n",
             "    <span class=\"check-marker\">\n",
@@ -565,7 +571,7 @@ mod tests {
             false,
             DocumentElement::image("Alt text", "path/to/image.png"),
         );
-        let html = feature.to_html(&element, "", 1);
+        let html = feature.to_html(&element, "", 1, 0);
         let expected = concat!(
             "  <div class=\"item item-check\">\n",
             "    <span class=\"check-marker\">\n",
@@ -586,7 +592,7 @@ mod tests {
             true,
             DocumentElement::text("Item with **bold**, *italic*, ~~strike~~, and `code` span"),
         );
-        let html = feature.to_html(&element, "", 0);
+        let html = feature.to_html(&element, "", 0, 0);
         let expected = concat!(
             "<div class=\"item item-check checked\">\n",
             "  <span class=\"check-marker\">\n",
@@ -601,11 +607,45 @@ mod tests {
     }
 
     #[test]
+    fn test_task_renders_with_depth() {
+        let feature = TaskFeature::new();
+        let element =
+            DocumentElement::check_box_item(false, DocumentElement::text("Sub task"));
+        let html = feature.to_html(&element, "", 2, 1);
+        let expected = concat!(
+            "    <div class=\"item item-check\" style=\"--indent: 1;\">\n",
+            "      <span class=\"check-marker\">\n",
+            "        <input type=\"checkbox\" class=\"check-box\" />\n",
+            "      </span>\n",
+            "      <span class=\"check-content\">\n",
+            "        Sub task\n",
+            "      </span>\n",
+            "    </div>\n"
+        );
+        assert_eq!(html, expected);
+
+        let checked =
+            DocumentElement::check_box_item(true, DocumentElement::text("Checked sub task"));
+        let checked_html = feature.to_html(&checked, "", 2, 2);
+        let checked_expected = concat!(
+            "    <div class=\"item item-check checked\" style=\"--indent: 2;\">\n",
+            "      <span class=\"check-marker\">\n",
+            "        <input type=\"checkbox\" class=\"check-box\" checked />\n",
+            "      </span>\n",
+            "      <span class=\"check-content\">\n",
+            "        Checked sub task\n",
+            "      </span>\n",
+            "    </div>\n"
+        );
+        assert_eq!(checked_html, checked_expected);
+    }
+
+    #[test]
     fn test_task_renders_with_children() {
         let feature = TaskFeature::new();
         let element = DocumentElement::check_box_item(false, DocumentElement::text("Parent task"));
-        let child_html = "    <div class=\"item item-check\">\n      <span class=\"check-marker\">\n        <input type=\"checkbox\" class=\"check-box\" />\n      </span>\n      <span class=\"check-content\">\n        Child task\n      </span>\n    </div>\n";
-        let html = feature.to_html(&element, child_html, 1);
+        let child_html = "    <div class=\"item item-check\" style=\"--indent: 1;\">\n      <span class=\"check-marker\">\n        <input type=\"checkbox\" class=\"check-box\" />\n      </span>\n      <span class=\"check-content\">\n        Child task\n      </span>\n    </div>\n";
+        let html = feature.to_html(&element, child_html, 1, 0);
         let expected_prefix = "  <div class=\"item item-check\">\n    <span class=\"check-marker\">\n      <input type=\"checkbox\" class=\"check-box\" />\n    </span>\n    <span class=\"check-content\">\n      Parent task\n    </span>\n  </div>\n";
         assert_eq!(html, format!("{expected_prefix}{child_html}"));
     }

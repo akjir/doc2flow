@@ -82,7 +82,7 @@ mod tests {
         let bullet_feature = get_feature("bullet_list").expect("bullet_list feature should exist");
         let element = DocumentElement::bullet_list_item(DocumentElement::text("Bullet item"));
         assert_eq!(
-            bullet_feature.to_html(&element, "", 1),
+            bullet_feature.to_html(&element, "", 1, 0),
             "  <div class=\"item item-bullet\">\n    <span class=\"bullet-marker\">&bull;</span>\n    <span class=\"bullet-content\">\n      Bullet item\n    </span>\n  </div>\n"
         );
     }
@@ -93,13 +93,13 @@ mod tests {
         let unchecked =
             DocumentElement::check_box_item(false, DocumentElement::text("Pending task"));
         assert_eq!(
-            task_feature.to_html(&unchecked, "", 1),
+            task_feature.to_html(&unchecked, "", 1, 0),
             "  <div class=\"item item-check\">\n    <span class=\"check-marker\">\n      <input type=\"checkbox\" class=\"check-box\" />\n    </span>\n    <span class=\"check-content\">\n      Pending task\n    </span>\n  </div>\n"
         );
 
         let checked = DocumentElement::check_box_item(true, DocumentElement::text("Done task"));
         assert_eq!(
-            task_feature.to_html(&checked, "", 1),
+            task_feature.to_html(&checked, "", 1, 0),
             "  <div class=\"item item-check checked\">\n    <span class=\"check-marker\">\n      <input type=\"checkbox\" class=\"check-box\" checked />\n    </span>\n    <span class=\"check-content\">\n      Done task\n    </span>\n  </div>\n"
         );
     }
@@ -109,13 +109,13 @@ mod tests {
         let code_feature = get_feature("code").expect("code feature should exist");
         let element = DocumentElement::code_block(Some("rust"), "fn main() {}");
         assert_eq!(
-            code_feature.to_html(&element, "", 1),
+            code_feature.to_html(&element, "", 1, 0),
             "  <pre class=\"code-default\"><code>fn main() {}</code></pre>\n"
         );
 
         let code_block_feature = get_feature("code_block").expect("code_block alias should exist");
         assert_eq!(
-            code_block_feature.to_html(&element, "", 1),
+            code_block_feature.to_html(&element, "", 1, 0),
             "  <pre class=\"code-default\"><code>fn main() {}</code></pre>\n"
         );
     }
@@ -125,7 +125,7 @@ mod tests {
         let core_feature = get_feature("core").expect("core feature should exist");
         let element = DocumentElement::text("Hello");
         assert_eq!(
-            core_feature.to_html(&element, "", 1),
+            core_feature.to_html(&element, "", 1, 0),
             "  <div class=\"item item-text\">\n    <span class=\"text-content\">\n      Hello\n    </span>\n  </div>\n"
         );
     }
@@ -136,7 +136,7 @@ mod tests {
             get_feature("ordered_list").expect("ordered_list feature should exist");
         let element = DocumentElement::ordered_list_item(1, DocumentElement::text("Ordered item"));
         assert_eq!(
-            ordered_feature.to_html(&element, "", 1),
+            ordered_feature.to_html(&element, "", 1, 0),
             "  <div class=\"item item-order\">\n    <span class=\"order-marker\">1.</span>\n    <span class=\"order-content\">\n      Ordered item\n    </span>\n  </div>\n"
         );
     }
@@ -146,7 +146,7 @@ mod tests {
         let unknown_feature = get_feature("unknown").expect("unknown feature should exist");
         let element = DocumentElement::unknown("Raw line");
         assert_eq!(
-            unknown_feature.to_html(&element, "", 1),
+            unknown_feature.to_html(&element, "", 1, 0),
             "  <p class=\"unknown-default\">\n    Raw line\n  </p>\n"
         );
     }
