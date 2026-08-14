@@ -84,6 +84,8 @@ pub enum DocumentElement {
         /// Optional programming or markup language identifier (info string).
         language: Option<String>,
     },
+    /// Horizontal divider or thematic break rule line.
+    HorizontalRule,
     /// Image element with alt text and source target URL.
     Image {
         /// Alternative descriptive text for the image.
@@ -163,6 +165,11 @@ impl DocumentElement {
         }
     }
 
+    /// Creates a new horizontal rule document element.
+    pub const fn horizontal_rule() -> Self {
+        Self::HorizontalRule
+    }
+
     /// Creates a new image document element with alt text and target URL.
     pub fn image(alt: impl Into<String>, url: impl Into<String>) -> Self {
         Self::Image {
@@ -181,11 +188,7 @@ impl DocumentElement {
     }
 
     /// Creates a new section document element with level, title, and children.
-    pub fn section(
-        level: usize,
-        title: impl Into<String>,
-        children: Vec<DocumentElement>,
-    ) -> Self {
+    pub fn section(level: usize, title: impl Into<String>, children: Vec<DocumentElement>) -> Self {
         Self::Section {
             children,
             level,
@@ -365,7 +368,8 @@ mod tests {
 
     #[test]
     fn test_check_box_item_creation() {
-        let unchecked = DocumentElement::check_box_item(0, false, DocumentElement::text("Pending task"));
+        let unchecked =
+            DocumentElement::check_box_item(0, false, DocumentElement::text("Pending task"));
         assert_eq!(
             unchecked,
             DocumentElement::CheckBoxItem {
@@ -375,7 +379,8 @@ mod tests {
             }
         );
 
-        let checked = DocumentElement::check_box_item(2, true, DocumentElement::text("Completed subtask"));
+        let checked =
+            DocumentElement::check_box_item(2, true, DocumentElement::text("Completed subtask"));
         assert_eq!(
             checked,
             DocumentElement::CheckBoxItem {
@@ -435,11 +440,31 @@ mod tests {
         doc.insert_parameter("title", "My Doc");
         doc.push_body(DocumentElement::text("Line 1"));
         doc.push_header(DocumentElement::text("Header Line"));
-        assert_eq!(doc.parameters.get("title").map(|s| s.as_str()), Some("My Doc"));
+        assert_eq!(
+            doc.parameters.get("title").map(|s| s.as_str()),
+            Some("My Doc")
+        );
         assert_eq!(doc.body.len(), 1);
         assert_eq!(doc.header.len(), 1);
         assert_eq!(doc.body[0], DocumentElement::Text("Line 1".into()));
         assert_eq!(doc.header[0], DocumentElement::Text("Header Line".into()));
+    }
+
+    #[test]
+    fn test_horizontal_rule_creation() {
+        let elem = DocumentElement::horizontal_rule();
+        assert_eq!(elem, DocumentElement::HorizontalRule);
+
+        let mut section = DocumentElement::section(1, "Section With HR", Vec::new());
+        assert!(section.push_child(elem).is_ok());
+        assert_eq!(
+            section,
+            DocumentElement::Section {
+                children: vec![DocumentElement::HorizontalRule],
+                level: 1,
+                title: "Section With HR".into(),
+            }
+        );
     }
 
     #[test]
@@ -463,7 +488,8 @@ mod tests {
 
     #[test]
     fn test_ordered_list_item_creation() {
-        let root_item = DocumentElement::ordered_list_item(0, 1, DocumentElement::text("First item"));
+        let root_item =
+            DocumentElement::ordered_list_item(0, 1, DocumentElement::text("First item"));
         assert_eq!(
             root_item,
             DocumentElement::OrderedListItem {
@@ -473,7 +499,8 @@ mod tests {
             }
         );
 
-        let nested_item = DocumentElement::ordered_list_item(2, 5, DocumentElement::text("Deep item"));
+        let nested_item =
+            DocumentElement::ordered_list_item(2, 5, DocumentElement::text("Deep item"));
         assert_eq!(
             nested_item,
             DocumentElement::OrderedListItem {
@@ -585,12 +612,6 @@ mod tests {
         ];
         let table = DocumentElement::table(alignments.clone(), rows.clone());
 
-        assert_eq!(
-            table,
-            DocumentElement::Table {
-                alignments,
-                rows,
-            }
-        );
+        assert_eq!(table, DocumentElement::Table { alignments, rows });
     }
 }

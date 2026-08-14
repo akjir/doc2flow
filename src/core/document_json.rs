@@ -176,6 +176,10 @@ fn format_element_inline(out: &mut String, elem: &DocumentElement, indent_level:
             escape_json_string(out, content);
             out.push_str("\"\n");
         }
+        DocumentElement::HorizontalRule => {
+            write_indent(out, indent_level + 1);
+            out.push_str("\"kind\": \"horizontal_rule\"\n");
+        }
         DocumentElement::Image { alt, url } => {
             write_indent(out, indent_level + 1);
             out.push_str("\"kind\": \"image\",\n");
@@ -359,6 +363,17 @@ mod tests {
         assert!(json.contains("\"title\": \"My Section\""));
         assert!(json.contains("\"kind\": \"unknown\""));
         assert!(json.contains("\"content\": \"Child\""));
+    }
+
+    #[test]
+    fn test_document_to_json_with_horizontal_rule() {
+        let mut doc = Document::new();
+        doc.push_body(DocumentElement::text("Above"));
+        doc.push_body(DocumentElement::horizontal_rule());
+        doc.push_body(DocumentElement::text("Below"));
+
+        let json = document_to_json(&doc);
+        assert!(json.contains("\"kind\": \"horizontal_rule\""));
     }
 
     #[test]

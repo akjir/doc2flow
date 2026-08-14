@@ -145,6 +145,7 @@ pub fn render_element(element: &DocumentElement, indent: usize) -> String {
             ("check_box_item", render_element(content, indent + 1))
         }
         DocumentElement::CodeBlock { .. } => ("code_block", String::new()),
+        DocumentElement::HorizontalRule => ("core", String::new()),
         DocumentElement::Image { .. } => ("image", String::new()),
         DocumentElement::OrderedListItem { content, .. } => {
             ("ordered_list_item", render_element(content, indent + 1))
@@ -185,7 +186,9 @@ mod tests {
         assert!(content.contains(LICENSE_URL));
         assert!(content.contains("<html lang=\"en\">"));
         assert!(content.contains("<meta name=\"features\" content=\"core\">"));
-        assert!(content.contains("    <p class=\"txt-default\">\n      Document body text\n    </p>"));
+        assert!(
+            content.contains("    <p class=\"txt-default\">\n      Document body text\n    </p>")
+        );
         assert!(!content.contains("{{CONTENT}}"));
         assert!(!content.contains("{{APP_VERSION}}"));
         assert!(!content.contains("{{APP_VERSION_RAW}}"));
@@ -231,7 +234,9 @@ mod tests {
         let features = DocumentFeature::from(&doc);
         let content = build(&doc, &features);
         assert!(content.contains("<meta name=\"features\" content=\"core, unknown\">"));
-        assert!(content.contains("    <p class=\"unknown-default\">\n      unrecognized\n    </p>"));
+        assert!(
+            content.contains("    <p class=\"unknown-default\">\n      unrecognized\n    </p>")
+        );
         assert!(content.contains("    --bg-body:"));
         assert!(content.contains("    --unknown-bg:"));
         assert!(content.contains("    .unknown-default"));
@@ -375,6 +380,13 @@ mod tests {
             render_element(&code_block, 1),
             "  <pre class=\"code-default\"><code>fn main() {}</code></pre>\n"
         );
+    }
+
+    #[test]
+    fn test_render_element_horizontal_rule() {
+        let hr = DocumentElement::horizontal_rule();
+        assert_eq!(render_element(&hr, 1), "  <hr />\n");
+        assert_eq!(render_element(&hr, 2), "    <hr />\n");
     }
 
     #[test]

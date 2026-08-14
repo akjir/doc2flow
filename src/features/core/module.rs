@@ -43,11 +43,14 @@ impl Feature for CoreFeature {
                 out.push_str("</p>\n");
                 out
             }
-            DocumentElement::Section {
-                level,
-                title,
-                ..
-            } => {
+            DocumentElement::HorizontalRule => {
+                let spaces = indent * 2;
+                let mut out = String::with_capacity(spaces + 8);
+                push_indent(&mut out, indent);
+                out.push_str("<hr />\n");
+                out
+            }
+            DocumentElement::Section { level, title, .. } => {
                 let spaces = indent * 2;
                 let inner_spaces = (indent + 1) * 2;
                 let mut out = String::with_capacity(
@@ -105,6 +108,7 @@ mod tests {
         assert!(css.contains(".section-body"));
         assert!(css.contains(".section-subheading"));
         assert!(css.contains("--section-bg-header:"));
+        assert!(css.contains("hr {"));
     }
 
     #[test]
@@ -115,6 +119,15 @@ mod tests {
             feature.to_html(&element, "", 1),
             "  <p class=\"txt-default\">\n    Hello, world!\n  </p>\n"
         );
+    }
+
+    #[test]
+    fn test_core_feature_renders_horizontal_rule() {
+        let feature = CoreFeature::new();
+        let element = DocumentElement::horizontal_rule();
+        assert_eq!(feature.to_html(&element, "", 0), "<hr />\n");
+        assert_eq!(feature.to_html(&element, "", 1), "  <hr />\n");
+        assert_eq!(feature.to_html(&element, "", 2), "    <hr />\n");
     }
 
     #[test]

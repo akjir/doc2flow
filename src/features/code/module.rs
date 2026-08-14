@@ -97,7 +97,8 @@ mod tests {
     #[test]
     fn test_code_feature_renders_code_block() {
         let feature = CodeFeature::new();
-        let element = DocumentElement::code_block(Some("rust"), "fn main() {\n    println!(\"hi\");\n}");
+        let element =
+            DocumentElement::code_block(Some("rust"), "fn main() {\n    println!(\"hi\");\n}");
         assert_eq!(
             feature.to_html(&element, "", 1),
             "  <pre class=\"code-default\"><code>fn main() {\n    println!(&quot;hi&quot;);\n}</code></pre>\n"
@@ -107,7 +108,8 @@ mod tests {
     #[test]
     fn test_code_feature_escapes_html_entities() {
         let feature = CodeFeature::new();
-        let element = DocumentElement::code_block(None::<String>, "<div class=\"foo\"> && 'bar'</div>");
+        let element =
+            DocumentElement::code_block(None::<String>, "<div class=\"foo\"> && 'bar'</div>");
         assert_eq!(
             feature.to_html(&element, "", 2),
             "    <pre class=\"code-default\"><code>&lt;div class=&quot;foo&quot;&gt; &amp;&amp; &#39;bar&#39;&lt;/div&gt;</code></pre>\n"

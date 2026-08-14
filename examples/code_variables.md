@@ -6,7 +6,7 @@ language: "en"
 header: flex
 ---
 
-[Variables]
+:::variables
 | Variable | Value |
 | --- | --- |
 | SYSTEM | prod-server |
@@ -14,6 +14,7 @@ header: flex
 | DB_HOST | db.internal.net |
 | APP_ENV | production |
 | UNUSED_METRIC_PORT | 9090 |
+:::
 
 # Microservice Deployment Procedure
 

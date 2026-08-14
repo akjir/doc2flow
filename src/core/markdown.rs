@@ -77,8 +77,7 @@ enum FrontmatterPhase {
 
 /// Constructs a standardized diagnostic error for invalid block directive names.
 fn build_invalid_block_directive_name_err(line_number: usize, line_snippet: &str) -> Error {
-    let carets =
-        build_caret_annotation(1, line_snippet.len().max(1), line_snippet.len().max(1));
+    let carets = build_caret_annotation(1, line_snippet.len().max(1), line_snippet.len().max(1));
     DiagnosticError {
         message: "invalid block directive name".into(),
         file_path: "<input>".into(),
@@ -96,8 +95,7 @@ fn build_invalid_block_directive_name_err(line_number: usize, line_snippet: &str
 
 /// Constructs a standardized diagnostic error for missing block directive names.
 fn build_missing_block_directive_name_err(line_number: usize, line_snippet: &str) -> Error {
-    let carets =
-        build_caret_annotation(1, line_snippet.len().max(1), line_snippet.len().max(1));
+    let carets = build_caret_annotation(1, line_snippet.len().max(1), line_snippet.len().max(1));
     DiagnosticError {
         message: "missing block directive name".into(),
         file_path: "<input>".into(),
@@ -114,8 +112,7 @@ fn build_missing_block_directive_name_err(line_number: usize, line_snippet: &str
 
 /// Constructs a standardized diagnostic error for missing frontmatter delimiters.
 fn build_missing_frontmatter_err(line_number: usize, line_snippet: &str) -> Error {
-    let carets =
-        build_caret_annotation(1, line_snippet.len().max(1), line_snippet.len().max(1));
+    let carets = build_caret_annotation(1, line_snippet.len().max(1), line_snippet.len().max(1));
     DiagnosticError {
         message: "missing frontmatter delimiter '---'".into(),
         file_path: "<input>".into(),
@@ -131,8 +128,7 @@ fn build_missing_frontmatter_err(line_number: usize, line_snippet: &str) -> Erro
 
 /// Constructs a standardized diagnostic error for nested block directives.
 fn build_nested_block_directive_err(line_number: usize, line_snippet: &str) -> Error {
-    let carets =
-        build_caret_annotation(1, line_snippet.len().max(1), line_snippet.len().max(1));
+    let carets = build_caret_annotation(1, line_snippet.len().max(1), line_snippet.len().max(1));
     DiagnosticError {
         message: "nested block directives are not supported".into(),
         file_path: "<input>".into(),
@@ -148,8 +144,7 @@ fn build_nested_block_directive_err(line_number: usize, line_snippet: &str) -> E
 
 /// Constructs a standardized diagnostic error for unclosed block directives.
 fn build_unclosed_block_directive_err(line_number: usize, line_snippet: &str) -> Error {
-    let carets =
-        build_caret_annotation(1, line_snippet.len().max(3), line_snippet.len().max(3));
+    let carets = build_caret_annotation(1, line_snippet.len().max(3), line_snippet.len().max(3));
     DiagnosticError {
         message: "unclosed block directive".into(),
         file_path: "<input>".into(),
@@ -178,7 +173,16 @@ fn classify_and_push_line(
         return;
     }
 
-    if let Some((level, title)) = parse_heading_line(effective_line) {
+    if is_horizontal_rule(trimmed) {
+        ordered_list_stack.clear();
+        push_element(
+            doc,
+            section_stack,
+            in_block,
+            block_children,
+            DocumentElement::horizontal_rule(),
+        );
+    } else if let Some((level, title)) = parse_heading_line(effective_line) {
         ordered_list_stack.clear();
         if in_block {
             push_element(
@@ -268,6 +272,12 @@ fn get_section_level(elem: &DocumentElement) -> usize {
         DocumentElement::Section { level, .. } => *level,
         _ => 0,
     }
+}
+
+/// Checks whether a line represents a markdown horizontal rule (`---`, `----`, etc.).
+fn is_horizontal_rule(line: &str) -> bool {
+    let trimmed = line.trim();
+    trimmed.len() >= 3 && trimmed.bytes().all(|b| b == b'-')
 }
 
 /// Checks whether a line represents plain text.
@@ -1065,8 +1075,59 @@ mod tests {
         );
         assert_eq!(doc.body.len(), 3);
         assert_eq!(doc.body[0], DocumentElement::Text("Line 1".into()));
-        assert_eq!(doc.body[1], DocumentElement::Unknown("---".into()));
+        assert_eq!(doc.body[1], DocumentElement::HorizontalRule);
         assert_eq!(doc.body[2], DocumentElement::Text("Line 2".into()));
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_horizontal_rule_variations() {
+        let md = "---\n---\n---\n----\n-----\n----------\n   ---   \n   ------   ";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 6);
+        for elem in &doc.body {
+            assert_eq!(*elem, DocumentElement::HorizontalRule);
+        }
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_horizontal_rule_in_section() {
+        let md = "---\n---\n## Section 1\nText before\n---\nText after\n";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 1);
+        match &doc.body[0] {
+            DocumentElement::Section {
+                children,
+                level,
+                title,
+            } => {
+                assert_eq!(*level, 2);
+                assert_eq!(title, "Section 1");
+                assert_eq!(children.len(), 3);
+                assert_eq!(children[0], DocumentElement::Text("Text before".into()));
+                assert_eq!(children[1], DocumentElement::HorizontalRule);
+                assert_eq!(children[2], DocumentElement::Text("Text after".into()));
+            }
+            other => panic!("expected section, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_is_horizontal_rule_helper() {
+        assert!(is_horizontal_rule("---"));
+        assert!(is_horizontal_rule("----"));
+        assert!(is_horizontal_rule("-----"));
+        assert!(is_horizontal_rule("----------"));
+        assert!(is_horizontal_rule("   ---   "));
+        assert!(is_horizontal_rule("  -----  "));
+
+        assert!(!is_horizontal_rule("--"));
+        assert!(!is_horizontal_rule("-"));
+        assert!(!is_horizontal_rule(""));
+        assert!(!is_horizontal_rule("--- text"));
+        assert!(!is_horizontal_rule("---123"));
+        assert!(!is_horizontal_rule("***"));
     }
 
     #[test]

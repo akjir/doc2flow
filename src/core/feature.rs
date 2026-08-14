@@ -176,7 +176,8 @@ fn scan_element(element: &DocumentElement, features: &mut DocumentFeature) {
         return;
     }
     match element {
-        DocumentElement::BlockDirective { children, .. } | DocumentElement::Section { children, .. } => {
+        DocumentElement::BlockDirective { children, .. }
+        | DocumentElement::Section { children, .. } => {
             scan_elements(children, features);
         }
         DocumentElement::BulletListItem { content, .. } => {
@@ -203,7 +204,7 @@ fn scan_element(element: &DocumentElement, features: &mut DocumentFeature) {
         DocumentElement::Table { .. } => {
             features.table = true;
         }
-        DocumentElement::Text(_) => {}
+        DocumentElement::HorizontalRule | DocumentElement::Text(_) => {}
         DocumentElement::Unknown(_) => {
             features.unknown = true;
         }
@@ -300,7 +301,10 @@ mod tests {
         doc.push_body(DocumentElement::section(
             1,
             "Section Title",
-            vec![DocumentElement::text("Section body text")],
+            vec![
+                DocumentElement::text("Section body text"),
+                DocumentElement::horizontal_rule(),
+            ],
         ));
         let features = DocumentFeature::from(&doc);
         assert!(features.is_empty());
@@ -472,10 +476,16 @@ mod tests {
         let mut features = DocumentFeature::default();
         features.bullet_list_item = true;
         features.table = true;
-        assert_eq!(features.to_features_string(), "core, bullet_list_item, table");
+        assert_eq!(
+            features.to_features_string(),
+            "core, bullet_list_item, table"
+        );
 
         features.image = true;
-        assert_eq!(features.to_features_string(), "core, bullet_list_item, image, table");
+        assert_eq!(
+            features.to_features_string(),
+            "core, bullet_list_item, image, table"
+        );
 
         features.unknown = true;
         assert_eq!(

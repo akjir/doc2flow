@@ -1067,9 +1067,36 @@ fn test_parser_and_builder_pipeline_integration() {
     let content = doc2flow::core::builder::build(&document, &features);
     assert!(!content.as_bytes().is_empty());
     assert!(content.contains("      <h1>Pipeline Heading</h1>"));
-    assert!(content.contains("        <p class=\"txt-default\">\n          Content paragraph\n        </p>"));
+    assert!(
+        content.contains(
+            "        <p class=\"txt-default\">\n          Content paragraph\n        </p>"
+        )
+    );
     assert!(content.contains("<title>Pipeline Test</title>"));
     assert!(content.contains("<meta name=\"features\" content=\"core, check_box_item\">"));
     assert!(!content.contains("{{FEATURES}}"));
     assert!(!content.contains("{{TITLE}}"));
+}
+
+#[test]
+fn test_core_horizontal_rule_pipeline_integration() {
+    let input = "---\ntitle: \"HR Pipeline Test\"\n---\n# Main Heading\n\nParagraph before\n\n---\n\n----\n\nParagraph after";
+    let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
+    let features = doc2flow::core::DocumentFeature::from(&document);
+    assert_eq!(features.to_features_string(), "core");
+    let content = doc2flow::core::builder::build(&document, &features);
+    assert!(content.contains("<title>HR Pipeline Test</title>"));
+    assert!(content.contains("<meta name=\"features\" content=\"core\">"));
+    assert!(content.contains("      <h1>Main Heading</h1>"));
+    assert!(
+        content.contains(
+            "        <p class=\"txt-default\">\n          Paragraph before\n        </p>"
+        )
+    );
+    assert!(content.contains("        <hr />"));
+    assert!(
+        content
+            .contains("        <p class=\"txt-default\">\n          Paragraph after\n        </p>")
+    );
+    assert!(content.contains("hr {\n      border: none;"));
 }
