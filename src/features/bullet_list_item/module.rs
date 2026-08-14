@@ -44,16 +44,19 @@ impl Feature for BulletListItemFeature {
     /// ```
     fn to_html(&self, element: &DocumentElement, _content: &str, indent: usize) -> String {
         match element {
-            DocumentElement::BulletListItem { content, depth } => {
+            DocumentElement::BulletListItem {
+                content, depth, ..
+            } => {
                 let spaces = indent * 2;
                 let inner_spaces = (indent + 1) * 2;
                 let content_len = match content.as_ref() {
                     DocumentElement::Text(text) => text.len() * 2,
-                    _ => _content.len(),
+                    _ => 0,
                 };
 
-                let mut out =
-                    String::with_capacity(content_len + spaces * 2 + inner_spaces * 2 + 128);
+                let mut out = String::with_capacity(
+                    content_len + _content.len() + spaces * 2 + inner_spaces * 2 + 128,
+                );
                 push_indent(&mut out, indent);
 
                 if *depth > 0 {
@@ -86,15 +89,7 @@ impl Feature for BulletListItemFeature {
                         escape_html_into(&mut out, alt);
                         out.push_str("\" />\n");
                     }
-                    _ => {
-                        if !_content.is_empty() {
-                            for line in _content.lines() {
-                                push_indent(&mut out, indent + 2);
-                                out.push_str(line.trim());
-                                out.push('\n');
-                            }
-                        }
-                    }
+                    _ => {}
                 }
 
                 push_indent(&mut out, indent + 1);
@@ -102,6 +97,7 @@ impl Feature for BulletListItemFeature {
 
                 push_indent(&mut out, indent);
                 out.push_str("</div>\n");
+                out.push_str(_content);
 
                 out
             }

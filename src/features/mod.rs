@@ -100,7 +100,7 @@ mod tests {
         let element = DocumentElement::text("Hello");
         assert_eq!(
             core_feature.to_html(&element, "", 1),
-            "  <div class=\"item item-text\">\n    <span class=\"item-content\">\n      Hello\n    </span>\n  </div>\n"
+            "  <div class=\"item item-text\">\n    <span class=\"text-content\">\n      Hello\n    </span>\n  </div>\n"
         );
     }
 

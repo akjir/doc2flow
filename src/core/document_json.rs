@@ -134,7 +134,11 @@ fn format_element_inline(out: &mut String, elem: &DocumentElement, indent_level:
                 out.push_str("]\n");
             }
         }
-        DocumentElement::BulletListItem { content, depth } => {
+        DocumentElement::BulletListItem {
+            children,
+            content,
+            depth,
+        } => {
             write_indent(out, indent_level + 1);
             out.push_str("\"kind\": \"bullet_list_item\",\n");
             write_indent(out, indent_level + 1);
@@ -142,10 +146,27 @@ fn format_element_inline(out: &mut String, elem: &DocumentElement, indent_level:
             write_indent(out, indent_level + 1);
             out.push_str("\"content\": ");
             format_element_inline(out, content, indent_level + 1);
-            out.push('\n');
+            out.push_str(",\n");
+            write_indent(out, indent_level + 1);
+            out.push_str("\"children\": [");
+            if children.is_empty() {
+                out.push_str("]\n");
+            } else {
+                out.push('\n');
+                for (j, child) in children.iter().enumerate() {
+                    format_element(out, child, indent_level + 2);
+                    if j + 1 < children.len() {
+                        out.push(',');
+                    }
+                    out.push('\n');
+                }
+                write_indent(out, indent_level + 1);
+                out.push_str("]\n");
+            }
         }
         DocumentElement::CheckBoxItem {
             checked,
+            children,
             content,
             depth,
         } => {
@@ -158,7 +179,23 @@ fn format_element_inline(out: &mut String, elem: &DocumentElement, indent_level:
             write_indent(out, indent_level + 1);
             out.push_str("\"content\": ");
             format_element_inline(out, content, indent_level + 1);
-            out.push('\n');
+            out.push_str(",\n");
+            write_indent(out, indent_level + 1);
+            out.push_str("\"children\": [");
+            if children.is_empty() {
+                out.push_str("]\n");
+            } else {
+                out.push('\n');
+                for (j, child) in children.iter().enumerate() {
+                    format_element(out, child, indent_level + 2);
+                    if j + 1 < children.len() {
+                        out.push(',');
+                    }
+                    out.push('\n');
+                }
+                write_indent(out, indent_level + 1);
+                out.push_str("]\n");
+            }
         }
         DocumentElement::CodeBlock { content, language } => {
             write_indent(out, indent_level + 1);
@@ -193,6 +230,7 @@ fn format_element_inline(out: &mut String, elem: &DocumentElement, indent_level:
             out.push_str("\"\n");
         }
         DocumentElement::OrderedListItem {
+            children,
             content,
             depth,
             position,
@@ -206,7 +244,23 @@ fn format_element_inline(out: &mut String, elem: &DocumentElement, indent_level:
             write_indent(out, indent_level + 1);
             out.push_str("\"content\": ");
             format_element_inline(out, content, indent_level + 1);
-            out.push('\n');
+            out.push_str(",\n");
+            write_indent(out, indent_level + 1);
+            out.push_str("\"children\": [");
+            if children.is_empty() {
+                out.push_str("]\n");
+            } else {
+                out.push('\n');
+                for (j, child) in children.iter().enumerate() {
+                    format_element(out, child, indent_level + 2);
+                    if j + 1 < children.len() {
+                        out.push(',');
+                    }
+                    out.push('\n');
+                }
+                write_indent(out, indent_level + 1);
+                out.push_str("]\n");
+            }
         }
         DocumentElement::Section {
             children,

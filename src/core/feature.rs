@@ -185,13 +185,23 @@ fn scan_element(element: &DocumentElement, features: &mut DocumentFeature) {
         | DocumentElement::Section { children, .. } => {
             scan_elements(children, features);
         }
-        DocumentElement::BulletListItem { content, .. } => {
+        DocumentElement::BulletListItem {
+            children,
+            content,
+            ..
+        } => {
             features.bullet_list_item = true;
             scan_element(content, features);
+            scan_elements(children, features);
         }
-        DocumentElement::CheckBoxItem { content, .. } => {
+        DocumentElement::CheckBoxItem {
+            children,
+            content,
+            ..
+        } => {
             features.check_box_item = true;
             scan_element(content, features);
+            scan_elements(children, features);
         }
         DocumentElement::CodeBlock { .. } => {
             features.code_block = true;
@@ -199,9 +209,14 @@ fn scan_element(element: &DocumentElement, features: &mut DocumentFeature) {
         DocumentElement::Image { .. } => {
             features.image = true;
         }
-        DocumentElement::OrderedListItem { content, .. } => {
+        DocumentElement::OrderedListItem {
+            children,
+            content,
+            ..
+        } => {
             features.ordered_list_item = true;
             scan_element(content, features);
+            scan_elements(children, features);
         }
         DocumentElement::Shoutout { .. } => {
             features.shoutout = true;

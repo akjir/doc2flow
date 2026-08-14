@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+210.d2028b2.dev">
-  <meta name="version" content="0.9.4+210.d2028b2.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+211.c7b61e5.dev">
+  <meta name="version" content="0.9.4+211.c7b61e5.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-14T20:22:20Z">
+  <meta name="dcterms.created" content="2026-08-14T20:46:12Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, bullet_list_item">
   <title>Stellar Evolution Overview</title>
@@ -277,7 +277,7 @@
       margin-bottom: 6px;
     }
 
-    .item-content,
+    .text-content,
     .item-text {
       flex: 1;
       min-width: 0;
@@ -288,20 +288,20 @@
       word-break: break-word;
     }
 
-    .item-content a,
+    .text-content a,
     .item-text a {
       color: var(--txt-color-link);
       text-decoration: none;
       transition: color 0.15s ease, text-decoration 0.15s ease;
     }
 
-    .item-content a:hover,
+    .text-content a:hover,
     .item-text a:hover {
       color: var(--txt-color-link-hover);
       text-decoration: underline;
     }
 
-    .item-content code,
+    .text-content code,
     .item-text code {
       font-family: var(--font-mono);
       font-size: inherit;
@@ -313,23 +313,23 @@
       border: 1px solid var(--code-border);
     }
 
-    .item-content strong,
+    .text-content strong,
     .item-text strong,
-    .item-content b,
+    .text-content b,
     .item-text b {
       font-weight: 600;
     }
 
-    .item-content em,
+    .text-content em,
     .item-text em,
-    .item-content i,
+    .text-content i,
     .item-text i {
       font-style: italic;
     }
 
-    .item-content s,
+    .text-content s,
     .item-text s,
-    .item-content del,
+    .text-content del,
     .item-text del {
       text-decoration: line-through;
     }
@@ -533,20 +533,20 @@
       .txt-default s,
       .txt-content del,
       .txt-default del,
-      .item-content s,
+      .text-content s,
       .item-text s,
-      .item-content del,
+      .text-content del,
       .item-text del {
         text-decoration: none !important;
       }
 
-      .item-content a,
+      .text-content a,
       .item-text a {
         color: #000000 !important;
         text-decoration: underline !important;
       }
 
-      .item-content code,
+      .text-content code,
       .item-text code {
         border: 1px solid var(--code-border) !important;
         background-color: var(--code-bg) !important;
@@ -569,7 +569,7 @@
         print-color-adjust: exact;
       }
 
-      .item-content,
+      .text-content,
       .item-text {
         color: #000000 !important;
       }
@@ -737,7 +737,7 @@
       <h1>Introduction to Stellar Evolution</h1>
       <div class="section-body">
         <div class="item item-text">
-          <span class="item-content">
+          <span class="text-content">
             The term <strong>stellar evolution</strong> describes the continuous astrophysical process by which a star undergoes radical structural changes over its lifetime. Stars are not <s>static, eternal celestial spheres</s>, but dynamic thermodynamic systems spanning lifetimes from a few million years for massive stars to <em>trillions of years</em> for low-mass red dwarfs.
           </span>
         </div>
@@ -747,7 +747,7 @@
       <h2>Stellar Formation</h2>
       <div class="section-body">
         <div class="item item-text">
-          <span class="item-content">
+          <span class="text-content">
             All stars originate inside cold, dense regions known as <em>giant molecular clouds</em> (GMCs) where temperatures drop below <code>T &lt; 20 K</code>.
           </span>
         </div>
@@ -755,7 +755,7 @@
           <h3>Molecular Clouds</h3>
           <div class="section-body">
             <div class="item item-text">
-              <span class="item-content">
+              <span class="text-content">
                 Cold interstellar clouds consisting primarily of molecular hydrogen (<code>H2</code>) and helium (<code>He</code>) provide the raw material for stellar birth.
               </span>
             </div>
@@ -772,7 +772,7 @@
               </span>
             </div>
             <div class="item item-text">
-              <span class="item-content">
+              <span class="text-content">
                 Dense cloud cores do not remain <s>uniform static nebulae</s>; instead, localized gravitational perturbations trigger runaway contraction.
               </span>
             </div>
@@ -782,7 +782,7 @@
           <h3>Protostar Phase</h3>
           <div class="section-body">
             <div class="item item-text">
-              <span class="item-content">
+              <span class="text-content">
                 As a collapsing core accretes surrounding matter, it forms a central <strong>protostar</strong> surrounded by a circumstellar accretion disk with angular momentum conservation.
               </span>
             </div>
@@ -806,7 +806,7 @@
       <h2>Main Sequence Stage</h2>
       <div class="section-body">
         <div class="item item-text">
-          <span class="item-content">
+          <span class="text-content">
             The <strong>main sequence</strong> represents the longest and most stable phase of a star&#39;s evolutionary journey, fueled by the core conversion of hydrogen into helium via <code>4 ¹H -&gt; ⁴He + 2e⁺ + 2νₑ</code>.
           </span>
         </div>
@@ -814,7 +814,7 @@
           <h3>Nuclear Fusion</h3>
           <div class="section-body">
             <div class="item item-text">
-              <span class="item-content">
+              <span class="text-content">
                 Energy generation in main-sequence stars relies on two distinct hydrogen burning mechanisms:
               </span>
             </div>
@@ -831,7 +831,7 @@
               </span>
             </div>
             <div class="item item-text">
-              <span class="item-content">
+              <span class="text-content">
                 Energy output scales dramatically with mass according to the mass-luminosity relation <code>L \propto M^{3.5}</code>, meaning high-mass stars exhaust their core fuel at <em>exponentially faster</em> rates than <s>long-lived red dwarfs</s>.
               </span>
             </div>
@@ -841,12 +841,12 @@
           <h3>Hydrostatic Equilibrium</h3>
           <div class="section-body">
             <div class="item item-text">
-              <span class="item-content">
+              <span class="text-content">
                 A star maintains structural stability through <strong>hydrostatic equilibrium</strong>, an exact dynamic balance between the <em>inward pull</em> of gravity and the <em>outward push</em> of radiative and thermal gas pressure.
               </span>
             </div>
             <div class="item item-text">
-              <span class="item-content">
+              <span class="text-content">
                 When core hydrogen is exhausted, the core is no longer sustained by <s>thermal radiation pressure</s>, leading directly to core contraction and envelope expansion into a giant branch star.
               </span>
             </div>
@@ -858,7 +858,7 @@
       <h2>Stellar Remnants</h2>
       <div class="section-body">
         <div class="item item-text">
-          <span class="item-content">
+          <span class="text-content">
             Final stellar remnants depend fundamentally on the progenitor&#39;s initial mass and whether the core exceeds the <strong><em>Chandrasekhar limit</em></strong> (<code>M_Ch \approx 1.44 M_sun</code>).
           </span>
         </div>
@@ -866,7 +866,7 @@
           <h3>White Dwarfs</h3>
           <div class="section-body">
             <div class="item item-text">
-              <span class="item-content">
+              <span class="text-content">
                 Low- to intermediate-mass progenitors (<code>M &lt;= 8 M_sun</code>) shed their outer gaseous envelopes as picturesque <em>planetary nebulae</em>, leaving behind an ultra-dense <strong>white dwarf</strong> remnant.
               </span>
             </div>
@@ -883,7 +883,7 @@
               </span>
             </div>
             <div class="item item-text">
-              <span class="item-content">
+              <span class="text-content">
                 White dwarfs contain no <s>active thermonuclear furnace</s>; they radiate residual stored thermal energy until cooling into hypothetical <em>black dwarfs</em>.
               </span>
             </div>
@@ -893,7 +893,7 @@
           <h3>Neutron Stars and Black Holes</h3>
           <div class="section-body">
             <div class="item item-text">
-              <span class="item-content">
+              <span class="text-content">
                 Massive progenitors (<code>M &gt; 8 M_sun</code>) undergo catastrophic core collapse, culminating in violent <code>Type II</code> <strong>core-collapse supernovae</strong>.
               </span>
             </div>
@@ -910,7 +910,7 @@
               </span>
             </div>
             <div class="item item-text">
-              <span class="item-content">
+              <span class="text-content">
                 Supernova nucleosynthesis disperses heavy elements across interstellar space, replacing <s>pristine hydrogen-helium gas</s> with enriched matter for future stellar generations.
               </span>
             </div>

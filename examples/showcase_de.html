@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+210.d2028b2.dev">
-  <meta name="version" content="0.9.4+210.d2028b2.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+211.c7b61e5.dev">
+  <meta name="version" content="0.9.4+211.c7b61e5.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-14T20:22:20Z">
+  <meta name="dcterms.created" content="2026-08-14T20:46:12Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, bullet_list_item, check_box_item, code_block, image, ordered_list_item, shoutout, table">
   <title>Doc2Flow Deutscher Showcase</title>
@@ -277,7 +277,7 @@
       margin-bottom: 6px;
     }
 
-    .item-content,
+    .text-content,
     .item-text {
       flex: 1;
       min-width: 0;
@@ -288,20 +288,20 @@
       word-break: break-word;
     }
 
-    .item-content a,
+    .text-content a,
     .item-text a {
       color: var(--txt-color-link);
       text-decoration: none;
       transition: color 0.15s ease, text-decoration 0.15s ease;
     }
 
-    .item-content a:hover,
+    .text-content a:hover,
     .item-text a:hover {
       color: var(--txt-color-link-hover);
       text-decoration: underline;
     }
 
-    .item-content code,
+    .text-content code,
     .item-text code {
       font-family: var(--font-mono);
       font-size: inherit;
@@ -313,23 +313,23 @@
       border: 1px solid var(--code-border);
     }
 
-    .item-content strong,
+    .text-content strong,
     .item-text strong,
-    .item-content b,
+    .text-content b,
     .item-text b {
       font-weight: 600;
     }
 
-    .item-content em,
+    .text-content em,
     .item-text em,
-    .item-content i,
+    .text-content i,
     .item-text i {
       font-style: italic;
     }
 
-    .item-content s,
+    .text-content s,
     .item-text s,
-    .item-content del,
+    .text-content del,
     .item-text del {
       text-decoration: line-through;
     }
@@ -533,20 +533,20 @@
       .txt-default s,
       .txt-content del,
       .txt-default del,
-      .item-content s,
+      .text-content s,
       .item-text s,
-      .item-content del,
+      .text-content del,
       .item-text del {
         text-decoration: none !important;
       }
 
-      .item-content a,
+      .text-content a,
       .item-text a {
         color: #000000 !important;
         text-decoration: underline !important;
       }
 
-      .item-content code,
+      .text-content code,
       .item-text code {
         border: 1px solid var(--code-border) !important;
         background-color: var(--code-bg) !important;
@@ -569,7 +569,7 @@
         print-color-adjust: exact;
       }
 
-      .item-content,
+      .text-content,
       .item-text {
         color: #000000 !important;
       }
@@ -892,22 +892,17 @@
       <h1>Teil 1: Systemeinrichtung & Vorbereitung</h1>
       <div class="section-body">
         <div class="item item-text">
-          <span class="item-content">
+          <span class="text-content">
             Dieser übergeordnete Abschnitt beschreibt die grundlegende Systemkonfiguration. Aufgaben in H1-Abschnitten besitzen keinen eigenen Badge-Indikator, fließen aber voll in die Gesamtfortschrittsanzeige ein.
           </span>
         </div>
-          <div class="item item-text">
-            <span class="item-content">
-              Allgemeine Sicherheitsunterweisung für Techniker durchgeführt
-            </span>
-          </div>
       </div>
     </section>
     <section class="section" data-level="2">
       <h2>Abschnitt 1: Übersicht & Richtlinien</h2>
       <div class="section-body">
         <div class="item item-text">
-          <span class="item-content">
+          <span class="text-content">
             Dies ist ein beliebiger Textabsatz im Abschnitts-Hauptteil. Er liefert allgemeine Anweisungen und Informationen für den Bearbeiter, die vor Beginn des Verfahrens durchgelesen werden sollten.
           </span>
         </div>
@@ -920,30 +915,10 @@
           <h3>Einrichtung & Vorbereitung</h3>
           <div class="section-body">
             <div class="item item-text">
-              <span class="item-content">
+              <span class="text-content">
                 Dieser beliebige Textabsatz beschreibt die vorbereitenden Schritte, die erfüllt sein müssen, bevor einzelne Aufgaben als erledigt markiert werden.
               </span>
             </div>
-              <div class="item item-text">
-                <span class="item-content">
-                  Hardware auspacken und Komponenten überprüfen
-                </span>
-              </div>
-              <div class="item item-text">
-                <span class="item-content">
-                  Vollständigkeit des Zubehörs kontrollieren
-                </span>
-              </div>
-              <div class="item item-text">
-                <span class="item-content">
-                  Gehäuse auf Transportschäden prüfen
-                </span>
-              </div>
-              <div class="item item-text">
-                <span class="item-content">
-                  Netzwerk und Stromversorgung anschließen
-                </span>
-              </div>
             <div class="item item-order" style="--indent: 1;">
               <span class="order-marker">a.</span>
               <span class="order-content">
@@ -956,13 +931,8 @@
                 Redundantes Netzwerkkabel in Port 2 einstecken
               </span>
             </div>
-              <div class="item item-text">
-                <span class="item-content">
-                  Initialer Einschalttest abgeschlossen
-                </span>
-              </div>
             <div class="item item-text">
-              <span class="item-content">
+              <span class="text-content">
                 [Externe Systemdokumentation](https://example.com/docs)
               </span>
             </div>
@@ -971,21 +941,6 @@
         <section class="section" data-level="3">
           <h3>Software-Konfiguration</h3>
           <div class="section-body">
-              <div class="item item-text">
-                <span class="item-content">
-                  Neueste Systemupdates installieren
-                </span>
-              </div>
-              <div class="item item-text">
-                <span class="item-content">
-                  Firewall-Regeln gemäß Unternehmensrichtlinie konfigurieren
-                </span>
-              </div>
-              <div class="item item-text">
-                <span class="item-content">
-                  Fernzugriffs-Dienst überprüfen
-                </span>
-              </div>
           </div>
         </section>
       </div>
@@ -1002,7 +957,7 @@
           <h3>System-Registrierungseinstellungen</h3>
           <div class="section-body">
             <div class="item item-text">
-              <span class="item-content">
+              <span class="text-content">
                 Der folgende Konfigurationsauszug muss angewendet werden, um automatische Updates zu deaktivieren:
               </span>
             </div>
@@ -1021,7 +976,7 @@
           <h3>Systemkomponenten & Spezifikationen</h3>
           <div class="section-body">
             <div class="item item-text">
-              <span class="item-content">
+              <span class="text-content">
                 Die folgende Tabelle enthält die Spezifikationen der installierten Hardwarekomponenten:
               </span>
             </div>
@@ -1056,66 +1011,58 @@
             Vorgehensweise bei Wartungsarbeiten
           </span>
         </div>
-          <div class="item item-text">
-            <span class="item-content">
-              Testlauf vorbereiten
-            </span>
-          </div>
-        <div class="item item-bullet" style="--indent: 3;">
+        <div class="item item-bullet" style="--indent: 2;">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
             Detailprüfung Parameter X
           </span>
         </div>
-        <div class="item item-bullet" style="--indent: 3;">
+        <div class="item item-bullet" style="--indent: 2;">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
             Detailprüfung Parameter Y
           </span>
         </div>
-          <div class="item item-text">
-            <span class="item-content">
-              Abnahme durch Administrator
-            </span>
-          </div>
         <div class="item item-order">
           <span class="order-marker">1.</span>
           <span class="order-content">
             Sequenzieller Hauptschritt 1
           </span>
         </div>
-        <div class="item item-bullet" style="--indent: 2;">
+        <div class="item item-bullet" style="--indent: 1;">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
             Untergeordneter Prüfschritt 1.1
           </span>
         </div>
-        <div class="item item-bullet" style="--indent: 2;">
+        <div class="item item-bullet" style="--indent: 1;">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
             Untergeordneter Prüfschritt 1.2
           </span>
         </div>
-        <div class="item item-text">
-          <span class="item-content">
-            2. Sequenzieller Hauptschritt 2
+        <div class="item item-order">
+          <span class="order-marker">2.</span>
+          <span class="order-content">
+            Sequenzieller Hauptschritt 2
           </span>
         </div>
-        <div class="item item-order" style="--indent: 2;">
-          <span class="order-marker">i.</span>
+        <div class="item item-order" style="--indent: 1;">
+          <span class="order-marker">a.</span>
           <span class="order-content">
             Detaillierter Teilverlauf 2.a
           </span>
         </div>
-        <div class="item item-order" style="--indent: 2;">
-          <span class="order-marker">ii.</span>
+        <div class="item item-order" style="--indent: 1;">
+          <span class="order-marker">b.</span>
           <span class="order-content">
             Detaillierter Teilverlauf 2.b
           </span>
         </div>
-        <div class="item item-text">
-          <span class="item-content">
-            3. Sequenzieller Hauptschritt 3
+        <div class="item item-order">
+          <span class="order-marker">3.</span>
+          <span class="order-content">
+            Sequenzieller Hauptschritt 3
           </span>
         </div>
         <hr />

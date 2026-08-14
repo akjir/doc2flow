@@ -1069,7 +1069,7 @@ fn test_parser_and_builder_pipeline_integration() {
     assert!(content.contains("      <h1>Pipeline Heading</h1>"));
     assert!(
         content.contains(
-            "        <div class=\"item item-text\">\n          <span class=\"item-content\">\n            Content paragraph\n          </span>\n        </div>"
+            "        <div class=\"item item-text\">\n          <span class=\"text-content\">\n            Content paragraph\n          </span>\n        </div>"
         )
     );
     assert!(content.contains("<title>Pipeline Test</title>"));
@@ -1090,13 +1090,13 @@ fn test_core_horizontal_rule_pipeline_integration() {
     assert!(content.contains("      <h1>Main Heading</h1>"));
     assert!(
         content.contains(
-            "        <div class=\"item item-text\">\n          <span class=\"item-content\">\n            Paragraph before\n          </span>\n        </div>"
+            "        <div class=\"item item-text\">\n          <span class=\"text-content\">\n            Paragraph before\n          </span>\n        </div>"
         )
     );
     assert!(content.contains("        <hr />"));
     assert!(
         content
-            .contains("        <div class=\"item item-text\">\n          <span class=\"item-content\">\n            Paragraph after\n          </span>\n        </div>")
+            .contains("        <div class=\"item item-text\">\n          <span class=\"text-content\">\n            Paragraph after\n          </span>\n        </div>")
     );
     assert!(content.contains("hr {\n      border: none;"));
 }

@@ -180,7 +180,7 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
 ///
 /// let element = DocumentElement::text("Hello world");
 /// let html = render_element(&element, 1);
-/// assert_eq!(html, "  <div class=\"item item-text\">\n    <span class=\"item-content\">\n      Hello world\n    </span>\n  </div>\n");
+/// assert_eq!(html, "  <div class=\"item item-text\">\n    <span class=\"text-content\">\n      Hello world\n    </span>\n  </div>\n");
 /// ```
 pub fn render_element(element: &DocumentElement, indent: usize) -> String {
     let (feature_name, inner_content) = match element {
@@ -191,17 +191,29 @@ pub fn render_element(element: &DocumentElement, indent: usize) -> String {
             }
             (name.as_str(), inner)
         }
-        DocumentElement::BulletListItem { content, .. } => {
-            ("bullet_list_item", render_element(content, indent + 1))
+        DocumentElement::BulletListItem { children, .. } => {
+            let mut inner = String::new();
+            for child in children {
+                inner.push_str(&render_element(child, indent));
+            }
+            ("bullet_list_item", inner)
         }
-        DocumentElement::CheckBoxItem { content, .. } => {
-            ("check_box_item", render_element(content, indent + 1))
+        DocumentElement::CheckBoxItem { children, .. } => {
+            let mut inner = String::new();
+            for child in children {
+                inner.push_str(&render_element(child, indent));
+            }
+            ("check_box_item", inner)
         }
         DocumentElement::CodeBlock { .. } => ("code_block", String::new()),
         DocumentElement::HorizontalRule => ("core", String::new()),
         DocumentElement::Image { .. } => ("image", String::new()),
-        DocumentElement::OrderedListItem { content, .. } => {
-            ("ordered_list_item", render_element(content, indent + 1))
+        DocumentElement::OrderedListItem { children, .. } => {
+            let mut inner = String::new();
+            for child in children {
+                inner.push_str(&render_element(child, indent));
+            }
+            ("ordered_list_item", inner)
         }
         DocumentElement::Section { children, .. } => {
             let mut inner = String::new();
@@ -240,7 +252,7 @@ mod tests {
         assert!(content.contains("<html lang=\"en\">"));
         assert!(content.contains("<meta name=\"features\" content=\"core\">"));
         assert!(
-            content.contains("    <div class=\"item item-text\">\n      <span class=\"item-content\">\n        Document body text\n      </span>\n    </div>")
+            content.contains("    <div class=\"item item-text\">\n      <span class=\"text-content\">\n        Document body text\n      </span>\n    </div>")
         );
         assert!(!content.contains("{{CONTENT}}"));
         assert!(!content.contains("{{APP_VERSION}}"));
@@ -378,7 +390,7 @@ mod tests {
         let text = DocumentElement::text("Sample paragraph text");
         assert_eq!(
             render_element(&text, 1),
-            "  <div class=\"item item-text\">\n    <span class=\"item-content\">\n      Sample paragraph text\n    </span>\n  </div>\n"
+            "  <div class=\"item item-text\">\n    <span class=\"text-content\">\n      Sample paragraph text\n    </span>\n  </div>\n"
         );
     }
 
@@ -406,12 +418,12 @@ mod tests {
             "    <h2>Details</h2>\n",
             "    <div class=\"section-body\">\n",
             "      <div class=\"item item-text\">\n",
-            "        <span class=\"item-content\">\n",
+            "        <span class=\"text-content\">\n",
             "          First paragraph\n",
             "        </span>\n",
             "      </div>\n",
             "      <div class=\"item item-text\">\n",
-            "        <span class=\"item-content\">\n",
+            "        <span class=\"text-content\">\n",
             "          Second paragraph\n",
             "        </span>\n",
             "      </div>\n",
@@ -434,7 +446,7 @@ mod tests {
             "        <h3>Inner</h3>\n",
             "        <div class=\"section-body\">\n",
             "          <div class=\"item item-text\">\n",
-            "            <span class=\"item-content\">\n",
+            "            <span class=\"text-content\">\n",
             "              Inner content\n",
             "            </span>\n",
             "          </div>\n",
@@ -483,7 +495,7 @@ mod tests {
         );
         assert_eq!(
             render_element(&directive, 1),
-            "    <div class=\"item item-text\">\n      <span class=\"item-content\">\n        Directive child\n      </span>\n    </div>\n"
+            "    <div class=\"item item-text\">\n      <span class=\"text-content\">\n        Directive child\n      </span>\n    </div>\n"
         );
     }
 }

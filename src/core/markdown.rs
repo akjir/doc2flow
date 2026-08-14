@@ -2,9 +2,22 @@
 
 use std::mem;
 
+use crate::core::{Error, Result};
 use crate::core::document::{Document, DocumentElement, ShoutoutElementKind, TableAlignment};
 use crate::core::error::{DiagnosticError, build_caret_annotation};
-use crate::core::{Error, Result};
+
+/// Active list item held on the hierarchical list tracking stack.
+#[derive(Debug)]
+struct ActiveListItem {
+    /// Visual nesting depth level.
+    depth: usize,
+    /// Element data model payload.
+    element: DocumentElement,
+    /// Indentation spaces offset.
+    indent_spaces: usize,
+    /// Last child ordered list numerical position.
+    last_child_ordered_position: Option<usize>,
+}
 
 /// State tracker for filtering HTML comments across lines.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -73,6 +86,131 @@ enum FrontmatterPhase {
     Inside,
     /// Frontmatter parsed, processing standard document body.
     Complete,
+}
+
+/// Intermediate list item classification before AST node construction.
+#[derive(Debug)]
+enum ListItemKind<'a> {
+    /// Bullet list item with raw inner text/image slice.
+    Bullet(&'a str),
+    /// Checkbox task item with checked state and raw inner slice.
+    CheckBox(bool, &'a str),
+    /// Ordered list item with raw inner text/image slice.
+    Ordered(&'a str),
+}
+
+/// Hierarchical list parsing state tracking active parent list items and sequential numbering.
+#[derive(Debug, Default)]
+struct ListState {
+    /// Next sequential position counter for root-level ordered lists.
+    root_ordered_position: Option<usize>,
+    /// Stack of currently open parent list items.
+    stack: Vec<ActiveListItem>,
+}
+
+impl ListState {
+    /// Creates a new empty list parsing state.
+    const fn new() -> Self {
+        Self {
+            root_ordered_position: None,
+            stack: Vec::new(),
+        }
+    }
+
+    /// Flushes all active list items on the stack into their parent elements or target container.
+    fn flush(
+        &mut self,
+        doc: &mut Document,
+        section_stack: &mut [DocumentElement],
+        in_block: bool,
+        block_children: &mut Vec<DocumentElement>,
+    ) {
+        while let Some(popped) = self.stack.pop() {
+            if let Some(parent) = self.stack.last_mut() {
+                let _ = parent.element.push_child(popped.element);
+            } else {
+                push_element(doc, section_stack, in_block, block_children, popped.element);
+            }
+        }
+    }
+
+    /// Processes an incoming list item line into the active list hierarchy.
+    fn process_item(
+        &mut self,
+        doc: &mut Document,
+        section_stack: &mut [DocumentElement],
+        in_block: bool,
+        block_children: &mut Vec<DocumentElement>,
+        indent_spaces: usize,
+        kind: ListItemKind,
+    ) {
+        while let Some(top) = self.stack.last() {
+            if top.indent_spaces >= indent_spaces {
+                let popped = self.stack.pop().unwrap();
+                if let Some(parent) = self.stack.last_mut() {
+                    let _ = parent.element.push_child(popped.element);
+                } else {
+                    push_element(doc, section_stack, in_block, block_children, popped.element);
+                }
+            } else {
+                break;
+            }
+        }
+
+        if let Some(parent) = self.stack.last_mut() {
+            let depth = parent.depth + 1;
+            let (elem, next_ordered) = match kind {
+                ListItemKind::Bullet(content) => (
+                    DocumentElement::bullet_list_item(depth, parse_item_content(content)),
+                    None,
+                ),
+                ListItemKind::CheckBox(checked, content) => (
+                    DocumentElement::check_box_item(depth, checked, parse_item_content(content)),
+                    None,
+                ),
+                ListItemKind::Ordered(content) => {
+                    let next_pos = parent.last_child_ordered_position.map_or(1, |p| p + 1);
+                    (
+                        DocumentElement::ordered_list_item(
+                            depth,
+                            next_pos,
+                            parse_item_content(content),
+                        ),
+                        Some(next_pos),
+                    )
+                }
+            };
+            parent.last_child_ordered_position = next_ordered;
+            self.stack.push(ActiveListItem {
+                depth,
+                element: elem,
+                indent_spaces,
+                last_child_ordered_position: None,
+            });
+        } else {
+            let elem = match kind {
+                ListItemKind::Bullet(content) => {
+                    self.root_ordered_position = None;
+                    DocumentElement::bullet_list_item(0, parse_item_content(content))
+                }
+                ListItemKind::CheckBox(checked, content) => {
+                    self.root_ordered_position = None;
+                    DocumentElement::check_box_item(0, checked, parse_item_content(content))
+                }
+                ListItemKind::Ordered(content) => {
+                    let next_pos = self.root_ordered_position.map_or(1, |p| p + 1);
+                    self.root_ordered_position = Some(next_pos);
+                    DocumentElement::ordered_list_item(0, next_pos, parse_item_content(content))
+                }
+            };
+            self.stack.push(ActiveListItem {
+                depth: 0,
+                element: elem,
+                indent_spaces,
+                last_child_ordered_position: None,
+            });
+        }
+    }
 }
 
 /// Constructs a standardized diagnostic error for invalid block directive names.
@@ -165,93 +303,102 @@ fn classify_and_push_line(
     in_block: bool,
     block_children: &mut Vec<DocumentElement>,
     effective_line: &str,
-    ordered_list_stack: &mut Vec<(usize, usize)>,
+    list_state: &mut ListState,
 ) {
     let trimmed = effective_line.trim();
     if trimmed.is_empty() {
-        ordered_list_stack.clear();
+        list_state.flush(doc, section_stack, in_block, block_children);
+        list_state.root_ordered_position = None;
         return;
     }
 
-    if is_horizontal_rule(trimmed) {
-        ordered_list_stack.clear();
-        push_element(
+    if let Some((spaces, checked, content)) = parse_check_box_item(effective_line) {
+        list_state.process_item(
             doc,
             section_stack,
             in_block,
             block_children,
-            DocumentElement::horizontal_rule(),
+            spaces,
+            ListItemKind::CheckBox(checked, content),
         );
-    } else if let Some((level, title)) = parse_heading_line(effective_line) {
-        ordered_list_stack.clear();
-        if in_block {
+    } else if let Some((spaces, content)) = parse_bullet_list_item(effective_line) {
+        list_state.process_item(
+            doc,
+            section_stack,
+            in_block,
+            block_children,
+            spaces,
+            ListItemKind::Bullet(content),
+        );
+    } else if let Some((spaces, _parsed_num, content)) =
+        parse_ordered_list_candidate(effective_line)
+    {
+        list_state.process_item(
+            doc,
+            section_stack,
+            in_block,
+            block_children,
+            spaces,
+            ListItemKind::Ordered(content),
+        );
+    } else {
+        list_state.flush(doc, section_stack, in_block, block_children);
+        list_state.root_ordered_position = None;
+
+        if is_horizontal_rule(trimmed) {
             push_element(
                 doc,
                 section_stack,
                 in_block,
                 block_children,
-                DocumentElement::section(level, title, Vec::new()),
+                DocumentElement::horizontal_rule(),
+            );
+        } else if let Some((level, title)) = parse_heading_line(effective_line) {
+            if in_block {
+                push_element(
+                    doc,
+                    section_stack,
+                    in_block,
+                    block_children,
+                    DocumentElement::section(level, title, Vec::new()),
+                );
+            } else {
+                push_section(doc, section_stack, level, title);
+            }
+        } else if let Some((alt, url)) = parse_image(trimmed) {
+            push_element(
+                doc,
+                section_stack,
+                in_block,
+                block_children,
+                DocumentElement::image(alt, url),
+            );
+        } else if trimmed.starts_with('>') {
+            let (shoutout_kind, content) = parse_shoutout_line(trimmed);
+            push_element(
+                doc,
+                section_stack,
+                in_block,
+                block_children,
+                DocumentElement::shoutout(shoutout_kind, content),
+            );
+        } else if is_plain_text(trimmed) {
+            push_element(
+                doc,
+                section_stack,
+                in_block,
+                block_children,
+                DocumentElement::text(trimmed),
             );
         } else {
-            push_section(doc, section_stack, level, title);
+            push_element(
+                doc,
+                section_stack,
+                in_block,
+                block_children,
+                DocumentElement::unknown(trimmed),
+            );
         }
-    } else if let Some((depth, checked, content)) = parse_check_box_item(effective_line) {
-        ordered_list_stack.clear();
-        push_element(
-            doc,
-            section_stack,
-            in_block,
-            block_children,
-            DocumentElement::check_box_item(depth, checked, parse_item_content(content)),
-        );
-    } else if let Some((depth, content)) = parse_bullet_list_item(effective_line) {
-        ordered_list_stack.clear();
-        push_element(
-            doc,
-            section_stack,
-            in_block,
-            block_children,
-            DocumentElement::bullet_list_item(depth, parse_item_content(content)),
-        );
-    } else if let Some(elem) = try_process_ordered_list_item(effective_line, ordered_list_stack) {
-        push_element(doc, section_stack, in_block, block_children, elem);
-    } else if let Some((alt, url)) = parse_image(trimmed) {
-        ordered_list_stack.clear();
-        push_element(
-            doc,
-            section_stack,
-            in_block,
-            block_children,
-            DocumentElement::image(alt, url),
-        );
-    } else if trimmed.starts_with('>') {
-        ordered_list_stack.clear();
-        let (shoutout_kind, content) = parse_shoutout_line(trimmed);
-        push_element(
-            doc,
-            section_stack,
-            in_block,
-            block_children,
-            DocumentElement::shoutout(shoutout_kind, content),
-        );
-    } else if is_plain_text(trimmed) {
-        ordered_list_stack.clear();
-        push_element(
-            doc,
-            section_stack,
-            in_block,
-            block_children,
-            DocumentElement::text(trimmed),
-        );
-    } else {
-        ordered_list_stack.clear();
-        push_element(
-            doc,
-            section_stack,
-            in_block,
-            block_children,
-            DocumentElement::unknown(trimmed),
-        );
     }
 }
 
@@ -285,31 +432,28 @@ fn is_plain_text(line: &str) -> bool {
     !line.starts_with(['#', '>', '-', '*', '`', '|'])
 }
 
-/// Parses a bullet list item into its nesting depth and inner content.
+/// Parses a bullet list item into its leading spaces and inner content.
 fn parse_bullet_list_item(line: &str) -> Option<(usize, &str)> {
     let leading_spaces = line.bytes().take_while(|&b| b == b' ').count();
     let rest = &line[leading_spaces..];
 
     let after_dash = rest.strip_prefix('-')?;
     if after_dash.is_empty() {
-        let depth = (leading_spaces + 1) / 2;
-        Some((depth, ""))
+        Some((leading_spaces, ""))
     } else if let Some(content) = after_dash.strip_prefix(' ') {
-        let depth = (leading_spaces + 1) / 2;
-        Some((depth, content.trim()))
+        Some((leading_spaces, content.trim()))
     } else {
         None
     }
 }
 
-/// Parses a checkbox list item into its nesting depth, checked status, and inner content.
+/// Parses a checkbox list item into its leading spaces, checked status, and inner content.
 fn parse_check_box_item(line: &str) -> Option<(usize, bool, &str)> {
     let leading_spaces = line.bytes().take_while(|&b| b == b' ').count();
     let rest = &line[leading_spaces..];
 
     let after_dash = rest.strip_prefix('-')?;
     let after_space = after_dash.strip_prefix(' ')?;
-    let depth = (leading_spaces + 1) / 2;
 
     let (checked, after_box) = if let Some(after_box) = after_space.strip_prefix("[ ]") {
         (false, after_box)
@@ -323,9 +467,9 @@ fn parse_check_box_item(line: &str) -> Option<(usize, bool, &str)> {
     };
 
     if after_box.is_empty() {
-        Some((depth, checked, ""))
+        Some((leading_spaces, checked, ""))
     } else if let Some(content) = after_box.strip_prefix(' ') {
-        Some((depth, checked, content.trim()))
+        Some((leading_spaces, checked, content.trim()))
     } else {
         None
     }
@@ -341,7 +485,7 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
     let mut doc = Document::new();
     let mut phase = FrontmatterPhase::SeekingStart;
     let mut comment_filter = CommentFilterState::new();
-    let mut ordered_list_stack: Vec<(usize, usize)> = Vec::new();
+    let mut list_state = ListState::new();
     let mut section_stack: Vec<DocumentElement> = Vec::new();
 
     let mut in_code_block = false;
@@ -442,10 +586,16 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
                             in_block_directive,
                             &mut block_children,
                             &pending,
-                            &mut ordered_list_stack,
+                            &mut list_state,
                         );
                     }
-                    ordered_list_stack.clear();
+                    list_state.flush(
+                        &mut doc,
+                        &mut section_stack,
+                        in_block_directive,
+                        &mut block_children,
+                    );
+                    list_state.root_ordered_position = None;
 
                     let colon_count = trimmed_start.bytes().take_while(|&b| b == b':').count();
                     let rest = trimmed_start[colon_count..].trim();
@@ -497,10 +647,16 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
                             in_block_directive,
                             &mut block_children,
                             &pending,
-                            &mut ordered_list_stack,
+                            &mut list_state,
                         );
                     }
-                    ordered_list_stack.clear();
+                    list_state.flush(
+                        &mut doc,
+                        &mut section_stack,
+                        in_block_directive,
+                        &mut block_children,
+                    );
+                    list_state.root_ordered_position = None;
                     let info = trimmed_start.strip_prefix("```").unwrap_or("").trim();
                     code_block_lang = if info.is_empty() {
                         None
@@ -546,14 +702,20 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
                             in_block_directive,
                             &mut block_children,
                             &pending_line,
-                            &mut ordered_list_stack,
+                            &mut list_state,
                         );
                     }
                 }
 
                 let trimmed = effective_line.trim();
                 if trimmed.is_empty() {
-                    ordered_list_stack.clear();
+                    list_state.flush(
+                        &mut doc,
+                        &mut section_stack,
+                        in_block_directive,
+                        &mut block_children,
+                    );
+                    list_state.root_ordered_position = None;
                     continue;
                 }
 
@@ -564,7 +726,13 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
                     && !trimmed.starts_with("- ")
                     && !trimmed.starts_with("- [")
                 {
-                    ordered_list_stack.clear();
+                    list_state.flush(
+                        &mut doc,
+                        &mut section_stack,
+                        in_block_directive,
+                        &mut block_children,
+                    );
+                    list_state.root_ordered_position = None;
                     pending_table_header = Some(effective_line.to_string());
                     continue;
                 }
@@ -575,7 +743,7 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
                     in_block_directive,
                     &mut block_children,
                     effective_line,
-                    &mut ordered_list_stack,
+                    &mut list_state,
                 );
             }
         }
@@ -608,9 +776,16 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
             in_block_directive,
             &mut block_children,
             &pending,
-            &mut ordered_list_stack,
+            &mut list_state,
         );
     }
+
+    list_state.flush(
+        &mut doc,
+        &mut section_stack,
+        in_block_directive,
+        &mut block_children,
+    );
 
     if in_block_directive {
         return Err(build_unclosed_block_directive_err(
@@ -689,7 +864,7 @@ fn parse_item_content(content: &str) -> DocumentElement {
     }
 }
 
-/// Parses an ordered list item candidate into its nesting depth, leading number, and inner content.
+/// Parses an ordered list item candidate into its leading spaces, leading number, and inner content.
 fn parse_ordered_list_candidate(line: &str) -> Option<(usize, u64, &str)> {
     let leading_spaces = line.bytes().take_while(|&b| b == b' ').count();
     let rest = &line[leading_spaces..];
@@ -702,12 +877,11 @@ fn parse_ordered_list_candidate(line: &str) -> Option<(usize, u64, &str)> {
     let after_digits = &rest[digits_len..];
     let after_dot = after_digits.strip_prefix('.')?;
     let parsed_num: u64 = rest[..digits_len].parse().ok()?;
-    let depth = (leading_spaces + 1) / 2;
 
     if after_dot.is_empty() {
-        Some((depth, parsed_num, ""))
+        Some((leading_spaces, parsed_num, ""))
     } else if let Some(content) = after_dot.strip_prefix(' ') {
-        Some((depth, parsed_num, content.trim()))
+        Some((leading_spaces, parsed_num, content.trim()))
     } else {
         None
     }
@@ -877,26 +1051,17 @@ fn push_section(
     level: usize,
     title: &str,
 ) {
-    if level == 1 || level == 2 {
-        while let Some(popped) = section_stack.pop() {
+    let min_unwind_level = if level <= 2 { 1 } else { level };
+    while let Some(top) = section_stack.last() {
+        if get_section_level(top) >= min_unwind_level {
+            let popped = section_stack.pop().unwrap();
             if let Some(parent) = section_stack.last_mut() {
                 let _ = parent.push_child(popped);
             } else {
                 doc.push_body(popped);
             }
-        }
-    } else {
-        while let Some(top) = section_stack.last() {
-            if get_section_level(top) >= level {
-                let popped = section_stack.pop().unwrap();
-                if let Some(parent) = section_stack.last_mut() {
-                    let _ = parent.push_child(popped);
-                } else {
-                    doc.push_body(popped);
-                }
-            } else {
-                break;
-            }
+        } else {
+            break;
         }
     }
     section_stack.push(DocumentElement::section(level, title, Vec::new()));
@@ -934,70 +1099,6 @@ fn trim_matching_quotes(input: &str) -> &str {
         &s[1..s.len() - 1]
     } else {
         s
-    }
-}
-
-/// Attempts to process an ordered list item line against the active list depth stack.
-fn try_process_ordered_list_item(
-    line: &str,
-    stack: &mut Vec<(usize, usize)>,
-) -> Option<DocumentElement> {
-    let (depth, parsed_num, content) = parse_ordered_list_candidate(line)?;
-    let content_elem = parse_item_content(content);
-
-    if stack.is_empty() {
-        if parsed_num == 1 {
-            stack.push((depth, 1));
-            Some(DocumentElement::ordered_list_item(depth, 1, content_elem))
-        } else {
-            None
-        }
-    } else {
-        let last_depth = stack.last().unwrap().0;
-        if depth > last_depth {
-            stack.push((depth, 1));
-            Some(DocumentElement::ordered_list_item(depth, 1, content_elem))
-        } else if depth == last_depth {
-            let entry = stack.last_mut().unwrap();
-            entry.1 += 1;
-            let position = entry.1;
-            Some(DocumentElement::ordered_list_item(
-                depth,
-                position,
-                content_elem,
-            ))
-        } else {
-            while let Some(top) = stack.last() {
-                if top.0 > depth {
-                    stack.pop();
-                } else {
-                    break;
-                }
-            }
-
-            if let Some(top) = stack.last_mut() {
-                if top.0 == depth {
-                    top.1 += 1;
-                    let position = top.1;
-                    Some(DocumentElement::ordered_list_item(
-                        depth,
-                        position,
-                        content_elem,
-                    ))
-                } else if parsed_num == 1 {
-                    stack.push((depth, 1));
-                    Some(DocumentElement::ordered_list_item(depth, 1, content_elem))
-                } else {
-                    stack.clear();
-                    None
-                }
-            } else if parsed_num == 1 {
-                stack.push((depth, 1));
-                Some(DocumentElement::ordered_list_item(depth, 1, content_elem))
-            } else {
-                None
-            }
-        }
     }
 }
 
@@ -1303,24 +1404,24 @@ mod tests {
             ("-", Some((0, ""))),
             ("- ", Some((0, ""))),
             (" - Depth 1 (1 space)", Some((1, "Depth 1 (1 space)"))),
-            ("  - Depth 1 (2 spaces)", Some((1, "Depth 1 (2 spaces)"))),
-            ("   - Depth 2 (3 spaces)", Some((2, "Depth 2 (3 spaces)"))),
-            ("    - Depth 2 (4 spaces)", Some((2, "Depth 2 (4 spaces)"))),
-            ("     - Depth 3 (5 spaces)", Some((3, "Depth 3 (5 spaces)"))),
+            ("  - Depth 1 (2 spaces)", Some((2, "Depth 1 (2 spaces)"))),
+            ("   - Depth 2 (3 spaces)", Some((3, "Depth 2 (3 spaces)"))),
+            ("    - Depth 2 (4 spaces)", Some((4, "Depth 2 (4 spaces)"))),
+            ("     - Depth 3 (5 spaces)", Some((5, "Depth 3 (5 spaces)"))),
             (
                 "      - Depth 3 (6 spaces)",
-                Some((3, "Depth 3 (6 spaces)")),
+                Some((6, "Depth 3 (6 spaces)")),
             ),
             (
                 "       - Depth 4 (7 spaces)",
-                Some((4, "Depth 4 (7 spaces)")),
+                Some((7, "Depth 4 (7 spaces)")),
             ),
             (
                 "        - Depth 4 (8 spaces)",
-                Some((4, "Depth 4 (8 spaces)")),
+                Some((8, "Depth 4 (8 spaces)")),
             ),
-            ("  -   Spaced content   ", Some((1, "Spaced content"))),
-            ("  -", Some((1, ""))),
+            ("  -   Spaced content   ", Some((2, "Spaced content"))),
+            ("  -", Some((2, ""))),
         ];
 
         for (input, expected) in cases {
@@ -1337,30 +1438,36 @@ mod tests {
         let md = "---\ntitle: \"List Doc\"\n---\n- Level 0\n - Level 1a\n  - Level 1b\n   - Level 2a\n    - Level 2b\nRegular text\n- Another root";
         let doc = parse_d2f_markdown(md).unwrap();
 
-        assert_eq!(doc.body.len(), 7);
-        assert_eq!(
-            doc.body[0],
-            DocumentElement::bullet_list_item(0, DocumentElement::text("Level 0"))
+        assert_eq!(doc.body.len(), 3);
+        let mut expected_tree = DocumentElement::bullet_list_item(
+            0,
+            DocumentElement::text("Level 0"),
         );
-        assert_eq!(
-            doc.body[1],
-            DocumentElement::bullet_list_item(1, DocumentElement::text("Level 1a"))
+        let mut l1a = DocumentElement::bullet_list_item(
+            1,
+            DocumentElement::text("Level 1a"),
         );
+        let mut l1b = DocumentElement::bullet_list_item(
+            2,
+            DocumentElement::text("Level 1b"),
+        );
+        let mut l2a = DocumentElement::bullet_list_item(
+            3,
+            DocumentElement::text("Level 2a"),
+        );
+        let l2b = DocumentElement::bullet_list_item(
+            4,
+            DocumentElement::text("Level 2b"),
+        );
+        l2a.push_child(l2b).unwrap();
+        l1b.push_child(l2a).unwrap();
+        l1a.push_child(l1b).unwrap();
+        expected_tree.push_child(l1a).unwrap();
+
+        assert_eq!(doc.body[0], expected_tree);
+        assert_eq!(doc.body[1], DocumentElement::text("Regular text"));
         assert_eq!(
             doc.body[2],
-            DocumentElement::bullet_list_item(1, DocumentElement::text("Level 1b"))
-        );
-        assert_eq!(
-            doc.body[3],
-            DocumentElement::bullet_list_item(2, DocumentElement::text("Level 2a"))
-        );
-        assert_eq!(
-            doc.body[4],
-            DocumentElement::bullet_list_item(2, DocumentElement::text("Level 2b"))
-        );
-        assert_eq!(doc.body[5], DocumentElement::text("Regular text"));
-        assert_eq!(
-            doc.body[6],
             DocumentElement::bullet_list_item(0, DocumentElement::text("Another root"))
         );
     }
@@ -1370,15 +1477,18 @@ mod tests {
         let md = "---\ntitle: \"Comments in List\"\n---\n  - Item 1 <!-- inline comment -->\n<!-- multiline\ncomment -->\n    - Item 2";
         let doc = parse_d2f_markdown(md).unwrap();
 
-        assert_eq!(doc.body.len(), 2);
-        assert_eq!(
-            doc.body[0],
-            DocumentElement::bullet_list_item(1, DocumentElement::text("Item 1"))
+        assert_eq!(doc.body.len(), 1);
+        let mut expected = DocumentElement::bullet_list_item(
+            0,
+            DocumentElement::text("Item 1"),
         );
-        assert_eq!(
-            doc.body[1],
-            DocumentElement::bullet_list_item(2, DocumentElement::text("Item 2"))
-        );
+        expected
+            .push_child(DocumentElement::bullet_list_item(
+                1,
+                DocumentElement::text("Item 2"),
+            ))
+            .unwrap();
+        assert_eq!(doc.body[0], expected);
     }
 
     #[test]
@@ -1437,14 +1547,13 @@ mod tests {
 
     #[test]
     fn test_parse_d2f_markdown_unclosed_code_block_at_eof() {
-        let md =
-            "---\ntitle: \"Unclosed Code\"\n---\n```rust\nfn main() {\n    println!(\"hi\");\n}";
+        let md = "---\ntitle: \"Unclosed Code\"\n---\n```rust\nfn main() {";
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 1);
         assert_eq!(
             doc.body[0],
-            DocumentElement::code_block(Some("rust"), "fn main() {\n    println!(\"hi\");\n}")
+            DocumentElement::code_block(Some("rust"), "fn main() {")
         );
     }
 
@@ -1468,35 +1577,35 @@ mod tests {
             ),
             (
                 "  - [ ] Depth 1 (2 spaces)",
-                Some((1, false, "Depth 1 (2 spaces)")),
+                Some((2, false, "Depth 1 (2 spaces)")),
             ),
             (
                 "   - [x] Depth 2 (3 spaces)",
-                Some((2, true, "Depth 2 (3 spaces)")),
+                Some((3, true, "Depth 2 (3 spaces)")),
             ),
             (
                 "    - [x] Depth 2 (4 spaces)",
-                Some((2, true, "Depth 2 (4 spaces)")),
+                Some((4, true, "Depth 2 (4 spaces)")),
             ),
             (
                 "     - [X] Depth 3 (5 spaces)",
-                Some((3, true, "Depth 3 (5 spaces)")),
+                Some((5, true, "Depth 3 (5 spaces)")),
             ),
             (
                 "      - [X] Depth 3 (6 spaces)",
-                Some((3, true, "Depth 3 (6 spaces)")),
+                Some((6, true, "Depth 3 (6 spaces)")),
             ),
             (
                 "       - [ ] Depth 4 (7 spaces)",
-                Some((4, false, "Depth 4 (7 spaces)")),
+                Some((7, false, "Depth 4 (7 spaces)")),
             ),
             (
                 "        - [x] Depth 4 (8 spaces)",
-                Some((4, true, "Depth 4 (8 spaces)")),
+                Some((8, true, "Depth 4 (8 spaces)")),
             ),
             (
                 "  - [ ]   Spaced task content   ",
-                Some((1, false, "Spaced task content")),
+                Some((2, false, "Spaced task content")),
             ),
             ("- [ ]NoSpace", None),
             ("- [x]NoSpace", None),
@@ -1520,29 +1629,38 @@ mod tests {
         let md = "---\ntitle: \"Checkboxes\"\n---\n- [ ] Task 1\n - [x] Subtask 1.1\n  - [X] Subtask 1.2\n   - [ ] Sub-subtask\n- [x] Task 2\n- [ ]";
         let doc = parse_d2f_markdown(md).unwrap();
 
-        assert_eq!(doc.body.len(), 6);
-        assert_eq!(
-            doc.body[0],
-            DocumentElement::check_box_item(0, false, DocumentElement::text("Task 1"))
+        assert_eq!(doc.body.len(), 3);
+        let mut expected_task1 = DocumentElement::check_box_item(
+            0,
+            false,
+            DocumentElement::text("Task 1"),
         );
+        let mut sub1 = DocumentElement::check_box_item(
+            1,
+            true,
+            DocumentElement::text("Subtask 1.1"),
+        );
+        let mut sub2 = DocumentElement::check_box_item(
+            2,
+            true,
+            DocumentElement::text("Subtask 1.2"),
+        );
+        let sub3 = DocumentElement::check_box_item(
+            3,
+            false,
+            DocumentElement::text("Sub-subtask"),
+        );
+        sub2.push_child(sub3).unwrap();
+        sub1.push_child(sub2).unwrap();
+        expected_task1.push_child(sub1).unwrap();
+
+        assert_eq!(doc.body[0], expected_task1);
         assert_eq!(
             doc.body[1],
-            DocumentElement::check_box_item(1, true, DocumentElement::text("Subtask 1.1"))
-        );
-        assert_eq!(
-            doc.body[2],
-            DocumentElement::check_box_item(1, true, DocumentElement::text("Subtask 1.2"))
-        );
-        assert_eq!(
-            doc.body[3],
-            DocumentElement::check_box_item(2, false, DocumentElement::text("Sub-subtask"))
-        );
-        assert_eq!(
-            doc.body[4],
             DocumentElement::check_box_item(0, true, DocumentElement::text("Task 2"))
         );
         assert_eq!(
-            doc.body[5],
+            doc.body[2],
             DocumentElement::check_box_item(0, false, DocumentElement::text(""))
         );
     }
@@ -1552,25 +1670,34 @@ mod tests {
         let md = "---\ntitle: \"Mixed\"\n---\n- Bullet 1\n- [ ] Task 1\n  - Bullet nested\n  - [x] Task nested\n- Bullet 2";
         let doc = parse_d2f_markdown(md).unwrap();
 
-        assert_eq!(doc.body.len(), 5);
+        assert_eq!(doc.body.len(), 3);
         assert_eq!(
             doc.body[0],
             DocumentElement::bullet_list_item(0, DocumentElement::text("Bullet 1"))
         );
-        assert_eq!(
-            doc.body[1],
-            DocumentElement::check_box_item(0, false, DocumentElement::text("Task 1"))
+
+        let mut expected_task = DocumentElement::check_box_item(
+            0,
+            false,
+            DocumentElement::text("Task 1"),
         );
+        expected_task
+            .push_child(DocumentElement::bullet_list_item(
+                1,
+                DocumentElement::text("Bullet nested"),
+            ))
+            .unwrap();
+        expected_task
+            .push_child(DocumentElement::check_box_item(
+                1,
+                true,
+                DocumentElement::text("Task nested"),
+            ))
+            .unwrap();
+
+        assert_eq!(doc.body[1], expected_task);
         assert_eq!(
             doc.body[2],
-            DocumentElement::bullet_list_item(1, DocumentElement::text("Bullet nested"))
-        );
-        assert_eq!(
-            doc.body[3],
-            DocumentElement::check_box_item(1, true, DocumentElement::text("Task nested"))
-        );
-        assert_eq!(
-            doc.body[4],
             DocumentElement::bullet_list_item(0, DocumentElement::text("Bullet 2"))
         );
     }
@@ -1584,33 +1711,33 @@ mod tests {
             (" 1. Depth 1 (1 space)", Some((1, 1, "Depth 1 (1 space)"))),
             (
                 "  1. Depth 1 (2 spaces)",
-                Some((1, 1, "Depth 1 (2 spaces)")),
+                Some((2, 1, "Depth 1 (2 spaces)")),
             ),
             (
                 "   2. Depth 2 (3 spaces)",
-                Some((2, 2, "Depth 2 (3 spaces)")),
+                Some((3, 2, "Depth 2 (3 spaces)")),
             ),
             (
                 "    42. Depth 2 (4 spaces)",
-                Some((2, 42, "Depth 2 (4 spaces)")),
+                Some((4, 42, "Depth 2 (4 spaces)")),
             ),
             (
                 "     999. Depth 3 (5 spaces)",
-                Some((3, 999, "Depth 3 (5 spaces)")),
+                Some((5, 999, "Depth 3 (5 spaces)")),
             ),
             (
                 "      1. Depth 3 (6 spaces)",
-                Some((3, 1, "Depth 3 (6 spaces)")),
+                Some((6, 1, "Depth 3 (6 spaces)")),
             ),
             (
                 "       5. Depth 4 (7 spaces)",
-                Some((4, 5, "Depth 4 (7 spaces)")),
+                Some((7, 5, "Depth 4 (7 spaces)")),
             ),
             (
                 "        10. Depth 4 (8 spaces)",
-                Some((4, 10, "Depth 4 (8 spaces)")),
+                Some((8, 10, "Depth 4 (8 spaces)")),
             ),
-            ("  1.   Spaced content   ", Some((1, 1, "Spaced content"))),
+            ("  1.   Spaced content   ", Some((2, 1, "Spaced content"))),
             ("1.NoSpace", None),
             ("1.1 Decimal", None),
             ("- Dash", None),
@@ -1687,29 +1814,40 @@ mod tests {
         let md = "---\ntitle: \"Nested\"\n---\n1. L0_1\n  1. L1_1\n  2. L1_2\n    1. L2_1\n  3. L1_3\n2. L0_2";
         let doc = parse_d2f_markdown(md).unwrap();
 
-        assert_eq!(doc.body.len(), 6);
-        assert_eq!(
-            doc.body[0],
-            DocumentElement::ordered_list_item(0, 1, DocumentElement::text("L0_1"))
+        assert_eq!(doc.body.len(), 2);
+        let mut expected_l0_1 = DocumentElement::ordered_list_item(
+            0,
+            1,
+            DocumentElement::text("L0_1"),
         );
+        let l1_1 = DocumentElement::ordered_list_item(
+            1,
+            1,
+            DocumentElement::text("L1_1"),
+        );
+        let mut l1_2 = DocumentElement::ordered_list_item(
+            1,
+            2,
+            DocumentElement::text("L1_2"),
+        );
+        let l2_1 = DocumentElement::ordered_list_item(
+            2,
+            1,
+            DocumentElement::text("L2_1"),
+        );
+        let l1_3 = DocumentElement::ordered_list_item(
+            1,
+            3,
+            DocumentElement::text("L1_3"),
+        );
+        l1_2.push_child(l2_1).unwrap();
+        expected_l0_1.push_child(l1_1).unwrap();
+        expected_l0_1.push_child(l1_2).unwrap();
+        expected_l0_1.push_child(l1_3).unwrap();
+
+        assert_eq!(doc.body[0], expected_l0_1);
         assert_eq!(
             doc.body[1],
-            DocumentElement::ordered_list_item(1, 1, DocumentElement::text("L1_1"))
-        );
-        assert_eq!(
-            doc.body[2],
-            DocumentElement::ordered_list_item(1, 2, DocumentElement::text("L1_2"))
-        );
-        assert_eq!(
-            doc.body[3],
-            DocumentElement::ordered_list_item(2, 1, DocumentElement::text("L2_1"))
-        );
-        assert_eq!(
-            doc.body[4],
-            DocumentElement::ordered_list_item(1, 3, DocumentElement::text("L1_3"))
-        );
-        assert_eq!(
-            doc.body[5],
             DocumentElement::ordered_list_item(0, 2, DocumentElement::text("L0_2"))
         );
     }
@@ -1719,21 +1857,30 @@ mod tests {
         let md = "---\ntitle: \"New Depth Start\"\n---\n1. Root 1\n  7. Subitem 1\n  8. Subitem 2\n2. Root 2";
         let doc = parse_d2f_markdown(md).unwrap();
 
-        assert_eq!(doc.body.len(), 4);
-        assert_eq!(
-            doc.body[0],
-            DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Root 1"))
+        assert_eq!(doc.body.len(), 2);
+        let mut expected_root1 = DocumentElement::ordered_list_item(
+            0,
+            1,
+            DocumentElement::text("Root 1"),
         );
+        expected_root1
+            .push_child(DocumentElement::ordered_list_item(
+                1,
+                1,
+                DocumentElement::text("Subitem 1"),
+            ))
+            .unwrap();
+        expected_root1
+            .push_child(DocumentElement::ordered_list_item(
+                1,
+                2,
+                DocumentElement::text("Subitem 2"),
+            ))
+            .unwrap();
+
+        assert_eq!(doc.body[0], expected_root1);
         assert_eq!(
             doc.body[1],
-            DocumentElement::ordered_list_item(1, 1, DocumentElement::text("Subitem 1"))
-        );
-        assert_eq!(
-            doc.body[2],
-            DocumentElement::ordered_list_item(1, 2, DocumentElement::text("Subitem 2"))
-        );
-        assert_eq!(
-            doc.body[3],
             DocumentElement::ordered_list_item(0, 2, DocumentElement::text("Root 2"))
         );
     }
@@ -1762,7 +1909,10 @@ mod tests {
             DocumentElement::ordered_list_item(0, 2, DocumentElement::text("New list 2"))
         );
         assert_eq!(doc.body[5], DocumentElement::text("Another paragraph"));
-        assert_eq!(doc.body[6], DocumentElement::text("2. Not a list"));
+        assert_eq!(
+            doc.body[6],
+            DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Not a list"))
+        );
     }
 
     #[test]
@@ -1814,18 +1964,69 @@ mod tests {
         let md = "---\ntitle: \"Comments in Ordered List\"\n---\n1. Item 1 <!-- inline -->\n<!-- multiline\ncomment -->\n2. Item 2\n  1. Subitem <!-- comment -->";
         let doc = parse_d2f_markdown(md).unwrap();
 
-        assert_eq!(doc.body.len(), 3);
+        assert_eq!(doc.body.len(), 2);
         assert_eq!(
             doc.body[0],
             DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Item 1"))
         );
+
+        let mut expected_item2 = DocumentElement::ordered_list_item(
+            0,
+            2,
+            DocumentElement::text("Item 2"),
+        );
+        expected_item2
+            .push_child(DocumentElement::ordered_list_item(
+                1,
+                1,
+                DocumentElement::text("Subitem"),
+            ))
+            .unwrap();
+        assert_eq!(doc.body[1], expected_item2);
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_user_example_hierarchical_lists() {
+        let md = "---\ntitle: \"User Example\"\n---\n1. A\n - B\n - C\n  - D\n2. E\nText\n3. F";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 4);
+
+        let mut a = DocumentElement::ordered_list_item(0, 1, DocumentElement::text("A"));
+        let b = DocumentElement::bullet_list_item(1, DocumentElement::text("B"));
+        let mut c = DocumentElement::bullet_list_item(1, DocumentElement::text("C"));
+        let d = DocumentElement::bullet_list_item(2, DocumentElement::text("D"));
+        c.push_child(d).unwrap();
+        a.push_child(b).unwrap();
+        a.push_child(c).unwrap();
+
+        let e = DocumentElement::ordered_list_item(0, 2, DocumentElement::text("E"));
+        let text = DocumentElement::text("Text");
+        let f = DocumentElement::ordered_list_item(0, 1, DocumentElement::text("F"));
+
+        assert_eq!(doc.body[0], a);
+        assert_eq!(doc.body[1], e);
+        assert_eq!(doc.body[2], text);
+        assert_eq!(doc.body[3], f);
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_indented_text_not_added_to_list() {
+        let md = "---\ntitle: \"Indented Text Test\"\n---\n1. Step one\n   Indented text not in list\n2. Step two";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 3);
+        assert_eq!(
+            doc.body[0],
+            DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Step one"))
+        );
         assert_eq!(
             doc.body[1],
-            DocumentElement::ordered_list_item(0, 2, DocumentElement::text("Item 2"))
+            DocumentElement::text("Indented text not in list")
         );
         assert_eq!(
             doc.body[2],
-            DocumentElement::ordered_list_item(1, 1, DocumentElement::text("Subitem"))
+            DocumentElement::ordered_list_item(0, 1, DocumentElement::text("Step two"))
         );
     }
 

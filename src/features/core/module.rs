@@ -71,7 +71,7 @@ impl Feature for CoreFeature {
                 push_indent(&mut out, indent);
                 out.push_str("<div class=\"item item-text\">\n");
                 push_indent(&mut out, indent + 1);
-                out.push_str("<span class=\"item-content\">\n");
+                out.push_str("<span class=\"text-content\">\n");
                 for line in text.lines() {
                     push_indent(&mut out, indent + 2);
                     format_inline_into(&mut out, line);
@@ -481,7 +481,7 @@ mod tests {
         assert!(css.contains("--item-done-bg:"));
         assert!(css.contains(".doc-body"));
         assert!(css.contains(".item"));
-        assert!(css.contains(".item-content"));
+        assert!(css.contains(".text-content"));
         assert!(css.contains(".txt-default"));
         assert!(css.contains(".txt-code"));
         assert!(css.contains(".txt-strike"));
@@ -514,7 +514,7 @@ mod tests {
         let elem = DocumentElement::text("5 < 10 & 20 > 15 \"quoted\" 'single'");
         assert_eq!(
             feature.to_html(&elem, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    5 &lt; 10 &amp; 20 &gt; 15 &quot;quoted&quot; &#39;single&#39;\n  </span>\n</div>\n"
+            "<div class=\"item item-text\">\n  <span class=\"text-content\">\n    5 &lt; 10 &amp; 20 &gt; 15 &quot;quoted&quot; &#39;single&#39;\n  </span>\n</div>\n"
         );
     }
 
@@ -524,7 +524,7 @@ mod tests {
         let elem = DocumentElement::text("Example `<div class=\"box\"> && **not bold**</div>` here.");
         assert_eq!(
             feature.to_html(&elem, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    Example <code>&lt;div class=&quot;box&quot;&gt; &amp;&amp; **not bold**&lt;/div&gt;</code> here.\n  </span>\n</div>\n"
+            "<div class=\"item item-text\">\n  <span class=\"text-content\">\n    Example <code>&lt;div class=&quot;box&quot;&gt; &amp;&amp; **not bold**&lt;/div&gt;</code> here.\n  </span>\n</div>\n"
         );
     }
 
@@ -534,7 +534,7 @@ mod tests {
         let elem = DocumentElement::text("Formatted ~~**bold strikethrough**~~ with `code`.");
         assert_eq!(
             feature.to_html(&elem, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    Formatted <s><strong>bold strikethrough</strong></s> with <code>code</code>.\n  </span>\n</div>\n"
+            "<div class=\"item item-text\">\n  <span class=\"text-content\">\n    Formatted <s><strong>bold strikethrough</strong></s> with <code>code</code>.\n  </span>\n</div>\n"
         );
     }
 
@@ -544,7 +544,7 @@ mod tests {
         let elem = DocumentElement::text("Host {{SERVER_NAME}}:{{PORT}} with key {{API_KEY}}.");
         assert_eq!(
             feature.to_html(&elem, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    Host {{SERVER_NAME}}:{{PORT}} with key {{API_KEY}}.\n  </span>\n</div>\n"
+            "<div class=\"item item-text\">\n  <span class=\"text-content\">\n    Host {{SERVER_NAME}}:{{PORT}} with key {{API_KEY}}.\n  </span>\n</div>\n"
         );
     }
 
@@ -554,13 +554,13 @@ mod tests {
         let elem = DocumentElement::text("This is ***bold and italic*** text.");
         assert_eq!(
             feature.to_html(&elem, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    This is <strong><em>bold and italic</em></strong> text.\n  </span>\n</div>\n"
+            "<div class=\"item item-text\">\n  <span class=\"text-content\">\n    This is <strong><em>bold and italic</em></strong> text.\n  </span>\n</div>\n"
         );
 
         let elem_underscores = DocumentElement::text("This is ___bold and italic___ text.");
         assert_eq!(
             feature.to_html(&elem_underscores, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    This is <strong><em>bold and italic</em></strong> text.\n  </span>\n</div>\n"
+            "<div class=\"item item-text\">\n  <span class=\"text-content\">\n    This is <strong><em>bold and italic</em></strong> text.\n  </span>\n</div>\n"
         );
     }
 
@@ -570,13 +570,13 @@ mod tests {
         let elem_asterisk = DocumentElement::text("This is **bold** text.");
         assert_eq!(
             feature.to_html(&elem_asterisk, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    This is <strong>bold</strong> text.\n  </span>\n</div>\n"
+            "<div class=\"item item-text\">\n  <span class=\"text-content\">\n    This is <strong>bold</strong> text.\n  </span>\n</div>\n"
         );
 
         let elem_underscore = DocumentElement::text("This is __bold__ text.");
         assert_eq!(
             feature.to_html(&elem_underscore, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    This is <strong>bold</strong> text.\n  </span>\n</div>\n"
+            "<div class=\"item item-text\">\n  <span class=\"text-content\">\n    This is <strong>bold</strong> text.\n  </span>\n</div>\n"
         );
     }
 
@@ -595,7 +595,7 @@ mod tests {
         let elem = DocumentElement::text("Run `cargo test --all` now.");
         assert_eq!(
             feature.to_html(&elem, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    Run <code>cargo test --all</code> now.\n  </span>\n</div>\n"
+            "<div class=\"item item-text\">\n  <span class=\"text-content\">\n    Run <code>cargo test --all</code> now.\n  </span>\n</div>\n"
         );
     }
 
@@ -605,13 +605,13 @@ mod tests {
         let elem_asterisk = DocumentElement::text("This is *italic* text.");
         assert_eq!(
             feature.to_html(&elem_asterisk, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    This is <em>italic</em> text.\n  </span>\n</div>\n"
+            "<div class=\"item item-text\">\n  <span class=\"text-content\">\n    This is <em>italic</em> text.\n  </span>\n</div>\n"
         );
 
         let elem_underscore = DocumentElement::text("This is _italic_ text.");
         assert_eq!(
             feature.to_html(&elem_underscore, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    This is <em>italic</em> text.\n  </span>\n</div>\n"
+            "<div class=\"item item-text\">\n  <span class=\"text-content\">\n    This is <em>italic</em> text.\n  </span>\n</div>\n"
         );
     }
 
@@ -621,7 +621,7 @@ mod tests {
         let element = DocumentElement::text("Hello, world!");
         assert_eq!(
             feature.to_html(&element, "", 1),
-            "  <div class=\"item item-text\">\n    <span class=\"item-content\">\n      Hello, world!\n    </span>\n  </div>\n"
+            "  <div class=\"item item-text\">\n    <span class=\"text-content\">\n      Hello, world!\n    </span>\n  </div>\n"
         );
     }
 
@@ -634,14 +634,14 @@ mod tests {
             vec![DocumentElement::text("Section body content")],
         );
         let child_html =
-            "        <div class=\"item item-text\">\n          <span class=\"item-content\">\n            Section body content\n          </span>\n        </div>\n";
+            "        <div class=\"item item-text\">\n          <span class=\"text-content\">\n            Section body content\n          </span>\n        </div>\n";
         let html = feature.to_html(&section, child_html, 2);
         let expected = concat!(
             "    <section class=\"section\" data-level=\"1\">\n",
             "      <h1>Overview</h1>\n",
             "      <div class=\"section-body\">\n",
             "        <div class=\"item item-text\">\n",
-            "          <span class=\"item-content\">\n",
+            "          <span class=\"text-content\">\n",
             "            Section body content\n",
             "          </span>\n",
             "        </div>\n",
@@ -657,7 +657,7 @@ mod tests {
         let elem = DocumentElement::text("Replaces ~~legacy procedures~~ with modern.");
         assert_eq!(
             feature.to_html(&elem, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    Replaces <s>legacy procedures</s> with modern.\n  </span>\n</div>\n"
+            "<div class=\"item item-text\">\n  <span class=\"text-content\">\n    Replaces <s>legacy procedures</s> with modern.\n  </span>\n</div>\n"
         );
     }
 
@@ -667,7 +667,7 @@ mod tests {
         let elem = DocumentElement::text("Unclosed **bold and ~~strike and `code");
         assert_eq!(
             feature.to_html(&elem, "", 0),
-            "<div class=\"item item-text\">\n  <span class=\"item-content\">\n    Unclosed **bold and ~~strike and `code\n  </span>\n</div>\n"
+            "<div class=\"item item-text\">\n  <span class=\"text-content\">\n    Unclosed **bold and ~~strike and `code\n  </span>\n</div>\n"
         );
     }
 }
