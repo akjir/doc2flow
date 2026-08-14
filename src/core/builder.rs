@@ -99,7 +99,7 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
 
     let mut html_content = String::new();
     for element in document.header.iter().chain(document.body.iter()) {
-        html_content.push_str(&render_element(element));
+        html_content.push_str(&render_element(element, 2));
     }
 
     TEMPLATE_HTML
@@ -126,33 +126,33 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
 /// use doc2flow::core::document::DocumentElement;
 ///
 /// let element = DocumentElement::text("Hello world");
-/// let html = render_element(&element);
-/// assert_eq!(html, "<p class=\"txt-default\">Hello world</p>");
+/// let html = render_element(&element, 1);
+/// assert_eq!(html, "  <p class=\"txt-default\">\n    Hello world\n  </p>\n");
 /// ```
-pub fn render_element(element: &DocumentElement) -> String {
+pub fn render_element(element: &DocumentElement, indent: usize) -> String {
     let (feature_name, inner_content) = match element {
         DocumentElement::BlockDirective { children, name } => {
             let mut inner = String::new();
             for child in children {
-                inner.push_str(&render_element(child));
+                inner.push_str(&render_element(child, indent + 1));
             }
             (name.as_str(), inner)
         }
         DocumentElement::BulletListItem { content, .. } => {
-            ("bullet_list_item", render_element(content))
+            ("bullet_list_item", render_element(content, indent + 1))
         }
         DocumentElement::CheckBoxItem { content, .. } => {
-            ("check_box_item", render_element(content))
+            ("check_box_item", render_element(content, indent + 1))
         }
         DocumentElement::CodeBlock { .. } => ("code_block", String::new()),
         DocumentElement::Image { .. } => ("image", String::new()),
         DocumentElement::OrderedListItem { content, .. } => {
-            ("ordered_list_item", render_element(content))
+            ("ordered_list_item", render_element(content, indent + 1))
         }
         DocumentElement::Section { children, .. } => {
             let mut inner = String::new();
             for child in children {
-                inner.push_str(&render_element(child));
+                inner.push_str(&render_element(child, indent + 2));
             }
             ("core", inner)
         }
@@ -163,7 +163,7 @@ pub fn render_element(element: &DocumentElement) -> String {
     };
 
     match get_feature(feature_name) {
-        Some(feature) => feature.to_html(element, &inner_content),
+        Some(feature) => feature.to_html(element, &inner_content, indent),
         None => inner_content,
     }
 }
@@ -185,7 +185,7 @@ mod tests {
         assert!(content.contains(LICENSE_URL));
         assert!(content.contains("<html lang=\"en\">"));
         assert!(content.contains("<meta name=\"features\" content=\"core\">"));
-        assert!(content.contains("<p class=\"txt-default\">Document body text</p>"));
+        assert!(content.contains("    <p class=\"txt-default\">\n      Document body text\n    </p>"));
         assert!(!content.contains("{{CONTENT}}"));
         assert!(!content.contains("{{APP_VERSION}}"));
         assert!(!content.contains("{{APP_VERSION_RAW}}"));
@@ -231,7 +231,7 @@ mod tests {
         let features = DocumentFeature::from(&doc);
         let content = build(&doc, &features);
         assert!(content.contains("<meta name=\"features\" content=\"core, unknown\">"));
-        assert!(content.contains("<p class=\"unknown-default\">unrecognized</p>"));
+        assert!(content.contains("    <p class=\"unknown-default\">\n      unrecognized\n    </p>"));
         assert!(content.contains("    --bg-body:"));
         assert!(content.contains("    --unknown-bg:"));
         assert!(content.contains("    .unknown-default"));
@@ -295,8 +295,8 @@ mod tests {
     fn test_render_element_text() {
         let text = DocumentElement::text("Sample paragraph text");
         assert_eq!(
-            render_element(&text),
-            "<p class=\"txt-default\">Sample paragraph text</p>"
+            render_element(&text, 1),
+            "  <p class=\"txt-default\">\n    Sample paragraph text\n  </p>\n"
         );
     }
 
@@ -304,8 +304,8 @@ mod tests {
     fn test_render_element_unknown() {
         let unknown = DocumentElement::unknown("Unrecognized markdown");
         assert_eq!(
-            render_element(&unknown),
-            "<p class=\"unknown-default\">Unrecognized markdown</p>"
+            render_element(&unknown, 1),
+            "  <p class=\"unknown-default\">\n    Unrecognized markdown\n  </p>\n"
         );
     }
 
@@ -319,8 +319,20 @@ mod tests {
                 DocumentElement::text("Second paragraph"),
             ],
         );
-        let expected = "<section class=\"section\" data-level=\"2\"><h2>Details</h2><div class=\"section-body\"><p class=\"txt-default\">First paragraph</p><p class=\"txt-default\">Second paragraph</p></div></section>";
-        assert_eq!(render_element(&section), expected);
+        let expected = concat!(
+            "  <section class=\"section\" data-level=\"2\">\n",
+            "    <h2>Details</h2>\n",
+            "    <div class=\"section-body\">\n",
+            "      <p class=\"txt-default\">\n",
+            "        First paragraph\n",
+            "      </p>\n",
+            "      <p class=\"txt-default\">\n",
+            "        Second paragraph\n",
+            "      </p>\n",
+            "    </div>\n",
+            "  </section>\n"
+        );
+        assert_eq!(render_element(&section, 1), expected);
     }
 
     #[test]
@@ -328,22 +340,36 @@ mod tests {
         let inner_section =
             DocumentElement::section(2, "Inner", vec![DocumentElement::text("Inner content")]);
         let outer_section = DocumentElement::section(1, "Outer", vec![inner_section]);
-        let expected = "<section class=\"section\" data-level=\"1\"><h1>Outer</h1><div class=\"section-body\"><section class=\"section\" data-level=\"2\"><h2>Inner</h2><div class=\"section-body\"><p class=\"txt-default\">Inner content</p></div></section></div></section>";
-        assert_eq!(render_element(&outer_section), expected);
+        let expected = concat!(
+            "  <section class=\"section\" data-level=\"1\">\n",
+            "    <h1>Outer</h1>\n",
+            "    <div class=\"section-body\">\n",
+            "      <section class=\"section\" data-level=\"2\">\n",
+            "        <h2>Inner</h2>\n",
+            "        <div class=\"section-body\">\n",
+            "          <p class=\"txt-default\">\n",
+            "            Inner content\n",
+            "          </p>\n",
+            "        </div>\n",
+            "      </section>\n",
+            "    </div>\n",
+            "  </section>\n"
+        );
+        assert_eq!(render_element(&outer_section, 1), expected);
     }
 
     #[test]
     fn test_render_element_unregistered_feature_fallback() {
         let code_block = DocumentElement::code_block(Some("rust"), "fn main() {}");
-        assert_eq!(render_element(&code_block), "");
+        assert_eq!(render_element(&code_block, 1), "");
 
         let directive = DocumentElement::block_directive(
             "unregistered_directive",
             vec![DocumentElement::text("Directive child")],
         );
         assert_eq!(
-            render_element(&directive),
-            "<p class=\"txt-default\">Directive child</p>"
+            render_element(&directive, 1),
+            "    <p class=\"txt-default\">\n      Directive child\n    </p>\n"
         );
     }
 }

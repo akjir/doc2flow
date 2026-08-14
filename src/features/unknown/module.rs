@@ -17,15 +17,30 @@ impl UnknownFeature {
     }
 }
 
+/// Appends leading whitespace indentation to a buffer based on the specified indent level.
+fn push_indent(out: &mut String, indent: usize) {
+    for _ in 0..indent {
+        out.push_str("  ");
+    }
+}
+
 impl Feature for UnknownFeature {
     /// Converts a document element and inner content into an HTML string representation.
-    fn to_html(&self, element: &DocumentElement, _content: &str) -> String {
+    fn to_html(&self, element: &DocumentElement, _content: &str, indent: usize) -> String {
         match element {
             DocumentElement::Unknown(text) => {
-                let mut out = String::with_capacity(text.len() + 32);
-                out.push_str("<p class=\"unknown-default\">");
-                out.push_str(text);
-                out.push_str("</p>");
+                let spaces = indent * 2;
+                let inner_spaces = (indent + 1) * 2;
+                let mut out = String::with_capacity(text.len() + spaces * 2 + inner_spaces + 32);
+                push_indent(&mut out, indent);
+                out.push_str("<p class=\"unknown-default\">\n");
+                for line in text.lines() {
+                    push_indent(&mut out, indent + 1);
+                    out.push_str(line);
+                    out.push('\n');
+                }
+                push_indent(&mut out, indent);
+                out.push_str("</p>\n");
                 out
             }
             _ => String::new(),
@@ -55,8 +70,8 @@ mod tests {
         let feature = UnknownFeature::new();
         let element = DocumentElement::unknown("Unrecognized raw markdown line");
         assert_eq!(
-            feature.to_html(&element, ""),
-            "<p class=\"unknown-default\">Unrecognized raw markdown line</p>"
+            feature.to_html(&element, "", 1),
+            "  <p class=\"unknown-default\">\n    Unrecognized raw markdown line\n  </p>\n"
         );
     }
 
@@ -64,6 +79,6 @@ mod tests {
     fn test_unknown_feature_empty_for_unsupported_elements() {
         let feature = UnknownFeature::new();
         let text = DocumentElement::text("Regular text");
-        assert_eq!(feature.to_html(&text, ""), "");
+        assert_eq!(feature.to_html(&text, "", 0), "");
     }
 }

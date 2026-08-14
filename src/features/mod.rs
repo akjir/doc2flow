@@ -45,8 +45,8 @@ mod tests {
         let core_feature = get_feature("core").expect("core feature should exist");
         let element = DocumentElement::text("Hello");
         assert_eq!(
-            core_feature.to_html(&element, ""),
-            "<p class=\"txt-default\">Hello</p>"
+            core_feature.to_html(&element, "", 1),
+            "  <p class=\"txt-default\">\n    Hello\n  </p>\n"
         );
     }
 
@@ -55,8 +55,8 @@ mod tests {
         let unknown_feature = get_feature("unknown").expect("unknown feature should exist");
         let element = DocumentElement::unknown("Raw line");
         assert_eq!(
-            unknown_feature.to_html(&element, ""),
-            "<p class=\"unknown-default\">Raw line</p>"
+            unknown_feature.to_html(&element, "", 1),
+            "  <p class=\"unknown-default\">\n    Raw line\n  </p>\n"
         );
     }
 

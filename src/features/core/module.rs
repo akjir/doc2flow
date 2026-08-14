@@ -17,15 +17,30 @@ impl CoreFeature {
     }
 }
 
+/// Appends leading whitespace indentation to a buffer based on the specified indent level.
+fn push_indent(out: &mut String, indent: usize) {
+    for _ in 0..indent {
+        out.push_str("  ");
+    }
+}
+
 impl Feature for CoreFeature {
     /// Converts a document element and inner content into an HTML string representation.
-    fn to_html(&self, element: &DocumentElement, content: &str) -> String {
+    fn to_html(&self, element: &DocumentElement, content: &str, indent: usize) -> String {
         match element {
             DocumentElement::Text(text) => {
-                let mut out = String::with_capacity(text.len() + 32);
-                out.push_str("<p class=\"txt-default\">");
-                out.push_str(text);
-                out.push_str("</p>");
+                let spaces = indent * 2;
+                let inner_spaces = (indent + 1) * 2;
+                let mut out = String::with_capacity(text.len() + spaces * 2 + inner_spaces + 32);
+                push_indent(&mut out, indent);
+                out.push_str("<p class=\"txt-default\">\n");
+                for line in text.lines() {
+                    push_indent(&mut out, indent + 1);
+                    out.push_str(line);
+                    out.push('\n');
+                }
+                push_indent(&mut out, indent);
+                out.push_str("</p>\n");
                 out
             }
             DocumentElement::Section {
@@ -33,18 +48,35 @@ impl Feature for CoreFeature {
                 title,
                 ..
             } => {
-                let mut out = String::with_capacity(title.len() + content.len() + 128);
+                let spaces = indent * 2;
+                let inner_spaces = (indent + 1) * 2;
+                let mut out = String::with_capacity(
+                    title.len() + content.len() + spaces * 2 + inner_spaces * 3 + 128,
+                );
+                push_indent(&mut out, indent);
                 out.push_str("<section class=\"section\" data-level=\"");
                 out.push_str(&level.to_string());
-                out.push_str("\"><h");
+                out.push_str("\">\n");
+
+                push_indent(&mut out, indent + 1);
+                out.push_str("<h");
                 out.push_str(&level.to_string());
                 out.push('>');
                 out.push_str(title);
                 out.push_str("</h");
                 out.push_str(&level.to_string());
-                out.push_str("><div class=\"section-body\">");
+                out.push_str(">\n");
+
+                push_indent(&mut out, indent + 1);
+                out.push_str("<div class=\"section-body\">\n");
+
                 out.push_str(content);
-                out.push_str("</div></section>");
+
+                push_indent(&mut out, indent + 1);
+                out.push_str("</div>\n");
+
+                push_indent(&mut out, indent);
+                out.push_str("</section>\n");
                 out
             }
             _ => String::new(),
@@ -74,8 +106,8 @@ mod tests {
         let feature = CoreFeature::new();
         let element = DocumentElement::text("Hello, world!");
         assert_eq!(
-            feature.to_html(&element, ""),
-            "<p class=\"txt-default\">Hello, world!</p>"
+            feature.to_html(&element, "", 1),
+            "  <p class=\"txt-default\">\n    Hello, world!\n  </p>\n"
         );
     }
 
@@ -87,17 +119,26 @@ mod tests {
             "Overview",
             vec![DocumentElement::text("Section body content")],
         );
-        let html = feature.to_html(&section, "<p class=\"txt-default\">Section body content</p>");
-        assert_eq!(
-            html,
-            "<section class=\"section\" data-level=\"1\"><h1>Overview</h1><div class=\"section-body\"><p class=\"txt-default\">Section body content</p></div></section>"
+        let child_html =
+            "        <p class=\"txt-default\">\n          Section body content\n        </p>\n";
+        let html = feature.to_html(&section, child_html, 2);
+        let expected = concat!(
+            "    <section class=\"section\" data-level=\"1\">\n",
+            "      <h1>Overview</h1>\n",
+            "      <div class=\"section-body\">\n",
+            "        <p class=\"txt-default\">\n",
+            "          Section body content\n",
+            "        </p>\n",
+            "      </div>\n",
+            "    </section>\n"
         );
+        assert_eq!(html, expected);
     }
 
     #[test]
     fn test_core_feature_empty_for_unsupported_elements() {
         let feature = CoreFeature::new();
         let code = DocumentElement::code_block(Some("rust"), "fn main() {}");
-        assert_eq!(feature.to_html(&code, ""), "");
+        assert_eq!(feature.to_html(&code, "", 0), "");
     }
 }

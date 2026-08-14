@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+200.00bd48e.dev">
-  <meta name="version" content="0.9.4+200.00bd48e.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+201.ef27ad4.dev">
+  <meta name="version" content="0.9.4+201.ef27ad4.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-14T16:34:03Z">
+  <meta name="dcterms.created" content="2026-08-14T16:57:57Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, code_block, table">
   <title>Microservice Deployment & Infrastructure Setup</title>
@@ -218,7 +218,47 @@
   <header class="doc-header">
   </header>
   <main class="doc-body">
-    <p class="txt-default">[Variables]</p><section class="section" data-level="1"><h1>Microservice Deployment Procedure</h1><div class="section-body"><p class="txt-default">This document outlines the automated deployment workflow for our cloud microservice stack. Dynamic variable substitution replaces placeholders matching `{{VARIABLE_NAME}}` when copying code snippets to your clipboard.</p><section class="section" data-level="3"><h3>Initial Environment Verification</h3><div class="section-body"><p class="txt-default">Verify connectivity to the primary application server before beginning deployment:</p></div></section><section class="section" data-level="2"><h2>Database Initialization & Migration</h2><div class="section-body"><p class="txt-default">Check the readiness of the primary database host:</p><p class="txt-default">Configure the application database instance environment settings:</p></div></section><section class="section" data-level="2"><h2>Service Container Deployment</h2><div class="section-body"><p class="txt-default">Spin up the API microservice container on the designated port:</p><p class="txt-default">Perform an automated health check against the newly deployed service:</p></div></section></div></section>
+    <p class="txt-default">
+      [Variables]
+    </p>
+    <section class="section" data-level="1">
+      <h1>Microservice Deployment Procedure</h1>
+      <div class="section-body">
+        <p class="txt-default">
+          This document outlines the automated deployment workflow for our cloud microservice stack. Dynamic variable substitution replaces placeholders matching `{{VARIABLE_NAME}}` when copying code snippets to your clipboard.
+        </p>
+        <section class="section" data-level="3">
+          <h3>Initial Environment Verification</h3>
+          <div class="section-body">
+            <p class="txt-default">
+              Verify connectivity to the primary application server before beginning deployment:
+            </p>
+          </div>
+        </section>
+        <section class="section" data-level="2">
+          <h2>Database Initialization & Migration</h2>
+          <div class="section-body">
+            <p class="txt-default">
+              Check the readiness of the primary database host:
+            </p>
+            <p class="txt-default">
+              Configure the application database instance environment settings:
+            </p>
+          </div>
+        </section>
+        <section class="section" data-level="2">
+          <h2>Service Container Deployment</h2>
+          <div class="section-body">
+            <p class="txt-default">
+              Spin up the API microservice container on the designated port:
+            </p>
+            <p class="txt-default">
+              Perform an automated health check against the newly deployed service:
+            </p>
+          </div>
+        </section>
+      </div>
+    </section>
   </main><!-- doc-body -->
   <script>
     window.d2f = window.d2f || {};
