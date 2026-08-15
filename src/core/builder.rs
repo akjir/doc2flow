@@ -1,7 +1,7 @@
 //! Document build and rendering module.
 
 use crate::core::constants::{APP_VERSION, LICENSE_URL, REPOSITORY_URL};
-use crate::core::document::{Document, DocumentElement};
+use crate::core::document::{Document, DocumentElement, DocumentParameters};
 use crate::core::feature::DocumentFeature;
 use crate::core::language::get_language_json;
 use crate::core::utils::format_iso8601_utc;
@@ -105,7 +105,7 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
 
     let mut html_content = String::new();
     for element in document.header.iter().chain(document.body.iter()) {
-        html_content.push_str(&render_element(element, 2));
+        html_content.push_str(&render_element(element, 2, &document.parameters));
     }
 
     TEMPLATE_HTML
@@ -131,37 +131,47 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
 ///
 /// ```
 /// use doc2flow::core::builder::render_element;
-/// use doc2flow::core::document::DocumentElement;
+/// use doc2flow::core::document::{DocumentElement, DocumentParameters};
 ///
 /// let element = DocumentElement::text("Hello world");
-/// let html = render_element(&element, 1);
+/// let params = DocumentParameters::default();
+/// let html = render_element(&element, 1, &params);
 /// assert_eq!(html, "  <div class=\"item item-text\">\n    <span class=\"text-content\">\n      Hello world\n    </span>\n  </div>\n");
 /// ```
-pub fn render_element(element: &DocumentElement, indent: usize) -> String {
-    render_element_with_depth(element, indent, 0)
+pub fn render_element(
+    element: &DocumentElement,
+    indent: usize,
+    parameters: &DocumentParameters,
+) -> String {
+    render_element_with_depth(element, indent, 0, parameters)
 }
 
 /// Renders a document element and its children with an explicit list nesting depth.
-fn render_element_with_depth(element: &DocumentElement, indent: usize, depth: usize) -> String {
+fn render_element_with_depth(
+    element: &DocumentElement,
+    indent: usize,
+    depth: usize,
+    parameters: &DocumentParameters,
+) -> String {
     let (feature_name, inner_content) = match element {
         DocumentElement::BlockDirective { children, name } => {
             let mut inner = String::new();
             for child in children {
-                inner.push_str(&render_element_with_depth(child, indent + 1, 0));
+                inner.push_str(&render_element_with_depth(child, indent + 1, 0, parameters));
             }
             (name.as_str(), inner)
         }
         DocumentElement::BulletListItem { children, .. } => {
             let mut inner = String::new();
             for child in children {
-                inner.push_str(&render_element_with_depth(child, indent, depth + 1));
+                inner.push_str(&render_element_with_depth(child, indent, depth + 1, parameters));
             }
             ("bullet_list", inner)
         }
         DocumentElement::CheckBoxItem { children, .. } => {
             let mut inner = String::new();
             for child in children {
-                inner.push_str(&render_element_with_depth(child, indent, depth + 1));
+                inner.push_str(&render_element_with_depth(child, indent, depth + 1, parameters));
             }
             ("task", inner)
         }
@@ -171,14 +181,14 @@ fn render_element_with_depth(element: &DocumentElement, indent: usize, depth: us
         DocumentElement::OrderedListItem { children, .. } => {
             let mut inner = String::new();
             for child in children {
-                inner.push_str(&render_element_with_depth(child, indent, depth + 1));
+                inner.push_str(&render_element_with_depth(child, indent, depth + 1, parameters));
             }
             ("ordered_list", inner)
         }
         DocumentElement::Section { children, .. } => {
             let mut inner = String::new();
             for child in children {
-                inner.push_str(&render_element_with_depth(child, indent + 2, 0));
+                inner.push_str(&render_element_with_depth(child, indent + 2, 0, parameters));
             }
             ("core", inner)
         }
@@ -189,7 +199,7 @@ fn render_element_with_depth(element: &DocumentElement, indent: usize, depth: us
     };
 
     match get_feature(feature_name) {
-        Some(feature) => feature.to_html(element, &inner_content, indent, depth),
+        Some(feature) => feature.to_html(element, &inner_content, indent, depth, parameters),
         None => inner_content,
     }
 }
@@ -348,7 +358,7 @@ mod tests {
     fn test_render_element_text() {
         let text = DocumentElement::text("Sample paragraph text");
         assert_eq!(
-            render_element(&text, 1),
+            render_element(&text, 1, &DocumentParameters::default()),
             "  <div class=\"item item-text\">\n    <span class=\"text-content\">\n      Sample paragraph text\n    </span>\n  </div>\n"
         );
     }
@@ -357,7 +367,7 @@ mod tests {
     fn test_render_element_unknown() {
         let unknown = DocumentElement::unknown("Unrecognized markdown");
         assert_eq!(
-            render_element(&unknown, 1),
+            render_element(&unknown, 1, &DocumentParameters::default()),
             "  <p class=\"unknown-default\">\n    Unrecognized markdown\n  </p>\n"
         );
     }
@@ -389,7 +399,10 @@ mod tests {
             "    </div>\n",
             "  </section>\n"
         );
-        assert_eq!(render_element(&section, 1), expected);
+        assert_eq!(
+            render_element(&section, 1, &DocumentParameters::default()),
+            expected
+        );
     }
 
     #[test]
@@ -414,7 +427,10 @@ mod tests {
             "    </div>\n",
             "  </section>\n"
         );
-        assert_eq!(render_element(&outer_section, 1), expected);
+        assert_eq!(
+            render_element(&outer_section, 1, &DocumentParameters::default()),
+            expected
+        );
     }
 
     #[test]
@@ -431,7 +447,7 @@ mod tests {
     fn test_render_element_code_block() {
         let code_block = DocumentElement::code_block(Some("rust"), "fn main() {}");
         assert_eq!(
-            render_element(&code_block, 1),
+            render_element(&code_block, 1, &DocumentParameters::default()),
             "  <pre class=\"code-default\"><code>fn main() {}</code></pre>\n"
         );
     }
@@ -439,8 +455,14 @@ mod tests {
     #[test]
     fn test_render_element_horizontal_rule() {
         let hr = DocumentElement::horizontal_rule();
-        assert_eq!(render_element(&hr, 1), "  <hr />\n");
-        assert_eq!(render_element(&hr, 2), "    <hr />\n");
+        assert_eq!(
+            render_element(&hr, 1, &DocumentParameters::default()),
+            "  <hr />\n"
+        );
+        assert_eq!(
+            render_element(&hr, 2, &DocumentParameters::default()),
+            "    <hr />\n"
+        );
     }
 
     #[test]
@@ -449,7 +471,7 @@ mod tests {
         let child = DocumentElement::bullet_list_item("Child bullet");
         bullet.push_child(child).unwrap();
 
-        let html = render_element(&bullet, 1);
+        let html = render_element(&bullet, 1, &DocumentParameters::default());
         assert!(html.contains(
             "<div class=\"item item-bullet\">\n    <span class=\"bullet-marker\">&bull;</span>"
         ));
@@ -464,7 +486,7 @@ mod tests {
         let child = DocumentElement::check_box_item(false, "Sub task");
         check.push_child(child).unwrap();
 
-        let html = render_element(&check, 1);
+        let html = render_element(&check, 1, &DocumentParameters::default());
         assert!(html.contains("<div class=\"item item-check checked\">"));
         assert!(html.contains("<div class=\"item item-check\" style=\"--indent: 1;\">"));
         assert!(html.contains("<input type=\"checkbox\" class=\"check-box\" checked />"));
@@ -479,7 +501,7 @@ mod tests {
         let child = DocumentElement::ordered_list_item(1, "Sub step");
         order.push_child(child).unwrap();
 
-        let html = render_element(&order, 1);
+        let html = render_element(&order, 1, &DocumentParameters::default());
         assert!(html.contains(
             "<div class=\"item item-order\">\n    <span class=\"order-marker\">1.</span>"
         ));
@@ -491,14 +513,17 @@ mod tests {
     #[test]
     fn test_render_element_unregistered_feature_fallback() {
         let image = DocumentElement::image("alt", "test.png");
-        assert_eq!(render_element(&image, 1), "");
+        assert_eq!(
+            render_element(&image, 1, &DocumentParameters::default()),
+            ""
+        );
 
         let directive = DocumentElement::block_directive(
             "unregistered_directive",
             vec![DocumentElement::text("Directive child")],
         );
         assert_eq!(
-            render_element(&directive, 1),
+            render_element(&directive, 1, &DocumentParameters::default()),
             "    <div class=\"item item-text\">\n      <span class=\"text-content\">\n        Directive child\n      </span>\n    </div>\n"
         );
     }

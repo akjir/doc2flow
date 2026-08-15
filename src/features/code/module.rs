@@ -1,6 +1,6 @@
 //! Code vertical slice feature module.
 
-use crate::core::document::DocumentElement;
+use crate::core::document::{DocumentElement, DocumentParameters};
 use crate::core::feature::Feature;
 use crate::core::format::{escape_html_into, push_indent};
 
@@ -26,6 +26,7 @@ impl Feature for CodeFeature {
         _content: &str,
         indent: usize,
         _depth: usize,
+        _parameters: &DocumentParameters,
     ) -> String {
         match element {
             DocumentElement::CodeBlock { content, .. } => {
@@ -73,7 +74,7 @@ mod tests {
         let element =
             DocumentElement::code_block(Some("rust"), "fn main() {\n    println!(\"hi\");\n}");
         assert_eq!(
-            feature.to_html(&element, "", 1, 0),
+            feature.to_html(&element, "", 1, 0, &DocumentParameters::default()),
             "  <pre class=\"code-default\"><code>fn main() {\n    println!(&quot;hi&quot;);\n}</code></pre>\n"
         );
     }
@@ -84,7 +85,7 @@ mod tests {
         let element =
             DocumentElement::code_block(None::<String>, "<div class=\"foo\"> && 'bar'</div>");
         assert_eq!(
-            feature.to_html(&element, "", 2, 0),
+            feature.to_html(&element, "", 2, 0, &DocumentParameters::default()),
             "    <pre class=\"code-default\"><code>&lt;div class=&quot;foo&quot;&gt; &amp;&amp; &#39;bar&#39;&lt;/div&gt;</code></pre>\n"
         );
     }
@@ -93,6 +94,9 @@ mod tests {
     fn test_code_feature_empty_for_unsupported_elements() {
         let feature = CodeFeature::new();
         let text = DocumentElement::text("Regular text");
-        assert_eq!(feature.to_html(&text, "", 0, 0), "");
+        assert_eq!(
+            feature.to_html(&text, "", 0, 0, &DocumentParameters::default()),
+            ""
+        );
     }
 }

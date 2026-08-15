@@ -2,7 +2,7 @@
 
 use std::fmt::Write as _;
 
-use crate::core::document::DocumentElement;
+use crate::core::document::{DocumentElement, DocumentParameters};
 use crate::core::feature::Feature;
 use crate::core::format::{format_inline_into, push_indent};
 
@@ -34,13 +34,14 @@ impl Feature for BulletListFeature {
     /// # Examples
     ///
     /// ```
-    /// use doc2flow::core::document::DocumentElement;
+    /// use doc2flow::core::document::{DocumentElement, DocumentParameters};
     /// use doc2flow::core::feature::Feature;
     /// use doc2flow::features::bullet_list::BulletListFeature;
     ///
     /// let feature = BulletListFeature::new();
     /// let elem = DocumentElement::bullet_list_item("List item");
-    /// let html = feature.to_html(&elem, "", 1, 0);
+    /// let params = DocumentParameters::default();
+    /// let html = feature.to_html(&elem, "", 1, 0, &params);
     /// assert!(html.contains("class=\"item item-bullet\""));
     /// ```
     fn to_html(
@@ -49,6 +50,7 @@ impl Feature for BulletListFeature {
         _content: &str,
         indent: usize,
         depth: usize,
+        _parameters: &DocumentParameters,
     ) -> String {
         match element {
             DocumentElement::BulletListItem { content, .. } => {
@@ -105,7 +107,10 @@ mod tests {
     fn test_bullet_list_empty_for_unsupported_elements() {
         let feature = BulletListFeature::new();
         let text = DocumentElement::text("Regular text");
-        assert_eq!(feature.to_html(&text, "", 0, 0), "");
+        assert_eq!(
+            feature.to_html(&text, "", 0, 0, &DocumentParameters::default()),
+            ""
+        );
     }
 
     #[test]
@@ -129,7 +134,7 @@ mod tests {
         let element = DocumentElement::bullet_list_item(
             "Item with **bold**, *italic*, ~~strike~~, and `code` span",
         );
-        let html = feature.to_html(&element, "", 0, 0);
+        let html = feature.to_html(&element, "", 0, 0, &DocumentParameters::default());
         let expected = concat!(
             "<div class=\"item item-bullet\">\n",
             "  <span class=\"bullet-marker\">&bull;</span>\n",
@@ -145,7 +150,7 @@ mod tests {
     fn test_bullet_list_renders_with_indent() {
         let feature = BulletListFeature::new();
         let element = DocumentElement::bullet_list_item("Nested level 2 item");
-        let html = feature.to_html(&element, "", 2, 0);
+        let html = feature.to_html(&element, "", 2, 0, &DocumentParameters::default());
         let expected = concat!(
             "    <div class=\"item item-bullet\">\n",
             "      <span class=\"bullet-marker\">&bull;</span>\n",
@@ -161,7 +166,7 @@ mod tests {
     fn test_bullet_list_renders_with_depth() {
         let feature = BulletListFeature::new();
         let element = DocumentElement::bullet_list_item("Indented child item");
-        let html = feature.to_html(&element, "", 2, 1);
+        let html = feature.to_html(&element, "", 2, 1, &DocumentParameters::default());
         let expected = concat!(
             "    <div class=\"item item-bullet\" style=\"--indent: 1;\">\n",
             "      <span class=\"bullet-marker\">&bull;</span>\n",
@@ -178,7 +183,13 @@ mod tests {
         let feature = BulletListFeature::new();
         let element = DocumentElement::bullet_list_item("Parent item");
         let child_html = "    <div class=\"item item-bullet\" style=\"--indent: 1;\">\n      <span class=\"bullet-marker\">&bull;</span>\n      <span class=\"bullet-content\">\n        Child item\n      </span>\n    </div>\n";
-        let html = feature.to_html(&element, child_html, 1, 0);
+        let html = feature.to_html(
+            &element,
+            child_html,
+            1,
+            0,
+            &DocumentParameters::default(),
+        );
         let expected_prefix = "  <div class=\"item item-bullet\">\n    <span class=\"bullet-marker\">&bull;</span>\n    <span class=\"bullet-content\">\n      Parent item\n    </span>\n  </div>\n";
         assert_eq!(html, format!("{expected_prefix}{child_html}"));
     }

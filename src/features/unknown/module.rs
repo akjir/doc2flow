@@ -1,6 +1,6 @@
 //! Unknown vertical slice feature module.
 
-use crate::core::document::DocumentElement;
+use crate::core::document::{DocumentElement, DocumentParameters};
 use crate::core::feature::Feature;
 use crate::core::format::push_indent;
 
@@ -26,6 +26,7 @@ impl Feature for UnknownFeature {
         _content: &str,
         indent: usize,
         _depth: usize,
+        _parameters: &DocumentParameters,
     ) -> String {
         match element {
             DocumentElement::Unknown(text) => {
@@ -70,7 +71,7 @@ mod tests {
         let feature = UnknownFeature::new();
         let element = DocumentElement::unknown("Unrecognized raw markdown line");
         assert_eq!(
-            feature.to_html(&element, "", 1, 0),
+            feature.to_html(&element, "", 1, 0, &DocumentParameters::default()),
             "  <p class=\"unknown-default\">\n    Unrecognized raw markdown line\n  </p>\n"
         );
     }
@@ -79,6 +80,9 @@ mod tests {
     fn test_unknown_feature_empty_for_unsupported_elements() {
         let feature = UnknownFeature::new();
         let text = DocumentElement::text("Regular text");
-        assert_eq!(feature.to_html(&text, "", 0, 0), "");
+        assert_eq!(
+            feature.to_html(&text, "", 0, 0, &DocumentParameters::default()),
+            ""
+        );
     }
 }

@@ -2,7 +2,7 @@
 
 use std::fmt::Write as _;
 
-use crate::core::document::DocumentElement;
+use crate::core::document::{DocumentElement, DocumentParameters};
 use crate::core::feature::Feature;
 use crate::core::format::{format_inline_into, push_indent};
 
@@ -34,13 +34,14 @@ impl Feature for OrderedListFeature {
     /// # Examples
     ///
     /// ```
-    /// use doc2flow::core::document::DocumentElement;
+    /// use doc2flow::core::document::{DocumentElement, DocumentParameters};
     /// use doc2flow::core::feature::Feature;
     /// use doc2flow::features::ordered_list::OrderedListFeature;
     ///
     /// let feature = OrderedListFeature::new();
     /// let elem = DocumentElement::ordered_list_item(1, "First item");
-    /// let html = feature.to_html(&elem, "", 1, 0);
+    /// let params = DocumentParameters::default();
+    /// let html = feature.to_html(&elem, "", 1, 0, &params);
     /// assert!(html.contains("class=\"item item-order\""));
     /// ```
     fn to_html(
@@ -49,6 +50,7 @@ impl Feature for OrderedListFeature {
         _content: &str,
         indent: usize,
         depth: usize,
+        _parameters: &DocumentParameters,
     ) -> String {
         match element {
             DocumentElement::OrderedListItem {
@@ -109,7 +111,10 @@ mod tests {
     fn test_ordered_list_empty_for_unsupported_elements() {
         let feature = OrderedListFeature::new();
         let text = DocumentElement::text("Regular text");
-        assert_eq!(feature.to_html(&text, "", 0, 0), "");
+        assert_eq!(
+            feature.to_html(&text, "", 0, 0, &DocumentParameters::default()),
+            ""
+        );
     }
 
     #[test]
@@ -131,7 +136,7 @@ mod tests {
     fn test_ordered_list_renders_root() {
         let feature = OrderedListFeature::new();
         let element = DocumentElement::ordered_list_item(1, "First numbered item");
-        let html = feature.to_html(&element, "", 1, 0);
+        let html = feature.to_html(&element, "", 1, 0, &DocumentParameters::default());
         let expected = concat!(
             "  <div class=\"item item-order\">\n",
             "    <span class=\"order-marker\">1.</span>\n",
@@ -150,7 +155,7 @@ mod tests {
             2,
             "Step with **bold**, *italic*, ~~strike~~, `code`, and <special> & characters",
         );
-        let html = feature.to_html(&element, "", 0, 0);
+        let html = feature.to_html(&element, "", 0, 0, &DocumentParameters::default());
         let expected = concat!(
             "<div class=\"item item-order\">\n",
             "  <span class=\"order-marker\">2.</span>\n",
@@ -166,7 +171,7 @@ mod tests {
     fn test_ordered_list_renders_with_depth() {
         let feature = OrderedListFeature::new();
         let element = DocumentElement::ordered_list_item(1, "Sub-step item");
-        let html = feature.to_html(&element, "", 2, 1);
+        let html = feature.to_html(&element, "", 2, 1, &DocumentParameters::default());
         let expected = concat!(
             "    <div class=\"item item-order\" style=\"--indent: 1;\">\n",
             "      <span class=\"order-marker\">1.</span>\n",
@@ -183,7 +188,13 @@ mod tests {
         let feature = OrderedListFeature::new();
         let element = DocumentElement::ordered_list_item(1, "Parent order");
         let child_html = "    <div class=\"item item-order\" style=\"--indent: 1;\">\n      <span class=\"order-marker\">1.</span>\n      <span class=\"order-content\">\n        Child item\n      </span>\n    </div>\n";
-        let html = feature.to_html(&element, child_html, 1, 0);
+        let html = feature.to_html(
+            &element,
+            child_html,
+            1,
+            0,
+            &DocumentParameters::default(),
+        );
         let expected_prefix = "  <div class=\"item item-order\">\n    <span class=\"order-marker\">1.</span>\n    <span class=\"order-content\">\n      Parent order\n    </span>\n  </div>\n";
         assert_eq!(html, format!("{expected_prefix}{child_html}"));
     }

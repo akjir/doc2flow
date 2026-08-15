@@ -2,7 +2,7 @@
 
 use std::fmt::{self, Display, Formatter};
 
-use crate::core::document::{Document, DocumentElement};
+use crate::core::document::{Document, DocumentElement, DocumentParameters};
 
 /// Trait for document feature renderers converting AST elements to HTML.
 pub trait Feature {
@@ -13,6 +13,7 @@ pub trait Feature {
         content: &str,
         indent: usize,
         depth: usize,
+        parameters: &DocumentParameters,
     ) -> String;
 
     /// Returns optional CSS stylesheet rules for this feature, defaulting to `None`.
@@ -509,6 +510,7 @@ mod tests {
                 _content: &str,
                 _indent: usize,
                 _depth: usize,
+                _parameters: &DocumentParameters,
             ) -> String {
                 String::new()
             }
