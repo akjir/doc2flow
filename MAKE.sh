@@ -18,7 +18,7 @@ Flags:
   --release-linux       Build Linux executable (x86_64-unknown-linux-gnu)
   --tests               Run cargo tests
   --examples            Build project and generate HTML examples
-  --examples-only       Generate HTML examples only (skip TypeScript & Cargo builds)
+  --examples-only       Generate HTML examples only (skip builds)
   --legacy              Run using legacy pipeline (e.g. for building examples)
 EOF
 }
@@ -69,11 +69,7 @@ if [ "$EXAMPLES_ONLY" = false ]; then
     if [ "$LEGACY" = true ]; then
         echo "==> Building Legacy TypeScript..."
         (cd web && npm run build:legacy)
-    else
-        echo "==> Building TypeScript..."
-        (cd web && npm run build)
     fi
-
 
     echo "==> Running Cargo build..."
     if [ ${#CARGO_ARGS[@]} -gt 0 ]; then

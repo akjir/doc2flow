@@ -31,19 +31,15 @@
 - **Git:** Commit ONLY if requested AND tests pass (or user overrides).
 - **Test:** Priority 1. Negative/edge cases. Regen `showcase_*.html` on UI changes.
 
-## 4. Frontend (HTML/TS/CSS)
+## 4. Frontend (HTML/JS/CSS)
 - **HTML (Generic):**
   - `##` -> `.section.sh.sb` (collapsible)
   - `[ ]` List -> `.check-item`
   - Quotes (`>`,`>?`,`>!`) -> `.note` variants
   - Local Img -> Base64; Remote -> `<img>`; Non-img asset -> `<a>.check-item.text-item`
   - Vars replaced via frontmatter
-- **TS:**
-  - Config: `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax`
-  - Scope: NO function `export`/`import`; decouple via `window.d2f` namespace. `window.d2f_{module}` interface ONLY when another module needs its functions.
-  - State: Discriminated unions, `readonly`
-  - Format: `interface` (expandable), `type` (unions), `satisfies` operator
-  - BANNED: `any`, `as`, `!`, `enum`, `{}`/`Object`, `?` (optional props/params — omit aggressively, when in doubt leave out)
+- **JS (Current):** Vanilla JS ONLY (`.js`). NO TS/build step. NO `export`/`import`; decouple via `window.d2f` namespace (`window.d2f.<module>`).
+- **TS (Legacy):** `strict`, NO `export`/`import` (`window.d2f`), `readonly`, discriminated unions. BANNED: `any`, `as`, `!`, `enum`, `{}`/`Object`, `?`.
 - **CSS:**
   - `:root` vars, BEM classes, ZERO external deps (fonts)
   - Print: Hide UI/buttons, expand collapsed (`display:block!important`), natural page breaks (no forced), exact print colors, no strikethrough

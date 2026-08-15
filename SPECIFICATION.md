@@ -130,10 +130,10 @@ d2f.exe --version
 * **Filesystem & I/O Isolation (`src/utils/io.rs`):** Exclusive module for generic filesystem interactions, file reading/writing, path resolution (`resolve_path`), and asset retrieval. Direct `std::fs`/`std::io` calls prohibited in processing modules.
 * **Pure In-Memory Processing Core:** Core modules (`src/core/converter.rs`, `src/core/builder.rs`, `src/core/components.rs`, `src/core/locales.rs`, `src/core/id.rs`) perform pure in-memory string/AST data transformations decoupled from disk I/O.
 * **Domain Image & Logo Processing (`src/core/image.rs`):** Image optimization, SVG sanitization, WebP downscaling, and domain-specific logo path resolution (`resolve_logo_path`).
-* **Strict Modular Feature Isolation (HTML, CSS, TS/JS):**
+* **Strict Modular Feature Isolation (HTML, CSS, JS):**
   * Extension features (`code`, `header`, `images`, `tables`, `tasks`) are fully decoupled and zero-knowledge of each other.
-  * Each feature maintains dedicated HTML components, TypeScript and CSS modules within its vertical slice directory (`src/features/<name>/`). Compiled JS resides directly in `src/features/<name>/<name>.js`.
-  * If a feature is omitted/disabled (`DocumentFeatures`), zero HTML elements, zero CSS rules, and zero JS/TS code for that feature are emitted in the rendered document.
+  * Each feature maintains dedicated HTML components, JavaScript and CSS modules within its vertical slice directory (`src/features/<name>/`). JS files reside directly in `src/features/<name>/<name>.js`.
+  * If a feature is omitted/disabled (`DocumentFeatures`), zero HTML elements, zero CSS rules, and zero JS code for that feature are emitted in the rendered document.
 * **HTML UI Components & Builder Engine (`src/components.rs` & `src/core/builder.rs`):**
   * `src/components.rs`: Core-universal zero-allocation HTML UI building blocks (`out: &mut impl Write`). Feature-specific HTML components reside in their respective feature modules.
   * `src/core/builder.rs`: Central HTML page orchestrator, dynamic feature asset assembler (`assemble_assets`).
@@ -150,7 +150,7 @@ d2f.exe --version
 
 ## 6. Technical Framework & Quality Standards
 
-* **Programming Language:** Rust (Edition 2024) for CLI backend, TypeScript 7.0 for client toolchain.
+* **Programming Language:** Rust (Edition 2024) for CLI backend, vanilla JavaScript for client runtime (legacy toolchain uses TypeScript).
 * **Target Platform:** Windows 64-Bit (`x86_64-pc-windows-msvc`).
 * **Version & Build Metadata:** Dynamic SemVer 2.0.0 versioning evaluated at compile time in `build.rs`:
   * Format: `v<MAJOR>.<MINOR>.<PATCH>+<COMMIT_COUNT>.<COMMIT_HASH>[.dev]`
@@ -177,7 +177,7 @@ doc2flow/
 │   └── templates/            # HTML layout and starter Markdown templates
 │       ├── base.html         # Base layout template
 │       └── template.md       # Starter Markdown template for init command
-├── web/                      # Client-side TypeScript toolchain
+├── web/                      # Legacy client-side TypeScript toolchain
 │   ├── package.json          # Node and esbuild bundler configuration
 │   └── tsconfig.json         # TypeScript compiler configuration
 ├── src/                      # Rust CLI backend
@@ -215,7 +215,7 @@ doc2flow/
 │   ├── showcase_de.md        # German Markdown showcase source
 │   ├── showcase_en.html      # Compiled English showcase HTML fixture
 │   └── showcase_en.md        # English Markdown showcase source
-├── build.rs                  # TypeScript build integration and version metadata
+├── build.rs                  # Embedded locale generator and version metadata
 ├── Cargo.toml                # Rust dependencies and build profile
 ├── SPECIFICATION.md          # Functional specification
 ├── AGENTS.md                 # AI agent directives

@@ -5,11 +5,11 @@ description: Scaffolds, implements, and registers vertical slice feature modules
 
 # Feature Module Builder
 
-**Goal:** Scaffold, implement, and register vertical slice feature modules (`src/features/<name>/`) with zero-alloc Rust traits, isolated BEM CSS, strict TS client logic, and tests.
+**Goal:** Scaffold, implement, and register vertical slice feature modules (`src/features/<name>/`) with zero-alloc Rust traits, isolated BEM CSS, vanilla JS client logic, and tests.
 
 ## USE WHEN
 - Creating/scaffolding a new vertical slice feature (e.g., search, zoom, tabs, outline).
-- Adding `module.rs`, `<name>.ts`, and `<name>.css` under `src/features/<name>/`.
+- Adding `module.rs`, `<name>.js`, and `<name>.css` under `src/features/<name>/`.
 - Registering features in `src/features/mod.rs` (`get_all_features`) and syncing `SPECIFICATION.md`.
 
 ## EXECUTION WORKFLOW
@@ -17,7 +17,7 @@ Follow these 5 steps sequentially:
 
 1. **Scaffold Slice:** Create `src/features/<name>/` directory:
    - `module.rs`: Feature struct `<Name>Feature` implementing `Feature` trait (`name`, `is_enabled`, `javascript`, `css`), `new()`, local feature constants (CSS classes, selectors, keys, defaults), and unit tests. Prohibit central constant dumpster files.
-   - `<name>.ts` *(if interactive)*: TypeScript logic attached to `window.d2f` namespace.
+   - `<name>.js` *(if interactive)*: Vanilla JS logic attached to `window.d2f` namespace.
    - `<name>.css` *(if styled)*: Scoped CSS using BEM classes and `:root` variables.
 2. **Implement `Feature` Trait:**
    - `name(&self) -> &'static str`: Return unique feature ID (e.g., `"code"`).
@@ -31,11 +31,11 @@ Follow these 5 steps sequentially:
    - Update `tests::test_feature_registry_*` with updated count and feature name.
 4. **Enforce Directives (`AGENTS.md`):**
    - **Rust:** Zero `unsafe`, zero-alloc hot path, canonical doc headers, Stdlib+`Doc2FlowError` (`src/utils/error.rs`), local constants in `module.rs`. DRY template contexts (`build_template_vars`), assembly pipeline parity (conditional components identical across pathways), NO `#[inline]` on heap allocs/IO.
-   - **TS:** Strict config, `window.d2f` namespace, `readonly`, discriminated unions, `satisfies`. BANNED: `export`/`import`, `any`, `as`, `!`, `enum`, `{}`/`Object`.
+   - **JS:** Vanilla JS, `window.d2f` namespace (`window.d2f.<module>`). NO build step. BANNED: `export`/`import`.
    - **CSS:** BEM classes, `:root` vars, ZERO external fonts/assets, print styles (`display:block!important`, natural page breaks, exact colors).
    - **Spec:** Sync `SPECIFICATION.md` tree and module description.
 5. **Verify:**
-   - `./MAKE.sh --tests` (cargo tests + TypeScript compilation).
+   - `./MAKE.sh --tests` (cargo tests).
    - `./MAKE.sh --examples` (validate generated HTML showcases).
 
 > [!NOTE]
