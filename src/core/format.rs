@@ -159,6 +159,57 @@ fn find_matching_underscore_delimiter(slice: &str, delimiter: &str) -> Option<us
     None
 }
 
+/// Finds the end of link text, start of URL, and end of URL in a slice starting with `[`.
+fn find_matching_link(slice: &str) -> Option<(usize, usize, usize)> {
+    let bytes = slice.as_bytes();
+    if bytes.first() != Some(&b'[') {
+        return None;
+    }
+
+    let mut idx = 1;
+    let mut bracket_depth = 1usize;
+
+    while idx < bytes.len() {
+        if let Some(next_idx) = skip_code_span(slice, idx) {
+            idx = next_idx;
+            continue;
+        }
+
+        if bytes[idx] == b'[' {
+            bracket_depth += 1;
+        } else if bytes[idx] == b']' {
+            bracket_depth -= 1;
+            if bracket_depth == 0 {
+                if idx + 1 < bytes.len() && bytes[idx + 1] == b'(' {
+                    let text_end = idx;
+                    let url_start = idx + 2;
+                    let mut url_idx = url_start;
+                    let mut paren_depth = 1usize;
+
+                    while url_idx < bytes.len() {
+                        if bytes[url_idx] == b'(' {
+                            paren_depth += 1;
+                        } else if bytes[url_idx] == b')' {
+                            paren_depth -= 1;
+                            if paren_depth == 0 {
+                                let url_end = url_idx;
+                                return Some((text_end, url_start, url_end));
+                            }
+                        }
+                        url_idx += 1;
+                    }
+                    return None;
+                }
+                return None;
+            }
+        }
+
+        idx += 1;
+    }
+
+    None
+}
+
 /// Formats inline markdown elements into an HTML output buffer.
 pub fn format_inline_into(out: &mut String, input: &str) {
     let mut idx = 0;
@@ -336,7 +387,25 @@ pub fn format_inline_into(out: &mut String, input: &str) {
             continue;
         }
 
-        // 9. HTML Entities and regular characters
+        // 9. Inline link
+        if bytes[idx] == b'[' {
+            if let Some((text_end, url_start, url_end)) = find_matching_link(remaining) {
+                let text = &remaining[1..text_end];
+                let url = &remaining[url_start..url_end];
+                out.push_str("<a href=\"");
+                escape_html_into(out, url.trim());
+                out.push_str("\">");
+                format_inline_into(out, text);
+                out.push_str("</a>");
+                idx += url_end + 1;
+                continue;
+            }
+            out.push('[');
+            idx += 1;
+            continue;
+        }
+
+        // 10. HTML Entities and regular characters
         match bytes[idx] {
             b'&' => out.push_str("&amp;"),
             b'<' => out.push_str("&lt;"),
@@ -349,7 +418,7 @@ pub fn format_inline_into(out: &mut String, input: &str) {
                     .take_while(|&&b| {
                         !matches!(
                             b,
-                            b'`' | b'~' | b'*' | b'_' | b'&' | b'<' | b'>' | b'"' | b'\''
+                            b'`' | b'~' | b'*' | b'_' | b'[' | b'&' | b'<' | b'>' | b'"' | b'\''
                         )
                     })
                     .count();
@@ -433,6 +502,91 @@ mod tests {
         assert_eq!(
             out,
             "Run <code>*not italic*</code> and <code>**not bold**</code>"
+        );
+    }
+
+    #[test]
+    fn test_format_inline_links() {
+        let mut out = String::new();
+        format_inline_into(&mut out, "Visit [Doc2Flow](https://doc2flow.dev) today.");
+        assert_eq!(
+            out,
+            "Visit <a href=\"https://doc2flow.dev\">Doc2Flow</a> today."
+        );
+    }
+
+    #[test]
+    fn test_format_inline_links_nested_formatting() {
+        let mut out = String::new();
+        format_inline_into(
+            &mut out,
+            "[**Bold** & *Italic* and `code`](https://example.com)",
+        );
+        assert_eq!(
+            out,
+            "<a href=\"https://example.com\"><strong>Bold</strong> &amp; <em>Italic</em> and <code>code</code></a>"
+        );
+    }
+
+    #[test]
+    fn test_format_inline_links_inside_bold_and_italic() {
+        let mut out = String::new();
+        format_inline_into(
+            &mut out,
+            "**[Bold Link](https://example.com)** and *[Italic Link](https://example.com)*",
+        );
+        assert_eq!(
+            out,
+            "<strong><a href=\"https://example.com\">Bold Link</a></strong> and <em><a href=\"https://example.com\">Italic Link</a></em>"
+        );
+    }
+
+    #[test]
+    fn test_format_inline_links_parentheses_in_url() {
+        let mut out = String::new();
+        format_inline_into(
+            &mut out,
+            "[Rust](https://en.wikipedia.org/wiki/Rust_(programming_language))",
+        );
+        assert_eq!(
+            out,
+            "<a href=\"https://en.wikipedia.org/wiki/Rust_(programming_language)\">Rust</a>"
+        );
+    }
+
+    #[test]
+    fn test_format_inline_links_escapes_url_and_text() {
+        let mut out = String::new();
+        format_inline_into(
+            &mut out,
+            "[Search <\"Doc & Flow\">](https://example.com/search?q=\"test\"&lang=en)",
+        );
+        assert_eq!(
+            out,
+            "<a href=\"https://example.com/search?q=&quot;test&quot;&amp;lang=en\">Search &lt;&quot;Doc &amp; Flow&quot;&gt;</a>"
+        );
+    }
+
+    #[test]
+    fn test_format_inline_links_code_brackets_inside_text() {
+        let mut out = String::new();
+        format_inline_into(&mut out, "[Index `arr[0]`](https://example.com)");
+        assert_eq!(
+            out,
+            "<a href=\"https://example.com\">Index <code>arr[0]</code></a>"
+        );
+    }
+
+    #[test]
+    fn test_format_inline_links_unclosed_or_invalid() {
+        let mut out = String::new();
+        format_inline_into(
+            &mut out,
+            "[Unclosed text and [not link] text and [link] (spaced)",
+        );
+        assert_eq!(
+            out,
+            "[Unclosed text and [not link] text and [link] (spaced)"
         );
     }
 

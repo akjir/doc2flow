@@ -322,6 +322,16 @@ mod tests {
     }
 
     #[test]
+    fn test_core_feature_renders_links() {
+        let feature = CoreFeature::new();
+        let elem = DocumentElement::text("Visit [Doc2Flow](https://doc2flow.dev) for guides.");
+        assert_eq!(
+            feature.to_html(&elem, "", 0, 0, &DocumentParameters::default()),
+            "<div class=\"item item-text\">\n  <span class=\"text-content\">\n    Visit <a href=\"https://doc2flow.dev\">Doc2Flow</a> for guides.\n  </span>\n</div>\n"
+        );
+    }
+
+    #[test]
     fn test_core_feature_unclosed_delimiters() {
         let feature = CoreFeature::new();
         let elem = DocumentElement::text("Unclosed **bold and ~~strike and `code");

@@ -153,14 +153,14 @@ mod tests {
         let feature = OrderedListFeature::new();
         let element = DocumentElement::ordered_list_item(
             2,
-            "Step with **bold**, *italic*, ~~strike~~, `code`, and <special> & characters",
+            "Step with **bold**, *italic*, ~~strike~~, `code`, [link](https://example.com), and <special> & characters",
         );
         let html = feature.to_html(&element, "", 0, 0, &DocumentParameters::default());
         let expected = concat!(
             "<div class=\"item item-order\">\n",
             "  <span class=\"order-marker\">2.</span>\n",
             "  <span class=\"order-content\">\n",
-            "    Step with <strong>bold</strong>, <em>italic</em>, <s>strike</s>, <code>code</code>, and &lt;special&gt; &amp; characters\n",
+            "    Step with <strong>bold</strong>, <em>italic</em>, <s>strike</s>, <code>code</code>, <a href=\"https://example.com\">link</a>, and &lt;special&gt; &amp; characters\n",
             "  </span>\n",
             "</div>\n"
         );

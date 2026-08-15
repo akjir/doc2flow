@@ -132,14 +132,14 @@ mod tests {
     fn test_bullet_list_renders_inline_formatting() {
         let feature = BulletListFeature::new();
         let element = DocumentElement::bullet_list_item(
-            "Item with **bold**, *italic*, ~~strike~~, and `code` span",
+            "Item with **bold**, *italic*, ~~strike~~, `code`, and [link](https://example.com) span",
         );
         let html = feature.to_html(&element, "", 0, 0, &DocumentParameters::default());
         let expected = concat!(
             "<div class=\"item item-bullet\">\n",
             "  <span class=\"bullet-marker\">&bull;</span>\n",
             "  <span class=\"bullet-content\">\n",
-            "    Item with <strong>bold</strong>, <em>italic</em>, <s>strike</s>, and <code>code</code> span\n",
+            "    Item with <strong>bold</strong>, <em>italic</em>, <s>strike</s>, <code>code</code>, and <a href=\"https://example.com\">link</a> span\n",
             "  </span>\n",
             "</div>\n"
         );

@@ -182,7 +182,7 @@ mod tests {
         let feature = TaskFeature::new();
         let element = DocumentElement::check_box_item(
             true,
-            "Item with **bold**, *italic*, ~~strike~~, and `code` span",
+            "Item with **bold**, *italic*, ~~strike~~, `code`, and [link](https://example.com) span",
         );
         let html = feature.to_html(&element, "", 0, 0, &DocumentParameters::default());
         let expected = concat!(
@@ -191,7 +191,7 @@ mod tests {
             "    <input type=\"checkbox\" class=\"check-box\" checked />\n",
             "  </span>\n",
             "  <span class=\"check-content\">\n",
-            "    Item with <strong>bold</strong>, <em>italic</em>, <s>strike</s>, and <code>code</code> span\n",
+            "    Item with <strong>bold</strong>, <em>italic</em>, <s>strike</s>, <code>code</code>, and <a href=\"https://example.com\">link</a> span\n",
             "  </span>\n",
             "</div>\n"
         );
