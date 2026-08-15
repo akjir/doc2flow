@@ -22,7 +22,7 @@ Follow these 5 steps sequentially:
 2. **Implement `Feature` Trait:**
    - `name(&self) -> &'static str`: Return unique feature ID (e.g., `"code"`).
    - `is_enabled(&self, ctx: &DocumentContext) -> bool`: Fast 1-pass detection on `ctx.frontmatter` or `ctx.raw_markdown`.
-   - `javascript(&self) -> Option<&'static str>`: `Some(include_str!("<name>.js"))` or `None`.
+   - `javascript(&self) -> &[&'static str]`: `&[include_str!("<name>.js")]` or `&[]`.
    - `css(&self) -> Option<&'static str>`: `Some(include_str!("<name>.css"))` or `None`.
 3. **Register in Engine:**
    - In `src/features/mod.rs`: Add `#[path = "<name>/module.rs"] pub mod <name>;`, export `pub use <name>::<Name>Feature;`.

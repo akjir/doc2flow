@@ -7,8 +7,11 @@ use crate::core::format::{format_inline_into, push_indent};
 /// Embedded core CSS styles for layout and components.
 pub const CSS: &str = include_str!("core.css");
 
-/// Embedded core JavaScript bundle for client runtime.
-pub const JS: &str = include_str!("core.js");
+/// Embedded core JavaScript utility functions.
+pub const JS_UTILS: &str = include_str!("utils.js");
+
+/// Embedded core JavaScript state storage handlers.
+pub const JS_STORAGE: &str = include_str!("storage.js");
 
 /// Core feature renderer handling text, horizontal rules, and section elements.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -100,9 +103,9 @@ impl Feature for CoreFeature {
         Some(CSS)
     }
 
-    /// Returns the embedded JavaScript client script for the core feature.
-    fn javascript(&self) -> Option<&'static str> {
-        Some(JS)
+    /// Returns the embedded JavaScript client scripts for the core feature.
+    fn javascript(&self) -> &[&'static str] {
+        &[JS_UTILS, JS_STORAGE]
     }
 }
 
@@ -138,9 +141,12 @@ mod tests {
     #[test]
     fn test_core_feature_javascript() {
         let feature = CoreFeature::new();
-        let js = feature.javascript().expect("core javascript should exist");
-        assert!(js.contains("window.d2f"));
-        assert!(js.contains("core"));
+        let js = feature.javascript();
+        assert_eq!(js.len(), 2);
+        assert!(js[0].contains("window.d2f"));
+        assert!(js[0].contains("utils"));
+        assert!(js[1].contains("window.d2f"));
+        assert!(js[1].contains("storage"));
     }
 
     #[test]

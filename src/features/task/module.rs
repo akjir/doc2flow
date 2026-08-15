@@ -112,11 +112,6 @@ impl Feature for TaskFeature {
     fn css(&self) -> Option<&'static str> {
         Some(CSS)
     }
-
-    /// Returns JavaScript logic for the task feature.
-    fn javascript(&self) -> Option<&'static str> {
-        None
-    }
 }
 
 #[cfg(test)]
@@ -138,7 +133,7 @@ mod tests {
     #[test]
     fn test_task_feature_javascript() {
         let feature = TaskFeature::new();
-        assert_eq!(feature.javascript(), None);
+        assert!(feature.javascript().is_empty());
     }
 
     #[test]

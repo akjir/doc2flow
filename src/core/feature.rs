@@ -21,9 +21,9 @@ pub trait Feature {
         None
     }
 
-    /// Returns optional JavaScript client logic for this feature, defaulting to `None`.
-    fn javascript(&self) -> Option<&'static str> {
-        None
+    /// Returns optional JavaScript client logic files for this feature, defaulting to an empty slice.
+    fn javascript(&self) -> &[&'static str] {
+        &[]
     }
 }
 
@@ -518,6 +518,6 @@ mod tests {
 
         let feature = MinimalFeature;
         assert_eq!(feature.css(), None);
-        assert_eq!(feature.javascript(), None);
+        assert!(feature.javascript().is_empty());
     }
 }

@@ -44,7 +44,7 @@ pub fn assemble_assets(features: &DocumentFeature) -> (String, String) {
         if let Some(css) = feature.css() {
             append_indented(&mut css_out, css);
         }
-        if let Some(js) = feature.javascript() {
+        for js in feature.javascript() {
             append_indented(&mut js_out, js);
         }
     }
@@ -64,7 +64,7 @@ pub fn assemble_assets(features: &DocumentFeature) -> (String, String) {
                 if let Some(css) = feature.css() {
                     append_indented(&mut css_out, css);
                 }
-                if let Some(js) = feature.javascript() {
+                for js in feature.javascript() {
                     append_indented(&mut js_out, js);
                 }
             }
@@ -257,7 +257,8 @@ mod tests {
         let features = DocumentFeature::default();
         let (_, js) = assemble_assets(&features);
         assert!(js.contains("    window.d2f"));
-        assert!(js.contains("core"));
+        assert!(js.contains("utils"));
+        assert!(js.contains("storage"));
     }
 
     #[test]

@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+221.f73a7e1.dev">
-  <meta name="version" content="0.9.4+221.f73a7e1.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+223.452ddee.dev">
+  <meta name="version" content="0.9.4+223.452ddee.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-15T16:49:32Z">
+  <meta name="dcterms.created" content="2026-08-15T17:33:29Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, bullet_list, code_block, image, ordered_list, shoutout, table, task">
   <title>Doc2Flow Deutscher Showcase</title>
@@ -1169,13 +1169,110 @@
     window.d2f.lang = window.d2f.lang || {};
     window.d2f.lang.dictionary = {};
     (() => {
-      const state = {
-        initialized: true,
-        name: 'core',
+      const debounce = (func, wait) => {
+        let timeout;
+        return (...args) => {
+          if (timeout !== undefined) {
+            clearTimeout(timeout);
+          }
+          timeout = setTimeout(() => func(...args), wait);
+        };
+      };
+
+      const isRecord = (val) => typeof val === 'object' && val !== null && !Array.isArray(val);
+
+      window.d2f = window.d2f || {};
+      window.d2f.utils = {
+        debounce,
+        isRecord,
+      };
+    })();
+    (() => {
+      const saveHandlers = new Set();
+      const loadHandlers = new Set();
+
+      const registerSaveHandler = (handler) => {
+        saveHandlers.add(handler);
+      };
+
+      const registerLoadHandler = (handler) => {
+        loadHandlers.add(handler);
+      };
+
+      const getStateKey = () => {
+        const docId = window.d2f?.document?.id ?? '';
+        const rawFilename = window.location.pathname.split('/').pop() || 'index.html';
+        const filename = decodeURIComponent(rawFilename || 'index.html');
+        return `d2f_state_${docId ? `${docId}_` : ''}${filename}`;
+      };
+
+      const loadState = () => {
+        const key = getStateKey();
+        try {
+          const raw = localStorage.getItem(key);
+          if (!raw) return;
+
+          const parsed = JSON.parse(raw);
+          const isRecord = window.d2f?.utils?.isRecord;
+          if (typeof isRecord === 'function') {
+            if (!isRecord(parsed)) return;
+          } else if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+            return;
+          }
+
+          const state = parsed;
+
+          loadHandlers.forEach((handler) => {
+            try {
+              handler(state);
+            } catch (e) {
+              console.warn('Failed to execute load handler', e);
+            }
+          });
+        } catch (e) {
+          console.warn(`Failed to load state from localStorage [key: ${key}]`, e);
+        }
+      };
+
+      const saveState = () => {
+        const combinedState = {};
+
+        saveHandlers.forEach((handler) => {
+          try {
+            const providerState = handler();
+            if (providerState && typeof providerState === 'object') {
+              Object.assign(combinedState, providerState);
+            }
+          } catch (e) {
+            console.warn('Failed to collect state from handler', e);
+          }
+        });
+
+        const key = getStateKey();
+        try {
+          localStorage.setItem(key, JSON.stringify(combinedState));
+        } catch (e) {
+          console.warn(`Failed to save state to localStorage [key: ${key}]`, e);
+        }
       };
 
       window.d2f = window.d2f || {};
-      window.d2f['core'] = state;
+      window.d2f.storage = {
+        registerSaveHandler,
+        registerLoadHandler,
+        loadState,
+        saveState,
+      };
+
+      if (typeof window !== 'undefined') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => {
+            loadState();
+          });
+        } else {
+          loadState();
+        }
+      }
     })();
   </script>
 </body>
