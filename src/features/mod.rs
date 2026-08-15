@@ -15,6 +15,9 @@ pub mod image;
 #[path = "ordered_list/module.rs"]
 pub mod ordered_list;
 
+#[path = "table/module.rs"]
+pub mod table;
+
 #[path = "task/module.rs"]
 pub mod task;
 
@@ -27,6 +30,7 @@ pub use code::CodeFeature;
 pub use core::CoreFeature;
 pub use image::ImageFeature;
 pub use ordered_list::OrderedListFeature;
+pub use table::TableFeature;
 pub use task::TaskFeature;
 pub use unknown::UnknownFeature;
 
@@ -44,6 +48,9 @@ static IMAGE_FEATURE: ImageFeature = ImageFeature;
 
 /// Static instance of the ordered list feature to avoid runtime allocations.
 static ORDERED_LIST_FEATURE: OrderedListFeature = OrderedListFeature;
+
+/// Static instance of the table feature to avoid runtime allocations.
+static TABLE_FEATURE: TableFeature = TableFeature;
 
 /// Static instance of the task feature to avoid runtime allocations.
 static TASK_FEATURE: TaskFeature = TaskFeature;
@@ -65,6 +72,8 @@ static UNKNOWN_FEATURE: UnknownFeature = UnknownFeature;
 /// assert!(get_feature("image").is_some());
 /// assert!(get_feature("images").is_some());
 /// assert!(get_feature("ordered_list").is_some());
+/// assert!(get_feature("table").is_some());
+/// assert!(get_feature("tables").is_some());
 /// assert!(get_feature("task").is_some());
 /// assert!(get_feature("unknown").is_some());
 /// assert!(get_feature("non_existent").is_none());
@@ -76,6 +85,7 @@ pub fn get_feature(name: &str) -> Option<&'static dyn Feature> {
         "core" => Some(&CORE_FEATURE),
         "image" | "images" => Some(&IMAGE_FEATURE),
         "ordered_list" => Some(&ORDERED_LIST_FEATURE),
+        "table" | "tables" => Some(&TABLE_FEATURE),
         "task" => Some(&TASK_FEATURE),
         "unknown" => Some(&UNKNOWN_FEATURE),
         _ => None,
@@ -163,6 +173,25 @@ mod tests {
         assert_eq!(
             ordered_feature.to_html(&element, "", 1, 0, &DocumentParameters::default()),
             "  <div class=\"item order-item\">\n    <span class=\"order-marker\">1.</span>\n    <span class=\"order-content\">\n      Ordered item\n    </span>\n  </div>\n"
+        );
+    }
+
+    #[test]
+    fn test_get_feature_returns_table() {
+        let table_feature = get_feature("table").expect("table feature should exist");
+        let element = DocumentElement::table(
+            vec![crate::core::document::TableAlignment::None],
+            vec![vec!["Col".into()]],
+        );
+        assert_eq!(
+            table_feature.to_html(&element, "", 1, 0, &DocumentParameters::default()),
+            "  <div class=\"table-wrap\">\n    <table class=\"table-default\">\n      <thead>\n        <tr>\n          <th>Col</th>\n        </tr>\n      </thead>\n    </table>\n  </div>\n"
+        );
+
+        let tables_alias_feature = get_feature("tables").expect("tables alias should exist");
+        assert_eq!(
+            tables_alias_feature.to_html(&element, "", 1, 0, &DocumentParameters::default()),
+            "  <div class=\"table-wrap\">\n    <table class=\"table-default\">\n      <thead>\n        <tr>\n          <th>Col</th>\n        </tr>\n      </thead>\n    </table>\n  </div>\n"
         );
     }
 

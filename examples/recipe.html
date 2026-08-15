@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+227.052cad1.dev">
-  <meta name="version" content="0.9.4+227.052cad1.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+228.a686593.dev">
+  <meta name="version" content="0.9.4+228.a686593.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-15T21:18:30Z">
+  <meta name="dcterms.created" content="2026-08-15T21:32:11Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, shoutout, table">
   <title>Classic Chocolate Fudge Cake Recipe</title>
@@ -662,6 +662,150 @@
         padding: 0 10px 40px;
       }
     }
+    /* ==========================================================================
+       Doc2Flow - Table Feature Styles (Tabular Layouts)
+       ========================================================================== */
+
+    /* 1. Base Variables & Tokens */
+    :root {
+      /* Table Tokens */
+      --table-border-color: #d0d7de;
+      --table-header-bg: #f1f5f9;
+      --table-header-text-color: #0f172a;
+      --table-row-even-bg: #f8fafc;
+      --table-row-hover-bg: #f0f6fc;
+      --table-text-color: #1e293b;
+      --table-radius: 8px;
+      --table-font-size: 13px;
+      --table-header-font-size: 12px;
+    }
+
+    /* 2. Table Layout & Container (.table-wrap) */
+    .table-wrap {
+      background: var(--bg-surface, #ffffff);
+      border: 1px solid var(--table-border-color);
+      border-radius: var(--table-radius);
+      margin: 12px 0;
+      overflow-x: auto;
+      width: 100%;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* 3. Table Component (.table-default) */
+    .table-default {
+      border-collapse: collapse;
+      color: var(--table-text-color);
+      font-family: var(--font-sans, Arial, sans-serif);
+      font-size: var(--table-font-size);
+      text-align: left;
+      width: 100%;
+    }
+
+    .table-default th {
+      background-color: var(--table-header-bg);
+      border-bottom: 2px solid var(--table-border-color);
+      color: var(--table-header-text-color);
+      font-size: var(--table-header-font-size);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      padding: 8px 12px;
+      text-transform: uppercase;
+    }
+
+    .table-default td {
+      border-bottom: 1px solid var(--table-border-color);
+      font-size: var(--table-font-size);
+      font-weight: normal;
+      padding: 8px 12px;
+      text-transform: none;
+      vertical-align: middle;
+    }
+
+    .table-default tbody tr:nth-child(even) {
+      background-color: var(--table-row-even-bg);
+    }
+
+    .table-default tbody tr:hover,
+    .table-default tbody tr.table-row-hover {
+      background-color: var(--table-row-hover-bg);
+      transition: background-color 0.15s ease-in-out;
+    }
+
+    .table-default tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .table-default tr:first-child th:first-child {
+      border-top-left-radius: var(--table-radius);
+    }
+
+    .table-default tr:first-child th:last-child {
+      border-top-right-radius: var(--table-radius);
+    }
+
+    /* 4. Print Styles */
+    @media print {
+      .table-wrap {
+        background: transparent !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: var(--table-radius) !important;
+        display: block !important;
+        margin: 10px 0 !important;
+        overflow: hidden !important;
+      }
+
+      .table-default tr:first-child th:first-child {
+        border-top-left-radius: 7px !important;
+      }
+
+      .table-default tr:first-child th:last-child {
+        border-top-right-radius: 7px !important;
+      }
+
+      .table-default {
+        color: #0f172a !important;
+        font-size: 11px !important;
+        page-break-inside: auto !important;
+        print-color-adjust: exact !important;
+        width: 100% !important;
+        -webkit-print-color-adjust: exact !important;
+      }
+
+      .table-default tr {
+        page-break-after: auto !important;
+        page-break-inside: avoid !important;
+      }
+
+      .table-default th {
+        background-color: #f1f5f9 !important;
+        border-bottom: 2px solid #94a3b8 !important;
+        color: #0f172a !important;
+        font-size: 10.5px !important;
+        padding: 6px 10px !important;
+        print-color-adjust: exact !important;
+        -webkit-print-color-adjust: exact !important;
+      }
+
+      .table-default tbody tr:nth-child(even) {
+        background-color: #f8fafc !important;
+        print-color-adjust: exact !important;
+        -webkit-print-color-adjust: exact !important;
+      }
+
+      .table-default td {
+        border-bottom: 1px solid #e2e8f0 !important;
+        padding: 6px 10px !important;
+      }
+    }
+
+    /* 5. Responsive Media Queries */
+    @media (max-width: 640px) {
+      .table-default th,
+      .table-default td {
+        font-size: 12px;
+        padding: 6px 8px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -686,6 +830,86 @@
             The table below lists all required ingredients split by dry and wet components.
           </span>
         </div>
+        <div class="table-wrap">
+          <table class="table-default">
+            <thead>
+              <tr>
+                <th>Component</th>
+                <th>Ingredient</th>
+                <th>Quantity</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Dry</td>
+                <td>All-Purpose Flour</td>
+                <td>250 g</td>
+                <td>Sifted</td>
+              </tr>
+              <tr>
+                <td>Dry</td>
+                <td>Granulated Sugar</td>
+                <td>300 g</td>
+                <td>Fine grain</td>
+              </tr>
+              <tr>
+                <td>Dry</td>
+                <td>Unsweetened Cocoa Powder</td>
+                <td>75 g</td>
+                <td>Dutch-processed</td>
+              </tr>
+              <tr>
+                <td>Dry</td>
+                <td>Baking Powder</td>
+                <td>2 tsp</td>
+                <td>Fresh</td>
+              </tr>
+              <tr>
+                <td>Dry</td>
+                <td>Baking Soda</td>
+                <td>1.5 tsp</td>
+                <td>Fresh</td>
+              </tr>
+              <tr>
+                <td>Dry</td>
+                <td>Fine Sea Salt</td>
+                <td>1 tsp</td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td>Wet</td>
+                <td>Large Eggs</td>
+                <td>2 pcs</td>
+                <td>Room temperature</td>
+              </tr>
+              <tr>
+                <td>Wet</td>
+                <td>Whole Milk</td>
+                <td>240 ml</td>
+                <td>Room temperature</td>
+              </tr>
+              <tr>
+                <td>Wet</td>
+                <td>Vegetable Oil</td>
+                <td>120 ml</td>
+                <td>Neutral flavor</td>
+              </tr>
+              <tr>
+                <td>Wet</td>
+                <td>Pure Vanilla Extract</td>
+                <td>2 tsp</td>
+                <td>Natural</td>
+              </tr>
+              <tr>
+                <td>Wet</td>
+                <td>Boiling Water</td>
+                <td>240 ml</td>
+                <td>Enhances cocoa flavor</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
     <section class="section" data-level="2">
@@ -696,6 +920,56 @@
             Follow these timing parameters and temperature settings for accurate baking.
           </span>
         </div>
+        <div class="table-wrap">
+          <table class="table-default">
+            <thead>
+              <tr>
+                <th>Stage</th>
+                <th>Target Duration</th>
+                <th>Temperature</th>
+                <th>Equipment / Setup</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Prep &amp; Measuring</td>
+                <td>15 minutes</td>
+                <td>Room Temp (20°C)</td>
+                <td>Mixing bowls &amp; whisk</td>
+              </tr>
+              <tr>
+                <td>Oven Preheating</td>
+                <td>10 minutes</td>
+                <td>175°C (350°F)</td>
+                <td>Conventional oven</td>
+              </tr>
+              <tr>
+                <td>Baking</td>
+                <td>30 - 35 minutes</td>
+                <td>175°C (350°F)</td>
+                <td>Two 9-inch round pans</td>
+              </tr>
+              <tr>
+                <td>Pan Cooling</td>
+                <td>10 minutes</td>
+                <td>Room Temp</td>
+                <td>Wire cooling rack</td>
+              </tr>
+              <tr>
+                <td>Wire Rack Cooling</td>
+                <td>45 minutes</td>
+                <td>Room Temp</td>
+                <td>Completely cooled</td>
+              </tr>
+              <tr>
+                <td>Frosting &amp; Assembly</td>
+                <td>15 minutes</td>
+                <td>Room Temp</td>
+                <td>Offset spatula</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
     <section class="section" data-level="2">
@@ -705,6 +979,59 @@
           <span class="text-content">
             Estimated nutritional values per serving (based on 12 equal slices).
           </span>
+        </div>
+        <div class="table-wrap">
+          <table class="table-default">
+            <thead>
+              <tr>
+                <th>Nutritive Parameter</th>
+                <th>Value Per Serving</th>
+                <th>Daily Value (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Energy / Calories</td>
+                <td>385 kcal</td>
+                <td>19%</td>
+              </tr>
+              <tr>
+                <td>Total Fat</td>
+                <td>18 g</td>
+                <td>23%</td>
+              </tr>
+              <tr>
+                <td>Saturated Fat</td>
+                <td>7 g</td>
+                <td>35%</td>
+              </tr>
+              <tr>
+                <td>Total Carbohydrates</td>
+                <td>52 g</td>
+                <td>19%</td>
+              </tr>
+              <tr>
+                <td>Dietary Fiber</td>
+                <td>4 g</td>
+                <td>14%</td>
+              </tr>
+              <tr>
+                <td>Total Sugars</td>
+                <td>32 g</td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td>Protein</td>
+                <td>6 g</td>
+                <td>12%</td>
+              </tr>
+              <tr>
+                <td>Sodium</td>
+                <td>310 mg</td>
+                <td>13%</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </section>
@@ -818,6 +1145,57 @@
           });
         } else {
           loadState();
+        }
+      }
+    })();
+    (() => {
+      const initTables = () => {
+        const tables = document.querySelectorAll('.table-wrap table, .table-default');
+        tables.forEach((table) => {
+          if (!table.classList.contains('table-default')) {
+            table.classList.add('table-default');
+          }
+        });
+      };
+
+      const handleMouseOver = (e) => {
+        const { target } = e;
+        if (!(target instanceof Element)) {
+          return;
+        }
+        const row = target.closest('.table-default tbody tr');
+        if (row) {
+          row.classList.add('table-row-hover');
+        }
+      };
+
+      const handleMouseOut = (e) => {
+        const { target } = e;
+        if (!(target instanceof Element)) {
+          return;
+        }
+        const row = target.closest('.table-default tbody tr');
+        if (row) {
+          row.classList.remove('table-row-hover');
+        }
+      };
+
+      window.d2f = window.d2f || {};
+      window.d2f.table = {
+        init: initTables,
+      };
+
+      const init = () => {
+        initTables();
+        document.addEventListener('mouseover', handleMouseOver);
+        document.addEventListener('mouseout', handleMouseOut);
+      };
+
+      if (typeof document !== 'undefined') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', init);
+        } else {
+          init();
         }
       }
     })();

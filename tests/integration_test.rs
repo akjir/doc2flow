@@ -1162,3 +1162,21 @@ fn test_task_pipeline_integration() {
     assert!(content.contains("        <div class=\"item check-item checked\">\n          <span class=\"check-marker\">\n            <input type=\"checkbox\" class=\"check-box\" checked />\n          </span>\n          <span class=\"check-content\">\n            Done <strong>task</strong> with <code>code</code>\n          </span>\n        </div>"));
     assert!(content.contains("        <div class=\"item check-item\" style=\"--indent: 1;\">\n          <span class=\"check-marker\">\n            <input type=\"checkbox\" class=\"check-box\" />\n          </span>\n          <span class=\"check-content\">\n            Sub-task\n          </span>\n        </div>"));
 }
+
+#[test]
+fn test_table_pipeline_integration() {
+    let input = "---\ntitle: \"Table Pipeline Test\"\n---\n# Table Section\n\n| Item | Qty | Status |\n| :--- | :---: | ---: |\n| **Widget A** | 42 | In Stock |\n| `Widget B` | 0 | *Out of Stock* |";
+    let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
+    let features = doc2flow::core::DocumentFeature::from(&document);
+    assert!(features.table);
+    assert_eq!(features.to_features_string(), "core, table");
+    let content = doc2flow::core::builder::build(&document, &features);
+    assert!(content.contains("<title>Table Pipeline Test</title>"));
+    assert!(content.contains("<meta name=\"features\" content=\"core, table\">"));
+    assert!(content.contains("--table-border-color:"));
+    assert!(content.contains("--table-header-bg:"));
+    assert!(content.contains(".table-wrap"));
+    assert!(content.contains(".table-default"));
+    assert!(content.contains("window.d2f.table"));
+    assert!(content.contains("        <div class=\"table-wrap\">\n          <table class=\"table-default\">\n            <thead>\n              <tr>\n                <th style=\"text-align: left;\">Item</th>\n                <th style=\"text-align: center;\">Qty</th>\n                <th style=\"text-align: right;\">Status</th>\n              </tr>\n            </thead>\n            <tbody>\n              <tr>\n                <td style=\"text-align: left;\"><strong>Widget A</strong></td>\n                <td style=\"text-align: center;\">42</td>\n                <td style=\"text-align: right;\">In Stock</td>\n              </tr>\n              <tr>\n                <td style=\"text-align: left;\"><code>Widget B</code></td>\n                <td style=\"text-align: center;\">0</td>\n                <td style=\"text-align: right;\"><em>Out of Stock</em></td>\n              </tr>\n            </tbody>\n          </table>\n        </div>"));
+}

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added modular table feature slice for responsive table rendering, column alignments, and row hover states.
 - Added modular image feature slice for image rendering, lightbox modal viewing, and broken image fallback handling.
 - Added inline markdown link parsing and rendering (`[text](url)`) across all text, list, and task elements.
 - Added modular task feature slice for task checklist rendering and state presentation.
