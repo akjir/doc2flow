@@ -43,7 +43,13 @@ impl Feature for TaskFeature {
     /// let html = feature.to_html(&elem, "", 1, 0);
     /// assert!(html.contains("class=\"item item-check\""));
     /// ```
-    fn to_html(&self, element: &DocumentElement, _content: &str, indent: usize, depth: usize) -> String {
+    fn to_html(
+        &self,
+        element: &DocumentElement,
+        _content: &str,
+        indent: usize,
+        depth: usize,
+    ) -> String {
         match element {
             DocumentElement::CheckBoxItem {
                 checked, content, ..

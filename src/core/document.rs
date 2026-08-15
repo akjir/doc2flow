@@ -182,9 +182,7 @@ impl DocumentElement {
     pub const fn is_list_item(&self) -> bool {
         matches!(
             self,
-            Self::BulletListItem { .. }
-                | Self::CheckBoxItem { .. }
-                | Self::OrderedListItem { .. }
+            Self::BulletListItem { .. } | Self::CheckBoxItem { .. } | Self::OrderedListItem { .. }
         )
     }
 
@@ -390,8 +388,7 @@ mod tests {
 
     #[test]
     fn test_check_box_item_creation() {
-        let unchecked =
-            DocumentElement::check_box_item(false, "Pending task");
+        let unchecked = DocumentElement::check_box_item(false, "Pending task");
         assert_eq!(
             unchecked,
             DocumentElement::CheckBoxItem {
@@ -401,8 +398,7 @@ mod tests {
             }
         );
 
-        let checked =
-            DocumentElement::check_box_item(true, "Completed subtask");
+        let checked = DocumentElement::check_box_item(true, "Completed subtask");
         assert_eq!(
             checked,
             DocumentElement::CheckBoxItem {
@@ -503,31 +499,41 @@ mod tests {
 
     #[test]
     fn test_list_items_push_child_allowed_and_forbidden() {
-        let mut bullet =
-            DocumentElement::bullet_list_item("Parent bullet");
-        let child_bullet =
-            DocumentElement::bullet_list_item("Child bullet");
-        let child_order =
-            DocumentElement::ordered_list_item(1, "Child order");
-        let child_check =
-            DocumentElement::check_box_item(false, "Child check");
+        let mut bullet = DocumentElement::bullet_list_item("Parent bullet");
+        let child_bullet = DocumentElement::bullet_list_item("Child bullet");
+        let child_order = DocumentElement::ordered_list_item(1, "Child order");
+        let child_check = DocumentElement::check_box_item(false, "Child check");
 
         assert!(bullet.push_child(child_bullet.clone()).is_ok());
         assert!(bullet.push_child(child_order.clone()).is_ok());
         assert!(bullet.push_child(child_check.clone()).is_ok());
 
-        assert!(bullet.push_child(DocumentElement::text("Non-list item")).is_err());
-        assert!(bullet.push_child(DocumentElement::horizontal_rule()).is_err());
+        assert!(
+            bullet
+                .push_child(DocumentElement::text("Non-list item"))
+                .is_err()
+        );
+        assert!(
+            bullet
+                .push_child(DocumentElement::horizontal_rule())
+                .is_err()
+        );
 
-        let mut order =
-            DocumentElement::ordered_list_item(1, "Parent order");
+        let mut order = DocumentElement::ordered_list_item(1, "Parent order");
         assert!(order.push_child(child_bullet.clone()).is_ok());
-        assert!(order.push_child(DocumentElement::text("Non-list item")).is_err());
+        assert!(
+            order
+                .push_child(DocumentElement::text("Non-list item"))
+                .is_err()
+        );
 
-        let mut check =
-            DocumentElement::check_box_item(false, "Parent check");
+        let mut check = DocumentElement::check_box_item(false, "Parent check");
         assert!(check.push_child(child_order).is_ok());
-        assert!(check.push_child(DocumentElement::text("Non-list item")).is_err());
+        assert!(
+            check
+                .push_child(DocumentElement::text("Non-list item"))
+                .is_err()
+        );
     }
 
     #[test]
@@ -539,8 +545,7 @@ mod tests {
 
     #[test]
     fn test_ordered_list_item_creation() {
-        let root_item =
-            DocumentElement::ordered_list_item(1, "First item");
+        let root_item = DocumentElement::ordered_list_item(1, "First item");
         assert_eq!(
             root_item,
             DocumentElement::OrderedListItem {
@@ -550,8 +555,7 @@ mod tests {
             }
         );
 
-        let nested_item =
-            DocumentElement::ordered_list_item(5, "Deep item");
+        let nested_item = DocumentElement::ordered_list_item(5, "Deep item");
         assert_eq!(
             nested_item,
             DocumentElement::OrderedListItem {

@@ -7,6 +7,7 @@ pub mod document;
 pub mod error;
 pub mod feature;
 pub mod format;
+pub mod language;
 pub mod markdown;
 pub mod utils;
 
@@ -19,4 +20,5 @@ pub use document::{Document, DocumentElement, ShoutoutElementKind, TableAlignmen
 pub use error::{DiagnosticError, Error, Result, build_caret_annotation};
 pub use feature::{DocumentFeature, Feature, to_features_string};
 pub use format::{escape_html_into, format_inline_into, push_indent};
+pub use language::get_language_json;
 pub use markdown::parse_d2f_markdown;

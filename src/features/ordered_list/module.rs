@@ -43,12 +43,16 @@ impl Feature for OrderedListFeature {
     /// let html = feature.to_html(&elem, "", 1, 0);
     /// assert!(html.contains("class=\"item item-order\""));
     /// ```
-    fn to_html(&self, element: &DocumentElement, _content: &str, indent: usize, depth: usize) -> String {
+    fn to_html(
+        &self,
+        element: &DocumentElement,
+        _content: &str,
+        indent: usize,
+        depth: usize,
+    ) -> String {
         match element {
             DocumentElement::OrderedListItem {
-                content,
-                position,
-                ..
+                content, position, ..
             } => {
                 let spaces = indent * 2;
                 let inner_spaces = (indent + 1) * 2;

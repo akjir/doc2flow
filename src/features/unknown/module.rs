@@ -20,7 +20,13 @@ impl UnknownFeature {
 
 impl Feature for UnknownFeature {
     /// Converts a document element and inner content into an HTML string representation.
-    fn to_html(&self, element: &DocumentElement, _content: &str, indent: usize, _depth: usize) -> String {
+    fn to_html(
+        &self,
+        element: &DocumentElement,
+        _content: &str,
+        indent: usize,
+        _depth: usize,
+    ) -> String {
         match element {
             DocumentElement::Unknown(text) => {
                 let spaces = indent * 2;

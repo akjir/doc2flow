@@ -23,7 +23,13 @@ impl CoreFeature {
 
 impl Feature for CoreFeature {
     /// Converts a document element and inner content into an HTML string representation.
-    fn to_html(&self, element: &DocumentElement, content: &str, indent: usize, _depth: usize) -> String {
+    fn to_html(
+        &self,
+        element: &DocumentElement,
+        content: &str,
+        indent: usize,
+        _depth: usize,
+    ) -> String {
         match element {
             DocumentElement::HorizontalRule => {
                 let spaces = indent * 2;
@@ -156,7 +162,8 @@ mod tests {
     #[test]
     fn test_core_feature_inline_code_escapes_html_and_preserves_literals() {
         let feature = CoreFeature::new();
-        let elem = DocumentElement::text("Example `<div class=\"box\"> && **not bold**</div>` here.");
+        let elem =
+            DocumentElement::text("Example `<div class=\"box\"> && **not bold**</div>` here.");
         assert_eq!(
             feature.to_html(&elem, "", 0, 0),
             "<div class=\"item item-text\">\n  <span class=\"text-content\">\n    Example <code>&lt;div class=&quot;box&quot;&gt; &amp;&amp; **not bold**&lt;/div&gt;</code> here.\n  </span>\n</div>\n"
@@ -268,8 +275,7 @@ mod tests {
             "Overview",
             vec![DocumentElement::text("Section body content")],
         );
-        let child_html =
-            "        <div class=\"item item-text\">\n          <span class=\"text-content\">\n            Section body content\n          </span>\n        </div>\n";
+        let child_html = "        <div class=\"item item-text\">\n          <span class=\"text-content\">\n            Section body content\n          </span>\n        </div>\n";
         let html = feature.to_html(&section, child_html, 2, 0);
         let expected = concat!(
             "    <section class=\"section\" data-level=\"1\">\n",

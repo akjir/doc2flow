@@ -7,7 +7,13 @@ use crate::core::document::{Document, DocumentElement};
 /// Trait for document feature renderers converting AST elements to HTML.
 pub trait Feature {
     /// Converts a document element and inner content into an HTML string representation.
-    fn to_html(&self, element: &DocumentElement, content: &str, indent: usize, depth: usize) -> String;
+    fn to_html(
+        &self,
+        element: &DocumentElement,
+        content: &str,
+        indent: usize,
+        depth: usize,
+    ) -> String;
 
     /// Returns optional CSS stylesheet rules for this feature, defaulting to `None`.
     fn css(&self) -> Option<&'static str> {
@@ -435,7 +441,8 @@ mod tests {
             task: true,
             unknown: true,
         };
-        let expected = "core, bullet_list, code_block, image, ordered_list, shoutout, table, task, unknown";
+        let expected =
+            "core, bullet_list, code_block, image, ordered_list, shoutout, table, task, unknown";
         assert_eq!(features.to_features_string(), expected);
         assert_eq!(to_features_string(&features), expected);
         assert_eq!(features.to_string(), expected);
@@ -446,10 +453,7 @@ mod tests {
         let mut features = DocumentFeature::default();
         features.bullet_list = true;
         features.table = true;
-        assert_eq!(
-            features.to_features_string(),
-            "core, bullet_list, table"
-        );
+        assert_eq!(features.to_features_string(), "core, bullet_list, table");
 
         features.image = true;
         assert_eq!(

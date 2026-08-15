@@ -3,6 +3,7 @@
 use crate::core::constants::{APP_VERSION, LICENSE_URL, REPOSITORY_URL};
 use crate::core::document::{Document, DocumentElement};
 use crate::core::feature::DocumentFeature;
+use crate::core::language::get_language_json;
 use crate::core::utils::format_iso8601_utc;
 use crate::features::get_feature;
 
@@ -105,10 +106,7 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
         .unwrap_or("");
     let features_str = features.to_features_string();
     let (css_content, js_content) = assemble_assets(features);
-    let i18n_json = match lang_code {
-        "de" => r#"{"lang":"de","reset":"Zurücksetzen","copy":"Kopieren"}"#,
-        _ => r#"{"lang":"en","reset":"Reset","copy":"Copy"}"#,
-    };
+    let i18n_json = get_language_json(lang_code);
 
     let mut html_content = String::new();
     for element in document.header.iter().chain(document.body.iter()) {
@@ -236,7 +234,7 @@ mod tests {
         assert!(content.contains("<title></title>"));
         assert!(content.contains("--bg-body:"));
         assert!(content.contains("window.d2f"));
-        assert!(content.contains("window.d2f.lang.dictionary = {\"lang\":\"en\""));
+        assert!(content.contains("window.d2f.lang.dictionary = {};"));
         assert!(!content.contains("--unknown-bg:"));
     }
 
@@ -324,7 +322,7 @@ mod tests {
         let features = DocumentFeature::default();
         let content = build(&doc, &features);
         assert!(content.contains("<html lang=\"de\">"));
-        assert!(content.contains("window.d2f.lang.dictionary = {\"lang\":\"de\""));
+        assert!(content.contains("window.d2f.lang.dictionary = {};"));
         assert!(!content.contains("{{LANG_CODE}}"));
         assert!(!content.contains("{{I18N_JSON}}"));
     }

@@ -20,7 +20,13 @@ impl CodeFeature {
 
 impl Feature for CodeFeature {
     /// Converts a document element and inner content into an HTML string representation.
-    fn to_html(&self, element: &DocumentElement, _content: &str, indent: usize, _depth: usize) -> String {
+    fn to_html(
+        &self,
+        element: &DocumentElement,
+        _content: &str,
+        indent: usize,
+        _depth: usize,
+    ) -> String {
         match element {
             DocumentElement::CodeBlock { content, .. } => {
                 let spaces = indent * 2;
