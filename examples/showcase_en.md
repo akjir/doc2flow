@@ -17,13 +17,13 @@ numbered_sections: true
 
 # Part 1: System Setup & Preparation
 
-This top-level section describes the basic system configuration. Tasks within H1 sections do not display an individual badge indicator, but contribute fully to the overall progress tracking.
+This top-level section describes the basic system configuration with **rich text formatting** such as `inline code`, *italic hints*, and ~~deprecated options~~. Tasks within H1 sections do not display an individual badge indicator, but contribute fully to the overall progress tracking.
 
-- [x] General safety briefing for technicians completed
+- [x] General **safety briefing** for technicians completed (incl. `ISO 27001` & ~~legacy protocol v1~~)
 
 ## Section 1: Overview & Guidelines
 
-This is an arbitrary text paragraph in the section body. It provides general instructions and information for the operator to review before starting the procedure.
+This is an arbitrary text paragraph in the section body demonstrating a comprehensive set of **text formatting styles**: **Bold text** for emphasis, *italic text* for subtle notes, ***bold and italic combinations*** for critical callouts, `inline code` like `systemctl restart service` for commands/variables, and ~~strikethrough text~~ for outdated specifications (e.g. ~~default port 80~~ replaced by `8080`).
 
 ![Example System Architecture](../resources/images/example1.jpg)
 
@@ -33,39 +33,39 @@ This is an arbitrary text paragraph in the section body. It provides general ins
 
 <!-- Test comment: This comment must not appear in the generated HTML -->
 
-> This is a neutral Note callout box providing standard context.
+> This is a neutral Note callout box providing standard context along with **bold keywords**, `inline code` paths, and *italic references*.
 
->? This is a green Tip box offering recommendations or best practices.
+>? This is a green Tip box offering **best practices**: use `curl -I` instead of ~~telnet~~ for *quick diagnostic checks*.
 
->! This is a purple Important box highlighting critical requirements.
+>! This is a purple Important box highlighting **critical requirements** (`TLS v1.3` mandatory, ~~SSL v3~~ disabled).
 
->!! This is a yellow Warning box advising caution for potential issues.
+>!! This is a yellow Warning box advising **caution** for insecure ports (`{{PORT}}`) and *unencrypted transmissions*.
 
->!!! This is a red Caution box warning against dangerous operations or data loss.
+>!!! This is a red Caution box warning against **dangerous operations** such as `rm -rf /` or ~~unauthenticated writes~~.
 
-> This is a multi-line callout box containing detailed background information and comprehensive instructions for the end user. It spans across multiple sentences to demonstrate fluid text wrapping and clean alignment within visual callout containers.
+> This is a multi-line callout box containing detailed **background information** and comprehensive instructions for the end user. It spans across multiple sentences to demonstrate fluid text wrapping and clean alignment with `inline code elements`, *italic annotations*, **highlighted key terms**, and ~~strikethrough legacy items~~ within visual callout containers.
 
 ## Section 2: Task Checklist
 
 ### Setup & Preparation
-This arbitrary text paragraph describes the preliminary setup steps that must be fulfilled before marking individual items as completed.
+This arbitrary text paragraph describes the preliminary setup steps with **priority tiers**, `file paths`, and ~~obsolete requirements~~ that must be fulfilled before marking individual items as completed.
 
-- [ ] Unpack hardware and verify components
-  - [ ] Inspect accessory completeness
-  - [x] Check casing for transport damage
-- [ ] Connect network and power supply
-  1. Plug primary network cable into Port 1
-  2. Plug redundant network cable into Port 2
-- [x] Initial power-on check completed
+- [ ] **Unpack hardware** and verify components against serial `SN-2026-X`
+  - [ ] Inspect accessory completeness (*manual*, `power cable`, ~~adapter v1~~)
+  - [x] Check casing for transport damage (incl. **visual inspection** of ports)
+- [ ] **Connect network and power supply** (ensure `VLAN 10` assignment)
+  1. Plug primary network cable into **Port 1** (`eth0`, `10 Gbps`)
+  2. Plug redundant network cable into **Port 2** (`eth1`, ~~1 Gbps fallback~~ `10 Gbps`)
+- [x] Initial power-on check completed (**status LED** shows `GREEN`)
 
 [External System Documentation](https://example.com/docs)
 
 ![Download System Specification PDF](https://example.com/files/specification.pdf)
 
 #### Software Configuration
-- [ ] Install latest system updates
-- [ ] Configure firewall rules according to company policy
-- [x] Verify remote access service
+- [ ] Install latest system updates via `apt update && apt upgrade -y` (verify **kernel** `6.x`)
+- [ ] Configure firewall rules according to company policy (open port `{{PORT}}`, close ~~port 21 FTP~~)
+- [x] Verify remote access service (`sshd` active on port `22`, *password auth* disabled)
 
 ![Software Configuration Overview](../resources/images/example2.jpg)
 
@@ -74,7 +74,7 @@ This arbitrary text paragraph describes the preliminary setup steps that must be
 ## Section 3: Reference & Code Blocks
 
 ### System Registry Settings
-The following configuration snippet must be applied to disable automatic updates:
+The following configuration snippet must be applied to disable automatic updates (set `DisableWindowsUpdateAccess=1`, remove ~~legacy key~~):
 
 ```ini
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate]
@@ -89,33 +89,33 @@ echo "Initializing Doc2Flow showcase environment {{SERVER_NAME}}:{{PORT}} with k
 
 ### System Components & Specifications
 
-The table below outlines the hardware specifications of the installed system components:
+The table below outlines the hardware specifications of the installed system components with **model details**, `interfaces`, and status indicators:
 
 | Component | Model | Status | Capacity |
 |---|---|---|---|
-| Central Processor | Intel Xeon E-2388G | Active | 8 Cores / 16 Threads |
-| System Memory | DDR4 ECC Registered | Optimal | 64 GB (2x 32 GB) |
-| Primary Storage | NVMe SSD PCIe 4.0 | Normal | 2 TB RAID 1 |
-| Network Interface | Dual 10GbE SFP+ | Connected | 10 Gbps |
+| **Central Processor** | `Intel Xeon E-2388G` | **Active** | 8 Cores / 16 Threads |
+| **System Memory** | `DDR4 ECC Registered` | *Optimal* | **64 GB** (2x 32 GB, ~~32 GB minimum~~) |
+| **Primary Storage** | `NVMe SSD PCIe 4.0` | *Normal* | **2 TB** RAID 1 |
+| **Network Interface** | `Dual 10GbE SFP+` | **Connected** | `10 Gbps` (~~1 Gbps legacy~~) |
 
 ## Section 4: Informational Lists
 
-- Main task & system monitoring
-  1. Sub-item A 1: Query service status
-  2. Sub-item A 2: Analyze error log
-- Procedure for maintenance tasks
-  - [ ] Prepare test run
-     - Detailed parameter check X
-     - Detailed parameter check Y
-  - [x] Approval by system administrator
+- **Main task & system monitoring** (standard operation `system-daemon`)
+  1. Sub-item A 1: Query service status with `systemctl is-active` (**status:** *active*)
+  2. Sub-item A 2: Analyze error log `/var/log/syslog` (ignore ~~legacy logfile~~)
+- **Procedure for maintenance tasks** (security classification `Level 2`)
+  - [ ] Prepare test run with parameters `--dry-run` and `--verbose`
+     - Detailed parameter check `X` (*threshold* `> 95%`)
+     - Detailed parameter check `Y` (~~standard timeout 30s~~ now `60s`)
+  - [x] Approval by **system administrator** (authorized via `signature token`)
 
-1. Sequential main step 1
-   - Subordinate verification step 1.1
-   - Subordinate verification step 1.2
-2. Sequential main step 2
-   1. Detailed sub-procedure 2.a
-   2. Detailed sub-procedure 2.b
-3. Sequential main step 3
+1. Sequential main step 1: **Initialization** using `init --force`
+   - Subordinate verification step 1.1: Validate `config.json` (*schema v2*, ~~v1 deprecated~~)
+   - Subordinate verification step 1.2: Verify certificate chain (`cert.pem`)
+2. Sequential main step 2: **Data transfer** execution
+   1. Detailed sub-procedure 2.a: Establish connection to `{{SERVER_NAME}}`
+   2. Detailed sub-procedure 2.b: Perform data synchronization via port `{{PORT}}` (*encrypted*)
+3. Sequential main step 3: **Finalization & verification** (archive audit log `audit.log`)
 
 ---
 

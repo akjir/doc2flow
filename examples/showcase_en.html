@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+216.9ad314f.dev">
-  <meta name="version" content="0.9.4+216.9ad314f.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+217.2d96ddc.dev">
+  <meta name="version" content="0.9.4+217.2d96ddc.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-15T12:21:57Z">
+  <meta name="dcterms.created" content="2026-08-15T12:30:34Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, bullet_list, code_block, image, ordered_list, shoutout, table, task">
   <title>Doc2Flow English Showcase</title>
@@ -888,7 +888,7 @@
       <div class="section-body">
         <div class="item item-text">
           <span class="text-content">
-            This top-level section describes the basic system configuration. Tasks within H1 sections do not display an individual badge indicator, but contribute fully to the overall progress tracking.
+            This top-level section describes the basic system configuration with <strong>rich text formatting</strong> such as <code>inline code</code>, <em>italic hints</em>, and <s>deprecated options</s>. Tasks within H1 sections do not display an individual badge indicator, but contribute fully to the overall progress tracking.
           </span>
         </div>
         <div class="item item-check checked">
@@ -896,7 +896,7 @@
             <input type="checkbox" class="check-box" checked />
           </span>
           <span class="check-content">
-            General safety briefing for technicians completed
+            General <strong>safety briefing</strong> for technicians completed (incl. <code>ISO 27001</code> &amp; <s>legacy protocol v1</s>)
           </span>
         </div>
       </div>
@@ -906,7 +906,7 @@
       <div class="section-body">
         <div class="item item-text">
           <span class="text-content">
-            This is an arbitrary text paragraph in the section body. It provides general instructions and information for the operator to review before starting the procedure.
+            This is an arbitrary text paragraph in the section body demonstrating a comprehensive set of <strong>text formatting styles</strong>: <strong>Bold text</strong> for emphasis, <em>italic text</em> for subtle notes, <strong><em>bold and italic combinations</em></strong> for critical callouts, <code>inline code</code> like <code>systemctl restart service</code> for commands/variables, and <s>strikethrough text</s> for outdated specifications (e.g. <s>default port 80</s> replaced by <code>8080</code>).
           </span>
         </div>
       </div>
@@ -919,7 +919,7 @@
           <div class="section-body">
             <div class="item item-text">
               <span class="text-content">
-                This arbitrary text paragraph describes the preliminary setup steps that must be fulfilled before marking individual items as completed.
+                This arbitrary text paragraph describes the preliminary setup steps with <strong>priority tiers</strong>, <code>file paths</code>, and <s>obsolete requirements</s> that must be fulfilled before marking individual items as completed.
               </span>
             </div>
             <div class="item item-check">
@@ -927,7 +927,7 @@
                 <input type="checkbox" class="check-box" />
               </span>
               <span class="check-content">
-                Unpack hardware and verify components
+                <strong>Unpack hardware</strong> and verify components against serial <code>SN-2026-X</code>
               </span>
             </div>
             <div class="item item-check" style="--indent: 1;">
@@ -935,7 +935,7 @@
                 <input type="checkbox" class="check-box" />
               </span>
               <span class="check-content">
-                Inspect accessory completeness
+                Inspect accessory completeness (<em>manual</em>, <code>power cable</code>, <s>adapter v1</s>)
               </span>
             </div>
             <div class="item item-check checked" style="--indent: 1;">
@@ -943,7 +943,7 @@
                 <input type="checkbox" class="check-box" checked />
               </span>
               <span class="check-content">
-                Check casing for transport damage
+                Check casing for transport damage (incl. <strong>visual inspection</strong> of ports)
               </span>
             </div>
             <div class="item item-check">
@@ -951,19 +951,19 @@
                 <input type="checkbox" class="check-box" />
               </span>
               <span class="check-content">
-                Connect network and power supply
+                <strong>Connect network and power supply</strong> (ensure <code>VLAN 10</code> assignment)
               </span>
             </div>
             <div class="item item-order" style="--indent: 1;">
               <span class="order-marker">1.</span>
               <span class="order-content">
-                Plug primary network cable into Port 1
+                Plug primary network cable into <strong>Port 1</strong> (<code>eth0</code>, <code>10 Gbps</code>)
               </span>
             </div>
             <div class="item item-order" style="--indent: 1;">
               <span class="order-marker">2.</span>
               <span class="order-content">
-                Plug redundant network cable into Port 2
+                Plug redundant network cable into <strong>Port 2</strong> (<code>eth1</code>, <s>1 Gbps fallback</s> <code>10 Gbps</code>)
               </span>
             </div>
             <div class="item item-check checked">
@@ -971,7 +971,7 @@
                 <input type="checkbox" class="check-box" checked />
               </span>
               <span class="check-content">
-                Initial power-on check completed
+                Initial power-on check completed (<strong>status LED</strong> shows <code>GREEN</code>)
               </span>
             </div>
             <div class="item item-text">
@@ -989,7 +989,7 @@
                 <input type="checkbox" class="check-box" />
               </span>
               <span class="check-content">
-                Install latest system updates
+                Install latest system updates via <code>apt update &amp;&amp; apt upgrade -y</code> (verify <strong>kernel</strong> <code>6.x</code>)
               </span>
             </div>
             <div class="item item-check">
@@ -997,7 +997,7 @@
                 <input type="checkbox" class="check-box" />
               </span>
               <span class="check-content">
-                Configure firewall rules according to company policy
+                Configure firewall rules according to company policy (open port <code>{{PORT}}</code>, close <s>port 21 FTP</s>)
               </span>
             </div>
             <div class="item item-check checked">
@@ -1005,7 +1005,7 @@
                 <input type="checkbox" class="check-box" checked />
               </span>
               <span class="check-content">
-                Verify remote access service
+                Verify remote access service (<code>sshd</code> active on port <code>22</code>, <em>password auth</em> disabled)
               </span>
             </div>
           </div>
@@ -1025,7 +1025,7 @@
           <div class="section-body">
             <div class="item item-text">
               <span class="text-content">
-                The following configuration snippet must be applied to disable automatic updates:
+                The following configuration snippet must be applied to disable automatic updates (set <code>DisableWindowsUpdateAccess=1</code>, remove <s>legacy key</s>):
               </span>
             </div>
             <pre class="code-default"><code>[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate]
@@ -1044,7 +1044,7 @@
           <div class="section-body">
             <div class="item item-text">
               <span class="text-content">
-                The table below outlines the hardware specifications of the installed system components:
+                The table below outlines the hardware specifications of the installed system components with <strong>model details</strong>, <code>interfaces</code>, and status indicators:
               </span>
             </div>
           </div>
@@ -1057,25 +1057,25 @@
         <div class="item item-bullet">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
-            Main task &amp; system monitoring
+            <strong>Main task &amp; system monitoring</strong> (standard operation <code>system-daemon</code>)
           </span>
         </div>
         <div class="item item-order" style="--indent: 1;">
           <span class="order-marker">1.</span>
           <span class="order-content">
-            Sub-item A 1: Query service status
+            Sub-item A 1: Query service status with <code>systemctl is-active</code> (<strong>status:</strong> <em>active</em>)
           </span>
         </div>
         <div class="item item-order" style="--indent: 1;">
           <span class="order-marker">2.</span>
           <span class="order-content">
-            Sub-item A 2: Analyze error log
+            Sub-item A 2: Analyze error log <code>/var/log/syslog</code> (ignore <s>legacy logfile</s>)
           </span>
         </div>
         <div class="item item-bullet">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
-            Procedure for maintenance tasks
+            <strong>Procedure for maintenance tasks</strong> (security classification <code>Level 2</code>)
           </span>
         </div>
         <div class="item item-check" style="--indent: 1;">
@@ -1083,19 +1083,19 @@
             <input type="checkbox" class="check-box" />
           </span>
           <span class="check-content">
-            Prepare test run
+            Prepare test run with parameters <code>--dry-run</code> and <code>--verbose</code>
           </span>
         </div>
         <div class="item item-bullet" style="--indent: 2;">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
-            Detailed parameter check X
+            Detailed parameter check <code>X</code> (<em>threshold</em> <code>&gt; 95%</code>)
           </span>
         </div>
         <div class="item item-bullet" style="--indent: 2;">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
-            Detailed parameter check Y
+            Detailed parameter check <code>Y</code> (<s>standard timeout 30s</s> now <code>60s</code>)
           </span>
         </div>
         <div class="item item-check checked" style="--indent: 1;">
@@ -1103,49 +1103,49 @@
             <input type="checkbox" class="check-box" checked />
           </span>
           <span class="check-content">
-            Approval by system administrator
+            Approval by <strong>system administrator</strong> (authorized via <code>signature token</code>)
           </span>
         </div>
         <div class="item item-order">
           <span class="order-marker">1.</span>
           <span class="order-content">
-            Sequential main step 1
+            Sequential main step 1: <strong>Initialization</strong> using <code>init --force</code>
           </span>
         </div>
         <div class="item item-bullet" style="--indent: 1;">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
-            Subordinate verification step 1.1
+            Subordinate verification step 1.1: Validate <code>config.json</code> (<em>schema v2</em>, <s>v1 deprecated</s>)
           </span>
         </div>
         <div class="item item-bullet" style="--indent: 1;">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
-            Subordinate verification step 1.2
+            Subordinate verification step 1.2: Verify certificate chain (<code>cert.pem</code>)
           </span>
         </div>
         <div class="item item-order">
           <span class="order-marker">2.</span>
           <span class="order-content">
-            Sequential main step 2
+            Sequential main step 2: <strong>Data transfer</strong> execution
           </span>
         </div>
         <div class="item item-order" style="--indent: 1;">
           <span class="order-marker">1.</span>
           <span class="order-content">
-            Detailed sub-procedure 2.a
+            Detailed sub-procedure 2.a: Establish connection to <code>{{SERVER_NAME}}</code>
           </span>
         </div>
         <div class="item item-order" style="--indent: 1;">
           <span class="order-marker">2.</span>
           <span class="order-content">
-            Detailed sub-procedure 2.b
+            Detailed sub-procedure 2.b: Perform data synchronization via port <code>{{PORT}}</code> (<em>encrypted</em>)
           </span>
         </div>
         <div class="item item-order">
           <span class="order-marker">3.</span>
           <span class="order-content">
-            Sequential main step 3
+            Sequential main step 3: <strong>Finalization &amp; verification</strong> (archive audit log <code>audit.log</code>)
           </span>
         </div>
         <hr />
