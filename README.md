@@ -1,261 +1,68 @@
 # Doc2Flow (`d2f`)
 
-**Doc2Flow (`d2f`)** is a fast, lightweight command-line tool built in Rust that converts Markdown documents into standalone, interactive HTML guides, manuals, protocols, and checklists.
+[![Version](https://img.shields.io/badge/version-0.9.4-blue.svg)](Cargo.toml)
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL_v3-blue.svg)](LICENSE)
 
-The generated HTML files are completely self-contained—embedding all CSS styling, JavaScript interactivity, embedded icons, and Base64-encoded local images—making them ideal for offline distribution, customer handovers, and field service workflows without external web servers or assets.
+Doc2Flow is a high-performance Rust CLI tool that compiles Markdown documents into standalone, zero-dependency interactive HTML workflows and checklists. It produces self-contained files with persistent client-side state for offline execution, standard operating procedures, and technical documentation.
 
----
+## Features
 
-## Key Features
+- **Zero-Dependency Output**: Inlines all CSS, JavaScript, and Base64-encoded assets into a single portable HTML file.
+- **Client-Side State Persistence**: Retains checkbox progress and variable inputs across page reloads via SHA-256 scoped `localStorage`.
+- **Interactive Workflows**: Provides collapsible sections with dynamic progress badges, interactive checklists (`- [ ]`), and 1-click code copying.
+- **Dynamic Variable Interpolation**: Replaces `{{VAR_NAME}}` placeholders across code blocks dynamically using interactive table inputs.
+- **Asset Processing & Optimization**: Embeds local images as Base64 data URIs with automatic WebP compression for files exceeding 250 KB.
+- **Print & Export Ready**: Auto-expands collapsed sections and hides interactive controls under `@media print` for clean PDF export.
 
-- 🚀 **Single Binary Executable:** Distributed as a lightweight, zero-dependency executable (`d2f` / `d2f.exe`).
-- 📦 **Zero-External Dependencies HTML:** All styles, client scripts, icons, and local images are embedded directly into a single `.html` file.
-- ✅ **Interactive Task Lists & State Persistence:**
-  - Dynamic task list checkboxes (`- [ ]` / `- [x]`).
-  - Section completion badges and overall document progress tracking.
-  - Automatic `localStorage` persistence scoped deterministically via SHA-256 (`d2f_id`).
-  - Global state reset option with a modal confirmation.
-- 🔀 **Dynamic Variable Substitution (`[Variables]`):**
-  - Extract parameters from Markdown tables annotated with `[Variables]`.
-  - Replace `{{VARIABLE_NAME}}` placeholders inside code blocks dynamically on copy or print.
-  - Interactive table UI rendered with persistent input fields.
-- 🔍 **Search Toolbar:**
-  - Built-in live search bar for filtering text and sections.
-- 🖼️ **Image Lightbox & Auto-Scaling:**
-  - Converts local images to embedded Base64 data URIs.
-  - Automatic WebP compression (`-s` / `--auto-scale`) for local images exceeding 250 KB.
-  - Interactive image modal/lightbox for full-resolution image viewing.
-- 🌐 **Multi-Language / i18n Support:**
-  - Built-in English (`en`) and German (`de`) static UI translations.
-  - Selectable per document via YAML frontmatter `language: "de"` setting.
-- 🎨 **Custom Header Logo Support:**
-  - Embed custom header logos (SVG, PNG, JPG, WebP) via CLI option (`-l` / `--logo`) or YAML frontmatter (`logo: "..."`).
-- 🛠️ **Starter Template Generator:**
-  - Instantly create a starter Markdown guide using `--init` / `-i`.
-- 📣 **Rich Callout & Alert Panels:**
-  - Color-coded alert boxes using simple blockquote prefix notation (`Note`, `Tip`, `Important`, `Warning`, `Caution`).
-- 💻 **Enhanced Code Blocks:**
-  - Syntax-aware containers with language tags, 1-click **Copy Code** functionality, and dynamic variable substitution.
-- 📝 **Protocol Sign-Off & Signature Footer:**
-  - Built-in persistent fields for agent name, completion date, signature lines, and protocol approval status.
-- 🖨️ **Print & PDF Optimized:**
-  - Dedicated `@media print` stylesheet that auto-expands collapsed sections and hides interactive controls for clean printouts and PDF exports.
+## Quick Start
 
----
-
-## Usage
-
-### Command Line Syntax
+Build the release executable using Cargo:
 
 ```bash
-# Standard conversion (generates input.html)
-d2f input.md
-
-# Specify custom output path
-d2f input.md -o /path/to/output.html
-
-# Specify custom header logo image
-d2f input.md -l logo.png
-
-# Enable automatic image scaling to WebP for local images > 250 KB
-d2f input.md -s
-
-# Generate starter Markdown template (defaults to template.md)
-d2f --init
-d2f -i custom_template.md
-
-# View CLI help & version
-d2f --help
-d2f --version
-```
-
-### CLI Parameters & Arguments
-
-| Argument / Flag | Short | Description | Required | Default |
-| --- | --- | --- | --- | --- |
-| `INPUT` | — | Path to source Markdown file | Conditional (unless `--init` used) | — |
-| `OUTPUT` | `-o`, `--output` | Target path for generated HTML file | No | `<INPUT_NAME>.html` |
-| `LOGO` | `-l`, `--logo` | Path to custom logo image (SVG, PNG, JPG, WebP) | No | Default embedded SVG logo |
-| `INIT` | `-i`, `--init` | Generates starter template Markdown file | No | `template.md` |
-| `AUTO_SCALE` | `-s`, `--auto-scale` | Auto-resizes local images > 250 KB to WebP | No | `false` |
-
----
-
-## Markdown Syntax & Authoring Guide
-
-Doc2Flow uses CommonMark with GitHub Flavored Markdown (GFM) extensions alongside custom metadata and annotation syntax:
-
-### 1. YAML Frontmatter (Metadata & Document Control)
-
-Place YAML metadata at the very top of your `.md` file to configure document settings and options:
-
-```yaml
----
-title: "Server Deployment Guide"
-subtitle: "Standard Operating Procedure"
-date: "2026-07-25"
-version: "1.0.0"
-language: "de"
-logo: "images/company_logo.svg"
-numbered_sections: true
----
-```
-
-### 2. Collapsible Sections & Headings
-
-- **`# Section Title` (Level 1 Heading):** Creates a primary, non-collapsible section header container.
-- **`## Section Title` (Level 2 Heading):** Creates a collapsible section container with a live completion badge (`0/3 completed`) and toggle indicator.
-- **`### Subheading` (Level 3–6 Headings):** Renders styled subheadings inside section bodies.
-
-```markdown
-# 1. Overview
-
-## 1.1 Initial Inspection
-
-### Hardware Verification
-- [ ] Inspect hardware for physical damage
-- [ ] Verify power supply connections
-```
-
-### 3. Checklists & List Items
-
-- **`- [ ]` / `- [x]`:** Interactive task item tracked by progress counters and saved in `localStorage`.
-- **`- Item` / `1. Item`:** Standard bulleted or numbered items for non-interactive information.
-
-```markdown
-## 2. Configuration Tasks
-
-- [ ] Configure network IP parameters
-- Standard reference parameter: Subnet 255.255.255.0
-- [ ] Apply latest security patch
-```
-
-### 4. Code Blocks & Dynamic Variable Substitution (`[Variables]`)
-
-Annotate a Markdown table with `[Variables]` to extract key-value variables. Place `{{VARIABLE_NAME}}` placeholders inside code blocks to substitute values dynamically on copying and printing.
-
-```markdown
-[Variables]
-| Parameter | Default |
-| --- | --- |
-| [Variables] | |
-| IP_ADDRESS | 192.168.1.100 |
-| GATEWAY | 192.168.1.1 |
-```
-
-```bash
-ping {{IP_ADDRESS}} -g {{GATEWAY}}
-```
-
-In the rendered HTML, variables are presented in an interactive table with editable text inputs. Updates automatically propagate to code block copy actions and persist in `localStorage`.
-
-### 5. Callout / Alert Panels
-
-Format blockquotes with specific prefix symbols to render color-coded callout panels:
-
-```markdown
-> Standard note message box.
-
->? Pro Tip: Use keyboard shortcuts for faster navigation.
-
->! Important: Back up all data before proceeding.
-
->!! Warning: Disconnecting power during update will corrupt firmware.
-
->!!! Caution: High voltage area. Exercise extreme care!
-```
-
-| Syntax | Alert Type | Badge Label (EN / DE) | Visual Theme |
-| --- | --- | --- | --- |
-| `>` | Note | Note / Hinweis | Neutral Grey |
-| `>?` | Tip | Tip / Tipp | Green |
-| `>!` | Important | Important / Wichtig | Blue |
-| `>!!` | Warning | Warning / Warnung | Orange |
-| `>!!!` | Caution | Caution / Achtung | Red |
-
-### 6. Image Embedding & Lightbox
-
-Standard Markdown images are automatically read, converted to Base64 data URIs, and embedded:
-
-```markdown
-![System Architecture](./images/architecture.png)
-```
-
-Clicking an image in the rendered HTML opens an interactive lightbox modal for detailed inspection.
-
----
-
-## Building & Development
-
-### Prerequisites
-
-- [Rust Toolchain](https://www.rust-lang.org/) (2024 Edition)
-- [Node.js](https://nodejs.org/) & [TypeScript](https://www.typescriptlang.org/) (Client script toolchain)
-
-### Build Executable
-
-```bash
-# Build debug binary
-cargo build
-
-# Build optimized release binary
 cargo build --release
 ```
 
-`build.rs` automatically compiles client TypeScript modules using `esbuild` and embeds them alongside CSS and locale JSON files into the Rust binary.
+The binary will be located at `target/release/d2f` (`target/release/d2f.exe` on Windows).
 
-The release binary will be created at `target/release/d2f` (Linux/macOS) or `target/release/d2f.exe` (Windows).
-
-### Running Tests
+## Usage
 
 ```bash
-# Run unit, integration, and doc tests
-cargo test
+# Convert Markdown to self-contained HTML
+d2f guide.md
+
+# Convert with custom output, logo, and image compression
+d2f guide.md -o output.html -l logo.svg -s
 ```
 
----
+## Configuration
 
-## Architecture & Project Structure
+### CLI Flags
 
-```text
-doc2flow/
-├── .cargo/               # Cargo cross-compile configuration & aliases
-├── resources/            # Embedded resources (images, locales, templates)
-│   ├── images/           # Built-in icons and default logo (logo.svg)
-│   ├── locales/          # Static UI translations (de.json, en.json)
-│   └── templates/        # HTML base layout and starter Markdown templates
-├── web/                  # TypeScript client toolchain
-│   ├── package.json      # Bundler & Node scripts
-│   ├── tsconfig.json     # TypeScript configuration
-│   └── src/
-│       └── core/         # Storage, items, sections, fields, export, search
-├── src/                  # Rust CLI backend
-│   ├── main.rs           # CLI entry point and argument parsing
-│   ├── lib.rs            # Library root interface
-│   ├── lib/              # Generic project-agnostic library subsystem (I/O, Error, Base64, Hasher, MIME, URI)
-│   ├── core/             # Core architecture, engine, stylesheets and TS runtime
-│   │   ├── mod.rs        # Core module exports
-│   │   ├── builder.rs    # HTML Assembler and template engine
-│   │   ├── components.rs # Zero-allocation HTML UI generators
-│   │   ├── constants.rs  # Global system metadata and core defaults
-│   │   ├── converter.rs  # Markdown AST parser & feature detector
-│   │   ├── feature.rs    # Feature trait and DocumentContext detection
-│   │   ├── id.rs         # Document identifier (d2f_id) generator
-│   │   ├── image.rs      # Base64 embedding & WebP auto-scaling
-│   │   ├── locales.rs    # Locale loader & translation engine
-│   │   ├── parse/        # CLI argument parsing and grammar
-│   │   └── web/          # Core web frontend runtime and stylesheets
-│   └── features/         # Vertical slice feature modules
-├── tests/                # Integration test suite & showcase fixtures
-├── build.rs              # TypeScript build integration & version metadata
-├── CHANGELOG.md          # Keep a Changelog documentation
-├── SPECIFICATION.md      # Technical specification document
-├── AGENTS.md             # AI agent directives
-└── README.md             # Project documentation
-```
+| Flag | Short | Description | Default |
+| :--- | :--- | :--- | :--- |
+| `<INPUT>` | — | Path to source Markdown file | Required (unless `-i`) |
+| `--output` | `-o` | Target HTML output filepath | `<INPUT_STEM>.html` |
+| `--logo` | `-l` | Custom header logo path (SVG, PNG, JPG, WebP) | Embedded default SVG |
+| `--init` | `-i` | Generate starter Markdown template | `template.md` |
+| `--auto-scale`| `-s` | Compress local images > 250 KB to WebP | `false` |
+| `--help` | `-h` | Print CLI help information | — |
+| `--version` | `-V` | Print version information | — |
 
----
+### Frontmatter Options
+
+Configure document metadata via YAML frontmatter at the top of the Markdown source:
+
+| Key | Type | Description | Default |
+| :--- | :--- | :--- | :--- |
+| `title` | `string` | Primary document title | `""` |
+| `subtitle` | `string` | Secondary subtitle text | `""` |
+| `date` | `string` | Protocol or revision date | `""` |
+| `version` | `string` | Document revision string | `""` |
+| `language` | `string` | UI locale (`en`, `de`) | `"en"` |
+| `logo` | `string` | Path or URI to custom header logo | `""` |
+| `header` | `string` | Header layout mode (`"none"`, `"flex"`) | `"none"` |
+| `numbered_sections` | `bool` | Auto-number section headings (`1.`, `1.1`) | `true` |
 
 ## License
 
-This project is licensed under the **GNU General Public License v3.0** (GPL-3.0). See the [LICENSE](file:///home/stefan/Development/doc2flow/LICENSE) file for full details.
+This project is licensed under the [GNU General Public License v3.0](LICENSE).
