@@ -12,8 +12,8 @@ pub struct Document {
     pub body: Vec<DocumentElement>,
     /// Header document elements.
     pub header: Vec<DocumentElement>,
-    /// Frontmatter key-value configuration parameters.
-    pub parameters: HashMap<String, String>,
+    /// Frontmatter and document configuration parameters.
+    pub parameters: DocumentParameters,
 }
 
 impl Document {
@@ -22,7 +22,7 @@ impl Document {
         Self {
             body: Vec::new(),
             header: Vec::new(),
-            parameters: HashMap::new(),
+            parameters: DocumentParameters::default(),
         }
     }
 
@@ -31,13 +31,8 @@ impl Document {
         Self {
             body: Vec::with_capacity(body_capacity),
             header: Vec::new(),
-            parameters: HashMap::new(),
+            parameters: DocumentParameters::default(),
         }
-    }
-
-    /// Inserts a frontmatter parameter.
-    pub fn insert_parameter(&mut self, key: impl Into<String>, value: impl Into<String>) {
-        self.parameters.insert(key.into(), value.into());
     }
 
     /// Appends a body element.
@@ -279,6 +274,102 @@ impl DocumentElement {
     }
 }
 
+/// Document metadata and configuration options extracted from frontmatter.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct DocumentParameters {
+    /// Protocol or document date string.
+    pub date: String,
+    /// Header layout variant identifier (e.g. `flex`, `none`).
+    pub header: String,
+    /// Language code for static UI translation (e.g. `en`, `de`).
+    pub language: String,
+    /// Path or URL to a custom logo image.
+    pub logo: String,
+    /// Whether automatic section numbering for headings is enabled.
+    pub numbered_sections: bool,
+    /// Subtitle or secondary description text.
+    pub subtitle: String,
+    /// Main document title.
+    pub title: String,
+    /// Dynamic document variables and custom frontmatter parameters.
+    pub variables: HashMap<String, String>,
+    /// Document version string.
+    pub version: String,
+}
+
+impl DocumentParameters {
+    /// Creates a new document parameters instance with default settings.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Creates document parameters by consuming a frontmatter key-value map.
+    pub fn from_map(map: HashMap<String, String>) -> Self {
+        Self::from(map)
+    }
+
+    /// Returns a reference to a variable value if present.
+    pub fn get_variable(&self, key: &str) -> Option<&str> {
+        self.variables.get(key).map(String::as_str)
+    }
+
+    /// Removes a variable by key, returning the previous value if present.
+    pub fn remove_variable(&mut self, key: &str) -> Option<String> {
+        self.variables.remove(key)
+    }
+
+    /// Inserts or updates a variable in the dynamic variables map.
+    pub fn set_variable(&mut self, key: impl Into<String>, value: impl Into<String>) {
+        self.variables.insert(key.into(), value.into());
+    }
+}
+
+impl Default for DocumentParameters {
+    fn default() -> Self {
+        Self {
+            date: String::new(),
+            header: String::new(),
+            language: "en".to_string(),
+            logo: String::new(),
+            numbered_sections: true,
+            subtitle: String::new(),
+            title: String::new(),
+            variables: HashMap::new(),
+            version: String::new(),
+        }
+    }
+}
+
+impl From<HashMap<String, String>> for DocumentParameters {
+    fn from(mut map: HashMap<String, String>) -> Self {
+        let title = map.remove("title").unwrap_or_default();
+        let subtitle = map.remove("subtitle").unwrap_or_default();
+        let date = map.remove("date").unwrap_or_default();
+        let version = map.remove("version").unwrap_or_default();
+        let language = map
+            .remove("language")
+            .unwrap_or_else(|| "en".to_string());
+        let logo = map.remove("logo").unwrap_or_default();
+        let header = map.remove("header").unwrap_or_default();
+        let numbered_sections = match map.remove("numbered_sections") {
+            Some(val) => val.eq_ignore_ascii_case("true"),
+            None => true,
+        };
+
+        Self {
+            date,
+            header,
+            language,
+            logo,
+            numbered_sections,
+            subtitle,
+            title,
+            variables: map,
+            version,
+        }
+    }
+}
+
 /// Classification of a shoutout element kind.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ShoutoutElementKind {
@@ -449,19 +540,71 @@ mod tests {
     }
 
     #[test]
+    fn test_document_parameters_operations() {
+        let params = DocumentParameters::new();
+        assert!(params.numbered_sections);
+        assert_eq!(params.title, "");
+        assert_eq!(params.subtitle, "");
+        assert_eq!(params.date, "");
+        assert_eq!(params.version, "");
+        assert_eq!(params.language, "en");
+        assert_eq!(params.logo, "");
+        assert_eq!(params.header, "");
+        assert!(params.variables.is_empty());
+
+        let mut map = HashMap::new();
+        map.insert("title".into(), "Spec Title".into());
+        map.insert("subtitle".into(), "Spec Subtitle".into());
+        map.insert("date".into(), "2026-08-15".into());
+        map.insert("version".into(), "1.2.3".into());
+        map.insert("language".into(), "de".into());
+        map.insert("logo".into(), "img/logo.svg".into());
+        map.insert("header".into(), "flex".into());
+        map.insert("numbered_sections".into(), "false".into());
+        map.insert("custom_key".into(), "custom_val".into());
+        map.insert("env".into(), "production".into());
+
+        let mut from_map = DocumentParameters::from_map(map);
+        assert_eq!(from_map.title, "Spec Title");
+        assert_eq!(from_map.subtitle, "Spec Subtitle");
+        assert_eq!(from_map.date, "2026-08-15");
+        assert_eq!(from_map.version, "1.2.3");
+        assert_eq!(from_map.language, "de");
+        assert_eq!(from_map.logo, "img/logo.svg");
+        assert_eq!(from_map.header, "flex");
+        assert!(!from_map.numbered_sections);
+
+        // Variables map contains unknown frontmatter parameters
+        assert_eq!(from_map.get_variable("custom_key"), Some("custom_val"));
+        assert_eq!(from_map.get_variable("env"), Some("production"));
+        assert_eq!(from_map.variables.get("custom_key").map(|s| s.as_str()), Some("custom_val"));
+        assert_eq!(from_map.get_variable("unknown_key"), None);
+
+        // Mutating variables map
+        from_map.set_variable("port", "8080");
+        assert_eq!(from_map.get_variable("port"), Some("8080"));
+        assert_eq!(from_map.remove_variable("custom_key"), Some("custom_val".into()));
+        assert_eq!(from_map.get_variable("custom_key"), None);
+
+        // Unrecognized 'lang' key is preserved in variables without overriding language
+        let mut lang_map = HashMap::new();
+        lang_map.insert("lang".into(), "de".into());
+        let lang_params = DocumentParameters::from(lang_map);
+        assert_eq!(lang_params.language, "en");
+        assert_eq!(lang_params.get_variable("lang"), Some("de"));
+    }
+
+    #[test]
     fn test_document_push_body_and_header() {
         let mut doc = Document::with_capacity(4);
-        assert!(doc.parameters.is_empty());
+        assert_eq!(doc.parameters.title, "");
         assert!(doc.header.is_empty());
         assert!(doc.body.is_empty());
 
-        doc.insert_parameter("title", "My Doc");
+        doc.parameters.title = "My Doc".into();
         doc.push_body(DocumentElement::text("Line 1"));
         doc.push_header(DocumentElement::text("Header Line"));
-        assert_eq!(
-            doc.parameters.get("title").map(|s| s.as_str()),
-            Some("My Doc")
-        );
+        assert_eq!(doc.parameters.title, "My Doc");
         assert_eq!(doc.body.len(), 1);
         assert_eq!(doc.header.len(), 1);
         assert_eq!(doc.body[0], DocumentElement::Text("Line 1".into()));

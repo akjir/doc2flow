@@ -1026,10 +1026,7 @@ title: "Image Fallback Test"
 fn test_core_parser_integration() {
     let input = "---\ntitle: \"Integration\"\n---\n# Heading\n\nSome text";
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parsing failed");
-    assert_eq!(
-        document.parameters.get("title").map(String::as_str),
-        Some("Integration")
-    );
+    assert_eq!(document.parameters.title, "Integration");
     assert_eq!(document.body.len(), 1);
     match &document.body[0] {
         doc2flow::core::DocumentElement::Section {

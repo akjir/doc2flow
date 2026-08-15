@@ -93,17 +93,12 @@ pub fn assemble_assets(features: &DocumentFeature) -> (String, String) {
 pub fn build(document: &Document, features: &DocumentFeature) -> String {
     let app_version_raw = APP_VERSION.strip_prefix('v').unwrap_or(APP_VERSION);
     let created_at = format_iso8601_utc(std::time::SystemTime::now());
-    let lang_code = document
-        .parameters
-        .get("language")
-        .map(String::as_str)
-        .filter(|s| !s.is_empty())
-        .unwrap_or("en");
-    let title = document
-        .parameters
-        .get("title")
-        .map(String::as_str)
-        .unwrap_or("");
+    let lang_code = if document.parameters.language.is_empty() {
+        "en"
+    } else {
+        &document.parameters.language
+    };
+    let title = &document.parameters.title;
     let features_str = features.to_features_string();
     let (css_content, js_content) = assemble_assets(features);
     let i18n_json = get_language_json(lang_code);
@@ -298,7 +293,7 @@ mod tests {
     #[test]
     fn test_builder_build_custom_title() {
         let mut doc = Document::new();
-        doc.insert_parameter("title", "Custom Title");
+        doc.parameters.title = "Custom Title".into();
         let features = DocumentFeature::default();
         let content = build(&doc, &features);
         assert!(content.contains("<title>Custom Title</title>"));
@@ -307,8 +302,7 @@ mod tests {
 
     #[test]
     fn test_builder_build_empty_title() {
-        let mut doc = Document::new();
-        doc.insert_parameter("title", "");
+        let doc = Document::new();
         let features = DocumentFeature::default();
         let content = build(&doc, &features);
         assert!(content.contains("<title></title>"));
@@ -318,7 +312,7 @@ mod tests {
     #[test]
     fn test_builder_build_custom_language() {
         let mut doc = Document::new();
-        doc.insert_parameter("language", "de");
+        doc.parameters.language = "de".into();
         let features = DocumentFeature::default();
         let content = build(&doc, &features);
         assert!(content.contains("<html lang=\"de\">"));
@@ -330,7 +324,7 @@ mod tests {
     #[test]
     fn test_builder_build_empty_language_fallback() {
         let mut doc = Document::new();
-        doc.insert_parameter("language", "");
+        doc.parameters.language.clear();
         let features = DocumentFeature::default();
         let content = build(&doc, &features);
         assert!(content.contains("<html lang=\"en\">"));

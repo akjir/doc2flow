@@ -1,8 +1,11 @@
 //! Markdown parser without external dependencies.
 
+use std::collections::HashMap;
 use std::mem;
 
-use crate::core::document::{Document, DocumentElement, ShoutoutElementKind, TableAlignment};
+use crate::core::document::{
+    Document, DocumentElement, DocumentParameters, ShoutoutElementKind, TableAlignment,
+};
 use crate::core::error::{DiagnosticError, build_caret_annotation};
 use crate::core::{Error, Result};
 
@@ -470,6 +473,7 @@ fn parse_check_box_item(line: &str) -> Option<(usize, bool, &str)> {
 /// or if block directives are malformed, unclosed, or nested.
 pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
     let mut doc = Document::new();
+    let mut frontmatter_map: HashMap<String, String> = HashMap::new();
     let mut phase = FrontmatterPhase::SeekingStart;
     let mut comment_filter = CommentFilterState::new();
     let mut list_state = ListState::new();
@@ -502,11 +506,12 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
         if phase == FrontmatterPhase::Inside {
             if line.trim() == "---" {
                 phase = FrontmatterPhase::Complete;
+                doc.parameters = DocumentParameters::from(mem::take(&mut frontmatter_map));
             } else if let Some((key, val)) = line.split_once(':') {
                 let key = key.trim();
                 let val_trimmed = trim_matching_quotes(val);
                 if !key.is_empty() {
-                    doc.insert_parameter(key, val_trimmed);
+                    frontmatter_map.insert(key.to_string(), val_trimmed.to_string());
                 }
             }
             continue;
@@ -1089,14 +1094,8 @@ mod tests {
         let md = "---\ntitle: \"Test Title\"\nversion: \"1.0.0\"\n---\n# Heading 1\n\nThis is plain text paragraph.\n\n> Callout note\nAnother text.";
         let doc = parse_d2f_markdown(md).unwrap();
 
-        assert_eq!(
-            doc.parameters.get("title").map(|s| s.as_str()),
-            Some("Test Title")
-        );
-        assert_eq!(
-            doc.parameters.get("version").map(|s| s.as_str()),
-            Some("1.0.0")
-        );
+        assert_eq!(doc.parameters.title, "Test Title");
+        assert_eq!(doc.parameters.version, "1.0.0");
         assert_eq!(doc.body.len(), 1);
 
         assert_eq!(
@@ -1117,11 +1116,43 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_d2f_markdown_full_frontmatter_options() {
+        let md = r#"---
+title: "Full Spec"
+subtitle: "Sub Spec"
+date: "2026-08-15"
+version: "2.0.0"
+language: "de"
+logo: "images/logo.svg"
+header: "flex"
+numbered_sections: false
+author: "Admin"
+---
+# Main Section
+Body text
+"#;
+        let doc = parse_d2f_markdown(md).unwrap();
+        assert_eq!(doc.parameters.title, "Full Spec");
+        assert_eq!(doc.parameters.subtitle, "Sub Spec");
+        assert_eq!(doc.parameters.date, "2026-08-15");
+        assert_eq!(doc.parameters.version, "2.0.0");
+        assert_eq!(doc.parameters.language, "de");
+        assert_eq!(doc.parameters.logo, "images/logo.svg");
+        assert_eq!(doc.parameters.header, "flex");
+        assert!(!doc.parameters.numbered_sections);
+        assert_eq!(
+            doc.parameters.variables.get("author").map(|s| s.as_str()),
+            Some("Admin")
+        );
+        assert_eq!(doc.parameters.get_variable("author"), Some("Admin"));
+    }
+
+    #[test]
     fn test_parse_d2f_markdown_comments_before_frontmatter() {
         let md = "<!-- Comment at top -->\n\n<!--\nMultiline comment\n-->\n<!-- inline -->\n---\ntitle: \"Doc\"\n---\n# Heading 1\nVisible text";
         let doc = parse_d2f_markdown(md).unwrap();
 
-        assert_eq!(doc.parameters.get("title").map(|s| s.as_str()), Some("Doc"));
+        assert_eq!(doc.parameters.title, "Doc");
         assert_eq!(doc.body.len(), 1);
         assert_eq!(
             doc.body[0],
@@ -1138,7 +1169,10 @@ mod tests {
         let md = "---\n---\nBody text";
         let doc = parse_d2f_markdown(md).unwrap();
 
-        assert!(doc.parameters.is_empty());
+        assert_eq!(doc.parameters.title, "");
+        assert_eq!(doc.parameters.language, "en");
+        assert!(doc.parameters.numbered_sections);
+        assert!(doc.parameters.variables.is_empty());
         assert_eq!(doc.body.len(), 1);
         assert_eq!(doc.body[0], DocumentElement::Text("Body text".into()));
     }
@@ -1148,10 +1182,7 @@ mod tests {
         let md = "---\ntitle: \"Test\"\n---\nLine 1\n---\nLine 2";
         let doc = parse_d2f_markdown(md).unwrap();
 
-        assert_eq!(
-            doc.parameters.get("title").map(|s| s.as_str()),
-            Some("Test")
-        );
+        assert_eq!(doc.parameters.title, "Test");
         assert_eq!(doc.body.len(), 3);
         assert_eq!(doc.body[0], DocumentElement::Text("Line 1".into()));
         assert_eq!(doc.body[1], DocumentElement::HorizontalRule);
@@ -1263,10 +1294,7 @@ mod tests {
         let md = "---\r\ntitle: \"CRLF\"\r\n---\r\n# Heading\r\nText";
         let doc = parse_d2f_markdown(md).unwrap();
 
-        assert_eq!(
-            doc.parameters.get("title").map(|s| s.as_str()),
-            Some("CRLF")
-        );
+        assert_eq!(doc.parameters.title, "CRLF");
         assert_eq!(doc.body.len(), 1);
         assert_eq!(
             doc.body[0],

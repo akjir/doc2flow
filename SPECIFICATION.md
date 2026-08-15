@@ -76,7 +76,7 @@ d2f.exe --version
   * `subtitle`: Subtitle or secondary description.
   * `date`: Document date.
   * `version`: Document version string.
-  * `language` / `lang`: Locale code (`en`, `de`) for static UI translations.
+  * `language`: Locale code (`en`, `de`) for static UI translations.
   * `logo`: Path to custom logo image (overridden by CLI `-l` / `--logo`).
   * `header`: Header layout (`"flex"`, `"none"`). Default: `"none"`. When `"flex"`, renders section-style header card containing logo, title, and subtitle before Section 1 and variable table.
   * `numbered_sections`: Enables section numbering (`1. `, `1.1 `). Default: `true`.
