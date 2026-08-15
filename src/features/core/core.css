@@ -16,6 +16,7 @@
   --txt-color-link-hover: #163a5c;
 
   /* Code Tokens */
+  --code-inline-font-size: 12px;
   --code-bg: #f0f2f5;
   --code-border: #d0d7de;
   --code-color: #24292f;
@@ -138,7 +139,7 @@ hr {
 
 .txt-code {
   font-family: var(--font-mono);
-  font-size: inherit;
+  font-size: var(--code-inline-font-size, 12px);
   line-height: inherit;
   color: var(--code-color);
   background-color: var(--code-bg);
@@ -186,7 +187,7 @@ hr {
 .txt-content code,
 .txt-default code {
   font-family: var(--font-mono);
-  font-size: inherit;
+  font-size: var(--code-inline-font-size, 12px);
   line-height: inherit;
   color: var(--code-color);
   background-color: var(--code-bg);
@@ -299,7 +300,7 @@ hr {
 .order-content code,
 .check-content code {
   font-family: var(--font-mono);
-  font-size: inherit;
+  font-size: var(--code-inline-font-size, 12px);
   line-height: inherit;
   color: var(--code-color);
   background-color: var(--code-bg);

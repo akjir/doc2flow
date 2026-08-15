@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated starter template (`templates/template.md`) with GFM table support, variables table documentation, and sample code variable usage.
 
 ### Changed
+- Adjusted typography sizing to reduce inline code font size and increase code block font size.
 - Unified document item hover and interaction styling under `item-` prefix in core stylesheet.
 - Deduplicated shared code styling tokens across core and code stylesheets.
 - Aligned Markdown section hierarchy so H1 and H2 act as top-level sections that accept only H3 child sections.

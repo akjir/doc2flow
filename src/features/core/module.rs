@@ -111,6 +111,7 @@ mod tests {
         assert!(css.contains("--code-bg:"));
         assert!(css.contains("--code-border:"));
         assert!(css.contains("--code-color:"));
+        assert!(css.contains("--code-inline-font-size:"));
         assert!(css.contains("--item-hover-bg:"));
         assert!(css.contains("--item-done-bg:"));
         assert!(css.contains(".doc-body"));
