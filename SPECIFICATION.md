@@ -1,224 +1,312 @@
-# Project Specification: Doc2Flow (d2f)
+# Doc2Flow (`d2f`) — Technical Specification
 
-## 1. Overview & Objectives
-Doc2Flow (`d2f`) is a command-line interface (CLI) tool built for Windows that converts Markdown files into fully self-contained HTML files. The generated HTML files serve as interactive guides, manuals, protocols, and checklists for end users.
+## 1. Metadata & Status
 
-### Core Principles & Non-Negotiables
-- **Single Binary Output:** Builds into a single executable (`d2f.exe`) with zero external runtime dependencies.
-- **Zero-Dependency HTML:** Output HTML embeds all CSS, JS, and Base64-encoded images directly—no external server or local path references.
-- **Integrated Templates & Localization:** HTML/CSS/JS templates and i18n JSON files are embedded into the binary at compile time via `include_str!`.
-- **100% Safe Rust:** Strict prohibition of `unsafe` code blocks across the entire codebase.
+| Attribute | Specification Value |
+| :--- | :--- |
+| **Project Name** | Doc2Flow (`d2f`) |
+| **Target Binary** | `d2f` (Unix) / `d2f.exe` (Windows) |
+| **Target Version** | `v0.9.4` (SemVer 2.0.0 with dynamic build metadata) |
+| **Document Status** | Final / Active Implementation |
+| **License** | GPL-3.0-or-later |
+| **Repository** | `https://github.com/akjir/doc2flow` |
 
 ---
 
-## 2. CLI Interface & Usage
+## 2. Vision & Scope
 
-### Executable
-The target binary is **`d2f.exe`**.
+### 2.1 Elevator Pitch
+Doc2Flow is a high-performance, single-binary CLI tool that compiles Markdown documents into standalone, zero-dependency, interactive offline HTML workflows and checklists with persistent client-side state.
 
-### Command Line Syntax
-```bash
-# Standard execution (generates input.html)
-d2f.exe input.md
+### 2.2 Non-Negotiable Principles
+- **Single Static Executable:** MUST compile into a single standalone binary (`d2f`/`d2f.exe`) requiring zero external runtime dependencies.
+- **Zero-Dependency Self-Contained Output:** Generated HTML MUST embed all CSS stylesheets, JavaScript logic, and Base64/SVG assets inline. External CDN or network requests are STRICTLY PROHIBITED.
+- **100% Safe Rust:** The codebase MUST NOT contain any `unsafe` code blocks (`#![forbid(unsafe_code)]`).
+- **Offline Persistence:** Checkbox states and variable inputs MUST persist locally in browser `localStorage` scoped by a deterministic document hash (`d2f_id`).
+- **Pure In-Memory Processing:** Document transformations, AST generation, and HTML rendering MUST operate purely in memory with minimal heap allocations.
 
-# Legacy pipeline execution
-d2f.exe input.md --legacy
+### 2.3 Out of Scope
+- Dynamic web server or daemon runtime modes.
+- Multi-file HTML output directories or external asset bundles.
+- Direct binary PDF/DOCX compilation (PDF generation is delegated to browser print rendering).
+- Remote API integrations or cloud synchronization.
+- Heavy JavaScript frontend frameworks (React, Vue, etc.).
 
-# Explicit output path
-d2f.exe input.md -o custom_output.html
+---
 
-# Custom header logo
-d2f.exe input.md -l logo.png
-d2f.exe input.md --logo=custom_logo.svg
+## 3. Architecture & Technical Constraints
 
-# Enable automatic image compression/WebP conversion for local images > 250 KB
-d2f.exe input.md -s
+### 3.1 Tech Stack
+- **Language & Edition:** Rust (Edition 2024).
+- **Core Dependencies & Custom Engines:**
+  - `image` (0.25): In-memory image processing and WebP conversion.
+  - **Zero-Dependency Parsers:** Markdown token parsing and AST construction are natively implemented in `src/core/markdown.rs`; JSON deserialization and locale mapping are natively implemented via custom zero-allocation parser (`json.rs` / `language.rs`) without external crates (`pulldown-cmark`, `serde`, `serde_json`).
+- **Client Runtime:** Vanilla JavaScript (ES6+), decoupled across the `window.d2f` namespace. Zero JS build step in the pipeline.
+- **Release Profile:** `opt-level = "z"`, `lto = true`, `codegen-units = 1`, `strip = true`, `panic = "abort"`.
 
-# Generate starter Markdown template (defaults to template.md)
-d2f.exe --init
-d2f.exe -i custom_template.md
+### 3.2 Target Platforms & Compatibility
+- **Host / Build Targets:** Linux (`x86_64-unknown-linux-gnu`), Windows (`x86_64-pc-windows-msvc`), macOS (`x86_64-apple-darwin`, `aarch64-apple-darwin`).
+- **Path Handling:** All filesystem paths MUST use `std::path::Path` / `PathBuf` for cross-platform safety.
+- **Browser Compatibility:** Modern evergreen browsers (Chrome 90+, Firefox 90+, Safari 14+, Edge 90+) supporting CSS custom properties, CSS Flexbox/Grid, and `localStorage`.
 
-# Help & Version
-d2f.exe --help
-d2f.exe --version
+### 3.3 System Layering & Modularity
+```
+┌────────────────────────────────────────────────────────┐
+│                        CLI Entry                       │
+│             src/main.rs | src/core/arguments.rs        │
+└───────────────────────────┬────────────────────────────┘
+                            │
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│                      Core Engine                       │
+│   src/core/markdown.rs (AST) | src/core/builder.rs     │
+└───────────────────────────┬────────────────────────────┘
+                            │
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│                Vertical Feature Slices                 │
+│                 src/features/<feature>/                │
+└───────────────────────────┬────────────────────────────┘
+                            │
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│                  Utility Subsystem                     │
+│               src/core/utils/ (mod.rs)                 │
+│         Base64 | MIME | Hasher | IO | URI | Time       │
+└────────────────────────────────────────────────────────┘
+```
+- **Utility Subsystem (`src/core/utils/`):** Pure, domain-agnostic library modules. Direct `std::fs` calls outside `io.rs` are PROHIBITED.
+- **Core Engine (`src/core/`):** Houses the AST data model, zero-alloc Markdown token parser, builder assembler, and compiler-style error diagnostics.
+- **Vertical Feature Slices (`src/features/<feature>/`):** Isolated modules (`bullet_list`, `code`, `core`, `ordered_list`, `task`, `unknown`). Each slice encapsulates its HTML rendering, CSS (`<name>.css`), JS (`<name>.js`), and local constants.
+- **Conditional Asset Assembly:** If a feature is absent from a document, zero CSS rules and zero JS code for that feature SHALL be emitted into the output HTML.
+
+---
+
+## 4. Functional Requirements
+
+### 4.1 CLI Interface & Parameters
+The CLI executable MUST support the following grammar: `d2f [OPTIONS] [INPUT]`
+
+| Flag / Option | Short | Argument | Description | Default |
+| :--- | :--- | :--- | :--- | :--- |
+| `<INPUT>` | — | Path | Path to input Markdown file. | Required (unless `--init`) |
+| `--output` | `-o` | `<PATH>` | Target HTML output filepath. | `<INPUT_STEM>.html` |
+| `--logo` | `-l` | `<PATH>` | Custom header logo (SVG, PNG, JPG, WebP). | Embedded default SVG |
+| `--init` | `-i` | `[PATH]` | Generates starter Markdown template. | `template.md` |
+| `--auto-scale` | `-s` | — | Auto-resizes local images > 250 KB to WebP. | `false` |
+| `--help` | `-h` | — | Prints CLI help text. | — |
+| `--version` | `-V` | — | Prints dynamic SemVer version string. | — |
+
+*Validation Rule:* Argument parsing MUST uniformly reject empty values for both space-separated (`-o ""`) and assignment (`-o=`) syntax.
+
+### 4.2 Markdown Input Specifications
+- **YAML Frontmatter:** Optional header enclosed by `---`:
+  - `title` (string): Document title.
+  - `subtitle` (string): Document subtitle.
+  - `date` (string): Protocol or revision date.
+  - `version` (string): Document version string.
+  - `language` (string): Locale code (`en`, `de`) for UI localization (default: `"en"`).
+  - `logo` (string): Relative path or URI to header logo (overridden by CLI `-l`).
+  - `header` (string): Header layout mode (`"flex"`, `"none"`, default: `"none"`).
+  - `numbered_sections` (bool): Automatic heading numbering (`1.`, `1.1`) (default: `true`).
+  - Custom keys: Preserved in `DocumentParameters.variables` map.
+- **Heading Hierarchy:**
+  - `# Heading 1`: Primary section container (`.section`, `.sh.sh-h1`, `.sb`).
+  - `## Heading 2`: Collapsible section container (`.section`, `.sh`, `.sb`) with completion badges (`.sbadge`) and fold indicators (`.stog`).
+  - `###` to `######`: Subheadings inside section bodies (`.subh`).
+- **Interactive Checklists & Tasks:**
+  - `- [ ]` / `- [x]`: Rendered as interactive checkboxes (`.item-check`) with dynamic section progress tracking.
+- **Hierarchical Lists:**
+  - `- `, `* `: Unordered bullet lists (`.item-bullet`) with recursive `--indent` levels.
+  - `1. `: Ordered numerical lists (`.item-order`) with automatic sequential position numbering.
+- **Block Directives:**
+  - `:::<name>` container blocks (e.g. `:::variables`) containing arbitrary child elements.
+- **Callout & Shoutout Panels:**
+  - `>` / `> Note`: Informational callout (`.note`, neutral styling).
+  - `>?` / `>? Tip`: Proactive tip callout (`.note-tip`, green accent).
+  - `>!` / `>! Important`: High-priority callout (`.note-important`, purple accent).
+  - `>!!` / `>!! Warning`: Warning callout (`.note-warning`, yellow accent).
+  - `>!!!` / `>!!! Caution`: Critical caution callout (`.note-caution`, red accent).
+- **Code Blocks & Variables:**
+  - ` ```lang ` fenced code blocks with language tags, 1-click **Copy Code** button, and variable interpolation (`{{VAR_NAME}}`).
+  - `[Variables]` markdown table: Extracts key-value pairs into editable persistent text fields (`.persistent-field`) that dynamically substitute code block placeholders upon copy.
+- **Image & Resource Embedding:**
+  - Local image paths: Read from disk, converted, and embedded as Base64 `data:<mime>;base64,<data>` URIs.
+  - Missing/broken images: Gracefully replaced by embedded vector placeholder SVG (`placeholder.svg`).
+  - Non-image assets (`.pdf`, `.zip`): Rendered as external download link elements (`<a>`).
+
+### 4.3 Output Document Specifications
+- Single HTML5 document with complete inline `<style>` and `<script>` blocks.
+- **Document Hash (`d2f_id`):** Deterministic SHA-256 hash computed over document metadata (`title`, `version`, `date`) scoping client `localStorage`.
+- **Localization (i18n):** Static UI placeholders (`{{L_KEY}}`) resolved from embedded JSON dictionaries (`de.json`, `en.json`).
+- **Print Optimization (`@media print`):** Collapsed sections MUST automatically expand (`display: block !important`), interactive toolbars MUST be hidden, and background colors MUST be preserved.
+
+---
+
+## 5. Non-Functional Requirements
+
+### 5.1 Performance & Resource Targets
+- **Compilation Speed:** A 50 KB Markdown document MUST parse and compile to HTML in < 20 ms on modern hardware.
+- **Binary Footprint:** Compiled release executable MUST NOT exceed 10 MB.
+- **Memory Footprint:** In-memory transformation MUST NOT exceed 5x input file size during processing.
+
+### 5.2 Efficiency & Zero-Allocation Rules
+- Buffers MUST be pre-allocated with exact or estimated capacities (`with_capacity`).
+- Slicing and string manipulation MUST prioritize zero-copy techniques (`&str`, `split_once`, `strip_prefix`, `Cow`).
+- Direct buffer streaming (`write_str` / `write!`) MUST be used in place of intermediate allocations or `format!`.
+
+### 5.3 Accessibility (a11y) & UX
+- Collapsible section headers MUST implement `role="button"`, `tabindex="0"`, and `aria-expanded` state attributes.
+- Keyboard navigation MUST support section toggling via `Enter` and `Space` keys.
+- Checkbox elements MUST provide associated accessible labels.
+
+---
+
+## 6. Data Model & I/O Architecture
+
+### 6.1 I/O Isolation Rules
+- All disk reads and writes MUST be isolated within `src/core/utils/io.rs`.
+- Processing engines MUST operate exclusively on UTF-8 strings or AST models in memory.
+
+### 6.2 Core Data Structures (`src/core/document.rs`)
+```rust
+pub struct Document {
+    pub body: Vec<DocumentElement>,
+    pub header: Vec<DocumentElement>,
+    pub parameters: DocumentParameters,
+}
+
+pub enum DocumentElement {
+    BlockDirective { name: String, children: Vec<DocumentElement> },
+    BulletListItem { content: String, children: Vec<DocumentElement> },
+    CheckBoxItem { checked: bool, content: String, children: Vec<DocumentElement> },
+    CodeBlock { content: String, language: Option<String> },
+    HorizontalRule,
+    Image { alt: String, url: String },
+    OrderedListItem { position: usize, content: String, children: Vec<DocumentElement> },
+    Section { level: usize, title: String, children: Vec<DocumentElement> },
+    Shoutout { kind: ShoutoutElementKind, content: String },
+    Table { alignments: Vec<TableAlignment>, rows: Vec<Vec<String>> },
+    Text(String),
+    Unknown(String),
+}
+
+pub struct DocumentParameters {
+    pub title: String,
+    pub subtitle: String,
+    pub date: String,
+    pub version: String,
+    pub language: String,
+    pub logo: String,
+    pub header: String,
+    pub numbered_sections: bool,
+    pub variables: HashMap<String, String>,
+}
+
+pub struct DocumentFeature {
+    pub bullet_list: bool,
+    pub code_block: bool,
+    pub image: bool,
+    pub ordered_list: bool,
+    pub shoutout: bool,
+    pub table: bool,
+    pub task: bool,
+    pub unknown: bool,
+}
 ```
 
-### Parameters & Arguments
-
-| Argument / Flag | Short | Description | Required? | Default |
-| --- | --- | --- | --- | --- |
-| `INPUT` | — | Path to source Markdown file | Conditional (unless `--init` used) | — |
-| `OUTPUT` | `-o`, `--output` | Target path for generated HTML file | No | `<INPUT_NAME>.html` |
-| `LOGO` | `-l`, `--logo` | Path to custom logo (SVG, PNG, JPG, WebP) | No | Default embedded SVG logo |
-| `INIT` | `-i`, `--init` | Generates starter template Markdown file | No | `template.md` |
-| `AUTO_SCALE` | `-s`, `--auto-scale` | Auto-resizes local images > 250 KB to WebP | No | `false` |
-| `LEGACY` | `--legacy` | Runs using legacy processing pipeline | No | `false` |
-
-
 ---
 
-## 3. Input Specification (Markdown & Extensions)
+## 7. Error Handling & Diagnostics
 
-* **Base Standard:** CommonMark with GitHub Flavored Markdown (GFM) extensions (`tasklists`, `strikethrough`, `tables`).
-* **YAML Frontmatter & Metadata:** Optional header metadata block delimited by `---`:
-  ```yaml
-  ---
-  title: "Server Maintenance Guide"
-  subtitle: "Standard Operating Procedure"
-  date: "2026-07-25"
-  version: "1.0.0"
-  language: "de"
-  logo: "images/custom_logo.svg"
-  numbered_sections: true
-  ---
+### 7.1 Diagnostic Error Reporting
+- Runtime errors, invalid frontmatter, or malformed syntax MUST emit compiler-style diagnostic messages on `stderr`.
+- Diagnostic output MUST follow rustc conventions:
+  ```text
+  error: <summary message>
+   --> <filepath>:<line>:<col>
+    |
+  <line> | <source snippet>
+    | <carets> <annotation>
+    |
+  = help: <actionable fix instructions>
   ```
-  * `title`: Document title.
-  * `subtitle`: Subtitle or secondary description.
-  * `date`: Document date.
-  * `version`: Document version string.
-  * `language`: Locale code (`en`, `de`) for static UI translations.
-  * `logo`: Path to custom logo image (overridden by CLI `-l` / `--logo`).
-  * `header`: Header layout (`"flex"`, `"none"`). Default: `"none"`. When `"flex"`, renders section-style header card containing logo, title, and subtitle before Section 1 and variable table.
-  * `numbered_sections`: Enables section numbering (`1. `, `1.1 `). Default: `true`.
-* **Callout / Note Box Annotations:** Blockquotes converted to alert panels via prefixes:
-  * `>` / `> Note`: Standard Note box (`.note`, neutral styling).
-  * `>?` / `>? Tip`: Tip box (`.note-tip`, green accent).
-  * `>!` / `>! Important`: Important note panel (`.note-important`, purple accent).
-  * `>!!` / `>!! Warning`: Warning box (`.note-warning`, yellow accent).
-  * `>!!!` / `>!!! Caution`: Caution box (`.note-caution`, red accent).
-* **Document Structure & Structural Mapping:**
-  * **Level 1 Headings (`#`):** Non-collapsible section blocks (`.section`, `.sh.sh-h1`, `.sb`) with primary header styling.
-  * **Level 2 Headings (`##`):** Collapsible section blocks (`.section`, `.sh`, `.sb`) with completion badges (`.sbadge`) and toggle indicators (`.stog`).
-  * **Level 3–6 Headings (`###`–`######`):** Styled subheadings inside section bodies (`.subh`).
-* **Checklists & List Items:**
-  * **Task Items (`- [ ]`, `- [x]`):** Interactive checkboxes (`.doc-item.check-item`) with dynamic completion tracking.
-  * **Bullet & Ordered Items (`-`, `1.`):** Formatted list entries (`.doc-item.simple-item`) with nested list support.
-  * **Text Paragraph Items:** Standalone text paragraph blocks (`.doc-item.text-item`).
-* **Code Blocks & Variable Substitution (`[Variables]` & `{{VARIABLE_NAME}}`):**
-  * Fenced code blocks (` ```lang `) with language tags and 1-click **Copy Code** button.
-  * **Dynamic Variable Substitution:** Markdown table annotated with `[Variables]` extracts key-value pairs and replaces `{{VARIABLE_NAME}}` placeholders inside code blocks when copying or printing.
-  * **Smart Variable Filtering & Validation:** Automatically scans code blocks for `{{VAR}}` placeholders. Only variables used in at least one code block are displayed in the table (unused table entries emit CLI warnings and are omitted; missing code block variables are added to the table with empty input fields and emit CLI warnings).
-  * **Interactive Table & State Persistence:** Rendered before Section 1 in a dark gray container (`.item-table-var-wrap`). Column 2 (`Value`) values are rendered as editable text inputs (`.item-table-var-input.persistent-field`) that save state in `localStorage` and single-file HTML exports.
 
-* **Image & Link Handling:**
-  * Relative local images converted to embedded Base64 `data:image/...;base64,...` URIs.
-  * Remote image URLs (`http://`, `https://`) preserved as `<img>` tags.
-  * Broken or unreachable images gracefully display an embedded fallback placeholder SVG (`placeholder.svg`).
-  * Non-image resources (e.g. `.pdf`, `.zip`) rendered as external link elements (`<a>`).
+### 7.2 Safety & Process Termination
+- Application MUST NOT panic under invalid user input, missing files, or malformed syntax.
+- CLI process MUST return `ExitCode::SUCCESS` (0) on successful compilation and `ExitCode::FAILURE` (1) on fatal errors.
 
 ---
 
-## 4. Output Specification (HTML & UX)
+## 8. Quality & Developer Guidelines
 
-* **Self-Contained Document:** Generates a single HTML5 file with fully embedded CSS (`<style>`) and JavaScript (`<script>`).
-* **Document Identity (`d2f_id`):** Deterministic SHA-256 key derived from metadata (`title`, `version`, `date`) to uniquely scope browser `localStorage`.
-* **Internationalization & Localization (i18n):**
-  * Supports localized UI elements via frontmatter `language` tag, mapping to embedded locale JSON files (default: `en`).
-  * Placeholders formatted as `{{L_KEY}}` map to `"key"` in target locale JSON. Missing keys emit non-blocking `stderr` warnings.
-* **Interactivity & State Persistence:**
-  * Interactive checkboxes and input field values are persisted per document in `localStorage` via `d2f_id`.
-  * Section badges dynamically track completed items (e.g. `2/5 completed`).
-  * Reset button clears stored state, unfolds all collapsed sections, and resets search filters following modal confirmation.
-* **Protocol & Sign-off Footer:** Agent signature input, completion date input, signature line, and "Process Completed" sign-off box.
-* **Layout & Print Optimization:** Responsive CSS layout with `@media print` rules that automatically expand collapsed sections, hide control buttons, and preserve print colors.
+### 8.1 Rust Coding Standards
+- **Zero Unsafe:** Strictly zero `unsafe` blocks across all crates.
+- **Idiomatic Types:** Newtypes, strong enum variants, and `Result<T, Error>` return types.
+- **Single Source of Constants:** Feature-specific constants MUST reside exclusively inside `src/features/<feature>/module.rs`. Global application metadata MUST reside in `src/core/constants.rs`.
+- **Inline Attributes:** `#[inline]` MUST NOT be used on heap-allocating functions, I/O routines, CLI parsers, or multi-branch logic.
+- **Documentation:** Inline docs MUST be written in concise English with standard headers (`# Examples`, `# Errors`, `# Panics`).
 
----
-
-## 5. Module Architecture & Subsystem Decoupling
-
-* **Project-Agnostic Library Layer (`src/utils/`):** Dedicated generic subsystem (`base64`, `error`, `hasher`, `io`, `mime`, `uri`) completely decoupled from Doc2Flow domain logic. Reusable across arbitrary projects. `src/core/` and `src/features/` consume it through the centralized API exported by `src/utils/mod.rs`.
-* **Filesystem & I/O Isolation (`src/utils/io.rs`):** Exclusive module for generic filesystem interactions, file reading/writing, path resolution (`resolve_path`), and asset retrieval. Direct `std::fs`/`std::io` calls prohibited in processing modules.
-* **Pure In-Memory Processing Core:** Core modules (`src/core/converter.rs`, `src/core/builder.rs`, `src/core/components.rs`, `src/core/locales.rs`, `src/core/id.rs`) perform pure in-memory string/AST data transformations decoupled from disk I/O.
-* **Domain Image & Logo Processing (`src/core/image.rs`):** Image optimization, SVG sanitization, WebP downscaling, and domain-specific logo path resolution (`resolve_logo_path`).
-* **Strict Modular Feature Isolation (HTML, CSS, JS):**
-  * Extension features (`code`, `header`, `images`, `tables`, `tasks`) are fully decoupled and zero-knowledge of each other.
-  * Each feature maintains dedicated HTML components, JavaScript and CSS modules within its vertical slice directory (`src/features/<name>/`). JS files reside directly in `src/features/<name>/<name>.js`.
-  * If a feature is omitted/disabled (`DocumentFeatures`), zero HTML elements, zero CSS rules, and zero JS code for that feature are emitted in the rendered document.
-* **HTML UI Components & Builder Engine (`src/components.rs` & `src/core/builder.rs`):**
-  * `src/components.rs`: Core-universal zero-allocation HTML UI building blocks (`out: &mut impl Write`). Feature-specific HTML components reside in their respective feature modules.
-  * `src/core/builder.rs`: Central HTML page orchestrator, dynamic feature asset assembler (`assemble_assets`).
-* **Constants Architecture & Encapsulation Rules:**
-  * **Feature-Specific Constants (Strict Encapsulation):** Constants used exclusively by an individual feature (e.g. CSS class names, frontmatter keys, selector strings, feature-internal default values) MUST be defined directly in the respective `src/legacy/features/<feature_name>/module.rs` (or private submodules). Distributing feature constants across central files or dumpsters is strictly prohibited to eliminate tight coupling.
-  * **Global System Constants (`src/legacy/core/constants.rs`):** Reserved exclusively for application-wide, feature-independent system metadata and global core defaults (e.g. `APP_NAME`, `CLI_BANNER`, `APP_VERSION`, `REPOSITORY_URL`, `LICENSE_TERMS`, `LICENSE_URL`, global system/I/O limits).
-* **Centralized Diagnostic Error Handling:** Runtime, I/O, and syntax errors map to diagnostic compiler-style error types (`Error` in `src/core/error.rs`, `Doc2FlowError` in `src/legacy/utils/error.rs`).
-* **Legacy Subsystem (`src/legacy/`):**
-  * Contains the self-contained legacy conversion engine (`src/legacy/legacy.rs`, `core/`, `features/`, `utils/`).
-  * Zero coupling to the root `src/core/` pipeline.
-  * Activated when `--legacy` is passed on the CLI.
+### 8.2 Testing Requirements
+- **Pass Rate:** 100% test pass rate required across all unit, doc, and integration tests.
+- **Negative & Edge Testing:** Tests MUST explicitly cover invalid CLI arguments, missing delimiters, unclosed directives, broken image paths, and empty inputs.
+- **Showcase Parity:** Changes to UI components MUST re-validate and match `examples/showcase_en.html` and `examples/showcase_de.html`.
 
 ---
 
-## 6. Technical Framework & Quality Standards
-
-* **Programming Language:** Rust (Edition 2024) for CLI backend, vanilla JavaScript for client runtime (legacy toolchain uses TypeScript).
-* **Target Platform:** Windows 64-Bit (`x86_64-pc-windows-msvc`).
-* **Version & Build Metadata:** Dynamic SemVer 2.0.0 versioning evaluated at compile time in `build.rs`:
-  * Format: `v<MAJOR>.<MINOR>.<PATCH>+<COMMIT_COUNT>.<COMMIT_HASH>[.dev]`
-  * Exported as `D2F_FULL_VERSION` compiler env var; embedded in `d2f --version` output, HTML `<meta name="generator">` tags, and header comments.
-* **Binary Size:** Executable size target `< 10 MB` using stripping, LTO, and release optimizations.
-* **Core Dependencies:** `pulldown-cmark`, `serde`, `serde_json`, `image` (custom Base64/MIME helpers in `src/legacy/utils/`).
-* **Error Handling & Testing:** Zero panics on invalid paths/inputs; human-readable diagnostic error messages on `stderr`. Unit and integration test suite coverage.
-
----
-
-## 7. Directory & File Structure
+## 9. Repository File Structure
 
 ```text
 doc2flow/
 ├── .cargo/
-│   └── config.toml           # Cargo Aliases and Cross-Compile configuration
+│   └── config.toml           # Cargo aliases and cross-compilation config
+├── examples/                 # Showcase Markdown and compiled HTML samples
+│   ├── code_variables.md     # Code variables showcase
+│   ├── recipe.md             # Recipe checklist showcase
+│   ├── showcase_de.md        # German feature showcase
+│   ├── showcase_en.md        # English feature showcase
+│   └── stellar_evolution.md  # Detailed documentation showcase
 ├── resources/                # Embedded static resources
 │   ├── images/               # Built-in vector icons and logos
 │   │   ├── logo.svg          # Default document header logo
-│   │   └── placeholder.svg   # Default fallback image placeholder
-│   ├── locales/              # Internationalization JSON translations
-│   │   ├── de.json           # German static UI translations
-│   │   └── en.json           # English static UI translations
-│   └── templates/            # HTML layout and starter Markdown templates
-│       ├── base.html         # Base layout template
-│       └── template.md       # Starter Markdown template for init command
-├── web/                      # Legacy client-side TypeScript toolchain
-│   ├── package.json          # Node and esbuild bundler configuration
-│   └── tsconfig.json         # TypeScript compiler configuration
-├── src/                      # Rust CLI backend
-│   ├── main.rs               # CLI entry point and argument parsing
-│   ├── lib.rs                # Module declarations and library interface
-│   ├── core/                 # Core modular engine and document AST pipeline
-│   │   ├── mod.rs            # Core module exports
-│   │   ├── builder.rs        # Document builder engine
-│   │   ├── constants.rs      # System constants and application metadata
-│   │   ├── document.rs       # Document AST data structures
-│   │   ├── error.rs          # Compiler-style diagnostic error reporting
-│   │   ├── feature.rs        # Document AST feature detection
+│   │   └── placeholder.svg   # Fallback broken image placeholder
+│   ├── locales/              # Embedded JSON translation maps
+│   │   ├── de.json           # German UI dictionary
+│   │   └── en.json           # English UI dictionary
+│   └── templates/            # HTML base layouts and starter templates
+│       ├── template.html     # Base layout template
+│       └── template.md       # Starter markdown template for --init
+├── src/                      # Rust CLI & Core Engine
+│   ├── main.rs               # CLI entry point and process execution
+│   ├── lib.rs                # Public library exports
+│   ├── core/                 # Core domain engine and AST pipeline
+│   │   ├── mod.rs            # Core module declarations
+│   │   ├── arguments.rs      # CLI argument parser and validator
+│   │   ├── builder.rs        # HTML page assembler and asset injector
+│   │   ├── constants.rs      # Global system metadata and defaults
+│   │   ├── document.rs       # Document AST and element definitions
+│   │   ├── error.rs          # Diagnostic compiler-style error types
+│   │   ├── feature.rs        # Document AST feature scanner and traits
+│   │   ├── format.rs         # Text formatting and escaping utilities
+│   │   ├── language.rs       # Embedded locale loader
 │   │   ├── markdown.rs       # Zero-alloc Markdown parser
-│   │   └── utils/            # Core filesystem and encoding utilities
-│   ├── features/             # Modular vertical slice feature modules
-│   │   ├── mod.rs            # Feature registry and exports
-│   │   ├── bullet_list/      # Bullet list feature
-│   │   ├── code/             # Code block feature
-│   │   ├── core/             # Core base feature (text & section styling)
-│   │   ├── ordered_list/     # Ordered list feature
-│   │   ├── task/             # Task checkbox feature
-│   │   └── unknown/          # Fallback unknown feature
-│   └── legacy/               # Isolated legacy conversion subsystem
-│       ├── mod.rs            # Legacy subsystem root
-│       ├── legacy.rs         # Legacy CLI execution runner
-│       ├── utils/            # Generic legacy utility library
-│       ├── core/             # Legacy core processing engine
-│       └── features/         # Legacy vertical slice features
-
+│   │   └── utils/            # Domain-agnostic utilities (IO, Base64, MIME, Hasher, URI, Time)
+│   └── features/             # Vertical slice feature modules
+│       ├── mod.rs            # Feature registry and dispatcher
+│       ├── bullet_list/      # Bullet list vertical slice
+│       ├── code/             # Code block vertical slice
+│       ├── core/             # Core base styles and client scripts
+│       ├── ordered_list/     # Ordered list vertical slice
+│       ├── task/             # Interactive task checkbox slice
+│       └── unknown/          # Unrecognized element fallback slice
 ├── tests/
-│   ├── example_onboarding.html # Compiled onboarding showcase HTML fixture
-│   ├── example_onboarding.md # Onboarding Markdown showcase source
-│   ├── integration_test.rs   # CLI and end-to-end integration tests
-│   ├── showcase_de.html      # Compiled German showcase HTML fixture
-│   ├── showcase_de.md        # German Markdown showcase source
-│   ├── showcase_en.html      # Compiled English showcase HTML fixture
-│   └── showcase_en.md        # English Markdown showcase source
-├── build.rs                  # Embedded locale generator and version metadata
-├── Cargo.toml                # Rust dependencies and build profile
-├── SPECIFICATION.md          # Functional specification
-├── AGENTS.md                 # AI agent directives
-├── CHANGELOG.md              # Version history
-└── README.md                 # Project documentation
+│   └── integration_test.rs   # End-to-end and CLI integration test suite
+├── build.rs                  # Build script for locales and Git version metadata
+├── Cargo.toml                # Package definition and release profile
+├── MAKE.sh                   # Automation workflow script
+├── SPECIFICATION.md          # Project technical specification (Single Source of Truth)
+├── AGENTS.md                 # AI agent directives and constraints
+├── CHANGELOG.md              # Version release history
+├── README.md                 # User guide and project overview
+└── LICENSE                   # GPL-3.0-or-later license text
 ```
