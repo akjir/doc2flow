@@ -42,7 +42,7 @@
   word-break: break-word;
 }
 
-.item-check.checked .check-content {
+.check-item.checked .check-content {
   text-decoration: line-through;
   color: var(--check-muted-color);
 }
@@ -58,7 +58,7 @@
     color: #000000 !important;
   }
 
-  .item-check.checked .check-content {
+  .check-item.checked .check-content {
     text-decoration: none !important;
     color: #000000 !important;
   }

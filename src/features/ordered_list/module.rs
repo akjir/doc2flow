@@ -42,7 +42,7 @@ impl Feature for OrderedListFeature {
     /// let elem = DocumentElement::ordered_list_item(1, "First item");
     /// let params = DocumentParameters::default();
     /// let html = feature.to_html(&elem, "", 1, 0, &params);
-    /// assert!(html.contains("class=\"item item-order\""));
+    /// assert!(html.contains("class=\"item order-item\""));
     /// ```
     fn to_html(
         &self,
@@ -64,7 +64,7 @@ impl Feature for OrderedListFeature {
                     content_len + _content.len() + spaces * 2 + inner_spaces * 2 + 128,
                 );
                 push_indent(&mut out, indent);
-                out.push_str("<div class=\"item item-order\"");
+                out.push_str("<div class=\"item order-item\"");
                 if depth > 0 {
                     let _ = write!(out, " style=\"--indent: {depth};\"");
                 }
@@ -138,7 +138,7 @@ mod tests {
         let element = DocumentElement::ordered_list_item(1, "First numbered item");
         let html = feature.to_html(&element, "", 1, 0, &DocumentParameters::default());
         let expected = concat!(
-            "  <div class=\"item item-order\">\n",
+            "  <div class=\"item order-item\">\n",
             "    <span class=\"order-marker\">1.</span>\n",
             "    <span class=\"order-content\">\n",
             "      First numbered item\n",
@@ -157,7 +157,7 @@ mod tests {
         );
         let html = feature.to_html(&element, "", 0, 0, &DocumentParameters::default());
         let expected = concat!(
-            "<div class=\"item item-order\">\n",
+            "<div class=\"item order-item\">\n",
             "  <span class=\"order-marker\">2.</span>\n",
             "  <span class=\"order-content\">\n",
             "    Step with <strong>bold</strong>, <em>italic</em>, <s>strike</s>, <code>code</code>, <a href=\"https://example.com\">link</a>, and &lt;special&gt; &amp; characters\n",
@@ -173,7 +173,7 @@ mod tests {
         let element = DocumentElement::ordered_list_item(1, "Sub-step item");
         let html = feature.to_html(&element, "", 2, 1, &DocumentParameters::default());
         let expected = concat!(
-            "    <div class=\"item item-order\" style=\"--indent: 1;\">\n",
+            "    <div class=\"item order-item\" style=\"--indent: 1;\">\n",
             "      <span class=\"order-marker\">1.</span>\n",
             "      <span class=\"order-content\">\n",
             "        Sub-step item\n",
@@ -187,7 +187,7 @@ mod tests {
     fn test_ordered_list_renders_with_children() {
         let feature = OrderedListFeature::new();
         let element = DocumentElement::ordered_list_item(1, "Parent order");
-        let child_html = "    <div class=\"item item-order\" style=\"--indent: 1;\">\n      <span class=\"order-marker\">1.</span>\n      <span class=\"order-content\">\n        Child item\n      </span>\n    </div>\n";
+        let child_html = "    <div class=\"item order-item\" style=\"--indent: 1;\">\n      <span class=\"order-marker\">1.</span>\n      <span class=\"order-content\">\n        Child item\n      </span>\n    </div>\n";
         let html = feature.to_html(
             &element,
             child_html,
@@ -195,7 +195,7 @@ mod tests {
             0,
             &DocumentParameters::default(),
         );
-        let expected_prefix = "  <div class=\"item item-order\">\n    <span class=\"order-marker\">1.</span>\n    <span class=\"order-content\">\n      Parent order\n    </span>\n  </div>\n";
+        let expected_prefix = "  <div class=\"item order-item\">\n    <span class=\"order-marker\">1.</span>\n    <span class=\"order-content\">\n      Parent order\n    </span>\n  </div>\n";
         assert_eq!(html, format!("{expected_prefix}{child_html}"));
     }
 }

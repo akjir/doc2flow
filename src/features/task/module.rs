@@ -42,7 +42,7 @@ impl Feature for TaskFeature {
     /// let elem = DocumentElement::check_box_item(false, "Todo task");
     /// let params = DocumentParameters::default();
     /// let html = feature.to_html(&elem, "", 1, 0, &params);
-    /// assert!(html.contains("class=\"item item-check\""));
+    /// assert!(html.contains("class=\"item check-item\""));
     /// ```
     fn to_html(
         &self,
@@ -66,9 +66,9 @@ impl Feature for TaskFeature {
                 push_indent(&mut out, indent);
 
                 if *checked {
-                    out.push_str("<div class=\"item item-check checked\"");
+                    out.push_str("<div class=\"item check-item checked\"");
                 } else {
-                    out.push_str("<div class=\"item item-check\"");
+                    out.push_str("<div class=\"item check-item\"");
                 }
                 if depth > 0 {
                     let _ = write!(out, " style=\"--indent: {depth};\"");
@@ -127,7 +127,7 @@ mod tests {
         assert!(css.contains(".check-marker"));
         assert!(css.contains(".check-box"));
         assert!(css.contains(".check-content"));
-        assert!(css.contains(".item-check.checked"));
+        assert!(css.contains(".check-item.checked"));
     }
 
     #[test]
@@ -142,7 +142,7 @@ mod tests {
         let element = DocumentElement::check_box_item(false, "Pending task");
         let html = feature.to_html(&element, "", 1, 0, &DocumentParameters::default());
         let expected = concat!(
-            "  <div class=\"item item-check\">\n",
+            "  <div class=\"item check-item\">\n",
             "    <span class=\"check-marker\">\n",
             "      <input type=\"checkbox\" class=\"check-box\" />\n",
             "    </span>\n",
@@ -160,7 +160,7 @@ mod tests {
         let element = DocumentElement::check_box_item(true, "Completed task");
         let html = feature.to_html(&element, "", 1, 0, &DocumentParameters::default());
         let expected = concat!(
-            "  <div class=\"item item-check checked\">\n",
+            "  <div class=\"item check-item checked\">\n",
             "    <span class=\"check-marker\">\n",
             "      <input type=\"checkbox\" class=\"check-box\" checked />\n",
             "    </span>\n",
@@ -181,7 +181,7 @@ mod tests {
         );
         let html = feature.to_html(&element, "", 0, 0, &DocumentParameters::default());
         let expected = concat!(
-            "<div class=\"item item-check checked\">\n",
+            "<div class=\"item check-item checked\">\n",
             "  <span class=\"check-marker\">\n",
             "    <input type=\"checkbox\" class=\"check-box\" checked />\n",
             "  </span>\n",
@@ -199,7 +199,7 @@ mod tests {
         let element = DocumentElement::check_box_item(false, "Sub task");
         let html = feature.to_html(&element, "", 2, 1, &DocumentParameters::default());
         let expected = concat!(
-            "    <div class=\"item item-check\" style=\"--indent: 1;\">\n",
+            "    <div class=\"item check-item\" style=\"--indent: 1;\">\n",
             "      <span class=\"check-marker\">\n",
             "        <input type=\"checkbox\" class=\"check-box\" />\n",
             "      </span>\n",
@@ -213,7 +213,7 @@ mod tests {
         let checked = DocumentElement::check_box_item(true, "Checked sub task");
         let checked_html = feature.to_html(&checked, "", 2, 2, &DocumentParameters::default());
         let checked_expected = concat!(
-            "    <div class=\"item item-check checked\" style=\"--indent: 2;\">\n",
+            "    <div class=\"item check-item checked\" style=\"--indent: 2;\">\n",
             "      <span class=\"check-marker\">\n",
             "        <input type=\"checkbox\" class=\"check-box\" checked />\n",
             "      </span>\n",
@@ -229,7 +229,7 @@ mod tests {
     fn test_task_renders_with_children() {
         let feature = TaskFeature::new();
         let element = DocumentElement::check_box_item(false, "Parent task");
-        let child_html = "    <div class=\"item item-check\" style=\"--indent: 1;\">\n      <span class=\"check-marker\">\n        <input type=\"checkbox\" class=\"check-box\" />\n      </span>\n      <span class=\"check-content\">\n        Child task\n      </span>\n    </div>\n";
+        let child_html = "    <div class=\"item check-item\" style=\"--indent: 1;\">\n      <span class=\"check-marker\">\n        <input type=\"checkbox\" class=\"check-box\" />\n      </span>\n      <span class=\"check-content\">\n        Child task\n      </span>\n    </div>\n";
         let html = feature.to_html(
             &element,
             child_html,
@@ -237,7 +237,7 @@ mod tests {
             0,
             &DocumentParameters::default(),
         );
-        let expected_prefix = "  <div class=\"item item-check\">\n    <span class=\"check-marker\">\n      <input type=\"checkbox\" class=\"check-box\" />\n    </span>\n    <span class=\"check-content\">\n      Parent task\n    </span>\n  </div>\n";
+        let expected_prefix = "  <div class=\"item check-item\">\n    <span class=\"check-marker\">\n      <input type=\"checkbox\" class=\"check-box\" />\n    </span>\n    <span class=\"check-content\">\n      Parent task\n    </span>\n  </div>\n";
         assert_eq!(html, format!("{expected_prefix}{child_html}"));
     }
 }

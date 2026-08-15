@@ -77,7 +77,7 @@ Doc2Flow is a high-performance, single-binary CLI tool that compiles Markdown do
 ```
 - **Utility Subsystem (`src/core/utils/`):** Pure, domain-agnostic library modules. Direct `std::fs` calls outside `io.rs` are PROHIBITED.
 - **Core Engine (`src/core/`):** Houses the AST data model, zero-alloc Markdown token parser, builder assembler, and compiler-style error diagnostics.
-- **Vertical Feature Slices (`src/features/<feature>/`):** Isolated modules (`bullet_list`, `code`, `core`, `ordered_list`, `task`, `unknown`). Each slice encapsulates its HTML rendering, CSS (`<name>.css`), JS (`<name>.js`), and local constants.
+- **Vertical Feature Slices (`src/features/<feature>/`):** Isolated modules (`bullet_list`, `code`, `core`, `image`, `ordered_list`, `task`, `unknown`). Each slice encapsulates its HTML rendering, CSS (`<name>.css`), JS (`<name>.js`), and local constants.
 - **Conditional Asset Assembly:** If a feature is absent from a document, zero CSS rules and zero JS code for that feature SHALL be emitted into the output HTML.
 
 ---
@@ -115,10 +115,10 @@ The CLI executable MUST support the following grammar: `d2f [OPTIONS] [INPUT]`
   - `## Heading 2`: Collapsible section container (`.section`, `.sh`, `.sb`) with completion badges (`.sbadge`) and fold indicators (`.stog`).
   - `###` to `######`: Subheadings inside section bodies (`.subh`).
 - **Interactive Checklists & Tasks:**
-  - `- [ ]` / `- [x]`: Rendered as interactive checkboxes (`.item-check`) with dynamic section progress tracking.
+  - `- [ ]` / `- [x]`: Rendered as interactive checkboxes (`.check-item`) with dynamic section progress tracking.
 - **Hierarchical Lists:**
-  - `- `, `* `: Unordered bullet lists (`.item-bullet`) with recursive `--indent` levels.
-  - `1. `: Ordered numerical lists (`.item-order`) with automatic sequential position numbering.
+  - `- `, `* `: Unordered bullet lists (`.bullet-item`) with recursive `--indent` levels.
+  - `1. `: Ordered numerical lists (`.order-item`) with automatic sequential position numbering.
 - **Block Directives:**
   - `:::<name>` container blocks (e.g. `:::variables`) containing arbitrary child elements.
 - **Callout & Shoutout Panels:**

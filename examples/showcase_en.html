@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+223.452ddee.dev">
-  <meta name="version" content="0.9.4+223.452ddee.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+226.4d0467b.dev">
+  <meta name="version" content="0.9.4+226.4d0467b.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-15T17:33:29Z">
+  <meta name="dcterms.created" content="2026-08-15T21:07:57Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, bullet_list, code_block, image, ordered_list, shoutout, table, task">
   <title>Doc2Flow English Showcase</title>
@@ -279,7 +279,7 @@
     }
 
     .text-content,
-    .item-text {
+    .text-item {
       flex: 1;
       min-width: 0;
       font-family: var(--font-sans);
@@ -290,7 +290,7 @@
     }
 
     .text-content a,
-    .item-text a,
+    .text-item a,
     .bullet-content a,
     .order-content a,
     .check-content a {
@@ -300,7 +300,7 @@
     }
 
     .text-content a:hover,
-    .item-text a:hover,
+    .text-item a:hover,
     .bullet-content a:hover,
     .order-content a:hover,
     .check-content a:hover {
@@ -309,7 +309,7 @@
     }
 
     .text-content code,
-    .item-text code,
+    .text-item code,
     .bullet-content code,
     .order-content code,
     .check-content code {
@@ -324,12 +324,12 @@
     }
 
     .text-content strong,
-    .item-text strong,
+    .text-item strong,
     .bullet-content strong,
     .order-content strong,
     .check-content strong,
     .text-content b,
-    .item-text b,
+    .text-item b,
     .bullet-content b,
     .order-content b,
     .check-content b {
@@ -337,12 +337,12 @@
     }
 
     .text-content em,
-    .item-text em,
+    .text-item em,
     .bullet-content em,
     .order-content em,
     .check-content em,
     .text-content i,
-    .item-text i,
+    .text-item i,
     .bullet-content i,
     .order-content i,
     .check-content i {
@@ -350,12 +350,12 @@
     }
 
     .text-content s,
-    .item-text s,
+    .text-item s,
     .bullet-content s,
     .order-content s,
     .check-content s,
     .text-content del,
-    .item-text del,
+    .text-item del,
     .bullet-content del,
     .order-content del,
     .check-content del {
@@ -562,12 +562,12 @@
       .txt-content del,
       .txt-default del,
       .text-content s,
-      .item-text s,
+      .text-item s,
       .bullet-content s,
       .order-content s,
       .check-content s,
       .text-content del,
-      .item-text del,
+      .text-item del,
       .bullet-content del,
       .order-content del,
       .check-content del {
@@ -575,7 +575,7 @@
       }
 
       .text-content a,
-      .item-text a,
+      .text-item a,
       .bullet-content a,
       .order-content a,
       .check-content a {
@@ -584,7 +584,7 @@
       }
 
       .text-content code,
-      .item-text code,
+      .text-item code,
       .bullet-content code,
       .order-content code,
       .check-content code {
@@ -610,7 +610,7 @@
       }
 
       .text-content,
-      .item-text {
+      .text-item {
         color: #000000 !important;
       }
 
@@ -762,6 +762,107 @@
       }
     }
     /* ==========================================================================
+       Doc2Flow - Image Feature Styles (Image Items & Lightbox Modal)
+       ========================================================================== */
+
+    /* 1. Base Variables & Tokens */
+    :root {
+      /* Image Tokens */
+      --image-radius: 10px;
+      --image-border: var(--border-color, #d0d7de);
+      --image-fallback-bg: var(--bg-surface, #ffffff);
+      --image-fallback-max-width: 400px;
+      --image-lightbox-bg: rgba(0, 0, 0, 0.88);
+      --image-lightbox-z-index: 999;
+      --image-lightbox-shadow: 0 4px 32px rgba(0, 0, 0, 0.5);
+      --image-lightbox-close-color: #ffffff;
+      --image-lightbox-close-size: 32px;
+    }
+
+    /* 2. Image Component (image-*) */
+    .image-item {
+      background: transparent;
+      border: none;
+      margin: 12px 0;
+      padding: 0 10px;
+    }
+
+    .image-item img,
+    .doc-body img {
+      border: 1px solid var(--image-border);
+      border-radius: var(--image-radius);
+      cursor: zoom-in;
+      display: block;
+      height: auto;
+      margin: 0 auto;
+      max-width: 100%;
+    }
+
+    .image-fallback,
+    .image-item img.image-fallback,
+    .doc-body img.image-fallback {
+      background-color: var(--image-fallback-bg);
+      border: 1px dashed var(--image-border);
+      cursor: default;
+      max-width: var(--image-fallback-max-width);
+    }
+
+    .image-lightbox {
+      align-items: center;
+      background: var(--image-lightbox-bg);
+      cursor: zoom-out;
+      display: none;
+      inset: 0;
+      justify-content: center;
+      position: fixed;
+      z-index: var(--image-lightbox-z-index);
+    }
+
+    .image-lightbox.active,
+    .image-lightbox.image-lightbox-active {
+      display: flex;
+    }
+
+    .image-lightbox img,
+    .image-lightbox .image-lightbox-img {
+      border: none;
+      border-radius: var(--image-radius);
+      box-shadow: var(--image-lightbox-shadow);
+      margin: 0;
+      max-height: 94vh;
+      max-width: 94vw;
+    }
+
+    .image-lightbox-close,
+    .image-lightbox-x {
+      color: var(--image-lightbox-close-color);
+      cursor: pointer;
+      font-size: var(--image-lightbox-close-size);
+      font-weight: bold;
+      line-height: 1;
+      position: fixed;
+      right: 18px;
+      top: 14px;
+      user-select: none;
+    }
+
+    /* 3. Print Styles */
+    @media print {
+      .image-item img,
+      .doc-body img {
+        -webkit-print-color-adjust: exact;
+        cursor: default;
+        margin: 10px auto;
+        max-height: 8cm;
+        print-color-adjust: exact;
+        width: auto;
+      }
+
+      .image-lightbox {
+        display: none !important;
+      }
+    }
+    /* ==========================================================================
        Doc2Flow - Ordered List Feature Styles
        ========================================================================== */
 
@@ -856,7 +957,7 @@
       word-break: break-word;
     }
 
-    .item-check.checked .check-content {
+    .check-item.checked .check-content {
       text-decoration: line-through;
       color: var(--check-muted-color);
     }
@@ -872,7 +973,7 @@
         color: #000000 !important;
       }
 
-      .item-check.checked .check-content {
+      .check-item.checked .check-content {
         text-decoration: none !important;
         color: #000000 !important;
       }
@@ -886,12 +987,12 @@
     <section class="section" data-level="1">
       <h1>Part 1: System Setup & Preparation</h1>
       <div class="section-body">
-        <div class="item item-text">
+        <div class="item text-item">
           <span class="text-content">
             This top-level section describes the basic system configuration with <strong>rich text formatting</strong> such as <code>inline code</code>, <em>italic hints</em>, and <s>deprecated options</s>. Tasks within H1 sections do not display an individual badge indicator, but contribute fully to the overall progress tracking.
           </span>
         </div>
-        <div class="item item-check checked">
+        <div class="item check-item checked">
           <span class="check-marker">
             <input type="checkbox" class="check-box" checked />
           </span>
@@ -904,10 +1005,19 @@
     <section class="section" data-level="2">
       <h2>Section 1: Overview & Guidelines</h2>
       <div class="section-body">
-        <div class="item item-text">
+        <div class="item text-item">
           <span class="text-content">
             This is an arbitrary text paragraph in the section body demonstrating a comprehensive set of <strong>text formatting styles</strong>: <strong>Bold text</strong> for emphasis, <em>italic text</em> for subtle notes, <strong><em>bold and italic combinations</em></strong> for critical callouts, <code>inline code</code> like <code>systemctl restart service</code> for commands/variables, and <s>strikethrough text</s> for outdated specifications (e.g. <s>default port 80</s> replaced by <code>8080</code>).
           </span>
+        </div>
+        <div class="image-item">
+          <img src="../resources/images/example1.jpg" alt="Example System Architecture" />
+        </div>
+        <div class="image-item">
+          <img src="https://picsum.photos/600/300" alt="External Remote Image" />
+        </div>
+        <div class="image-item">
+          <img src="https://invalid-host-doc2flow.test/broken-image.jpg" alt="Broken External Image" />
         </div>
       </div>
     </section>
@@ -917,12 +1027,12 @@
         <section class="section" data-level="3">
           <h3>Setup & Preparation</h3>
           <div class="section-body">
-            <div class="item item-text">
+            <div class="item text-item">
               <span class="text-content">
                 This arbitrary text paragraph describes the preliminary setup steps with <strong>priority tiers</strong>, <code>file paths</code>, and <s>obsolete requirements</s> that must be fulfilled before marking individual items as completed.
               </span>
             </div>
-            <div class="item item-check">
+            <div class="item check-item">
               <span class="check-marker">
                 <input type="checkbox" class="check-box" />
               </span>
@@ -930,7 +1040,7 @@
                 <strong>Unpack hardware</strong> and verify components against serial <code>SN-2026-X</code>
               </span>
             </div>
-            <div class="item item-check" style="--indent: 1;">
+            <div class="item check-item" style="--indent: 1;">
               <span class="check-marker">
                 <input type="checkbox" class="check-box" />
               </span>
@@ -938,7 +1048,7 @@
                 Inspect accessory completeness (<em>manual</em>, <code>power cable</code>, <s>adapter v1</s>)
               </span>
             </div>
-            <div class="item item-check checked" style="--indent: 1;">
+            <div class="item check-item checked" style="--indent: 1;">
               <span class="check-marker">
                 <input type="checkbox" class="check-box" checked />
               </span>
@@ -946,7 +1056,7 @@
                 Check casing for transport damage (incl. <strong>visual inspection</strong> of ports)
               </span>
             </div>
-            <div class="item item-check">
+            <div class="item check-item">
               <span class="check-marker">
                 <input type="checkbox" class="check-box" />
               </span>
@@ -954,19 +1064,19 @@
                 <strong>Connect network and power supply</strong> (ensure <code>VLAN 10</code> assignment)
               </span>
             </div>
-            <div class="item item-order" style="--indent: 1;">
+            <div class="item order-item" style="--indent: 1;">
               <span class="order-marker">1.</span>
               <span class="order-content">
                 Plug primary network cable into <strong>Port 1</strong> (<code>eth0</code>, <code>10 Gbps</code>)
               </span>
             </div>
-            <div class="item item-order" style="--indent: 1;">
+            <div class="item order-item" style="--indent: 1;">
               <span class="order-marker">2.</span>
               <span class="order-content">
                 Plug redundant network cable into <strong>Port 2</strong> (<code>eth1</code>, <s>1 Gbps fallback</s> <code>10 Gbps</code>)
               </span>
             </div>
-            <div class="item item-check checked">
+            <div class="item check-item checked">
               <span class="check-marker">
                 <input type="checkbox" class="check-box" checked />
               </span>
@@ -974,17 +1084,20 @@
                 Initial power-on check completed (<strong>status LED</strong> shows <code>GREEN</code>)
               </span>
             </div>
-            <div class="item item-text">
+            <div class="item text-item">
               <span class="text-content">
                 <a href="https://example.com/docs">External System Documentation</a>
               </span>
+            </div>
+            <div class="image-item">
+              <img src="https://example.com/files/specification.pdf" alt="Download System Specification PDF" />
             </div>
           </div>
         </section>
         <section class="section" data-level="3">
           <h3>Software Configuration</h3>
           <div class="section-body">
-            <div class="item item-check">
+            <div class="item check-item">
               <span class="check-marker">
                 <input type="checkbox" class="check-box" />
               </span>
@@ -992,7 +1105,7 @@
                 Install latest system updates via <code>apt update &amp;&amp; apt upgrade -y</code> (verify <strong>kernel</strong> <code>6.x</code>)
               </span>
             </div>
-            <div class="item item-check">
+            <div class="item check-item">
               <span class="check-marker">
                 <input type="checkbox" class="check-box" />
               </span>
@@ -1000,13 +1113,16 @@
                 Configure firewall rules according to company policy (open port <code>{{PORT}}</code>, close <s>port 21 FTP</s>)
               </span>
             </div>
-            <div class="item item-check checked">
+            <div class="item check-item checked">
               <span class="check-marker">
                 <input type="checkbox" class="check-box" checked />
               </span>
               <span class="check-content">
                 Verify remote access service (<code>sshd</code> active on port <code>22</code>, <em>password auth</em> disabled)
               </span>
+            </div>
+            <div class="image-item">
+              <img src="../resources/images/example2.jpg" alt="Software Configuration Overview" />
             </div>
           </div>
         </section>
@@ -1023,7 +1139,7 @@
         <section class="section" data-level="3">
           <h3>System Registry Settings</h3>
           <div class="section-body">
-            <div class="item item-text">
+            <div class="item text-item">
               <span class="text-content">
                 The following configuration snippet must be applied to disable automatic updates (set <code>DisableWindowsUpdateAccess=1</code>, remove <s>legacy key</s>):
               </span>
@@ -1042,7 +1158,7 @@
         <section class="section" data-level="3">
           <h3>System Components & Specifications</h3>
           <div class="section-body">
-            <div class="item item-text">
+            <div class="item text-item">
               <span class="text-content">
                 The table below outlines the hardware specifications of the installed system components with <strong>model details</strong>, <code>interfaces</code>, and status indicators:
               </span>
@@ -1054,31 +1170,31 @@
     <section class="section" data-level="2">
       <h2>Section 4: Informational Lists</h2>
       <div class="section-body">
-        <div class="item item-bullet">
+        <div class="item bullet-item">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
             <strong>Main task &amp; system monitoring</strong> (standard operation <code>system-daemon</code>)
           </span>
         </div>
-        <div class="item item-order" style="--indent: 1;">
+        <div class="item order-item" style="--indent: 1;">
           <span class="order-marker">1.</span>
           <span class="order-content">
             Sub-item A 1: Query service status with <code>systemctl is-active</code> (<strong>status:</strong> <em>active</em>)
           </span>
         </div>
-        <div class="item item-order" style="--indent: 1;">
+        <div class="item order-item" style="--indent: 1;">
           <span class="order-marker">2.</span>
           <span class="order-content">
             Sub-item A 2: Analyze error log <code>/var/log/syslog</code> (ignore <s>legacy logfile</s>)
           </span>
         </div>
-        <div class="item item-bullet">
+        <div class="item bullet-item">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
             <strong>Procedure for maintenance tasks</strong> (security classification <code>Level 2</code>)
           </span>
         </div>
-        <div class="item item-check" style="--indent: 1;">
+        <div class="item check-item" style="--indent: 1;">
           <span class="check-marker">
             <input type="checkbox" class="check-box" />
           </span>
@@ -1086,19 +1202,19 @@
             Prepare test run with parameters <code>--dry-run</code> and <code>--verbose</code>
           </span>
         </div>
-        <div class="item item-bullet" style="--indent: 2;">
+        <div class="item bullet-item" style="--indent: 2;">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
             Detailed parameter check <code>X</code> (<em>threshold</em> <code>&gt; 95%</code>)
           </span>
         </div>
-        <div class="item item-bullet" style="--indent: 2;">
+        <div class="item bullet-item" style="--indent: 2;">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
             Detailed parameter check <code>Y</code> (<s>standard timeout 30s</s> now <code>60s</code>)
           </span>
         </div>
-        <div class="item item-check checked" style="--indent: 1;">
+        <div class="item check-item checked" style="--indent: 1;">
           <span class="check-marker">
             <input type="checkbox" class="check-box" checked />
           </span>
@@ -1106,49 +1222,55 @@
             Approval by <strong>system administrator</strong> (authorized via <code>signature token</code>)
           </span>
         </div>
-        <div class="item item-order">
+        <div class="item order-item">
           <span class="order-marker">1.</span>
           <span class="order-content">
             Sequential main step 1: <strong>Initialization</strong> using <code>init --force</code>
           </span>
         </div>
-        <div class="item item-bullet" style="--indent: 1;">
+        <div class="item bullet-item" style="--indent: 1;">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
             Subordinate verification step 1.1: Validate <code>config.json</code> (<em>schema v2</em>, <s>v1 deprecated</s>)
           </span>
         </div>
-        <div class="item item-bullet" style="--indent: 1;">
+        <div class="item bullet-item" style="--indent: 1;">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
             Subordinate verification step 1.2: Verify certificate chain (<code>cert.pem</code>)
           </span>
         </div>
-        <div class="item item-order">
+        <div class="item order-item">
           <span class="order-marker">2.</span>
           <span class="order-content">
             Sequential main step 2: <strong>Data transfer</strong> execution
           </span>
         </div>
-        <div class="item item-order" style="--indent: 1;">
+        <div class="item order-item" style="--indent: 1;">
           <span class="order-marker">1.</span>
           <span class="order-content">
             Detailed sub-procedure 2.a: Establish connection to <code>{{SERVER_NAME}}</code>
           </span>
         </div>
-        <div class="item item-order" style="--indent: 1;">
+        <div class="item order-item" style="--indent: 1;">
           <span class="order-marker">2.</span>
           <span class="order-content">
             Detailed sub-procedure 2.b: Perform data synchronization via port <code>{{PORT}}</code> (<em>encrypted</em>)
           </span>
         </div>
-        <div class="item item-order">
+        <div class="item order-item">
           <span class="order-marker">3.</span>
           <span class="order-content">
             Sequential main step 3: <strong>Finalization &amp; verification</strong> (archive audit log <code>audit.log</code>)
           </span>
         </div>
         <hr />
+        <div class="image-item">
+          <img src="../resources/images/example3.jpg" alt="System Information Overview" />
+        </div>
+        <div class="image-item">
+          <img src="../resources/images/example4.png" alt="White Background Test Image" />
+        </div>
       </div>
     </section>
     <section class="section" data-level="1">
@@ -1271,6 +1393,137 @@
           });
         } else {
           loadState();
+        }
+      }
+    })();
+    (() => {
+      const PLACEHOLDER_SVG_URI =
+        'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMjAwIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIj48cmVjdCB3aWR0aD0iMzk4IiBoZWlnaHQ9IjE5OCIgeD0iMSIgeT0iMSIgcng9IjgiIGZpbGw9IiNmOGZhZmMiIHN0cm9rZT0iI2NiZDVlMSIgc3Ryb2tlLWRhc2hhcnJheT0iNiA0Ii8+PGcgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIj48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iNjAiIHg9IjE2MCIgeT0iNTIiIHJ4PSI2IiBmaWxsPSIjZmZmIiBzdHJva2U9IiM5NGEzYjgiIHN0cm9rZS13aWR0aD0iMiIvPjxjaXJjbGUgY3g9IjE4MCIgY3k9IjcxIiByPSI1IiBmaWxsPSIjY2JkNWUxIi8+PHBhdGggZD0ibTE2NSAxMDcgMTgtMjAgMTggMTYgMTItMTAgMjIgMTQiIHN0cm9rZT0iIzk0YTNiOCIgc3Ryb2tlLXdpZHRoPSIyIi8+PGNpcmNsZSBjeD0iMjI1IiBjeT0iNjIiIHI9IjkiIGZpbGw9IiNmMWY1ZjkiIHN0cm9rZT0iIzk0YTNiOCIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48cGF0aCBkPSJtMjIxIDY2IDgtOCIgc3Ryb2tlPSIjZTExZDQ4IiBzdHJva2Utd2lkdGg9IjIiLz48L2c+PHRleHQgeD0iMjAwIiB5PSIxNDIiIGZpbGw9IiM2NDc0OGIiIGZvbnQtZmFtaWx5PSItYXBwbGUtc3lzdGVtLEJsaW5rTWFjU3lzdGVtRm9udCwnU2Vnb2UgVUknLFJvYm90byxzYW5zLXNlcmlmIiBmb250LXNpemU9IjEzIiBmb250LXdlaWdodD0iNjAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5JbWFnZSB1bmF2YWlsYWJsZTwvdGV4dD48L3N2Zz4=';
+
+      const handleLightboxKeydown = (e) => {
+        if (e.key === 'Escape') {
+          closeLightbox();
+        }
+      };
+
+      const getOrCreateLightbox = () => {
+        let lightbox =
+          document.getElementById('image-lightbox') ||
+          document.getElementById('lightbox') ||
+          document.querySelector('.image-lightbox');
+
+        if (!lightbox) {
+          lightbox = document.createElement('div');
+          lightbox.id = 'image-lightbox';
+          lightbox.className = 'image-lightbox';
+          lightbox.innerHTML =
+            '<span class="image-lightbox-close">&times;</span><img id="image-lightbox-img" class="image-lightbox-img" src="" alt="" />';
+          document.body.appendChild(lightbox);
+        }
+        return lightbox;
+      };
+
+      const openLightbox = (imgSrc) => {
+        const lightbox = getOrCreateLightbox();
+        const lbImg =
+          lightbox.querySelector('#image-lightbox-img') ||
+          lightbox.querySelector('#lb-img') ||
+          lightbox.querySelector('.image-lightbox-img') ||
+          lightbox.querySelector('img');
+
+        if (lbImg && lightbox) {
+          lbImg.src = imgSrc;
+          lightbox.classList.add('active');
+          document.addEventListener('keydown', handleLightboxKeydown);
+        }
+      };
+
+      const closeLightbox = () => {
+        const lightbox =
+          document.getElementById('image-lightbox') ||
+          document.getElementById('lightbox') ||
+          document.querySelector('.image-lightbox');
+
+        if (lightbox) {
+          lightbox.classList.remove('active');
+          lightbox.classList.remove('image-lightbox-active');
+        }
+        document.removeEventListener('keydown', handleLightboxKeydown);
+      };
+
+      const applyImageFallback = (img) => {
+        if (img.dataset.d2fFallback === 'true') {
+          return;
+        }
+        img.dataset.d2fFallback = 'true';
+        img.classList.add('image-fallback');
+        img.classList.add('img-fallback');
+        img.src = PLACEHOLDER_SVG_URI;
+      };
+
+      const handleImageError = (e) => {
+        const { target } = e;
+        if (target instanceof HTMLImageElement) {
+          applyImageFallback(target);
+        }
+      };
+
+      const handleDocumentClick = (e) => {
+        const { target } = e;
+        if (!(target instanceof Element)) {
+          return;
+        }
+
+        const lightbox = target.closest('#image-lightbox, #lightbox, .image-lightbox');
+        if (lightbox) {
+          const lbImg = target.closest('#image-lightbox-img, #lb-img, .image-lightbox-img');
+          if (!lbImg) {
+            closeLightbox();
+          }
+          return;
+        }
+
+        const imgEl = target.closest('.image-item img, .doc-body img, .img-item img');
+        if (imgEl instanceof HTMLImageElement) {
+          if (
+            imgEl.classList.contains('image-fallback') ||
+            imgEl.classList.contains('img-fallback') ||
+            imgEl.dataset.d2fFallback === 'true'
+          ) {
+            return;
+          }
+          e.stopPropagation();
+          openLightbox(imgEl.src);
+        }
+      };
+
+      const checkExistingImages = () => {
+        const images = document.querySelectorAll('.image-item img, .doc-body img, .img-item img');
+        images.forEach((img) => {
+          if (img.complete && img.naturalWidth === 0 && img.src !== '') {
+            applyImageFallback(img);
+          }
+        });
+      };
+
+      window.d2f = window.d2f || {};
+      window.d2f.image = {
+        open: openLightbox,
+        close: closeLightbox,
+        fallback: applyImageFallback,
+      };
+
+      const init = () => {
+        document.addEventListener('click', handleDocumentClick);
+        document.addEventListener('error', handleImageError, true);
+        checkExistingImages();
+      };
+
+      if (typeof document !== 'undefined') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', init);
+        } else {
+          init();
         }
       }
     })();

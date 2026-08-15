@@ -42,7 +42,7 @@ impl Feature for BulletListFeature {
     /// let elem = DocumentElement::bullet_list_item("List item");
     /// let params = DocumentParameters::default();
     /// let html = feature.to_html(&elem, "", 1, 0, &params);
-    /// assert!(html.contains("class=\"item item-bullet\""));
+    /// assert!(html.contains("class=\"item bullet-item\""));
     /// ```
     fn to_html(
         &self,
@@ -62,7 +62,7 @@ impl Feature for BulletListFeature {
                     content_len + _content.len() + spaces * 2 + inner_spaces * 2 + 128,
                 );
                 push_indent(&mut out, indent);
-                out.push_str("<div class=\"item item-bullet\"");
+                out.push_str("<div class=\"item bullet-item\"");
                 if depth > 0 {
                     let _ = write!(out, " style=\"--indent: {depth};\"");
                 }
@@ -136,7 +136,7 @@ mod tests {
         );
         let html = feature.to_html(&element, "", 0, 0, &DocumentParameters::default());
         let expected = concat!(
-            "<div class=\"item item-bullet\">\n",
+            "<div class=\"item bullet-item\">\n",
             "  <span class=\"bullet-marker\">&bull;</span>\n",
             "  <span class=\"bullet-content\">\n",
             "    Item with <strong>bold</strong>, <em>italic</em>, <s>strike</s>, <code>code</code>, and <a href=\"https://example.com\">link</a> span\n",
@@ -152,7 +152,7 @@ mod tests {
         let element = DocumentElement::bullet_list_item("Nested level 2 item");
         let html = feature.to_html(&element, "", 2, 0, &DocumentParameters::default());
         let expected = concat!(
-            "    <div class=\"item item-bullet\">\n",
+            "    <div class=\"item bullet-item\">\n",
             "      <span class=\"bullet-marker\">&bull;</span>\n",
             "      <span class=\"bullet-content\">\n",
             "        Nested level 2 item\n",
@@ -168,7 +168,7 @@ mod tests {
         let element = DocumentElement::bullet_list_item("Indented child item");
         let html = feature.to_html(&element, "", 2, 1, &DocumentParameters::default());
         let expected = concat!(
-            "    <div class=\"item item-bullet\" style=\"--indent: 1;\">\n",
+            "    <div class=\"item bullet-item\" style=\"--indent: 1;\">\n",
             "      <span class=\"bullet-marker\">&bull;</span>\n",
             "      <span class=\"bullet-content\">\n",
             "        Indented child item\n",
@@ -182,7 +182,7 @@ mod tests {
     fn test_bullet_list_renders_with_children() {
         let feature = BulletListFeature::new();
         let element = DocumentElement::bullet_list_item("Parent item");
-        let child_html = "    <div class=\"item item-bullet\" style=\"--indent: 1;\">\n      <span class=\"bullet-marker\">&bull;</span>\n      <span class=\"bullet-content\">\n        Child item\n      </span>\n    </div>\n";
+        let child_html = "    <div class=\"item bullet-item\" style=\"--indent: 1;\">\n      <span class=\"bullet-marker\">&bull;</span>\n      <span class=\"bullet-content\">\n        Child item\n      </span>\n    </div>\n";
         let html = feature.to_html(
             &element,
             child_html,
@@ -190,7 +190,7 @@ mod tests {
             0,
             &DocumentParameters::default(),
         );
-        let expected_prefix = "  <div class=\"item item-bullet\">\n    <span class=\"bullet-marker\">&bull;</span>\n    <span class=\"bullet-content\">\n      Parent item\n    </span>\n  </div>\n";
+        let expected_prefix = "  <div class=\"item bullet-item\">\n    <span class=\"bullet-marker\">&bull;</span>\n    <span class=\"bullet-content\">\n      Parent item\n    </span>\n  </div>\n";
         assert_eq!(html, format!("{expected_prefix}{child_html}"));
     }
 }

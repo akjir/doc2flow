@@ -9,6 +9,9 @@ pub mod code;
 #[path = "core/module.rs"]
 pub mod core;
 
+#[path = "image/module.rs"]
+pub mod image;
+
 #[path = "ordered_list/module.rs"]
 pub mod ordered_list;
 
@@ -22,6 +25,7 @@ use crate::core::feature::Feature;
 pub use bullet_list::BulletListFeature;
 pub use code::CodeFeature;
 pub use core::CoreFeature;
+pub use image::ImageFeature;
 pub use ordered_list::OrderedListFeature;
 pub use task::TaskFeature;
 pub use unknown::UnknownFeature;
@@ -34,6 +38,9 @@ static CODE_FEATURE: CodeFeature = CodeFeature;
 
 /// Static instance of the core feature to avoid runtime allocations.
 static CORE_FEATURE: CoreFeature = CoreFeature;
+
+/// Static instance of the image feature to avoid runtime allocations.
+static IMAGE_FEATURE: ImageFeature = ImageFeature;
 
 /// Static instance of the ordered list feature to avoid runtime allocations.
 static ORDERED_LIST_FEATURE: OrderedListFeature = OrderedListFeature;
@@ -55,6 +62,8 @@ static UNKNOWN_FEATURE: UnknownFeature = UnknownFeature;
 /// assert!(get_feature("code").is_some());
 /// assert!(get_feature("code_block").is_some());
 /// assert!(get_feature("core").is_some());
+/// assert!(get_feature("image").is_some());
+/// assert!(get_feature("images").is_some());
 /// assert!(get_feature("ordered_list").is_some());
 /// assert!(get_feature("task").is_some());
 /// assert!(get_feature("unknown").is_some());
@@ -65,6 +74,7 @@ pub fn get_feature(name: &str) -> Option<&'static dyn Feature> {
         "bullet_list" => Some(&BULLET_LIST_FEATURE),
         "code" | "code_block" => Some(&CODE_FEATURE),
         "core" => Some(&CORE_FEATURE),
+        "image" | "images" => Some(&IMAGE_FEATURE),
         "ordered_list" => Some(&ORDERED_LIST_FEATURE),
         "task" => Some(&TASK_FEATURE),
         "unknown" => Some(&UNKNOWN_FEATURE),
@@ -83,7 +93,7 @@ mod tests {
         let element = DocumentElement::bullet_list_item("Bullet item");
         assert_eq!(
             bullet_feature.to_html(&element, "", 1, 0, &DocumentParameters::default()),
-            "  <div class=\"item item-bullet\">\n    <span class=\"bullet-marker\">&bull;</span>\n    <span class=\"bullet-content\">\n      Bullet item\n    </span>\n  </div>\n"
+            "  <div class=\"item bullet-item\">\n    <span class=\"bullet-marker\">&bull;</span>\n    <span class=\"bullet-content\">\n      Bullet item\n    </span>\n  </div>\n"
         );
     }
 
@@ -93,13 +103,13 @@ mod tests {
         let unchecked = DocumentElement::check_box_item(false, "Pending task");
         assert_eq!(
             task_feature.to_html(&unchecked, "", 1, 0, &DocumentParameters::default()),
-            "  <div class=\"item item-check\">\n    <span class=\"check-marker\">\n      <input type=\"checkbox\" class=\"check-box\" />\n    </span>\n    <span class=\"check-content\">\n      Pending task\n    </span>\n  </div>\n"
+            "  <div class=\"item check-item\">\n    <span class=\"check-marker\">\n      <input type=\"checkbox\" class=\"check-box\" />\n    </span>\n    <span class=\"check-content\">\n      Pending task\n    </span>\n  </div>\n"
         );
 
         let checked = DocumentElement::check_box_item(true, "Done task");
         assert_eq!(
             task_feature.to_html(&checked, "", 1, 0, &DocumentParameters::default()),
-            "  <div class=\"item item-check checked\">\n    <span class=\"check-marker\">\n      <input type=\"checkbox\" class=\"check-box\" checked />\n    </span>\n    <span class=\"check-content\">\n      Done task\n    </span>\n  </div>\n"
+            "  <div class=\"item check-item checked\">\n    <span class=\"check-marker\">\n      <input type=\"checkbox\" class=\"check-box\" checked />\n    </span>\n    <span class=\"check-content\">\n      Done task\n    </span>\n  </div>\n"
         );
     }
 
@@ -125,7 +135,23 @@ mod tests {
         let element = DocumentElement::text("Hello");
         assert_eq!(
             core_feature.to_html(&element, "", 1, 0, &DocumentParameters::default()),
-            "  <div class=\"item item-text\">\n    <span class=\"text-content\">\n      Hello\n    </span>\n  </div>\n"
+            "  <div class=\"item text-item\">\n    <span class=\"text-content\">\n      Hello\n    </span>\n  </div>\n"
+        );
+    }
+
+    #[test]
+    fn test_get_feature_returns_image() {
+        let image_feature = get_feature("image").expect("image feature should exist");
+        let element = DocumentElement::image("Alt", "pic.png");
+        assert_eq!(
+            image_feature.to_html(&element, "", 1, 0, &DocumentParameters::default()),
+            "  <div class=\"image-item\">\n    <img src=\"pic.png\" alt=\"Alt\" />\n  </div>\n"
+        );
+
+        let images_alias_feature = get_feature("images").expect("images alias should exist");
+        assert_eq!(
+            images_alias_feature.to_html(&element, "", 1, 0, &DocumentParameters::default()),
+            "  <div class=\"image-item\">\n    <img src=\"pic.png\" alt=\"Alt\" />\n  </div>\n"
         );
     }
 
@@ -136,7 +162,7 @@ mod tests {
         let element = DocumentElement::ordered_list_item(1, "Ordered item");
         assert_eq!(
             ordered_feature.to_html(&element, "", 1, 0, &DocumentParameters::default()),
-            "  <div class=\"item item-order\">\n    <span class=\"order-marker\">1.</span>\n    <span class=\"order-content\">\n      Ordered item\n    </span>\n  </div>\n"
+            "  <div class=\"item order-item\">\n    <span class=\"order-marker\">1.</span>\n    <span class=\"order-content\">\n      Ordered item\n    </span>\n  </div>\n"
         );
     }
 

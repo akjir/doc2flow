@@ -265,7 +265,7 @@ hr {
 }
 
 .text-content,
-.item-text {
+.text-item {
   flex: 1;
   min-width: 0;
   font-family: var(--font-sans);
@@ -276,7 +276,7 @@ hr {
 }
 
 .text-content a,
-.item-text a,
+.text-item a,
 .bullet-content a,
 .order-content a,
 .check-content a {
@@ -286,7 +286,7 @@ hr {
 }
 
 .text-content a:hover,
-.item-text a:hover,
+.text-item a:hover,
 .bullet-content a:hover,
 .order-content a:hover,
 .check-content a:hover {
@@ -295,7 +295,7 @@ hr {
 }
 
 .text-content code,
-.item-text code,
+.text-item code,
 .bullet-content code,
 .order-content code,
 .check-content code {
@@ -310,12 +310,12 @@ hr {
 }
 
 .text-content strong,
-.item-text strong,
+.text-item strong,
 .bullet-content strong,
 .order-content strong,
 .check-content strong,
 .text-content b,
-.item-text b,
+.text-item b,
 .bullet-content b,
 .order-content b,
 .check-content b {
@@ -323,12 +323,12 @@ hr {
 }
 
 .text-content em,
-.item-text em,
+.text-item em,
 .bullet-content em,
 .order-content em,
 .check-content em,
 .text-content i,
-.item-text i,
+.text-item i,
 .bullet-content i,
 .order-content i,
 .check-content i {
@@ -336,12 +336,12 @@ hr {
 }
 
 .text-content s,
-.item-text s,
+.text-item s,
 .bullet-content s,
 .order-content s,
 .check-content s,
 .text-content del,
-.item-text del,
+.text-item del,
 .bullet-content del,
 .order-content del,
 .check-content del {
@@ -548,12 +548,12 @@ hr {
   .txt-content del,
   .txt-default del,
   .text-content s,
-  .item-text s,
+  .text-item s,
   .bullet-content s,
   .order-content s,
   .check-content s,
   .text-content del,
-  .item-text del,
+  .text-item del,
   .bullet-content del,
   .order-content del,
   .check-content del {
@@ -561,7 +561,7 @@ hr {
   }
 
   .text-content a,
-  .item-text a,
+  .text-item a,
   .bullet-content a,
   .order-content a,
   .check-content a {
@@ -570,7 +570,7 @@ hr {
   }
 
   .text-content code,
-  .item-text code,
+  .text-item code,
   .bullet-content code,
   .order-content code,
   .check-content code {
@@ -596,7 +596,7 @@ hr {
   }
 
   .text-content,
-  .item-text {
+  .text-item {
     color: #000000 !important;
   }
 

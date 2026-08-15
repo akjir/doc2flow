@@ -136,7 +136,7 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
 /// let element = DocumentElement::text("Hello world");
 /// let params = DocumentParameters::default();
 /// let html = render_element(&element, 1, &params);
-/// assert_eq!(html, "  <div class=\"item item-text\">\n    <span class=\"text-content\">\n      Hello world\n    </span>\n  </div>\n");
+/// assert_eq!(html, "  <div class=\"item text-item\">\n    <span class=\"text-content\">\n      Hello world\n    </span>\n  </div>\n");
 /// ```
 pub fn render_element(
     element: &DocumentElement,
@@ -222,7 +222,7 @@ mod tests {
         assert!(content.contains("<html lang=\"en\">"));
         assert!(content.contains("<meta name=\"features\" content=\"core\">"));
         assert!(
-            content.contains("    <div class=\"item item-text\">\n      <span class=\"text-content\">\n        Document body text\n      </span>\n    </div>")
+            content.contains("    <div class=\"item text-item\">\n      <span class=\"text-content\">\n        Document body text\n      </span>\n    </div>")
         );
         assert!(!content.contains("{{CONTENT}}"));
         assert!(!content.contains("{{APP_VERSION}}"));
@@ -360,7 +360,7 @@ mod tests {
         let text = DocumentElement::text("Sample paragraph text");
         assert_eq!(
             render_element(&text, 1, &DocumentParameters::default()),
-            "  <div class=\"item item-text\">\n    <span class=\"text-content\">\n      Sample paragraph text\n    </span>\n  </div>\n"
+            "  <div class=\"item text-item\">\n    <span class=\"text-content\">\n      Sample paragraph text\n    </span>\n  </div>\n"
         );
     }
 
@@ -387,12 +387,12 @@ mod tests {
             "  <section class=\"section\" data-level=\"2\">\n",
             "    <h2>Details</h2>\n",
             "    <div class=\"section-body\">\n",
-            "      <div class=\"item item-text\">\n",
+            "      <div class=\"item text-item\">\n",
             "        <span class=\"text-content\">\n",
             "          First paragraph\n",
             "        </span>\n",
             "      </div>\n",
-            "      <div class=\"item item-text\">\n",
+            "      <div class=\"item text-item\">\n",
             "        <span class=\"text-content\">\n",
             "          Second paragraph\n",
             "        </span>\n",
@@ -418,7 +418,7 @@ mod tests {
             "      <section class=\"section\" data-level=\"3\">\n",
             "        <h3>Inner</h3>\n",
             "        <div class=\"section-body\">\n",
-            "          <div class=\"item item-text\">\n",
+            "          <div class=\"item text-item\">\n",
             "            <span class=\"text-content\">\n",
             "              Inner content\n",
             "            </span>\n",
@@ -474,9 +474,9 @@ mod tests {
 
         let html = render_element(&bullet, 1, &DocumentParameters::default());
         assert!(html.contains(
-            "<div class=\"item item-bullet\">\n    <span class=\"bullet-marker\">&bull;</span>"
+            "<div class=\"item bullet-item\">\n    <span class=\"bullet-marker\">&bull;</span>"
         ));
-        assert!(html.contains("<div class=\"item item-bullet\" style=\"--indent: 1;\">"));
+        assert!(html.contains("<div class=\"item bullet-item\" style=\"--indent: 1;\">"));
         assert!(html.contains("Parent bullet"));
         assert!(html.contains("Child bullet"));
     }
@@ -488,8 +488,8 @@ mod tests {
         check.push_child(child).unwrap();
 
         let html = render_element(&check, 1, &DocumentParameters::default());
-        assert!(html.contains("<div class=\"item item-check checked\">"));
-        assert!(html.contains("<div class=\"item item-check\" style=\"--indent: 1;\">"));
+        assert!(html.contains("<div class=\"item check-item checked\">"));
+        assert!(html.contains("<div class=\"item check-item\" style=\"--indent: 1;\">"));
         assert!(html.contains("<input type=\"checkbox\" class=\"check-box\" checked />"));
         assert!(html.contains("<input type=\"checkbox\" class=\"check-box\" />"));
         assert!(html.contains("Done task"));
@@ -504,18 +504,30 @@ mod tests {
 
         let html = render_element(&order, 1, &DocumentParameters::default());
         assert!(html.contains(
-            "<div class=\"item item-order\">\n    <span class=\"order-marker\">1.</span>"
+            "<div class=\"item order-item\">\n    <span class=\"order-marker\">1.</span>"
         ));
-        assert!(html.contains("<div class=\"item item-order\" style=\"--indent: 1;\">"));
+        assert!(html.contains("<div class=\"item order-item\" style=\"--indent: 1;\">"));
         assert!(html.contains("First step"));
         assert!(html.contains("Sub step"));
     }
 
     #[test]
-    fn test_render_element_unregistered_feature_fallback() {
-        let image = DocumentElement::image("alt", "test.png");
+    fn test_render_element_image() {
+        let image = DocumentElement::image("alt text", "test.png");
         assert_eq!(
             render_element(&image, 1, &DocumentParameters::default()),
+            "  <div class=\"image-item\">\n    <img src=\"test.png\" alt=\"alt text\" />\n  </div>\n"
+        );
+    }
+
+    #[test]
+    fn test_render_element_unregistered_feature_fallback() {
+        let shoutout = DocumentElement::shoutout(
+            crate::core::document::ShoutoutElementKind::Note,
+            "Unregistered shoutout",
+        );
+        assert_eq!(
+            render_element(&shoutout, 1, &DocumentParameters::default()),
             ""
         );
 
@@ -525,7 +537,7 @@ mod tests {
         );
         assert_eq!(
             render_element(&directive, 1, &DocumentParameters::default()),
-            "    <div class=\"item item-text\">\n      <span class=\"text-content\">\n        Directive child\n      </span>\n    </div>\n"
+            "    <div class=\"item text-item\">\n      <span class=\"text-content\">\n        Directive child\n      </span>\n    </div>\n"
         );
     }
 }

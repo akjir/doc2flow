@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+223.452ddee.dev">
-  <meta name="version" content="0.9.4+223.452ddee.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+226.4d0467b.dev">
+  <meta name="version" content="0.9.4+226.4d0467b.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-15T17:33:29Z">
+  <meta name="dcterms.created" content="2026-08-15T21:07:57Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, code_block, table">
   <title>Microservice Deployment & Infrastructure Setup</title>
@@ -279,7 +279,7 @@
     }
 
     .text-content,
-    .item-text {
+    .text-item {
       flex: 1;
       min-width: 0;
       font-family: var(--font-sans);
@@ -290,7 +290,7 @@
     }
 
     .text-content a,
-    .item-text a,
+    .text-item a,
     .bullet-content a,
     .order-content a,
     .check-content a {
@@ -300,7 +300,7 @@
     }
 
     .text-content a:hover,
-    .item-text a:hover,
+    .text-item a:hover,
     .bullet-content a:hover,
     .order-content a:hover,
     .check-content a:hover {
@@ -309,7 +309,7 @@
     }
 
     .text-content code,
-    .item-text code,
+    .text-item code,
     .bullet-content code,
     .order-content code,
     .check-content code {
@@ -324,12 +324,12 @@
     }
 
     .text-content strong,
-    .item-text strong,
+    .text-item strong,
     .bullet-content strong,
     .order-content strong,
     .check-content strong,
     .text-content b,
-    .item-text b,
+    .text-item b,
     .bullet-content b,
     .order-content b,
     .check-content b {
@@ -337,12 +337,12 @@
     }
 
     .text-content em,
-    .item-text em,
+    .text-item em,
     .bullet-content em,
     .order-content em,
     .check-content em,
     .text-content i,
-    .item-text i,
+    .text-item i,
     .bullet-content i,
     .order-content i,
     .check-content i {
@@ -350,12 +350,12 @@
     }
 
     .text-content s,
-    .item-text s,
+    .text-item s,
     .bullet-content s,
     .order-content s,
     .check-content s,
     .text-content del,
-    .item-text del,
+    .text-item del,
     .bullet-content del,
     .order-content del,
     .check-content del {
@@ -562,12 +562,12 @@
       .txt-content del,
       .txt-default del,
       .text-content s,
-      .item-text s,
+      .text-item s,
       .bullet-content s,
       .order-content s,
       .check-content s,
       .text-content del,
-      .item-text del,
+      .text-item del,
       .bullet-content del,
       .order-content del,
       .check-content del {
@@ -575,7 +575,7 @@
       }
 
       .text-content a,
-      .item-text a,
+      .text-item a,
       .bullet-content a,
       .order-content a,
       .check-content a {
@@ -584,7 +584,7 @@
       }
 
       .text-content code,
-      .item-text code,
+      .text-item code,
       .bullet-content code,
       .order-content code,
       .check-content code {
@@ -610,7 +610,7 @@
       }
 
       .text-content,
-      .item-text {
+      .text-item {
         color: #000000 !important;
       }
 
@@ -720,7 +720,7 @@
     <section class="section" data-level="1">
       <h1>Microservice Deployment Procedure</h1>
       <div class="section-body">
-        <div class="item item-text">
+        <div class="item text-item">
           <span class="text-content">
             This document outlines the automated deployment workflow for our cloud microservice stack. Dynamic variable substitution replaces placeholders matching <code>{{VARIABLE_NAME}}</code> when copying code snippets to your clipboard.
           </span>
@@ -728,7 +728,7 @@
         <section class="section" data-level="3">
           <h3>Initial Environment Verification</h3>
           <div class="section-body">
-            <div class="item item-text">
+            <div class="item text-item">
               <span class="text-content">
                 Verify connectivity to the primary application server before beginning deployment:
               </span>
@@ -741,13 +741,13 @@
     <section class="section" data-level="2">
       <h2>Database Initialization & Migration</h2>
       <div class="section-body">
-        <div class="item item-text">
+        <div class="item text-item">
           <span class="text-content">
             Check the readiness of the primary database host:
           </span>
         </div>
         <pre class="code-default"><code>pg_isready -h {{DB_HOST}} -p 5432 -U postgres</code></pre>
-        <div class="item item-text">
+        <div class="item text-item">
           <span class="text-content">
             Configure the application database instance environment settings:
           </span>
@@ -758,13 +758,13 @@
     <section class="section" data-level="2">
       <h2>Service Container Deployment</h2>
       <div class="section-body">
-        <div class="item item-text">
+        <div class="item text-item">
           <span class="text-content">
             Spin up the API microservice container on the designated port:
           </span>
         </div>
         <pre class="code-default"><code>docker run -d --name api-service -e ENV={{APP_ENV}} -p {{PORT}}:8080 acme/api-service:latest</code></pre>
-        <div class="item item-text">
+        <div class="item text-item">
           <span class="text-content">
             Perform an automated health check against the newly deployed service:
           </span>

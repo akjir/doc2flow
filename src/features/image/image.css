@@ -1,0 +1,101 @@
+/* ==========================================================================
+   Doc2Flow - Image Feature Styles (Image Items & Lightbox Modal)
+   ========================================================================== */
+
+/* 1. Base Variables & Tokens */
+:root {
+  /* Image Tokens */
+  --image-radius: 10px;
+  --image-border: var(--border-color, #d0d7de);
+  --image-fallback-bg: var(--bg-surface, #ffffff);
+  --image-fallback-max-width: 400px;
+  --image-lightbox-bg: rgba(0, 0, 0, 0.88);
+  --image-lightbox-z-index: 999;
+  --image-lightbox-shadow: 0 4px 32px rgba(0, 0, 0, 0.5);
+  --image-lightbox-close-color: #ffffff;
+  --image-lightbox-close-size: 32px;
+}
+
+/* 2. Image Component (image-*) */
+.image-item {
+  background: transparent;
+  border: none;
+  margin: 12px 0;
+  padding: 0 10px;
+}
+
+.image-item img,
+.doc-body img {
+  border: 1px solid var(--image-border);
+  border-radius: var(--image-radius);
+  cursor: zoom-in;
+  display: block;
+  height: auto;
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+.image-fallback,
+.image-item img.image-fallback,
+.doc-body img.image-fallback {
+  background-color: var(--image-fallback-bg);
+  border: 1px dashed var(--image-border);
+  cursor: default;
+  max-width: var(--image-fallback-max-width);
+}
+
+.image-lightbox {
+  align-items: center;
+  background: var(--image-lightbox-bg);
+  cursor: zoom-out;
+  display: none;
+  inset: 0;
+  justify-content: center;
+  position: fixed;
+  z-index: var(--image-lightbox-z-index);
+}
+
+.image-lightbox.active,
+.image-lightbox.image-lightbox-active {
+  display: flex;
+}
+
+.image-lightbox img,
+.image-lightbox .image-lightbox-img {
+  border: none;
+  border-radius: var(--image-radius);
+  box-shadow: var(--image-lightbox-shadow);
+  margin: 0;
+  max-height: 94vh;
+  max-width: 94vw;
+}
+
+.image-lightbox-close,
+.image-lightbox-x {
+  color: var(--image-lightbox-close-color);
+  cursor: pointer;
+  font-size: var(--image-lightbox-close-size);
+  font-weight: bold;
+  line-height: 1;
+  position: fixed;
+  right: 18px;
+  top: 14px;
+  user-select: none;
+}
+
+/* 3. Print Styles */
+@media print {
+  .image-item img,
+  .doc-body img {
+    -webkit-print-color-adjust: exact;
+    cursor: default;
+    margin: 10px auto;
+    max-height: 8cm;
+    print-color-adjust: exact;
+    width: auto;
+  }
+
+  .image-lightbox {
+    display: none !important;
+  }
+}
