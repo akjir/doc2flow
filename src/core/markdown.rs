@@ -34,7 +34,7 @@ impl CommentFilterState {
     /// Creates a new comment filter in standard mode.
     #[must_use]
     fn new() -> Self {
-        Self { in_comment: false }
+        Self::default()
     }
 
     /// Filters HTML comments from a single line.
@@ -79,9 +79,10 @@ impl CommentFilterState {
 }
 
 /// Frontmatter parsing lifecycle state.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 enum FrontmatterPhase {
     /// Seeking opening frontmatter delimiter `---`.
+    #[default]
     SeekingStart,
     /// Inside frontmatter block, collecting content until closing `---`.
     Inside,
@@ -200,6 +201,459 @@ impl ListState {
                 indent_spaces,
                 last_child_ordered_position: None,
             });
+        }
+    }
+}
+
+/// Parser state tracker encapsulating parsing phase, active buffers, and document construction.
+#[derive(Debug)]
+struct MarkdownParser<'a> {
+    /// Active table alignment and accumulated rows.
+    active_table: Option<(Vec<TableAlignment>, Vec<Vec<String>>)>,
+    /// Child elements collected inside the active block directive.
+    block_children: Vec<DocumentElement>,
+    /// Name of the active block directive.
+    block_name: String,
+    /// Line number where the active block directive began.
+    block_start_line: usize,
+    /// Snippet of the opening block directive line.
+    block_start_snippet: &'a str,
+    /// Optional language tag for the active code block.
+    code_block_lang: Option<String>,
+    /// Accumulated raw lines for the active code block.
+    code_block_lines: Vec<&'a str>,
+    /// State tracker for filtering HTML comments.
+    comment_filter: CommentFilterState,
+    /// Target document being constructed.
+    doc: Document,
+    /// Line number of the frontmatter opening delimiter.
+    fm_start_line: usize,
+    /// Snippet of the frontmatter opening delimiter line.
+    fm_start_snippet: &'a str,
+    /// Frontmatter key-value pairs accumulator.
+    frontmatter_map: HashMap<String, String>,
+    /// Tracks if at least one level-1 heading has been encountered.
+    has_seen_first_h1: bool,
+    /// Flag indicating if an active block directive is open.
+    in_block_directive: bool,
+    /// Flag indicating if an active code block is being collected.
+    in_code_block: bool,
+    /// Last processed line number and snippet for diagnostics.
+    last_line_info: (usize, &'a str),
+    /// State tracker for hierarchical list parsing.
+    list_state: ListState,
+    /// Raw line of a pending table header awaiting delimiter row validation.
+    pending_table_header: Option<String>,
+    /// Current frontmatter parsing phase.
+    phase: FrontmatterPhase,
+    /// Stack of open section elements.
+    section_stack: Vec<DocumentElement>,
+}
+
+impl<'a> MarkdownParser<'a> {
+    /// Creates a new default parser state tracker.
+    #[must_use]
+    fn new() -> Self {
+        Self::default()
+    }
+
+    /// Finalizes parsing, flushes all remaining buffers, validates document constraints, and returns Document.
+    fn finish(mut self) -> Result<Document, Error> {
+        self.flush_code_block();
+        self.flush_active_table();
+        self.flush_pending_table_header();
+        self.flush_lists();
+
+        if self.in_block_directive {
+            return Err(build_unclosed_block_directive_err(
+                self.block_start_line,
+                self.block_start_snippet,
+            ));
+        }
+
+        match self.phase {
+            FrontmatterPhase::SeekingStart => {
+                let (line_no, snippet) = self.last_line_info;
+                Err(build_missing_frontmatter_err(line_no, snippet))
+            }
+            FrontmatterPhase::Inside => Err(DiagnosticError {
+                message: "unclosed frontmatter block".into(),
+                file_path: "<input>".into(),
+                line_number: self.fm_start_line,
+                col_number: 1,
+                line_snippet: self.fm_start_snippet.into(),
+                annotation_carets: build_caret_annotation(
+                    1,
+                    self.fm_start_snippet.len().max(3),
+                    self.fm_start_snippet.len().max(3),
+                ),
+                annotation_text: "frontmatter starting here is never closed".into(),
+                help_text: "close the frontmatter block with a closing '---' line.".into(),
+            }
+            .into()),
+            FrontmatterPhase::Complete => {
+                if !self.has_seen_first_h1 {
+                    let (line_no, snippet) = self.last_line_info;
+                    return Err(build_missing_h1_err(line_no, snippet));
+                }
+                flush_section_stack(&mut self.doc, &mut self.section_stack);
+                Ok(self.doc)
+            }
+        }
+    }
+
+    /// Flushes active table, pending table header, and list states simultaneously.
+    fn flush_active_buffers(&mut self) {
+        self.flush_active_table();
+        self.flush_pending_table_header();
+        self.flush_lists();
+    }
+
+    /// Flushes the active table into the document hierarchy if present.
+    fn flush_active_table(&mut self) {
+        if let Some((alignments, rows)) = self.active_table.take() {
+            push_element(
+                &mut self.doc,
+                &mut self.section_stack,
+                self.in_block_directive,
+                &mut self.block_children,
+                DocumentElement::table(alignments, rows),
+            );
+        }
+    }
+
+    /// Flushes any open code block into the document hierarchy.
+    fn flush_code_block(&mut self) {
+        if self.in_code_block {
+            let content = trim_code_block_lines(&self.code_block_lines);
+            push_element(
+                &mut self.doc,
+                &mut self.section_stack,
+                self.in_block_directive,
+                &mut self.block_children,
+                DocumentElement::code_block(self.code_block_lang.take(), content),
+            );
+            self.code_block_lines.clear();
+            self.in_code_block = false;
+        }
+    }
+
+    /// Flushes pending list hierarchy and resets ordered position tracking.
+    fn flush_lists(&mut self) {
+        self.list_state.flush(
+            &mut self.doc,
+            &mut self.section_stack,
+            self.in_block_directive,
+            &mut self.block_children,
+        );
+        self.list_state.root_ordered_position = None;
+    }
+
+    /// Flushes any pending table header row into document elements if unconfirmed.
+    fn flush_pending_table_header(&mut self) {
+        if let Some(pending) = self.pending_table_header.take() {
+            classify_and_push_line(
+                &mut self.doc,
+                &mut self.section_stack,
+                self.in_block_directive,
+                &mut self.block_children,
+                &pending,
+                &mut self.list_state,
+            );
+        }
+    }
+
+    /// Appends a table row to an active table, or flushes the table if current line is not a valid row.
+    fn handle_active_table_row(&mut self, effective_line: &str) -> bool {
+        if let Some((_, ref mut rows)) = self.active_table {
+            let trimmed = effective_line.trim();
+            if !trimmed.is_empty()
+                && trimmed.contains('|')
+                && !trimmed.starts_with(['#', '>'])
+                && !trimmed.starts_with("```")
+                && !trimmed.starts_with(":::")
+            {
+                rows.push(parse_table_row(effective_line));
+                return true;
+            }
+            self.flush_active_table();
+        }
+        false
+    }
+
+    /// Processes a block directive line starting with `:::`.
+    fn handle_block_directive(
+        &mut self,
+        trimmed_start: &str,
+        line_no: usize,
+        line: &'a str,
+    ) -> Result<(), Error> {
+        self.flush_active_buffers();
+        let colon_count = trimmed_start.chars().take_while(|&c| c == ':').count();
+        let rest = trimmed_start[colon_count..].trim();
+
+        if self.in_block_directive {
+            if rest.is_empty() {
+                let mut children = mem::take(&mut self.block_children);
+                let name = mem::take(&mut self.block_name);
+                if name == "variables" {
+                    if children.len() != 1
+                        || !matches!(&children[0], DocumentElement::Table { .. })
+                    {
+                        return Err(build_invalid_variables_block_directive_err(
+                            self.block_start_line,
+                            self.block_start_snippet,
+                        ));
+                    }
+                    let DocumentElement::Table { rows, .. } = children.remove(0) else {
+                        unreachable!();
+                    };
+                    let mut variables_map =
+                        HashMap::with_capacity(rows.len().saturating_sub(1));
+                    for mut row in rows.into_iter().skip(1) {
+                        if !row.is_empty() {
+                            let key = row.remove(0);
+                            let val = if row.is_empty() {
+                                String::new()
+                            } else {
+                                row.remove(0)
+                            };
+                            variables_map.insert(key, val);
+                        }
+                    }
+                    self.doc.header.variables =
+                        Some(DocumentElement::table_variables(variables_map));
+                } else {
+                    push_element(
+                        &mut self.doc,
+                        &mut self.section_stack,
+                        false,
+                        &mut self.block_children,
+                        DocumentElement::block_directive(name, children),
+                    );
+                }
+                self.in_block_directive = false;
+                Ok(())
+            } else {
+                Err(build_nested_block_directive_err(line_no, line))
+            }
+        } else if rest.is_empty() {
+            Err(build_missing_block_directive_name_err(line_no, line))
+        } else if !rest.chars().all(|c| c.is_ascii_alphanumeric()) {
+            Err(build_invalid_block_directive_name_err(line_no, line))
+        } else if !self.has_seen_first_h1 && !is_allowed_pre_h1_directive(rest) {
+            Err(build_disallowed_pre_h1_block_directive_err(line_no, line, rest))
+        } else {
+            self.in_block_directive = true;
+            self.block_name = rest.to_string();
+            self.block_start_line = line_no;
+            self.block_start_snippet = line;
+            self.block_children.clear();
+            Ok(())
+        }
+    }
+
+    /// Handles a body line after frontmatter collection is complete.
+    fn handle_body_line(
+        &mut self,
+        effective_line: &str,
+        line_no: usize,
+        line: &'a str,
+    ) -> Result<(), Error> {
+        let trimmed_start = effective_line.trim_start();
+        if trimmed_start.starts_with(":::") {
+            return self.handle_block_directive(trimmed_start, line_no, line);
+        }
+
+        if !self.in_block_directive && !self.has_seen_first_h1 {
+            let trimmed = effective_line.trim();
+            if trimmed.is_empty() {
+                return Ok(());
+            }
+            if let Some((1, title)) = parse_heading_line(effective_line) {
+                self.has_seen_first_h1 = true;
+                push_section(&mut self.doc, &mut self.section_stack, 1, title);
+                return Ok(());
+            }
+            return Err(build_content_before_h1_err(line_no, line));
+        }
+
+        if trimmed_start.starts_with("```") {
+            self.handle_code_block_start(trimmed_start);
+            return Ok(());
+        }
+
+        if self.handle_active_table_row(effective_line) {
+            return Ok(());
+        }
+
+        if self.handle_pending_table_header(effective_line) {
+            return Ok(());
+        }
+
+        let trimmed = effective_line.trim();
+        if trimmed.is_empty() {
+            self.flush_lists();
+            return Ok(());
+        }
+
+        if trimmed.contains('|')
+            && !trimmed.starts_with(['#', '>'])
+            && !trimmed.starts_with("```")
+            && !trimmed.starts_with(":::")
+            && !trimmed.starts_with("- ")
+            && !trimmed.starts_with("- [")
+        {
+            self.flush_lists();
+            self.pending_table_header = Some(effective_line.to_string());
+            return Ok(());
+        }
+
+        classify_and_push_line(
+            &mut self.doc,
+            &mut self.section_stack,
+            self.in_block_directive,
+            &mut self.block_children,
+            effective_line,
+            &mut self.list_state,
+        );
+        Ok(())
+    }
+
+    /// Consumes a line while inside an active code block.
+    fn handle_code_block_line(&mut self, line: &'a str) {
+        let trimmed = line.trim_start();
+        if trimmed.starts_with("```") {
+            self.flush_code_block();
+        } else {
+            self.code_block_lines.push(line);
+        }
+    }
+
+    /// Initializes a new code block collection state.
+    fn handle_code_block_start(&mut self, trimmed_start: &str) {
+        self.flush_active_buffers();
+        let info = trimmed_start.strip_prefix("```").unwrap_or("").trim();
+        self.code_block_lang = if info.is_empty() {
+            None
+        } else {
+            Some(info.to_string())
+        };
+        self.code_block_lines.clear();
+        self.in_code_block = true;
+    }
+
+    /// Accumulates frontmatter key-value pairs until the closing delimiter.
+    fn handle_frontmatter_line(&mut self, line: &'a str) {
+        if line.trim() == "---" {
+            self.phase = FrontmatterPhase::Complete;
+            self.doc.parameters = DocumentParameters::from(mem::take(&mut self.frontmatter_map));
+        } else if let Some((key, val)) = line.split_once(':') {
+            let key = key.trim();
+            let val_trimmed = trim_matching_quotes(val);
+            if !key.is_empty() {
+                self.frontmatter_map.insert(key.to_string(), val_trimmed.to_string());
+            }
+        }
+    }
+
+    /// Validates whether a pending table header followed by current delimiter row initiates a new table.
+    fn handle_pending_table_header(&mut self, effective_line: &str) -> bool {
+        if let Some(pending_line) = self.pending_table_header.take() {
+            if let Some(alignments) = parse_table_delimiter_row(effective_line) {
+                let header_row = parse_table_row(&pending_line);
+                self.active_table = Some((alignments, vec![header_row]));
+                return true;
+            }
+            classify_and_push_line(
+                &mut self.doc,
+                &mut self.section_stack,
+                self.in_block_directive,
+                &mut self.block_children,
+                &pending_line,
+                &mut self.list_state,
+            );
+        }
+        false
+    }
+
+    /// Validates the opening frontmatter delimiter before processing any document content.
+    fn handle_seeking_frontmatter(
+        &mut self,
+        effective_line: &str,
+        line_no: usize,
+        line: &'a str,
+    ) -> Result<bool, Error> {
+        let trimmed = effective_line.trim();
+        if trimmed.is_empty() {
+            return Ok(false);
+        }
+        if trimmed == "---" {
+            self.phase = FrontmatterPhase::Inside;
+            self.fm_start_line = line_no;
+            self.fm_start_snippet = line;
+            return Ok(true);
+        }
+        Err(build_missing_frontmatter_err(line_no, line))
+    }
+
+    /// Processes a single input line across the parser state machine.
+    fn process_line(
+        &mut self,
+        line_no: usize,
+        line: &'a str,
+        line_buf: &mut String,
+    ) -> Result<(), Error> {
+        self.last_line_info = (line_no, line);
+
+        if self.phase == FrontmatterPhase::Inside {
+            self.handle_frontmatter_line(line);
+            return Ok(());
+        }
+
+        if self.in_code_block {
+            self.handle_code_block_line(line);
+            return Ok(());
+        }
+
+        let Some(effective_line) = self.comment_filter.process_line(line, line_buf) else {
+            return Ok(());
+        };
+
+        match self.phase {
+            FrontmatterPhase::SeekingStart => {
+                self.handle_seeking_frontmatter(effective_line, line_no, line)?;
+                Ok(())
+            }
+            FrontmatterPhase::Inside => unreachable!(),
+            FrontmatterPhase::Complete => self.handle_body_line(effective_line, line_no, line),
+        }
+    }
+}
+
+impl<'a> Default for MarkdownParser<'a> {
+    fn default() -> Self {
+        Self {
+            active_table: None,
+            block_children: Vec::new(),
+            block_name: String::new(),
+            block_start_line: 0,
+            block_start_snippet: "",
+            code_block_lang: None,
+            code_block_lines: Vec::new(),
+            comment_filter: CommentFilterState::new(),
+            doc: Document::new(),
+            fm_start_line: 0,
+            fm_start_snippet: "",
+            frontmatter_map: HashMap::new(),
+            has_seen_first_h1: false,
+            in_block_directive: false,
+            in_code_block: false,
+            last_line_info: (1, ""),
+            list_state: ListState::new(),
+            pending_table_header: None,
+            phase: FrontmatterPhase::SeekingStart,
+            section_stack: Vec::new(),
         }
     }
 }
@@ -478,6 +932,7 @@ fn flush_section_stack(doc: &mut Document, section_stack: &mut Vec<DocumentEleme
 }
 
 /// Returns the heading level if the element is a Section.
+#[must_use]
 fn get_section_level(elem: &DocumentElement) -> usize {
     match elem {
         DocumentElement::Section { level, .. } => *level,
@@ -486,24 +941,28 @@ fn get_section_level(elem: &DocumentElement) -> usize {
 }
 
 /// Checks whether a block directive name is permitted before the first level-1 heading.
+#[must_use]
 fn is_allowed_pre_h1_directive(name: &str) -> bool {
     ALLOWED_PRE_H1_DIRECTIVES.contains(&name)
 }
 
 /// Checks whether a line represents a markdown horizontal rule (`---`, `----`, etc.).
+#[must_use]
 fn is_horizontal_rule(line: &str) -> bool {
     let trimmed = line.trim();
-    trimmed.len() >= 3 && trimmed.bytes().all(|b| b == b'-')
+    trimmed.len() >= 3 && trimmed.chars().all(|c| c == '-')
 }
 
 /// Checks whether a line represents plain text.
+#[must_use]
 fn is_plain_text(line: &str) -> bool {
     !line.starts_with(['#', '>', '-', '*', '`', '|'])
 }
 
 /// Parses a bullet list item into its leading spaces and inner content.
+#[must_use]
 fn parse_bullet_list_item(line: &str) -> Option<(usize, &str)> {
-    let leading_spaces = line.bytes().take_while(|&b| b == b' ').count();
+    let leading_spaces = line.chars().take_while(|&c| c == ' ').count();
     let rest = &line[leading_spaces..];
 
     let after_dash = rest.strip_prefix('-')?;
@@ -517,8 +976,9 @@ fn parse_bullet_list_item(line: &str) -> Option<(usize, &str)> {
 }
 
 /// Parses a checkbox list item into its leading spaces, checked status, and inner content.
+#[must_use]
 fn parse_check_box_item(line: &str) -> Option<(usize, bool, &str)> {
-    let leading_spaces = line.bytes().take_while(|&b| b == b' ').count();
+    let leading_spaces = line.chars().take_while(|&c| c == ' ').count();
     let rest = &line[leading_spaces..];
 
     let after_dash = rest.strip_prefix('-')?;
@@ -550,406 +1010,22 @@ fn parse_check_box_item(line: &str) -> Option<(usize, bool, &str)> {
 /// if content is defined before the first level-1 heading without authorization,
 /// or if block directives are malformed, unclosed, or nested.
 pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
-    let mut doc = Document::new();
-    let mut frontmatter_map: HashMap<String, String> = HashMap::new();
-    let mut phase = FrontmatterPhase::SeekingStart;
-    let mut comment_filter = CommentFilterState::new();
-    let mut list_state = ListState::new();
-    let mut section_stack: Vec<DocumentElement> = Vec::new();
-    let mut has_seen_first_h1 = false;
-
-    let mut in_code_block = false;
-    let mut code_block_lang: Option<String> = None;
-    let mut code_block_lines: Vec<&str> = Vec::new();
-
-    let mut in_block_directive = false;
-    let mut block_name = String::new();
-    let mut block_start_line = 0;
-    let mut block_start_snippet = "";
-    let mut block_children: Vec<DocumentElement> = Vec::new();
-
-    let mut active_table: Option<(Vec<TableAlignment>, Vec<Vec<String>>)> = None;
-    let mut pending_table_header: Option<String> = None;
-
-    let mut fm_start_line = 0;
-    let mut fm_start_snippet = "";
-
+    let mut parser = MarkdownParser::new();
     let mut line_buf = String::new();
-    let mut last_line_info = (1, "");
-
     for (idx, line) in md_content.lines().enumerate() {
-        let line_no = idx + 1;
-        last_line_info = (line_no, line);
-
-        // 1. Frontmatter collection phase
-        if phase == FrontmatterPhase::Inside {
-            if line.trim() == "---" {
-                phase = FrontmatterPhase::Complete;
-                doc.parameters = DocumentParameters::from(mem::take(&mut frontmatter_map));
-            } else if let Some((key, val)) = line.split_once(':') {
-                let key = key.trim();
-                let val_trimmed = trim_matching_quotes(val);
-                if !key.is_empty() {
-                    frontmatter_map.insert(key.to_string(), val_trimmed.to_string());
-                }
-            }
-            continue;
-        }
-
-        // 2. Active code block collection phase (verbatim lines, no comment filtering)
-        if in_code_block {
-            let trimmed = line.trim_start();
-            if trimmed.starts_with("```") {
-                let content = trim_code_block_lines(&code_block_lines);
-                push_element(
-                    &mut doc,
-                    &mut section_stack,
-                    in_block_directive,
-                    &mut block_children,
-                    DocumentElement::code_block(code_block_lang.take(), content),
-                );
-                code_block_lines.clear();
-                in_code_block = false;
-            } else {
-                code_block_lines.push(line);
-            }
-            continue;
-        }
-
-        // 3. HTML comment filtering
-        let Some(effective_line) = comment_filter.process_line(line, &mut line_buf) else {
-            continue;
-        };
-
-        // 4. Frontmatter start detection or document body classification
-        match phase {
-            FrontmatterPhase::SeekingStart => {
-                let trimmed = effective_line.trim();
-                if trimmed.is_empty() {
-                    continue;
-                }
-                if trimmed == "---" {
-                    phase = FrontmatterPhase::Inside;
-                    fm_start_line = line_no;
-                    fm_start_snippet = line;
-                    continue;
-                }
-                return Err(build_missing_frontmatter_err(line_no, line));
-            }
-            FrontmatterPhase::Inside => unreachable!(),
-            FrontmatterPhase::Complete => {
-                let trimmed_start = effective_line.trim_start();
-
-                if trimmed_start.starts_with(":::") {
-                    if let Some((alignments, rows)) = active_table.take() {
-                        push_element(
-                            &mut doc,
-                            &mut section_stack,
-                            in_block_directive,
-                            &mut block_children,
-                            DocumentElement::table(alignments, rows),
-                        );
-                    }
-                    if let Some(pending) = pending_table_header.take() {
-                        classify_and_push_line(
-                            &mut doc,
-                            &mut section_stack,
-                            in_block_directive,
-                            &mut block_children,
-                            &pending,
-                            &mut list_state,
-                        );
-                    }
-                    list_state.flush(
-                        &mut doc,
-                        &mut section_stack,
-                        in_block_directive,
-                        &mut block_children,
-                    );
-                    list_state.root_ordered_position = None;
-
-                    let colon_count = trimmed_start.bytes().take_while(|&b| b == b':').count();
-                    let rest = trimmed_start[colon_count..].trim();
-
-                    if in_block_directive {
-                        if rest.is_empty() {
-                            let mut children = mem::take(&mut block_children);
-                            let name = mem::take(&mut block_name);
-                            if name == "variables" {
-                                if children.len() != 1
-                                    || !matches!(&children[0], DocumentElement::Table { .. })
-                                {
-                                    return Err(build_invalid_variables_block_directive_err(
-                                        block_start_line,
-                                        block_start_snippet,
-                                    ));
-                                }
-                                let DocumentElement::Table { rows, .. } = children.remove(0) else {
-                                    unreachable!();
-                                };
-                                let mut variables_map =
-                                    HashMap::with_capacity(rows.len().saturating_sub(1));
-                                for mut row in rows.into_iter().skip(1) {
-                                    if !row.is_empty() {
-                                        let key = row.remove(0);
-                                        let val = if row.is_empty() {
-                                            String::new()
-                                        } else {
-                                            row.remove(0)
-                                        };
-                                        variables_map.insert(key, val);
-                                    }
-                                }
-                                doc.header.variables =
-                                    Some(DocumentElement::table_variables(variables_map));
-                            } else {
-                                push_element(
-                                    &mut doc,
-                                    &mut section_stack,
-                                    false,
-                                    &mut block_children,
-                                    DocumentElement::block_directive(name, children),
-                                );
-                            }
-                            in_block_directive = false;
-                            continue;
-                        } else {
-                            return Err(build_nested_block_directive_err(line_no, line));
-                        }
-                    } else if rest.is_empty() {
-                        return Err(build_missing_block_directive_name_err(line_no, line));
-                    } else if !rest.chars().all(|c| c.is_ascii_alphanumeric()) {
-                        return Err(build_invalid_block_directive_name_err(line_no, line));
-                    } else if !has_seen_first_h1 && !is_allowed_pre_h1_directive(rest) {
-                        return Err(build_disallowed_pre_h1_block_directive_err(
-                            line_no, line, rest,
-                        ));
-                    } else {
-                        in_block_directive = true;
-                        block_name = rest.to_string();
-                        block_start_line = line_no;
-                        block_start_snippet = line;
-                        block_children.clear();
-                        continue;
-                    }
-                }
-
-                if !in_block_directive && !has_seen_first_h1 {
-                    let trimmed = effective_line.trim();
-                    if trimmed.is_empty() {
-                        continue;
-                    }
-                    if let Some((1, title)) = parse_heading_line(effective_line) {
-                        has_seen_first_h1 = true;
-                        push_section(&mut doc, &mut section_stack, 1, title);
-                        continue;
-                    }
-                    return Err(build_content_before_h1_err(line_no, line));
-                }
-
-                if trimmed_start.starts_with("```") {
-                    if let Some((alignments, rows)) = active_table.take() {
-                        push_element(
-                            &mut doc,
-                            &mut section_stack,
-                            in_block_directive,
-                            &mut block_children,
-                            DocumentElement::table(alignments, rows),
-                        );
-                    }
-                    if let Some(pending) = pending_table_header.take() {
-                        classify_and_push_line(
-                            &mut doc,
-                            &mut section_stack,
-                            in_block_directive,
-                            &mut block_children,
-                            &pending,
-                            &mut list_state,
-                        );
-                    }
-                    list_state.flush(
-                        &mut doc,
-                        &mut section_stack,
-                        in_block_directive,
-                        &mut block_children,
-                    );
-                    list_state.root_ordered_position = None;
-                    let info = trimmed_start.strip_prefix("```").unwrap_or("").trim();
-                    code_block_lang = if info.is_empty() {
-                        None
-                    } else {
-                        Some(info.to_string())
-                    };
-                    code_block_lines.clear();
-                    in_code_block = true;
-                    continue;
-                }
-
-                if let Some((_, ref mut rows)) = active_table {
-                    let trimmed = effective_line.trim();
-                    if !trimmed.is_empty()
-                        && trimmed.contains('|')
-                        && !trimmed.starts_with(['#', '>'])
-                        && !trimmed.starts_with("```")
-                        && !trimmed.starts_with(":::")
-                    {
-                        rows.push(parse_table_row(effective_line));
-                        continue;
-                    } else {
-                        let (alignments, rows) = active_table.take().unwrap();
-                        push_element(
-                            &mut doc,
-                            &mut section_stack,
-                            in_block_directive,
-                            &mut block_children,
-                            DocumentElement::table(alignments, rows),
-                        );
-                    }
-                }
-
-                if let Some(pending_line) = pending_table_header.take() {
-                    if let Some(alignments) = parse_table_delimiter_row(effective_line) {
-                        let header_row = parse_table_row(&pending_line);
-                        active_table = Some((alignments, vec![header_row]));
-                        continue;
-                    } else {
-                        classify_and_push_line(
-                            &mut doc,
-                            &mut section_stack,
-                            in_block_directive,
-                            &mut block_children,
-                            &pending_line,
-                            &mut list_state,
-                        );
-                    }
-                }
-
-                let trimmed = effective_line.trim();
-                if trimmed.is_empty() {
-                    list_state.flush(
-                        &mut doc,
-                        &mut section_stack,
-                        in_block_directive,
-                        &mut block_children,
-                    );
-                    list_state.root_ordered_position = None;
-                    continue;
-                }
-
-                if trimmed.contains('|')
-                    && !trimmed.starts_with(['#', '>'])
-                    && !trimmed.starts_with("```")
-                    && !trimmed.starts_with(":::")
-                    && !trimmed.starts_with("- ")
-                    && !trimmed.starts_with("- [")
-                {
-                    list_state.flush(
-                        &mut doc,
-                        &mut section_stack,
-                        in_block_directive,
-                        &mut block_children,
-                    );
-                    list_state.root_ordered_position = None;
-                    pending_table_header = Some(effective_line.to_string());
-                    continue;
-                }
-
-                classify_and_push_line(
-                    &mut doc,
-                    &mut section_stack,
-                    in_block_directive,
-                    &mut block_children,
-                    effective_line,
-                    &mut list_state,
-                );
-            }
-        }
+        parser.process_line(idx + 1, line, &mut line_buf)?;
     }
-
-    if in_code_block {
-        let content = trim_code_block_lines(&code_block_lines);
-        push_element(
-            &mut doc,
-            &mut section_stack,
-            in_block_directive,
-            &mut block_children,
-            DocumentElement::code_block(code_block_lang.take(), content),
-        );
-    }
-
-    if let Some((alignments, rows)) = active_table.take() {
-        push_element(
-            &mut doc,
-            &mut section_stack,
-            in_block_directive,
-            &mut block_children,
-            DocumentElement::table(alignments, rows),
-        );
-    }
-    if let Some(pending) = pending_table_header.take() {
-        classify_and_push_line(
-            &mut doc,
-            &mut section_stack,
-            in_block_directive,
-            &mut block_children,
-            &pending,
-            &mut list_state,
-        );
-    }
-
-    list_state.flush(
-        &mut doc,
-        &mut section_stack,
-        in_block_directive,
-        &mut block_children,
-    );
-
-    if in_block_directive {
-        return Err(build_unclosed_block_directive_err(
-            block_start_line,
-            block_start_snippet,
-        ));
-    }
-
-    // Final state validation
-    match phase {
-        FrontmatterPhase::SeekingStart => {
-            let (line_no, snippet) = last_line_info;
-            Err(build_missing_frontmatter_err(line_no, snippet))
-        }
-        FrontmatterPhase::Inside => Err(DiagnosticError {
-            message: "unclosed frontmatter block".into(),
-            file_path: "<input>".into(),
-            line_number: fm_start_line,
-            col_number: 1,
-            line_snippet: fm_start_snippet.into(),
-            annotation_carets: build_caret_annotation(
-                1,
-                fm_start_snippet.len().max(3),
-                fm_start_snippet.len().max(3),
-            ),
-            annotation_text: "frontmatter starting here is never closed".into(),
-            help_text: "close the frontmatter block with a closing '---' line.".into(),
-        }
-        .into()),
-        FrontmatterPhase::Complete => {
-            if !has_seen_first_h1 {
-                let (line_no, snippet) = last_line_info;
-                return Err(build_missing_h1_err(line_no, snippet));
-            }
-            flush_section_stack(&mut doc, &mut section_stack);
-            Ok(doc)
-        }
-    }
+    parser.finish()
 }
 
 /// Parses a markdown heading line into its normalized section level (1, 2, or 3) and title.
+#[must_use]
 fn parse_heading_line(line: &str) -> Option<(usize, &str)> {
     let trimmed = line.trim_start();
     if !trimmed.starts_with('#') {
         return None;
     }
-    let hash_count = trimmed.bytes().take_while(|&b| b == b'#').count();
+    let hash_count = trimmed.chars().take_while(|&c| c == '#').count();
     let rest = &trimmed[hash_count..];
     let level = match hash_count {
         1 => 1,
@@ -966,6 +1042,7 @@ fn parse_heading_line(line: &str) -> Option<(usize, &str)> {
 }
 
 /// Parses a standalone image markdown pattern `![alt](url)` into alt text and url slices.
+#[must_use]
 fn parse_image(input: &str) -> Option<(&str, &str)> {
     let trimmed = input.trim();
     let rest = trimmed.strip_prefix("![")?;
@@ -977,11 +1054,12 @@ fn parse_image(input: &str) -> Option<(&str, &str)> {
 }
 
 /// Parses an ordered list item candidate into its leading spaces, leading number, and inner content.
+#[must_use]
 fn parse_ordered_list_candidate(line: &str) -> Option<(usize, u64, &str)> {
-    let leading_spaces = line.bytes().take_while(|&b| b == b' ').count();
+    let leading_spaces = line.chars().take_while(|&c| c == ' ').count();
     let rest = &line[leading_spaces..];
 
-    let digits_len = rest.bytes().take_while(|b| b.is_ascii_digit()).count();
+    let digits_len = rest.chars().take_while(|c| c.is_ascii_digit()).count();
     if digits_len == 0 {
         return None;
     }
@@ -1000,36 +1078,27 @@ fn parse_ordered_list_candidate(line: &str) -> Option<(usize, u64, &str)> {
 }
 
 /// Parses a shoutout line starting with `>` into its element kind and inner content.
+#[must_use]
 fn parse_shoutout_line(line: &str) -> (ShoutoutElementKind, &str) {
     debug_assert!(line.starts_with('>'));
     let inner = line[1..].trim_start();
-
-    if let Some(rest) = inner.strip_prefix("!!!") {
-        (
-            ShoutoutElementKind::Caution,
-            rest.strip_prefix(' ').unwrap_or(rest),
-        )
-    } else if let Some(rest) = inner.strip_prefix("!!") {
-        (
-            ShoutoutElementKind::Warning,
-            rest.strip_prefix(' ').unwrap_or(rest),
-        )
-    } else if let Some(rest) = inner.strip_prefix('!') {
-        (
-            ShoutoutElementKind::Important,
-            rest.strip_prefix(' ').unwrap_or(rest),
-        )
-    } else if let Some(rest) = inner.strip_prefix('?') {
-        (
-            ShoutoutElementKind::Tip,
-            rest.strip_prefix(' ').unwrap_or(rest),
-        )
-    } else {
-        (ShoutoutElementKind::Note, inner)
+    const PREFIX_MAP: [(&str, ShoutoutElementKind); 4] = [
+        ("!!!", ShoutoutElementKind::Caution),
+        ("!!", ShoutoutElementKind::Warning),
+        ("!", ShoutoutElementKind::Important),
+        ("?", ShoutoutElementKind::Tip),
+    ];
+    for (prefix, kind) in PREFIX_MAP {
+        if let Some(rest) = inner.strip_prefix(prefix) {
+            let content = rest.strip_prefix(' ').unwrap_or(rest);
+            return (kind, content);
+        }
     }
+    (ShoutoutElementKind::Note, inner)
 }
 
 /// Parses a single cell in a table delimiter row into its `TableAlignment`.
+#[must_use]
 fn parse_table_alignment(cell: &str) -> Option<TableAlignment> {
     let trimmed = cell.trim();
     if trimmed.is_empty() {
@@ -1051,7 +1120,7 @@ fn parse_table_alignment(cell: &str) -> Option<TableAlignment> {
         inner
     };
 
-    if inner.is_empty() || !inner.bytes().all(|b| b == b'-') {
+    if inner.is_empty() || !inner.chars().all(|c| c == '-') {
         return None;
     }
 
@@ -1064,6 +1133,7 @@ fn parse_table_alignment(cell: &str) -> Option<TableAlignment> {
 }
 
 /// Parses a markdown table delimiter row (e.g. `| :--- | :---: | ---: |`) into column alignments.
+#[must_use]
 fn parse_table_delimiter_row(line: &str) -> Option<Vec<TableAlignment>> {
     let trimmed = line.trim();
     if !trimmed.contains('|') && !trimmed.starts_with('-') {
@@ -1100,6 +1170,7 @@ fn parse_table_delimiter_row(line: &str) -> Option<Vec<TableAlignment>> {
 }
 
 /// Parses a markdown table row into trimmed cell string contents, unescaping escaped pipes (`\|`).
+#[must_use]
 fn parse_table_row(line: &str) -> Vec<String> {
     let trimmed = line.trim();
     let inner = if let Some(stripped) = trimmed.strip_prefix('|') {
@@ -1178,6 +1249,7 @@ fn push_section(
 }
 
 /// Trims leading and trailing empty lines from a slice of code lines.
+#[must_use]
 fn trim_code_block_lines(lines: &[&str]) -> String {
     let start = lines.iter().position(|line| !line.trim().is_empty());
     let end = lines.iter().rposition(|line| !line.trim().is_empty());
@@ -1201,6 +1273,7 @@ fn trim_code_block_lines(lines: &[&str]) -> String {
 }
 
 /// Trims surrounding quotes only if enclosed by identical matching single or double quotes.
+#[must_use]
 fn trim_matching_quotes(input: &str) -> &str {
     let s = input.trim();
     if (s.starts_with('"') && s.ends_with('"') && s.len() >= 2)
@@ -3036,5 +3109,27 @@ Body text
         } else {
             panic!("expected Section");
         }
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_unicode_whitespace_bullet_list() {
+        let md = "---\ntitle: \"Unicode Bullets\"\n---\n# Main\n- Root item 1\n  - Nested ASCII indented\n\u{00A0}- Unicode non-breaking space item\n\u{3000}- Fullwidth space item\n  - \u{2605} Star bullet item\n";
+        let doc = parse_d2f_markdown(md).unwrap();
+        assert_eq!(doc.body.len(), 1);
+        let DocumentElement::Section { children, .. } = &doc.body[0] else {
+            panic!("expected section");
+        };
+        assert_eq!(children.len(), 4);
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_unicode_whitespace_ordered_and_check_lists() {
+        let md = "---\ntitle: \"Unicode Lists\"\n---\n# Main\n1. First \u{1F600} item\n  1. Nested item\n\u{2002}2. Second item\n- [x] Done \u{2713} item\n  - [ ] Nested todo\n\u{2009}- [ ] Thin space task\n";
+        let doc = parse_d2f_markdown(md).unwrap();
+        assert_eq!(doc.body.len(), 1);
+        let DocumentElement::Section { children, .. } = &doc.body[0] else {
+            panic!("expected section");
+        };
+        assert_eq!(children.len(), 4);
     }
 }
