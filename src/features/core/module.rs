@@ -27,7 +27,7 @@ impl CoreFeature {
 
 impl Feature for CoreFeature {
     /// Intercepts the rendering of core document elements into the output buffer.
-    fn try_render(
+    fn try_render_body(
         &self,
         element: &DocumentElement,
         indent: usize,
@@ -145,7 +145,7 @@ mod tests {
         let code = DocumentElement::code_block(Some("rust"), "fn main() {}");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(!feature.try_render(
+        assert!(!feature.try_render_body(
             &code,
             0,
             0,
@@ -162,7 +162,7 @@ mod tests {
         let elem = DocumentElement::text("5 < 10 & 20 > 15 \"quoted\" 'single'");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &elem,
             0,
             0,
@@ -183,7 +183,7 @@ mod tests {
             DocumentElement::text("Example `<div class=\"box\"> && **not bold**</div>` here.");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &elem,
             0,
             0,
@@ -203,7 +203,7 @@ mod tests {
         let elem = DocumentElement::text("Formatted ~~**bold strikethrough**~~ with `code`.");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &elem,
             0,
             0,
@@ -223,7 +223,7 @@ mod tests {
         let elem = DocumentElement::text("Host {{SERVER_NAME}}:{{PORT}} with key {{API_KEY}}.");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &elem,
             0,
             0,
@@ -243,7 +243,7 @@ mod tests {
         let elem = DocumentElement::text("This is ***bold and italic*** text.");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &elem,
             0,
             0,
@@ -258,7 +258,7 @@ mod tests {
 
         let elem_underscores = DocumentElement::text("This is ___bold and italic___ text.");
         let mut out_underscores = String::new();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &elem_underscores,
             0,
             0,
@@ -278,7 +278,7 @@ mod tests {
         let elem_asterisk = DocumentElement::text("This is **bold** text.");
         let mut out_asterisk = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &elem_asterisk,
             0,
             0,
@@ -293,7 +293,7 @@ mod tests {
 
         let elem_underscore = DocumentElement::text("This is __bold__ text.");
         let mut out_underscore = String::new();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &elem_underscore,
             0,
             0,
@@ -314,7 +314,7 @@ mod tests {
         let renderer = HtmlRenderer::default_renderer();
 
         let mut out0 = String::new();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &element,
             0,
             0,
@@ -325,7 +325,7 @@ mod tests {
         assert_eq!(out0, "<hr />\n");
 
         let mut out1 = String::new();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &element,
             1,
             0,
@@ -336,7 +336,7 @@ mod tests {
         assert_eq!(out1, "  <hr />\n");
 
         let mut out2 = String::new();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &element,
             2,
             0,
@@ -353,7 +353,7 @@ mod tests {
         let elem = DocumentElement::text("Run `cargo test --all` now.");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &elem,
             0,
             0,
@@ -373,7 +373,7 @@ mod tests {
         let elem_asterisk = DocumentElement::text("This is *italic* text.");
         let mut out_asterisk = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &elem_asterisk,
             0,
             0,
@@ -388,7 +388,7 @@ mod tests {
 
         let elem_underscore = DocumentElement::text("This is _italic_ text.");
         let mut out_underscore = String::new();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &elem_underscore,
             0,
             0,
@@ -408,7 +408,7 @@ mod tests {
         let element = DocumentElement::text("Hello, world!");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &element,
             1,
             0,
@@ -432,7 +432,7 @@ mod tests {
         );
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &section,
             2,
             0,
@@ -461,7 +461,7 @@ mod tests {
         let elem = DocumentElement::text("Replaces ~~legacy procedures~~ with modern.");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &elem,
             0,
             0,
@@ -481,7 +481,7 @@ mod tests {
         let elem = DocumentElement::text("Visit [Doc2Flow](https://doc2flow.dev) for guides.");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &elem,
             0,
             0,
@@ -501,7 +501,7 @@ mod tests {
         let elem = DocumentElement::text("Unclosed **bold and ~~strike and `code");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &elem,
             0,
             0,

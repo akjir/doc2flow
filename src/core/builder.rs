@@ -51,7 +51,7 @@ impl<'a> HtmlRenderer<'a> {
         out: &mut String,
     ) {
         for feature in self.features {
-            if feature.try_render(element, indent, depth, parameters, out, self) {
+            if feature.try_render_body(element, indent, depth, parameters, out, self) {
                 return;
             }
         }
@@ -193,7 +193,7 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
         &document.parameters.language
     };
     let title = &document.parameters.title;
-    let features_str = features.to_features_string();
+    let features_str = features.to_string();
     let (css_content, js_content) = assemble_assets(features);
     let i18n_json = get_language_json(lang_code);
 
@@ -331,10 +331,7 @@ mod tests {
 
     #[test]
     fn test_assemble_styles_with_unknown_feature() {
-        let features = DocumentFeature {
-            unknown: true,
-            ..Default::default()
-        };
+        let features = DocumentFeature::UNKNOWN;
         let (css, _) = assemble_assets(&features);
         assert!(css.contains("    --bg-body:"));
         assert!(css.contains("    .txt-default"));
@@ -496,10 +493,7 @@ mod tests {
 
     #[test]
     fn test_assemble_styles_with_code_feature() {
-        let features = DocumentFeature {
-            code: true,
-            ..Default::default()
-        };
+        let features = DocumentFeature::CODE;
         let (css, _) = assemble_assets(&features);
         assert!(css.contains("    --bg-body:"));
         assert!(css.contains("    --code-bg:"));
@@ -607,7 +601,10 @@ mod tests {
     fn test_builder_build_with_header_variables() {
         let mut doc = Document::new();
         doc.header.variables = Some(DocumentElement::table(
-            vec![crate::core::document::TableAlignment::None, crate::core::document::TableAlignment::None],
+            vec![
+                crate::core::document::TableAlignment::None,
+                crate::core::document::TableAlignment::None,
+            ],
             vec![
                 vec!["Variable".into(), "Value".into()],
                 vec!["PORT".into(), "8080".into()],
@@ -620,7 +617,7 @@ mod tests {
         assert!(content.contains("<th>Variable</th>"));
         assert!(content.contains("<td>8080</td>"));
         assert!(content.contains("Body text"));
-        assert!(features.code);
-        assert!(features.table);
+        assert!(features.contains(DocumentFeature::CODE));
+        assert!(features.contains(DocumentFeature::TABLE));
     }
 }

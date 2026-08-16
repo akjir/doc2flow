@@ -32,7 +32,7 @@ impl TableFeature {
 
 impl Feature for TableFeature {
     /// Intercepts the rendering of table elements into the output buffer.
-    fn try_render(
+    fn try_render_body(
         &self,
         element: &DocumentElement,
         indent: usize,
@@ -185,7 +185,7 @@ mod tests {
         let text = DocumentElement::text("Regular text");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(!feature.try_render(
+        assert!(!feature.try_render_body(
             &text,
             0,
             0,
@@ -202,7 +202,7 @@ mod tests {
         let element = DocumentElement::table(vec![], vec![]);
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &element,
             0,
             0,
@@ -222,7 +222,7 @@ mod tests {
         );
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &element,
             0,
             0,
@@ -262,7 +262,7 @@ mod tests {
         );
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &element,
             1,
             0,
@@ -310,7 +310,7 @@ mod tests {
         );
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &element,
             0,
             0,

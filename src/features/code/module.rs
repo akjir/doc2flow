@@ -21,7 +21,7 @@ impl CodeFeature {
 
 impl Feature for CodeFeature {
     /// Intercepts the rendering of code block elements into the output buffer.
-    fn try_render(
+    fn try_render_body(
         &self,
         element: &DocumentElement,
         indent: usize,
@@ -75,7 +75,7 @@ mod tests {
             DocumentElement::code_block(Some("rust"), "fn main() {\n    println!(\"hi\");\n}");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &element,
             1,
             0,
@@ -96,7 +96,7 @@ mod tests {
             DocumentElement::code_block(None::<String>, "<div class=\"foo\"> && 'bar'</div>");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &element,
             2,
             0,
@@ -116,7 +116,7 @@ mod tests {
         let text = DocumentElement::text("Regular text");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(!feature.try_render(
+        assert!(!feature.try_render_body(
             &text,
             0,
             0,

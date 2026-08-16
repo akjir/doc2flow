@@ -21,7 +21,7 @@ impl UnknownFeature {
 
 impl Feature for UnknownFeature {
     /// Intercepts the rendering of unknown fallback elements into the output buffer.
-    fn try_render(
+    fn try_render_body(
         &self,
         element: &DocumentElement,
         indent: usize,
@@ -71,7 +71,7 @@ mod tests {
         let element = DocumentElement::unknown("Unrecognized raw markdown line");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &element,
             1,
             0,
@@ -91,7 +91,7 @@ mod tests {
         let text = DocumentElement::text("Regular text");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(!feature.try_render(
+        assert!(!feature.try_render_body(
             &text,
             0,
             0,

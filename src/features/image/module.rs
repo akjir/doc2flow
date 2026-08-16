@@ -32,7 +32,7 @@ impl ImageFeature {
 
 impl Feature for ImageFeature {
     /// Intercepts the rendering of image elements into the output buffer.
-    fn try_render(
+    fn try_render_body(
         &self,
         element: &DocumentElement,
         indent: usize,
@@ -114,7 +114,7 @@ mod tests {
         let element = DocumentElement::image("Architecture Diagram", "assets/arch.png");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &element,
             1,
             0,
@@ -139,7 +139,7 @@ mod tests {
         );
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &element,
             2,
             0,
@@ -161,7 +161,7 @@ mod tests {
         let text = DocumentElement::text("Regular text");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(!feature.try_render(
+        assert!(!feature.try_render_body(
             &text,
             0,
             0,

@@ -1,61 +1,51 @@
 //! Document AST feature detection, inspection, and rendering traits.
 
 use std::fmt::{self, Display, Formatter};
+use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Not};
 
 use crate::core::builder::HtmlRenderer;
-use crate::core::document::{Document, DocumentElement, DocumentParameters};
+use crate::core::document::{Document, DocumentElement, DocumentHeader, DocumentParameters};
 
-/// Trait for document feature renderers converting AST elements to HTML.
-pub trait Feature: Send + Sync + fmt::Debug {
-    /// Intercepts the rendering of a document element into an output buffer.
-    ///
-    /// Returns `true` if this feature handled rendering the element, or `false`
-    /// to delegate to subsequent features or core fallback rendering.
-    fn try_render(
-        &self,
-        _element: &DocumentElement,
-        _indent: usize,
-        _depth: usize,
-        _parameters: &DocumentParameters,
-        _out: &mut String,
-        _renderer: &HtmlRenderer,
-    ) -> bool {
-        false
-    }
+/// Static mapping of feature flags to their canonical display identifiers.
+const FEATURE_NAMES: [(DocumentFeature, &str); 8] = [
+    (DocumentFeature::BULLET, "bullet"),
+    (DocumentFeature::CODE, "code"),
+    (DocumentFeature::IMAGE, "image"),
+    (DocumentFeature::ORDERED, "ordered"),
+    (DocumentFeature::SHOUTOUT, "shoutout"),
+    (DocumentFeature::TABLE, "table"),
+    (DocumentFeature::TASK, "task"),
+    (DocumentFeature::UNKNOWN, "unknown"),
+];
 
-    /// Returns optional CSS stylesheet rules for this feature, defaulting to `None`.
-    fn css(&self) -> Option<&'static str> {
-        None
-    }
-
-    /// Returns optional JavaScript client logic files for this feature, defaulting to an empty slice.
-    fn javascript(&self) -> &[&'static str] {
-        &[]
-    }
-}
-
-/// Feature detection flags for document AST elements.
+/// Feature detection flags for document AST elements represented as a bitmask.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct DocumentFeature {
-    /// Indicates whether bullet lists are present.
-    pub bullet: bool,
-    /// Indicates whether code blocks are present.
-    pub code: bool,
-    /// Indicates whether images are present.
-    pub image: bool,
-    /// Indicates whether ordered lists are present.
-    pub ordered: bool,
-    /// Indicates whether shoutout callouts are present.
-    pub shoutout: bool,
-    /// Indicates whether tables are present.
-    pub table: bool,
-    /// Indicates whether task items are present.
-    pub task: bool,
-    /// Indicates whether unrecognized unknown elements are present.
-    pub unknown: bool,
+    bits: u16,
 }
 
 impl DocumentFeature {
+    /// Mask representing all supported document features combined.
+    pub const ALL: Self = Self { bits: (1 << 8) - 1 };
+    /// Flag indicating bullet lists are present.
+    pub const BULLET: Self = Self { bits: 1 << 0 };
+    /// Flag indicating code blocks are present.
+    pub const CODE: Self = Self { bits: 1 << 1 };
+    /// Flag indicating images are present.
+    pub const IMAGE: Self = Self { bits: 1 << 2 };
+    /// Empty feature set with no flags enabled.
+    pub const NONE: Self = Self { bits: 0 };
+    /// Flag indicating ordered lists are present.
+    pub const ORDERED: Self = Self { bits: 1 << 3 };
+    /// Flag indicating shoutout callouts are present.
+    pub const SHOUTOUT: Self = Self { bits: 1 << 4 };
+    /// Flag indicating tables are present.
+    pub const TABLE: Self = Self { bits: 1 << 5 };
+    /// Flag indicating task items are present.
+    pub const TASK: Self = Self { bits: 1 << 6 };
+    /// Flag indicating unrecognized unknown elements are present.
+    pub const UNKNOWN: Self = Self { bits: 1 << 7 };
+
     /// Creates a new default feature set with no document features enabled.
     ///
     /// # Examples
@@ -67,43 +57,25 @@ impl DocumentFeature {
     /// assert!(features.is_empty());
     /// ```
     pub const fn new() -> Self {
-        Self {
-            bullet: false,
-            code: false,
-            image: false,
-            ordered: false,
-            shoutout: false,
-            table: false,
-            task: false,
-            unknown: false,
-        }
+        Self::NONE
     }
 
-    /// Returns `true` if all feature flags are enabled.
-    pub const fn is_all(self) -> bool {
-        self.bullet
-            && self.code
-            && self.image
-            && self.ordered
-            && self.shoutout
-            && self.table
-            && self.task
-            && self.unknown
+    /// Returns `true` if this feature set contains the specified feature flag.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use doc2flow::core::feature::DocumentFeature;
+    ///
+    /// let features = DocumentFeature::CODE | DocumentFeature::TABLE;
+    /// assert!(features.contains(DocumentFeature::CODE));
+    /// assert!(!features.contains(DocumentFeature::BULLET));
+    /// ```
+    pub const fn contains(self, other: Self) -> bool {
+        (self.bits & other.bits) == other.bits
     }
 
-    /// Returns `true` if no feature flags are enabled.
-    pub const fn is_empty(self) -> bool {
-        !self.bullet
-            && !self.code
-            && !self.image
-            && !self.ordered
-            && !self.shoutout
-            && !self.table
-            && !self.task
-            && !self.unknown
-    }
-
-    /// Renders a comma-separated list of enabled feature identifiers starting with `"core"`.
+    /// Inserts the specified feature flag into this feature set.
     ///
     /// # Examples
     ///
@@ -111,42 +83,68 @@ impl DocumentFeature {
     /// use doc2flow::core::feature::DocumentFeature;
     ///
     /// let mut features = DocumentFeature::default();
-    /// assert_eq!(features.to_features_string(), "core");
-    ///
-    /// features.code = true;
-    /// assert_eq!(features.to_features_string(), "core, code");
-    ///
-    /// features.table = true;
-    /// assert_eq!(features.to_features_string(), "core, code, table");
+    /// features.insert(DocumentFeature::BULLET);
+    /// assert!(features.contains(DocumentFeature::BULLET));
     /// ```
-    pub fn to_features_string(&self) -> String {
-        let mut out = String::with_capacity(96);
-        out.push_str("core");
-        if self.bullet {
-            out.push_str(", bullet");
+    pub fn insert(&mut self, other: Self) {
+        self.bits |= other.bits;
+    }
+
+    /// Returns `true` if all feature flags are enabled.
+    pub const fn is_all(self) -> bool {
+        (self.bits & Self::ALL.bits) == Self::ALL.bits
+    }
+
+    /// Returns `true` if no feature flags are enabled.
+    pub const fn is_empty(self) -> bool {
+        self.bits == 0
+    }
+
+    /// Removes the specified feature flag from this feature set.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use doc2flow::core::feature::DocumentFeature;
+    ///
+    /// let mut features = DocumentFeature::ALL;
+    /// features.remove(DocumentFeature::IMAGE);
+    /// assert!(!features.contains(DocumentFeature::IMAGE));
+    /// ```
+    pub fn remove(&mut self, other: Self) {
+        self.bits &= !other.bits;
+    }
+}
+
+impl BitAnd for DocumentFeature {
+    type Output = Self;
+
+    fn bitand(self, rhs: Self) -> Self::Output {
+        Self {
+            bits: self.bits & rhs.bits,
         }
-        if self.code {
-            out.push_str(", code");
+    }
+}
+
+impl BitAndAssign for DocumentFeature {
+    fn bitand_assign(&mut self, rhs: Self) {
+        self.bits &= rhs.bits;
+    }
+}
+
+impl BitOr for DocumentFeature {
+    type Output = Self;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        Self {
+            bits: self.bits | rhs.bits,
         }
-        if self.image {
-            out.push_str(", image");
-        }
-        if self.ordered {
-            out.push_str(", ordered");
-        }
-        if self.shoutout {
-            out.push_str(", shoutout");
-        }
-        if self.table {
-            out.push_str(", table");
-        }
-        if self.task {
-            out.push_str(", task");
-        }
-        if self.unknown {
-            out.push_str(", unknown");
-        }
-        out
+    }
+}
+
+impl BitOrAssign for DocumentFeature {
+    fn bitor_assign(&mut self, rhs: Self) {
+        self.bits |= rhs.bits;
     }
 }
 
@@ -162,7 +160,14 @@ impl Display for DocumentFeature {
     /// assert_eq!(features.to_string(), "core");
     /// ```
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.to_features_string())
+        f.write_str("core")?;
+        for &(flag, name) in &FEATURE_NAMES {
+            if self.contains(flag) {
+                f.write_str(", ")?;
+                f.write_str(name)?;
+            }
+        }
+        Ok(())
     }
 }
 
@@ -178,17 +183,68 @@ impl From<&Document> for DocumentFeature {
     /// let mut doc = Document::new();
     /// doc.push_body(DocumentElement::code_block(Some("rust"), "fn main() {}"));
     /// let features = DocumentFeature::from(&doc);
-    /// assert!(features.code);
-    /// assert!(!features.table);
+    /// assert!(features.contains(DocumentFeature::CODE));
+    /// assert!(!features.contains(DocumentFeature::TABLE));
     /// ```
     fn from(doc: &Document) -> Self {
         let mut features = Self::default();
         if let Some(ref variables) = doc.header.variables {
-            features.code = true;
+            features.insert(DocumentFeature::CODE);
             scan_element(variables, &mut features);
         }
         scan_elements(&doc.body, &mut features);
         features
+    }
+}
+
+impl Not for DocumentFeature {
+    type Output = Self;
+
+    fn not(self) -> Self::Output {
+        Self {
+            bits: !self.bits & Self::ALL.bits,
+        }
+    }
+}
+
+/// Trait for document feature renderers converting AST elements to HTML.
+pub trait Feature: Send + Sync + fmt::Debug {
+    /// Returns optional CSS stylesheet rules for this feature, defaulting to `None`.
+    fn css(&self) -> Option<&'static str> {
+        None
+    }
+
+    /// Returns optional JavaScript client logic files for this feature, defaulting to an empty slice.
+    fn javascript(&self) -> &[&'static str] {
+        &[]
+    }
+
+    /// Intercepts the rendering of a document element into an output buffer.
+    ///
+    /// Returns `true` if this feature handled rendering the element, or `false`
+    /// to delegate to subsequent features or core fallback rendering.
+    fn try_render_body(
+        &self,
+        _element: &DocumentElement,
+        _indent: usize,
+        _depth: usize,
+        _parameters: &DocumentParameters,
+        _out: &mut String,
+        _renderer: &HtmlRenderer,
+    ) -> bool {
+        false
+    }
+
+    /// Intercepts the rendering of a document header.
+    ///
+    /// Returns `true` if this feature handled rendering the header, or `false`
+    /// to delegate to subsequent features or core fallback rendering.
+    fn try_render_header(
+        &self,
+        _header: &DocumentHeader,
+        _parameters: &DocumentParameters,
+    ) -> bool {
+        false
     }
 }
 
@@ -203,32 +259,32 @@ fn scan_element(element: &DocumentElement, features: &mut DocumentFeature) {
             scan_elements(children, features);
         }
         DocumentElement::BulletListItem { children, .. } => {
-            features.bullet = true;
+            features.insert(DocumentFeature::BULLET);
             scan_elements(children, features);
         }
         DocumentElement::CheckBoxItem { children, .. } => {
-            features.task = true;
+            features.insert(DocumentFeature::TASK);
             scan_elements(children, features);
         }
         DocumentElement::CodeBlock { .. } => {
-            features.code = true;
+            features.insert(DocumentFeature::CODE);
         }
         DocumentElement::Image { .. } => {
-            features.image = true;
+            features.insert(DocumentFeature::IMAGE);
         }
         DocumentElement::OrderedListItem { children, .. } => {
-            features.ordered = true;
+            features.insert(DocumentFeature::ORDERED);
             scan_elements(children, features);
         }
         DocumentElement::Shoutout { .. } => {
-            features.shoutout = true;
+            features.insert(DocumentFeature::SHOUTOUT);
         }
         DocumentElement::Table { .. } => {
-            features.table = true;
+            features.insert(DocumentFeature::TABLE);
         }
         DocumentElement::HorizontalRule | DocumentElement::Text(_) => {}
         DocumentElement::Unknown(_) => {
-            features.unknown = true;
+            features.insert(DocumentFeature::UNKNOWN);
         }
     }
 }
@@ -241,20 +297,6 @@ fn scan_elements(elements: &[DocumentElement], features: &mut DocumentFeature) {
         }
         scan_element(element, features);
     }
-}
-
-/// Converts a [`DocumentFeature`] configuration into a formatted feature summary string.
-///
-/// # Examples
-///
-/// ```
-/// use doc2flow::core::feature::{DocumentFeature, to_features_string};
-///
-/// let features = DocumentFeature::default();
-/// assert_eq!(to_features_string(&features), "core");
-/// ```
-pub fn to_features_string(features: &DocumentFeature) -> String {
-    features.to_features_string()
 }
 
 #[cfg(test)]
@@ -287,14 +329,14 @@ mod tests {
         let features = DocumentFeature::from(&doc);
         assert!(!features.is_empty());
         assert!(features.is_all());
-        assert!(features.bullet);
-        assert!(features.task);
-        assert!(features.code);
-        assert!(features.image);
-        assert!(features.ordered);
-        assert!(features.shoutout);
-        assert!(features.table);
-        assert!(features.unknown);
+        assert!(features.contains(DocumentFeature::BULLET));
+        assert!(features.contains(DocumentFeature::TASK));
+        assert!(features.contains(DocumentFeature::CODE));
+        assert!(features.contains(DocumentFeature::IMAGE));
+        assert!(features.contains(DocumentFeature::ORDERED));
+        assert!(features.contains(DocumentFeature::SHOUTOUT));
+        assert!(features.contains(DocumentFeature::TABLE));
+        assert!(features.contains(DocumentFeature::UNKNOWN));
     }
 
     #[test]
@@ -317,7 +359,7 @@ mod tests {
         ));
         let features = DocumentFeature::from(&doc);
         assert!(features.is_empty());
-        assert_eq!(features.to_features_string(), "core");
+        assert!(features.to_string().contains("core"));
     }
 
     #[test]
@@ -336,14 +378,68 @@ mod tests {
         let features = DocumentFeature::from(&doc);
         assert!(!features.is_empty());
         assert!(!features.is_all());
-        assert!(features.bullet);
-        assert!(features.ordered);
-        assert!(features.task);
-        assert!(!features.image);
-        assert!(!features.code);
-        assert!(!features.table);
-        assert!(!features.shoutout);
-        assert!(!features.unknown);
+        assert!(features.contains(DocumentFeature::BULLET));
+        assert!(features.contains(DocumentFeature::ORDERED));
+        assert!(features.contains(DocumentFeature::TASK));
+        assert!(!features.contains(DocumentFeature::IMAGE));
+        assert!(!features.contains(DocumentFeature::CODE));
+        assert!(!features.contains(DocumentFeature::TABLE));
+        assert!(!features.contains(DocumentFeature::SHOUTOUT));
+        assert!(!features.contains(DocumentFeature::UNKNOWN));
+    }
+
+    #[test]
+    fn test_display_all() {
+        let features = DocumentFeature::ALL;
+        let s = features.to_string();
+        assert!(s.contains("core"));
+        assert!(s.contains("bullet"));
+        assert!(s.contains("code"));
+        assert!(s.contains("image"));
+        assert!(s.contains("ordered"));
+        assert!(s.contains("shoutout"));
+        assert!(s.contains("table"));
+        assert!(s.contains("task"));
+        assert!(s.contains("unknown"));
+    }
+
+    #[test]
+    fn test_display_combinations() {
+        let mut features = DocumentFeature::BULLET | DocumentFeature::TABLE;
+        let s1 = features.to_string();
+        assert!(s1.contains("core"));
+        assert!(s1.contains("bullet"));
+        assert!(s1.contains("table"));
+        assert!(!s1.contains("image"));
+
+        features |= DocumentFeature::IMAGE;
+        let s2 = features.to_string();
+        assert!(s2.contains("image"));
+
+        features |= DocumentFeature::UNKNOWN;
+        let s3 = features.to_string();
+        assert!(s3.contains("unknown"));
+    }
+
+    #[test]
+    fn test_display_default() {
+        let features = DocumentFeature::default();
+        assert!(features.to_string().contains("core"));
+    }
+
+    #[test]
+    fn test_display_single() {
+        let features = DocumentFeature::CODE;
+        let s = features.to_string();
+        assert!(s.contains("core"));
+        assert!(s.contains("code"));
+        assert!(!s.contains("unknown"));
+
+        let unknown_feature = DocumentFeature::UNKNOWN;
+        let s_unknown = unknown_feature.to_string();
+        assert!(s_unknown.contains("core"));
+        assert!(s_unknown.contains("unknown"));
+        assert!(!s_unknown.contains("code"));
     }
 
     #[test]
@@ -385,14 +481,14 @@ mod tests {
             ],
         ));
         let features = DocumentFeature::from(&doc);
-        assert!(features.code);
-        assert!(features.table);
-        assert!(!features.bullet);
-        assert!(!features.task);
-        assert!(!features.image);
-        assert!(!features.ordered);
-        assert!(!features.shoutout);
-        assert!(!features.unknown);
+        assert!(features.contains(DocumentFeature::CODE));
+        assert!(features.contains(DocumentFeature::TABLE));
+        assert!(!features.contains(DocumentFeature::BULLET));
+        assert!(!features.contains(DocumentFeature::TASK));
+        assert!(!features.contains(DocumentFeature::IMAGE));
+        assert!(!features.contains(DocumentFeature::ORDERED));
+        assert!(!features.contains(DocumentFeature::SHOUTOUT));
+        assert!(!features.contains(DocumentFeature::UNKNOWN));
     }
 
     #[test]
@@ -402,133 +498,14 @@ mod tests {
         assert_eq!(features, DocumentFeature::default());
         assert!(features.is_empty());
         assert!(!features.is_all());
-        assert!(!features.bullet);
-        assert!(!features.task);
-        assert!(!features.code);
-        assert!(!features.image);
-        assert!(!features.ordered);
-        assert!(!features.shoutout);
-        assert!(!features.table);
-        assert!(!features.unknown);
-    }
-
-    #[test]
-    fn test_partial_features_matches() {
-        let mut single_feature_doc = Document::new();
-        single_feature_doc.push_body(DocumentElement::bullet_list_item("Only bullet"));
-        let single_features = DocumentFeature::from(&single_feature_doc);
-        assert!(!single_features.is_empty());
-        assert!(!single_features.is_all());
-        assert!(single_features.bullet);
-        assert!(!single_features.code);
-        assert!(!single_features.table);
-        assert!(!single_features.unknown);
-
-        let mut multi_feature_doc = Document::new();
-        multi_feature_doc.push_body(DocumentElement::code_block(
-            None::<String>,
-            "console.log(1)",
-        ));
-        multi_feature_doc.push_body(DocumentElement::table(vec![], vec![]));
-        let multi_features = DocumentFeature::from(&multi_feature_doc);
-        assert!(!multi_features.is_empty());
-        assert!(!multi_features.is_all());
-        assert!(multi_features.code);
-        assert!(multi_features.table);
-        assert!(!multi_features.image);
-        assert!(!multi_features.unknown);
-
-        let mut six_features_doc = Document::new();
-        six_features_doc.push_body(DocumentElement::bullet_list_item("A"));
-        six_features_doc.push_body(DocumentElement::check_box_item(false, "B"));
-        six_features_doc.push_body(DocumentElement::code_block(None::<String>, "C"));
-        six_features_doc.push_body(DocumentElement::ordered_list_item(1, "D"));
-        six_features_doc.push_body(DocumentElement::section(1, "E", vec![]));
-        six_features_doc.push_body(DocumentElement::shoutout(ShoutoutElementKind::Tip, "F"));
-        six_features_doc.push_body(DocumentElement::table(vec![], vec![]));
-        let six_features = DocumentFeature::from(&six_features_doc);
-        assert!(!six_features.is_empty());
-        assert!(!six_features.is_all());
-        assert!(!six_features.image);
-        assert!(six_features.bullet);
-        assert!(six_features.task);
-        assert!(six_features.code);
-        assert!(six_features.ordered);
-        assert!(six_features.shoutout);
-        assert!(six_features.table);
-        assert!(!six_features.unknown);
-    }
-
-    #[test]
-    fn test_to_features_string_all() {
-        let features = DocumentFeature {
-            bullet: true,
-            code: true,
-            image: true,
-            ordered: true,
-            shoutout: true,
-            table: true,
-            task: true,
-            unknown: true,
-        };
-        let expected = "core, bullet, code, image, ordered, shoutout, table, task, unknown";
-        assert_eq!(features.to_features_string(), expected);
-        assert_eq!(to_features_string(&features), expected);
-        assert_eq!(features.to_string(), expected);
-    }
-
-    #[test]
-    fn test_to_features_string_combinations() {
-        let mut features = DocumentFeature {
-            bullet: true,
-            table: true,
-            ..Default::default()
-        };
-        assert_eq!(features.to_features_string(), "core, bullet, table");
-
-        features.image = true;
-        assert_eq!(features.to_features_string(), "core, bullet, image, table");
-
-        features.unknown = true;
-        assert_eq!(
-            features.to_features_string(),
-            "core, bullet, image, table, unknown"
-        );
-    }
-
-    #[test]
-    fn test_to_features_string_default() {
-        let features = DocumentFeature::default();
-        assert_eq!(features.to_features_string(), "core");
-        assert_eq!(to_features_string(&features), "core");
-        assert_eq!(features.to_string(), "core");
-    }
-
-    #[test]
-    fn test_to_features_string_single() {
-        let features = DocumentFeature {
-            code: true,
-            ..Default::default()
-        };
-        assert_eq!(features.to_features_string(), "core, code");
-        assert_eq!(to_features_string(&features), "core, code");
-        assert_eq!(features.to_string(), "core, code");
-
-        let unknown_feature = DocumentFeature {
-            unknown: true,
-            ..Default::default()
-        };
-        assert_eq!(unknown_feature.to_features_string(), "core, unknown");
-    }
-
-    #[test]
-    fn test_unknown_element_detected() {
-        let mut doc = Document::new();
-        doc.push_body(DocumentElement::unknown("fallback raw data"));
-        let features = DocumentFeature::from(&doc);
-        assert!(!features.is_empty());
-        assert!(features.unknown);
-        assert_eq!(features.to_features_string(), "core, unknown");
+        assert!(!features.contains(DocumentFeature::BULLET));
+        assert!(!features.contains(DocumentFeature::TASK));
+        assert!(!features.contains(DocumentFeature::CODE));
+        assert!(!features.contains(DocumentFeature::IMAGE));
+        assert!(!features.contains(DocumentFeature::ORDERED));
+        assert!(!features.contains(DocumentFeature::SHOUTOUT));
+        assert!(!features.contains(DocumentFeature::TABLE));
+        assert!(!features.contains(DocumentFeature::UNKNOWN));
     }
 
     #[test]
@@ -542,9 +519,70 @@ mod tests {
         assert!(feature.javascript().is_empty());
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
+        let header = DocumentHeader::default();
         let element = DocumentElement::text("Test");
         let params = DocumentParameters::default();
-        assert!(!feature.try_render(&element, 0, 0, &params, &mut out, &renderer));
+        assert!(!feature.try_render_header(&header, &params));
+        assert!(!feature.try_render_body(&element, 0, 0, &params, &mut out, &renderer));
         assert!(out.is_empty());
+    }
+
+    #[test]
+    fn test_partial_features_matches() {
+        let mut single_feature_doc = Document::new();
+        single_feature_doc.push_body(DocumentElement::bullet_list_item("Only bullet"));
+        let single_features = DocumentFeature::from(&single_feature_doc);
+        assert!(!single_features.is_empty());
+        assert!(!single_features.is_all());
+        assert!(single_features.contains(DocumentFeature::BULLET));
+        assert!(!single_features.contains(DocumentFeature::CODE));
+        assert!(!single_features.contains(DocumentFeature::TABLE));
+        assert!(!single_features.contains(DocumentFeature::UNKNOWN));
+
+        let mut multi_feature_doc = Document::new();
+        multi_feature_doc.push_body(DocumentElement::code_block(
+            None::<String>,
+            "console.log(1)",
+        ));
+        multi_feature_doc.push_body(DocumentElement::table(vec![], vec![]));
+        let multi_features = DocumentFeature::from(&multi_feature_doc);
+        assert!(!multi_features.is_empty());
+        assert!(!multi_features.is_all());
+        assert!(multi_features.contains(DocumentFeature::CODE));
+        assert!(multi_features.contains(DocumentFeature::TABLE));
+        assert!(!multi_features.contains(DocumentFeature::IMAGE));
+        assert!(!multi_features.contains(DocumentFeature::UNKNOWN));
+
+        let mut six_features_doc = Document::new();
+        six_features_doc.push_body(DocumentElement::bullet_list_item("A"));
+        six_features_doc.push_body(DocumentElement::check_box_item(false, "B"));
+        six_features_doc.push_body(DocumentElement::code_block(None::<String>, "C"));
+        six_features_doc.push_body(DocumentElement::ordered_list_item(1, "D"));
+        six_features_doc.push_body(DocumentElement::section(1, "E", vec![]));
+        six_features_doc.push_body(DocumentElement::shoutout(ShoutoutElementKind::Tip, "F"));
+        six_features_doc.push_body(DocumentElement::table(vec![], vec![]));
+        let six_features = DocumentFeature::from(&six_features_doc);
+        assert!(!six_features.is_empty());
+        assert!(!six_features.is_all());
+        assert!(!six_features.contains(DocumentFeature::IMAGE));
+        assert!(six_features.contains(DocumentFeature::BULLET));
+        assert!(six_features.contains(DocumentFeature::TASK));
+        assert!(six_features.contains(DocumentFeature::CODE));
+        assert!(six_features.contains(DocumentFeature::ORDERED));
+        assert!(six_features.contains(DocumentFeature::SHOUTOUT));
+        assert!(six_features.contains(DocumentFeature::TABLE));
+        assert!(!six_features.contains(DocumentFeature::UNKNOWN));
+    }
+
+    #[test]
+    fn test_unknown_element_detected() {
+        let mut doc = Document::new();
+        doc.push_body(DocumentElement::unknown("fallback raw data"));
+        let features = DocumentFeature::from(&doc);
+        assert!(!features.is_empty());
+        assert!(features.contains(DocumentFeature::UNKNOWN));
+        let s = features.to_string();
+        assert!(s.contains("core"));
+        assert!(s.contains("unknown"));
     }
 }

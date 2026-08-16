@@ -31,7 +31,7 @@ impl BulletFeature {
 
 impl Feature for BulletFeature {
     /// Intercepts the rendering of bullet list elements into the output buffer.
-    fn try_render(
+    fn try_render_body(
         &self,
         element: &DocumentElement,
         indent: usize,
@@ -90,7 +90,7 @@ mod tests {
         let text = DocumentElement::text("Regular text");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(!feature.try_render(
+        assert!(!feature.try_render_body(
             &text,
             0,
             0,
@@ -124,7 +124,7 @@ mod tests {
         );
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &element,
             0,
             0,
@@ -149,7 +149,7 @@ mod tests {
         let element = DocumentElement::bullet_list_item("Nested level 2 item");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &element,
             2,
             0,
@@ -174,7 +174,7 @@ mod tests {
         let element = DocumentElement::bullet_list_item("Indented child item");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &element,
             2,
             1,
@@ -202,7 +202,7 @@ mod tests {
 
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render(
+        assert!(feature.try_render_body(
             &element,
             1,
             0,

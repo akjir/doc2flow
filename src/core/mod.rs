@@ -21,7 +21,7 @@ pub use document::{
     TableAlignment,
 };
 pub use error::{DiagnosticError, Error, Result, build_caret_annotation};
-pub use feature::{DocumentFeature, Feature, to_features_string};
+pub use feature::{DocumentFeature, Feature};
 pub use format::{escape_html_into, format_inline_into, push_indent};
 pub use language::get_language_json;
 pub use markdown::parse_d2f_markdown;

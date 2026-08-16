@@ -75,37 +75,25 @@ pub fn get_active_features<'a>(
     features: &DocumentFeature,
     buffer: &'a mut [&'static dyn Feature; 8],
 ) -> &'a [&'static dyn Feature] {
+    const MAPPED_FEATURES: [(DocumentFeature, &'static dyn Feature); 7] = [
+        (DocumentFeature::BULLET, &BULLET_FEATURE),
+        (DocumentFeature::CODE, &CODE_FEATURE),
+        (DocumentFeature::IMAGE, &IMAGE_FEATURE),
+        (DocumentFeature::ORDERED, &ORDERED_FEATURE),
+        (DocumentFeature::TABLE, &TABLE_FEATURE),
+        (DocumentFeature::TASK, &TASK_FEATURE),
+        (DocumentFeature::UNKNOWN, &UNKNOWN_FEATURE),
+    ];
+
     let mut count = 0;
     buffer[count] = &CORE_FEATURE;
     count += 1;
 
-    if features.bullet {
-        buffer[count] = &BULLET_FEATURE;
-        count += 1;
-    }
-    if features.code {
-        buffer[count] = &CODE_FEATURE;
-        count += 1;
-    }
-    if features.image {
-        buffer[count] = &IMAGE_FEATURE;
-        count += 1;
-    }
-    if features.ordered {
-        buffer[count] = &ORDERED_FEATURE;
-        count += 1;
-    }
-    if features.table {
-        buffer[count] = &TABLE_FEATURE;
-        count += 1;
-    }
-    if features.task {
-        buffer[count] = &TASK_FEATURE;
-        count += 1;
-    }
-    if features.unknown {
-        buffer[count] = &UNKNOWN_FEATURE;
-        count += 1;
+    for &(flag, feature_ref) in &MAPPED_FEATURES {
+        if features.contains(flag) {
+            buffer[count] = feature_ref;
+            count += 1;
+        }
     }
 
     &buffer[..count]
@@ -154,7 +142,7 @@ mod tests {
         let element = DocumentElement::bullet_list_item("Bullet item");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(bullet_feature.try_render(
+        assert!(bullet_feature.try_render_body(
             &element,
             1,
             0,
@@ -174,7 +162,7 @@ mod tests {
         let unchecked = DocumentElement::check_box_item(false, "Pending task");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(task_feature.try_render(
+        assert!(task_feature.try_render_body(
             &unchecked,
             1,
             0,
@@ -189,7 +177,7 @@ mod tests {
 
         let checked = DocumentElement::check_box_item(true, "Done task");
         let mut out_checked = String::new();
-        assert!(task_feature.try_render(
+        assert!(task_feature.try_render_body(
             &checked,
             1,
             0,
@@ -209,7 +197,7 @@ mod tests {
         let element = DocumentElement::code_block(Some("rust"), "fn main() {}");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(code_feature.try_render(
+        assert!(code_feature.try_render_body(
             &element,
             1,
             0,
@@ -229,7 +217,7 @@ mod tests {
         let element = DocumentElement::text("Hello");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(core_feature.try_render(
+        assert!(core_feature.try_render_body(
             &element,
             1,
             0,
@@ -249,7 +237,7 @@ mod tests {
         let element = DocumentElement::image("Alt", "pic.png");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(image_feature.try_render(
+        assert!(image_feature.try_render_body(
             &element,
             1,
             0,
@@ -269,7 +257,7 @@ mod tests {
         let element = DocumentElement::ordered_list_item(1, "Ordered item");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(ordered_feature.try_render(
+        assert!(ordered_feature.try_render_body(
             &element,
             1,
             0,
@@ -292,7 +280,7 @@ mod tests {
         );
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(table_feature.try_render(
+        assert!(table_feature.try_render_body(
             &element,
             1,
             0,
@@ -312,7 +300,7 @@ mod tests {
         let element = DocumentElement::unknown("Raw line");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(unknown_feature.try_render(
+        assert!(unknown_feature.try_render_body(
             &element,
             1,
             0,

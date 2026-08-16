@@ -2504,7 +2504,9 @@ Body text
         let md = "---\ntitle: \"Empty Variables\"\n---\n:::variables\n:::\n# Main Section\nContent";
         let err = parse_d2f_markdown(md).unwrap_err();
         let err_str = err.to_string();
-        assert!(err_str.contains("block directive ':::variables' must contain only a single table"));
+        assert!(
+            err_str.contains("block directive ':::variables' must contain only a single table")
+        );
     }
 
     #[test]
@@ -2512,7 +2514,9 @@ Body text
         let md = "---\ntitle: \"Invalid Variables\"\n---\n:::variables\n| Variable | Value |\n| --- | --- |\n| TARGET_HOST | 192.168.1.100 |\nExtra text\n:::\n# Main\nContent";
         let err = parse_d2f_markdown(md).unwrap_err();
         let err_str = err.to_string();
-        assert!(err_str.contains("block directive ':::variables' must contain only a single table"));
+        assert!(
+            err_str.contains("block directive ':::variables' must contain only a single table")
+        );
     }
 
     #[test]
@@ -2520,7 +2524,9 @@ Body text
         let md = "---\ntitle: \"Invalid Variables\"\n---\n:::variables\n- [x] Task\n:::\n# Main\nContent";
         let err = parse_d2f_markdown(md).unwrap_err();
         let err_str = err.to_string();
-        assert!(err_str.contains("block directive ':::variables' must contain only a single table"));
+        assert!(
+            err_str.contains("block directive ':::variables' must contain only a single table")
+        );
     }
 
     #[test]
@@ -2528,7 +2534,9 @@ Body text
         let md = "---\ntitle: \"Invalid Variables\"\n---\n:::variables\n| A | B |\n| --- | --- |\n| 1 | 2 |\n\n| C | D |\n| --- | --- |\n| 3 | 4 |\n:::\n# Main\nContent";
         let err = parse_d2f_markdown(md).unwrap_err();
         let err_str = err.to_string();
-        assert!(err_str.contains("block directive ':::variables' must contain only a single table"));
+        assert!(
+            err_str.contains("block directive ':::variables' must contain only a single table")
+        );
     }
 
     #[test]
@@ -2601,7 +2609,10 @@ Body text
             doc.header.variables,
             Some(DocumentElement::table(
                 vec![TableAlignment::None, TableAlignment::None],
-                vec![vec!["Var".into(), "Val".into()], vec!["A".into(), "1".into()]]
+                vec![
+                    vec!["Var".into(), "Val".into()],
+                    vec!["A".into(), "1".into()]
+                ]
             ))
         );
         assert_eq!(doc.body.len(), 1);
