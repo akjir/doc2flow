@@ -129,30 +129,22 @@ const STATIC_CARETS: &str =
 pub fn build_caret_annotation(col_no: usize, span_len: usize, max_len: usize) -> Cow<'static, str> {
     let max_len = max_len.max(1);
     let span = span_len.max(1);
-    let padding_len = col_no.saturating_sub(1);
+    let padding_len = col_no.saturating_sub(1).min(max_len);
 
     if padding_len == 0 {
         let effective_span = span.min(max_len);
         if effective_span <= STATIC_CARETS.len() {
             Cow::Borrowed(&STATIC_CARETS[..effective_span.min(STATIC_CARETS.len())])
         } else {
-            let mut s = String::with_capacity(effective_span);
-            for _ in 0..effective_span {
-                s.push('^');
-            }
-            Cow::Owned(s)
+            Cow::Owned("^".repeat(effective_span))
         }
     } else {
         let effective_span = span.min(max_len.saturating_sub(padding_len).max(1));
-        let total_len = padding_len.saturating_add(effective_span);
-        let mut s = String::with_capacity(total_len);
-        for _ in 0..padding_len {
-            s.push(' ');
-        }
-        for _ in 0..effective_span {
-            s.push('^');
-        }
-        Cow::Owned(s)
+        Cow::Owned(format!(
+            "{}{}",
+            " ".repeat(padding_len),
+            "^".repeat(effective_span)
+        ))
     }
 }
 
@@ -332,9 +324,18 @@ mod tests {
         assert_eq!(&col_huge[149..], "^".repeat(60));
 
         let col_over_max = build_caret_annotation(200, 50, 120);
-        assert_eq!(col_over_max.len(), 199 + 1);
-        assert_eq!(&col_over_max[..199], " ".repeat(199));
-        assert_eq!(&col_over_max[199..], "^");
+        assert_eq!(col_over_max.len(), 120 + 1);
+        assert_eq!(&col_over_max[..120], " ".repeat(120));
+        assert_eq!(&col_over_max[120..], "^");
+    }
+
+    #[test]
+    fn test_caret_annotation_extreme_col_no() {
+        let max_len = 80;
+        let carets = build_caret_annotation(usize::MAX, 5, max_len);
+        assert_eq!(carets.len(), max_len + 1);
+        assert_eq!(&carets[..max_len], " ".repeat(max_len));
+        assert_eq!(&carets[max_len..], "^");
     }
 
     #[test]

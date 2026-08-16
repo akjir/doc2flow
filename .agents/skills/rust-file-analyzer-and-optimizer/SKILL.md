@@ -29,6 +29,8 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 - **Zero-Copy:** Use `.split_once()`, `.strip_prefix()`. AVOID intermediate collections (`.collect::<Vec<_>>()`).
 - **Safe Slicing:** Use safe subslice manipulation (`.split_once()`, `.strip_prefix()`, cursor offsets). Prohibit raw pointer arithmetic (`as_ptr` diffs) for string bounds.
 - **Pre-allocate:** ALWAYS use `.with_capacity()` for dynamic collections in loops.
+- **Bounded Allocations:** Always clamp dynamic `usize` inputs used for memory allocation (e.g. `String::with_capacity`, padding lengths, gutter widths) against hardcoded limits or validated logical bounds to prevent OOM panics (P-BOUND-ALLOC).
+- **Idiomatic Duplication:** Prefer `str::repeat()` over manual `Iterator::extend`/`repeat_n` loops for standard character/string repetition (P-IDIOM-REPEAT).
 - **State Condensation:** When tracking multiple boolean configuration flags, evaluate `bitflags` or array-backed state to minimize memory footprint and avoid brittle `&&`/`||` chains.
 - **Bitmask Safety:** When using integer bitmasks (`u32`, `u64`), assert `len <= bit_width` at initialization to prevent overflow (P-MASK-SAFE).
 - **No Magic Capacities:** Avoid hardcoding array capacities (`[T; 8]`). Define named `const MAX_CAPACITY: usize` with `debug_assert!` checks (P-NO-MAGIC-CAP).
@@ -64,6 +66,7 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 - **Pipelines & Parity:** DRY template contexts (`build_template_vars`), render conditional components identically across entry points, and single-predicate feature dispatch (`is_feature_active`).
 - **Resilient Test Assertions:** Assert specific semantic tokens (e.g., `.contains("bullet")`) on formatted string outputs (like `Display`) rather than brittle exact full-string matches.
 - **Fallback Testing:** Always write explicit `#[test]` cases for fallback or default `_ => {}` match arms (M-FALLBACK-TESTS).
+- **Extreme Boundary Testing:** Mandate extreme edge-case unit tests (`usize::MAX`, `0`, overflow bounds) for functions performing length/padding math (M-EXTREME-BOUND-TESTS).
 
 ### 5: HTML, XML & Asset Processing
 - **Scanners:** Zero-alloc single-pass tokenizers (O(N) forward cursor). Avoid redundant scanning passes over attribute names/values.

@@ -1,7 +1,7 @@
 //! Error types and diagnostic definitions for Doc2Flow core engine.
 
 use std::borrow::Cow;
-use std::fmt::{self, Display, Formatter, Write};
+use std::fmt::{self, Display, Formatter};
 
 /// Static buffer of carets for zero-allocation caret borrowing on typical line lengths.
 const STATIC_CARETS: &str =
@@ -32,53 +32,38 @@ impl DiagnosticError<'_> {
     /// Formats the diagnostic error into a rustc-style string.
     #[must_use]
     pub fn render(&self) -> String {
-        let line_len = self.line_number.checked_ilog10().unwrap_or(0) as usize + 1;
-        let cap = 80
-            + self.message.len()
-            + self.file_path.len()
-            + self.line_snippet.len()
-            + self.annotation_carets.len()
-            + self.annotation_text.len()
-            + self.help_text.len()
-            + line_len * 4;
-
-        let mut out = String::with_capacity(cap);
-
-        let _ = out.write_str("error: ");
-        let _ = out.write_str(&self.message);
-        let _ = out.write_str("\n --> ");
-        let _ = writeln!(
-            out,
-            "{}:{}:{}",
-            self.file_path, self.line_number, self.col_number
-        );
-        let _ = writeln!(out, "{:>width$} |", "", width = line_len);
-        let _ = writeln!(
-            out,
-            "{:>width$} | {}",
-            self.line_number,
-            self.line_snippet,
-            width = line_len
-        );
-        let _ = writeln!(
-            out,
-            "{:>width$} | {} {}",
-            "",
-            self.annotation_carets,
-            self.annotation_text,
-            width = line_len
-        );
-        let _ = writeln!(out, "{:>width$} |", "", width = line_len);
-        let _ = out.write_str("= help: ");
-        let _ = out.write_str(&self.help_text);
-
-        out
+        self.to_string()
     }
 }
 
 impl Display for DiagnosticError<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.render())
+        let line_len = self.line_number.checked_ilog10().unwrap_or(0) as usize + 1;
+
+        writeln!(f, "error: {}", self.message)?;
+        writeln!(
+            f,
+            " --> {}:{}:{}",
+            self.file_path, self.line_number, self.col_number
+        )?;
+        writeln!(f, "{:>width$} |", "", width = line_len)?;
+        writeln!(
+            f,
+            "{:>width$} | {}",
+            self.line_number,
+            self.line_snippet,
+            width = line_len
+        )?;
+        writeln!(
+            f,
+            "{:>width$} | {} {}",
+            "",
+            self.annotation_carets,
+            self.annotation_text,
+            width = line_len
+        )?;
+        writeln!(f, "{:>width$} |", "", width = line_len)?;
+        write!(f, "= help: {}", self.help_text)
     }
 }
 
@@ -102,11 +87,9 @@ impl Display for Error {
     }
 }
 
-impl std::error::Error for Error {}
-
 impl From<&DiagnosticError<'_>> for Error {
     fn from(err: &DiagnosticError<'_>) -> Self {
-        Self::Diagnostic(err.render())
+        Self::Diagnostic(err.to_string())
     }
 }
 
@@ -118,7 +101,7 @@ impl From<&str> for Error {
 
 impl<'a> From<DiagnosticError<'a>> for Error {
     fn from(err: DiagnosticError<'a>) -> Self {
-        Self::Diagnostic(err.render())
+        Self::Diagnostic(err.to_string())
     }
 }
 
@@ -128,37 +111,32 @@ impl From<String> for Error {
     }
 }
 
+impl std::error::Error for Error {}
+
 /// Result type alias for core operations.
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 /// Constructs a diagnostic caret annotation string pointing to a source location.
+#[must_use]
 pub fn build_caret_annotation(col_no: usize, span_len: usize, max_len: usize) -> Cow<'static, str> {
     let max_len = max_len.max(1);
     let span = span_len.max(1);
-    let padding_len = col_no.saturating_sub(1);
+    let padding_len = col_no.saturating_sub(1).min(max_len);
 
     if padding_len == 0 {
         let effective_span = span.min(max_len);
         if effective_span <= STATIC_CARETS.len() {
             Cow::Borrowed(&STATIC_CARETS[..effective_span])
         } else {
-            let mut s = String::with_capacity(effective_span);
-            for _ in 0..effective_span {
-                s.push('^');
-            }
-            Cow::Owned(s)
+            Cow::Owned("^".repeat(effective_span))
         }
     } else {
         let effective_span = span.min(max_len.saturating_sub(padding_len).max(1));
-        let total_len = padding_len.saturating_add(effective_span);
-        let mut s = String::with_capacity(total_len);
-        for _ in 0..padding_len {
-            s.push(' ');
-        }
-        for _ in 0..effective_span {
-            s.push('^');
-        }
-        Cow::Owned(s)
+        Cow::Owned(format!(
+            "{}{}",
+            " ".repeat(padding_len),
+            "^".repeat(effective_span)
+        ))
     }
 }
 
@@ -194,6 +172,15 @@ mod tests {
     }
 
     #[test]
+    fn test_caret_annotation_extreme_col_no() {
+        let max_len = 80;
+        let carets = build_caret_annotation(usize::MAX, 5, max_len);
+        assert_eq!(carets.len(), max_len + 1);
+        assert_eq!(&carets[..max_len], " ".repeat(max_len));
+        assert_eq!(&carets[max_len..], "^");
+    }
+
+    #[test]
     fn test_caret_annotation_long_snippet_exceeding_static_carets() {
         let long_len = 120;
         let carets = build_caret_annotation(0, long_len, 200);
@@ -217,9 +204,9 @@ mod tests {
         assert_eq!(&col_huge[149..], "^".repeat(60));
 
         let col_over_max = build_caret_annotation(200, 50, 120);
-        assert_eq!(col_over_max.len(), 199 + 1);
-        assert_eq!(&col_over_max[..199], " ".repeat(199));
-        assert_eq!(&col_over_max[199..], "^");
+        assert_eq!(col_over_max.len(), 120 + 1);
+        assert_eq!(&col_over_max[..120], " ".repeat(120));
+        assert_eq!(&col_over_max[120..], "^");
     }
 
     #[test]
@@ -235,7 +222,7 @@ mod tests {
             help_text: "close the frontmatter block with a closing '---' line.".into(),
         };
 
-        let displayed = format!("{}", diag);
+        let displayed = format!("{diag}");
         assert_eq!(displayed, diag.render());
 
         let err_owned: Error = diag.clone().into();
@@ -336,6 +323,22 @@ mod tests {
     }
 
     #[test]
+    fn test_diagnostic_error_trait_impl() {
+        let diag = DiagnosticError {
+            message: "sample".into(),
+            file_path: "test.md".into(),
+            line_number: 1,
+            col_number: 1,
+            line_snippet: "snippet".into(),
+            annotation_carets: "^".into(),
+            annotation_text: "note".into(),
+            help_text: "fix it".into(),
+        };
+        let std_err: &dyn std::error::Error = &diag;
+        assert!(std_err.source().is_none());
+    }
+
+    #[test]
     fn test_error_display() {
         let err = Error::Message("test error".to_string());
         assert_eq!(err.to_string(), "test error");
@@ -348,5 +351,13 @@ mod tests {
     fn test_error_from_str() {
         let err: Error = "test from str".into();
         assert_eq!(err.to_string(), "test from str");
+    }
+
+    #[test]
+    fn test_error_from_string() {
+        let err: Error = String::from("test from String").into();
+        assert_eq!(err.to_string(), "test from String");
+        let std_err: &dyn std::error::Error = &err;
+        assert!(std_err.source().is_none());
     }
 }
