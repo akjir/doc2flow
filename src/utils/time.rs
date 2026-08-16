@@ -12,7 +12,7 @@ use std::time::SystemTime;
 ///
 /// ```
 /// use std::time::{Duration, UNIX_EPOCH};
-/// use doc2flow::core::utils::time::format_iso8601_utc;
+/// use doc2flow::utils::time::format_iso8601_utc;
 ///
 /// let epoch = UNIX_EPOCH;
 /// assert_eq!(format_iso8601_utc(epoch), "1970-01-01T00:00:00Z");
@@ -35,7 +35,7 @@ pub fn format_iso8601_utc(time: SystemTime) -> String {
 ///
 /// ```
 /// use std::time::UNIX_EPOCH;
-/// use doc2flow::core::utils::time::format_iso8601_utc_into;
+/// use doc2flow::utils::time::format_iso8601_utc_into;
 ///
 /// let mut buf = String::new();
 /// format_iso8601_utc_into(UNIX_EPOCH, &mut buf);

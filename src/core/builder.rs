@@ -6,7 +6,7 @@ use crate::core::feature::FeatureModule;
 use crate::core::format::append_indented;
 use crate::core::language::get_language_json;
 use crate::core::renderer::{HtmlRenderer, MAX_ACTIVE_FEATURES};
-use crate::core::utils::format_iso8601_utc;
+use crate::utils::format_iso8601_utc;
 
 /// Embedded base HTML template.
 pub const TEMPLATE_HTML: &str = include_str!("../../resources/templates/template.html");

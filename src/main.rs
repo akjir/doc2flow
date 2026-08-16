@@ -3,8 +3,8 @@
 use doc2flow::core::arguments::{help_message, parse_args};
 use doc2flow::core::builder;
 use doc2flow::core::error::{Error, Result};
+use doc2flow::core::io;
 use doc2flow::core::markdown::parse_d2f_markdown;
-use doc2flow::core::utils::io;
 use std::env;
 use std::process::ExitCode;
 

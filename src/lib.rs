@@ -3,3 +3,5 @@
 pub mod core;
 pub mod features;
 pub mod legacy;
+pub mod utils;
+

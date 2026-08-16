@@ -31,7 +31,7 @@ pub fn create_dir_all(path: impl AsRef<Path>) -> Result<()> {
 /// # Examples
 ///
 /// ```no_run
-/// use doc2flow::core::utils::io::get_file_size;
+/// use doc2flow::core::io::get_file_size;
 ///
 /// let size = get_file_size("large_image.png").unwrap();
 /// ```
@@ -49,7 +49,7 @@ pub fn get_file_size(path: impl AsRef<Path>) -> Result<u64> {
 /// # Examples
 ///
 /// ```
-/// use doc2flow::core::utils::io::path_exists;
+/// use doc2flow::core::io::path_exists;
 ///
 /// assert!(!path_exists("non_existent_file_xyz.txt"));
 /// ```
@@ -82,7 +82,7 @@ pub fn prompt_user_yes_no(prompt_msg: &str) -> bool {
 /// # Examples
 ///
 /// ```no_run
-/// use doc2flow::core::utils::io::read_file_bytes;
+/// use doc2flow::core::io::read_file_bytes;
 ///
 /// let bytes = read_file_bytes("image.png").unwrap();
 /// ```
@@ -100,7 +100,7 @@ pub fn read_file_bytes(path: impl AsRef<Path>) -> Result<Vec<u8>> {
 /// # Examples
 ///
 /// ```no_run
-/// use doc2flow::core::utils::io::read_file_to_string;
+/// use doc2flow::core::io::read_file_to_string;
 ///
 /// let content = read_file_to_string("document.md").unwrap();
 /// ```
@@ -132,7 +132,7 @@ pub fn remove_dir_all(path: impl AsRef<Path>) -> Result<()> {
 /// # Examples
 ///
 /// ```
-/// use doc2flow::core::utils::io::resolve_path;
+/// use doc2flow::core::io::resolve_path;
 ///
 /// assert_eq!(resolve_path("non_existent_file_xyz.txt", None::<&str>), None);
 /// ```
@@ -159,7 +159,7 @@ pub fn resolve_path(path: impl AsRef<Path>, base_dir: Option<impl AsRef<Path>>) 
 /// # Examples
 ///
 /// ```no_run
-/// use doc2flow::core::utils::io::write_file;
+/// use doc2flow::core::io::write_file;
 ///
 /// write_file("output.html", "<h1>Header</h1>").unwrap();
 /// ```

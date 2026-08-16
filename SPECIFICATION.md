@@ -71,12 +71,12 @@ Doc2Flow is a high-performance, single-binary CLI tool that compiles Markdown do
                             ▼
 ┌────────────────────────────────────────────────────────┐
 │                  Utility Subsystem                     │
-│               src/core/utils/ (mod.rs)                 │
-│         Base64 | MIME | Hasher | IO | URI | Time       │
+│                  src/utils/ (mod.rs)                   │
+│            Base64 | MIME | Hasher | URI | Time         │
 └────────────────────────────────────────────────────────┘
 ```
-- **Utility Subsystem (`src/core/utils/`):** Pure, domain-agnostic library modules. Direct `std::fs` calls outside `io.rs` are PROHIBITED.
-- **Core Engine (`src/core/`):** Houses the AST data model, zero-alloc Markdown token parser, builder assembler, and compiler-style error diagnostics.
+- **Utility Subsystem (`src/utils/`):** Pure, domain-agnostic library modules.
+- **Core Engine (`src/core/`):** Houses the AST data model, zero-alloc Markdown token parser, builder assembler, compiler-style error diagnostics, and filesystem I/O (`src/core/io.rs`). Direct `std::fs` calls outside `io.rs` are PROHIBITED.
 - **Vertical Feature Slices (`src/features/<feature>/`):** Isolated modules (`bullet`, `code`, `core`, `image`, `ordered`, `table`, `task`, `unknown`). Each slice encapsulates its HTML rendering, CSS (`<name>.css`), JS (`<name>.js`), and local constants.
 - **Conditional Asset Assembly:** If a feature is absent from a document, zero CSS rules and zero JS code for that feature SHALL be emitted into the output HTML.
 
@@ -165,7 +165,7 @@ The CLI executable MUST support the following grammar: `d2f [OPTIONS] [INPUT]`
 ## 6. Data Model & I/O Architecture
 
 ### 6.1 I/O Isolation Rules
-- All disk reads and writes MUST be isolated within `src/core/utils/io.rs`.
+- All disk reads and writes MUST be isolated within `src/core/io.rs`.
 - Processing engines MUST operate exclusively on UTF-8 strings or AST models in memory.
 
 ### 6.2 Core Data Structures (`src/core/document.rs`)
@@ -320,20 +320,27 @@ doc2flow/
 │   │   ├── error.rs          # Diagnostic compiler-style error types
 │   │   ├── feature.rs        # FeatureModule trait definition
 │   │   ├── format.rs         # Text formatting and escaping utilities
+│   │   ├── io.rs             # File system and I/O abstraction
 │   │   ├── language.rs       # Embedded locale loader
 │   │   ├── markdown.rs       # Zero-alloc Markdown parser
-│   │   ├── renderer.rs       # HTML AST renderer and element formatter
-│   │   └── utils/            # Domain-agnostic utilities (IO, Base64, MIME, Hasher, URI, Time)
-│   └── features/             # Vertical slice feature modules
-│       ├── mod.rs            # Feature registry and dispatcher
-│       ├── bullet/           # Bullet list vertical slice
-│       ├── code/             # Code block vertical slice
-│       ├── core/             # Core base styles and client scripts
-│       ├── image/            # Image display and lightbox slice
-│       ├── ordered/          # Ordered list vertical slice
-│       ├── table/            # Table rendering slice
-│       ├── task/             # Interactive task checkbox slice
-│       └── unknown/          # Unrecognized element fallback slice
+│   │   └── renderer.rs       # HTML AST renderer and element formatter
+│   ├── features/             # Vertical slice feature modules
+│   │   ├── mod.rs            # Feature registry and dispatcher
+│   │   ├── bullet/           # Bullet list vertical slice
+│   │   ├── code/             # Code block vertical slice
+│   │   ├── core/             # Core base styles and client scripts
+│   │   ├── image/            # Image display and lightbox slice
+│   │   ├── ordered/          # Ordered list vertical slice
+│   │   ├── table/            # Table rendering slice
+│   │   ├── task/             # Interactive task checkbox slice
+│   │   └── unknown/          # Unrecognized element fallback slice
+│   └── utils/                # Domain-agnostic utilities (Base64, MIME, Hasher, URI, Time)
+│       ├── mod.rs            # Utility module declarations and exports
+│       ├── base64.rs         # Base64 encoding utilities
+│       ├── hasher.rs         # SHA-256 cryptographic hashing
+│       ├── mime.rs           # MIME type detection
+│       ├── time.rs           # Timestamp formatting
+│       └── uri.rs            # Data URI creation
 ├── tests/
 │   └── integration_test.rs   # End-to-end and CLI integration test suite
 ├── build.rs                  # Build script for locales and Git version metadata

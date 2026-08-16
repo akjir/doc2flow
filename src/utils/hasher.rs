@@ -24,7 +24,7 @@ const K: [u32; 64] = [
 /// # Examples
 ///
 /// ```
-/// use doc2flow::core::utils::hasher::sha256;
+/// use doc2flow::utils::hasher::sha256;
 ///
 /// let digest = sha256(b"abc");
 /// assert_eq!(digest, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");

@@ -7,10 +7,10 @@ pub mod document;
 pub mod error;
 pub mod feature;
 pub mod format;
+pub mod io;
 pub mod language;
 pub mod markdown;
 pub mod renderer;
-pub mod utils;
 
 pub use arguments::{Args, help_message, parse_args};
 pub use builder::{assemble_assets, build};
