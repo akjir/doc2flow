@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated starter template (`templates/template.md`) with GFM table support, variables table documentation, and sample code variable usage.
 
 ### Changed
+- Refactored `Document.header` into `DocumentHeader` struct with strict single-table validation for `:::variables` block directives and automatic code feature activation.
 - Updated image fallback placeholder SVG to remove the outer dashed border and optimize vector size.
 - Adjusted typography sizing to reduce inline code font size and increase code block font size.
 - Unified document item hover and interaction styling under `item-` prefix in core stylesheet.

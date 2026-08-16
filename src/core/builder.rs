@@ -51,7 +51,7 @@ pub fn assemble_assets(features: &DocumentFeature) -> (String, String) {
 
     for (name, is_active) in [
         ("bullet", features.bullet),
-        ("code", features.code_block),
+        ("code", features.code),
         ("image", features.image),
         ("ordered", features.ordered),
         ("shoutout", features.shoutout),
@@ -104,7 +104,10 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
     let i18n_json = get_language_json(lang_code);
 
     let mut html_content = String::new();
-    for element in document.header.iter().chain(document.body.iter()) {
+    if let Some(ref variables) = document.header.variables {
+        html_content.push_str(&render_element(variables, 2, &document.parameters));
+    }
+    for element in &document.body {
         html_content.push_str(&render_element(element, 2, &document.parameters));
     }
 
@@ -366,7 +369,7 @@ mod tests {
         ));
         let features = DocumentFeature::from(&doc);
         let content = build(&doc, &features);
-        assert!(content.contains("<meta name=\"features\" content=\"core, code_block\">"));
+        assert!(content.contains("<meta name=\"features\" content=\"core, code\">"));
         assert!(!content.contains("{{FEATURES}}"));
     }
 
@@ -452,7 +455,7 @@ mod tests {
     #[test]
     fn test_assemble_styles_with_code_feature() {
         let mut features = DocumentFeature::default();
-        features.code_block = true;
+        features.code = true;
         let (css, _) = assemble_assets(&features);
         assert!(css.contains("    --bg-body:"));
         assert!(css.contains("    --code-bg:"));
@@ -554,5 +557,26 @@ mod tests {
             render_element(&directive, 1, &DocumentParameters::default()),
             "    <div class=\"item text-item\">\n      <span class=\"text-content\">\n        Directive child\n      </span>\n    </div>\n"
         );
+    }
+
+    #[test]
+    fn test_builder_build_with_header_variables() {
+        let mut doc = Document::new();
+        doc.header.variables = Some(DocumentElement::table(
+            vec![crate::core::document::TableAlignment::None, crate::core::document::TableAlignment::None],
+            vec![
+                vec!["Variable".into(), "Value".into()],
+                vec!["PORT".into(), "8080".into()],
+            ],
+        ));
+        doc.push_body(DocumentElement::text("Body text"));
+        let features = DocumentFeature::from(&doc);
+        let content = build(&doc, &features);
+        assert!(content.contains("<div class=\"table-wrap\">"));
+        assert!(content.contains("<th>Variable</th>"));
+        assert!(content.contains("<td>8080</td>"));
+        assert!(content.contains("Body text"));
+        assert!(features.code);
+        assert!(features.table);
     }
 }

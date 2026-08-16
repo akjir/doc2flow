@@ -17,7 +17,8 @@ pub use constants::{
     APP_NAME, APP_VERSION, CLI_ALIAS, CLI_BANNER, LICENSE_TERMS, LICENSE_URL, REPOSITORY_URL,
 };
 pub use document::{
-    Document, DocumentElement, DocumentParameters, ShoutoutElementKind, TableAlignment,
+    Document, DocumentElement, DocumentHeader, DocumentParameters, ShoutoutElementKind,
+    TableAlignment,
 };
 pub use error::{DiagnosticError, Error, Result, build_caret_annotation};
 pub use feature::{DocumentFeature, Feature, to_features_string};

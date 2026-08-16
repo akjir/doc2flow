@@ -33,7 +33,7 @@ pub struct DocumentFeature {
     /// Indicates whether bullet lists are present.
     pub bullet: bool,
     /// Indicates whether code blocks are present.
-    pub code_block: bool,
+    pub code: bool,
     /// Indicates whether images are present.
     pub image: bool,
     /// Indicates whether ordered lists are present.
@@ -62,7 +62,7 @@ impl DocumentFeature {
     pub const fn new() -> Self {
         Self {
             bullet: false,
-            code_block: false,
+            code: false,
             image: false,
             ordered: false,
             shoutout: false,
@@ -75,7 +75,7 @@ impl DocumentFeature {
     /// Returns `true` if all feature flags are enabled.
     pub const fn is_all(self) -> bool {
         self.bullet
-            && self.code_block
+            && self.code
             && self.image
             && self.ordered
             && self.shoutout
@@ -87,7 +87,7 @@ impl DocumentFeature {
     /// Returns `true` if no feature flags are enabled.
     pub const fn is_empty(self) -> bool {
         !self.bullet
-            && !self.code_block
+            && !self.code
             && !self.image
             && !self.ordered
             && !self.shoutout
@@ -106,11 +106,11 @@ impl DocumentFeature {
     /// let mut features = DocumentFeature::default();
     /// assert_eq!(features.to_features_string(), "core");
     ///
-    /// features.code_block = true;
-    /// assert_eq!(features.to_features_string(), "core, code_block");
+    /// features.code = true;
+    /// assert_eq!(features.to_features_string(), "core, code");
     ///
     /// features.table = true;
-    /// assert_eq!(features.to_features_string(), "core, code_block, table");
+    /// assert_eq!(features.to_features_string(), "core, code, table");
     /// ```
     pub fn to_features_string(&self) -> String {
         let mut out = String::with_capacity(96);
@@ -118,8 +118,8 @@ impl DocumentFeature {
         if self.bullet {
             out.push_str(", bullet");
         }
-        if self.code_block {
-            out.push_str(", code_block");
+        if self.code {
+            out.push_str(", code");
         }
         if self.image {
             out.push_str(", image");
@@ -171,12 +171,15 @@ impl From<&Document> for DocumentFeature {
     /// let mut doc = Document::new();
     /// doc.push_body(DocumentElement::code_block(Some("rust"), "fn main() {}"));
     /// let features = DocumentFeature::from(&doc);
-    /// assert!(features.code_block);
+    /// assert!(features.code);
     /// assert!(!features.table);
     /// ```
     fn from(doc: &Document) -> Self {
         let mut features = Self::default();
-        scan_elements(&doc.header, &mut features);
+        if let Some(ref variables) = doc.header.variables {
+            features.code = true;
+            scan_element(variables, &mut features);
+        }
         scan_elements(&doc.body, &mut features);
         features
     }
@@ -201,7 +204,7 @@ fn scan_element(element: &DocumentElement, features: &mut DocumentFeature) {
             scan_elements(children, features);
         }
         DocumentElement::CodeBlock { .. } => {
-            features.code_block = true;
+            features.code = true;
         }
         DocumentElement::Image { .. } => {
             features.image = true;
@@ -255,7 +258,6 @@ mod tests {
     #[test]
     fn test_all_features_present() {
         let mut doc = Document::new();
-        doc.push_header(DocumentElement::text("Header text"));
         doc.push_body(DocumentElement::bullet_list_item("Bullet"));
         doc.push_body(DocumentElement::check_box_item(true, "Task"));
         doc.push_body(DocumentElement::code_block(Some("rust"), "fn main() {}"));
@@ -280,7 +282,7 @@ mod tests {
         assert!(features.is_all());
         assert!(features.bullet);
         assert!(features.task);
-        assert!(features.code_block);
+        assert!(features.code);
         assert!(features.image);
         assert!(features.ordered);
         assert!(features.shoutout);
@@ -298,7 +300,6 @@ mod tests {
     #[test]
     fn test_core_elements_only_is_empty() {
         let mut doc = Document::new();
-        doc.push_header(DocumentElement::text("Header text"));
         doc.push_body(DocumentElement::section(
             1,
             "Section Title",
@@ -332,7 +333,7 @@ mod tests {
         assert!(features.ordered);
         assert!(features.task);
         assert!(!features.image);
-        assert!(!features.code_block);
+        assert!(!features.code);
         assert!(!features.table);
         assert!(!features.shoutout);
         assert!(!features.unknown);
@@ -341,14 +342,14 @@ mod tests {
     #[test]
     fn test_early_exit_short_circuit() {
         let mut doc = Document::new();
-        doc.push_header(DocumentElement::bullet_list_item("A"));
-        doc.push_header(DocumentElement::check_box_item(true, "B"));
-        doc.push_header(DocumentElement::code_block(None::<String>, "C"));
-        doc.push_header(DocumentElement::image("D", "d.png"));
-        doc.push_header(DocumentElement::ordered_list_item(1, "E"));
-        doc.push_header(DocumentElement::shoutout(ShoutoutElementKind::Caution, "G"));
-        doc.push_header(DocumentElement::table(vec![], vec![]));
-        doc.push_header(DocumentElement::unknown("H"));
+        doc.push_body(DocumentElement::bullet_list_item("A"));
+        doc.push_body(DocumentElement::check_box_item(true, "B"));
+        doc.push_body(DocumentElement::code_block(None::<String>, "C"));
+        doc.push_body(DocumentElement::image("D", "d.png"));
+        doc.push_body(DocumentElement::ordered_list_item(1, "E"));
+        doc.push_body(DocumentElement::shoutout(ShoutoutElementKind::Caution, "G"));
+        doc.push_body(DocumentElement::table(vec![], vec![]));
+        doc.push_body(DocumentElement::unknown("H"));
 
         assert!(DocumentFeature::from(&doc).is_all());
 
@@ -367,6 +368,27 @@ mod tests {
     }
 
     #[test]
+    fn test_header_variables_activates_code_and_table_features() {
+        let mut doc = Document::new();
+        doc.header.variables = Some(DocumentElement::table(
+            vec![TableAlignment::None, TableAlignment::None],
+            vec![
+                vec!["Variable".into(), "Value".into()],
+                vec!["PORT".into(), "8080".into()],
+            ],
+        ));
+        let features = DocumentFeature::from(&doc);
+        assert!(features.code);
+        assert!(features.table);
+        assert!(!features.bullet);
+        assert!(!features.task);
+        assert!(!features.image);
+        assert!(!features.ordered);
+        assert!(!features.shoutout);
+        assert!(!features.unknown);
+    }
+
+    #[test]
     fn test_empty_document_boundary() {
         let doc = Document::new();
         let features = DocumentFeature::from(&doc);
@@ -375,7 +397,7 @@ mod tests {
         assert!(!features.is_all());
         assert!(!features.bullet);
         assert!(!features.task);
-        assert!(!features.code_block);
+        assert!(!features.code);
         assert!(!features.image);
         assert!(!features.ordered);
         assert!(!features.shoutout);
@@ -391,7 +413,7 @@ mod tests {
         assert!(!single_features.is_empty());
         assert!(!single_features.is_all());
         assert!(single_features.bullet);
-        assert!(!single_features.code_block);
+        assert!(!single_features.code);
         assert!(!single_features.table);
         assert!(!single_features.unknown);
 
@@ -404,7 +426,7 @@ mod tests {
         let multi_features = DocumentFeature::from(&multi_feature_doc);
         assert!(!multi_features.is_empty());
         assert!(!multi_features.is_all());
-        assert!(multi_features.code_block);
+        assert!(multi_features.code);
         assert!(multi_features.table);
         assert!(!multi_features.image);
         assert!(!multi_features.unknown);
@@ -423,7 +445,7 @@ mod tests {
         assert!(!six_features.image);
         assert!(six_features.bullet);
         assert!(six_features.task);
-        assert!(six_features.code_block);
+        assert!(six_features.code);
         assert!(six_features.ordered);
         assert!(six_features.shoutout);
         assert!(six_features.table);
@@ -434,7 +456,7 @@ mod tests {
     fn test_to_features_string_all() {
         let features = DocumentFeature {
             bullet: true,
-            code_block: true,
+            code: true,
             image: true,
             ordered: true,
             shoutout: true,
@@ -442,7 +464,7 @@ mod tests {
             task: true,
             unknown: true,
         };
-        let expected = "core, bullet, code_block, image, ordered, shoutout, table, task, unknown";
+        let expected = "core, bullet, code, image, ordered, shoutout, table, task, unknown";
         assert_eq!(features.to_features_string(), expected);
         assert_eq!(to_features_string(&features), expected);
         assert_eq!(features.to_string(), expected);
@@ -476,10 +498,10 @@ mod tests {
     #[test]
     fn test_to_features_string_single() {
         let mut features = DocumentFeature::default();
-        features.code_block = true;
-        assert_eq!(features.to_features_string(), "core, code_block");
-        assert_eq!(to_features_string(&features), "core, code_block");
-        assert_eq!(features.to_string(), "core, code_block");
+        features.code = true;
+        assert_eq!(features.to_features_string(), "core, code");
+        assert_eq!(to_features_string(&features), "core, code");
+        assert_eq!(features.to_string(), "core, code");
 
         let mut unknown_feature = DocumentFeature::default();
         unknown_feature.unknown = true;

@@ -10,8 +10,8 @@ use crate::core::error::{Error, Result};
 pub struct Document {
     /// Main body document elements.
     pub body: Vec<DocumentElement>,
-    /// Header document elements.
-    pub header: Vec<DocumentElement>,
+    /// Header document elements and configuration.
+    pub header: DocumentHeader,
     /// Frontmatter and document configuration parameters.
     pub parameters: DocumentParameters,
 }
@@ -21,7 +21,7 @@ impl Document {
     pub fn new() -> Self {
         Self {
             body: Vec::new(),
-            header: Vec::new(),
+            header: DocumentHeader::new(),
             parameters: DocumentParameters::default(),
         }
     }
@@ -30,7 +30,7 @@ impl Document {
     pub fn with_capacity(body_capacity: usize) -> Self {
         Self {
             body: Vec::with_capacity(body_capacity),
-            header: Vec::new(),
+            header: DocumentHeader::new(),
             parameters: DocumentParameters::default(),
         }
     }
@@ -38,11 +38,6 @@ impl Document {
     /// Appends a body element.
     pub fn push_body(&mut self, element: DocumentElement) {
         self.body.push(element);
-    }
-
-    /// Appends a header element.
-    pub fn push_header(&mut self, element: DocumentElement) {
-        self.header.push(element);
     }
 }
 
@@ -271,6 +266,20 @@ impl DocumentElement {
                 "cannot add child to non-container element".into(),
             )),
         }
+    }
+}
+
+/// Represents document header elements and configuration.
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct DocumentHeader {
+    /// Dynamic variables table element.
+    pub variables: Option<DocumentElement>,
+}
+
+impl DocumentHeader {
+    /// Creates a new empty document header.
+    pub fn new() -> Self {
+        Self { variables: None }
     }
 }
 
@@ -599,20 +608,29 @@ mod tests {
     }
 
     #[test]
+    fn test_document_header_creation() {
+        let header = DocumentHeader::new();
+        assert_eq!(header, DocumentHeader::default());
+        assert_eq!(header.variables, None);
+    }
+
+    #[test]
     fn test_document_push_body_and_header() {
         let mut doc = Document::with_capacity(4);
         assert_eq!(doc.parameters.title, "");
-        assert!(doc.header.is_empty());
+        assert_eq!(doc.header.variables, None);
         assert!(doc.body.is_empty());
 
         doc.parameters.title = "My Doc".into();
         doc.push_body(DocumentElement::text("Line 1"));
-        doc.push_header(DocumentElement::text("Header Line"));
+        doc.header.variables = Some(DocumentElement::table(
+            vec![TableAlignment::None],
+            vec![vec!["Var".into()]],
+        ));
         assert_eq!(doc.parameters.title, "My Doc");
         assert_eq!(doc.body.len(), 1);
-        assert_eq!(doc.header.len(), 1);
+        assert!(doc.header.variables.is_some());
         assert_eq!(doc.body[0], DocumentElement::Text("Line 1".into()));
-        assert_eq!(doc.header[0], DocumentElement::Text("Header Line".into()));
     }
 
     #[test]

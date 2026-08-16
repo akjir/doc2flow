@@ -172,8 +172,12 @@ The CLI executable MUST support the following grammar: `d2f [OPTIONS] [INPUT]`
 ```rust
 pub struct Document {
     pub body: Vec<DocumentElement>,
-    pub header: Vec<DocumentElement>,
+    pub header: DocumentHeader,
     pub parameters: DocumentParameters,
+}
+
+pub struct DocumentHeader {
+    pub variables: Option<DocumentElement>,
 }
 
 pub enum DocumentElement {
@@ -205,7 +209,7 @@ pub struct DocumentParameters {
 
 pub struct DocumentFeature {
     pub bullet: bool,
-    pub code_block: bool,
+    pub code: bool,
     pub image: bool,
     pub ordered: bool,
     pub shoutout: bool,

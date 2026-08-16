@@ -264,6 +264,23 @@ fn build_invalid_block_directive_name_err(line_number: usize, line_snippet: &str
     .into()
 }
 
+/// Constructs a standardized diagnostic error for malformed variables block directives.
+fn build_invalid_variables_block_directive_err(line_number: usize, line_snippet: &str) -> Error {
+    let carets = build_caret_annotation(1, line_snippet.len().max(3), line_snippet.len().max(3));
+    DiagnosticError {
+        message: "block directive ':::variables' must contain only a single table".into(),
+        file_path: "<input>".into(),
+        line_number,
+        col_number: 1,
+        line_snippet: line_snippet.into(),
+        annotation_carets: carets,
+        annotation_text: "directive must contain only a table and no other content".into(),
+        help_text: "define exactly one markdown table inside the ':::variables' block directive."
+            .into(),
+    }
+    .into()
+}
+
 /// Constructs a standardized diagnostic error for missing block directive names.
 fn build_missing_block_directive_name_err(line_number: usize, line_snippet: &str) -> Error {
     let carets = build_caret_annotation(1, line_snippet.len().max(1), line_snippet.len().max(1));
@@ -660,15 +677,27 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
 
                     if in_block_directive {
                         if rest.is_empty() {
-                            let children = mem::take(&mut block_children);
+                            let mut children = mem::take(&mut block_children);
                             let name = mem::take(&mut block_name);
-                            push_element(
-                                &mut doc,
-                                &mut section_stack,
-                                false,
-                                &mut block_children,
-                                DocumentElement::block_directive(name, children),
-                            );
+                            if name == "variables" {
+                                if children.len() != 1
+                                    || !matches!(&children[0], DocumentElement::Table { .. })
+                                {
+                                    return Err(build_invalid_variables_block_directive_err(
+                                        block_start_line,
+                                        block_start_snippet,
+                                    ));
+                                }
+                                doc.header.variables = Some(children.remove(0));
+                            } else {
+                                push_element(
+                                    &mut doc,
+                                    &mut section_stack,
+                                    false,
+                                    &mut block_children,
+                                    DocumentElement::block_directive(name, children),
+                                );
+                            }
                             in_block_directive = false;
                             continue;
                         } else {
@@ -2456,37 +2485,60 @@ Body text
 
     #[test]
     fn test_parse_d2f_markdown_block_directive_variables_example() {
-        let md = "---\ntitle: \"Block Directive Doc\"\n---\n:::variables\n| Variable | Value |\n| --- | --- |\n| TARGET_HOST | 192.168.1.100 |\n| SERVICE_PORT | 8080 |\nDas ist ein Text.\n\nDas auch.\n:::\n# Main Section\nContent under main";
+        let md = "---\ntitle: \"Block Directive Doc\"\n---\n:::variables\n| Variable | Value |\n| --- | --- |\n| TARGET_HOST | 192.168.1.100 |\n| SERVICE_PORT | 8080 |\n:::\n# Main Section\nContent under main";
         let doc = parse_d2f_markdown(md).unwrap();
 
-        assert_eq!(doc.body.len(), 2);
+        assert_eq!(
+            doc.header.variables,
+            Some(DocumentElement::table(
+                vec![TableAlignment::None, TableAlignment::None],
+                vec![
+                    vec!["Variable".into(), "Value".into()],
+                    vec!["TARGET_HOST".into(), "192.168.1.100".into()],
+                    vec!["SERVICE_PORT".into(), "8080".into()],
+                ]
+            ))
+        );
+        assert_eq!(doc.body.len(), 1);
         match &doc.body[0] {
-            DocumentElement::BlockDirective { name, children } => {
-                assert_eq!(name, "variables");
-                assert_eq!(children.len(), 3);
-                assert_eq!(
-                    children[0],
-                    DocumentElement::table(
-                        vec![TableAlignment::None, TableAlignment::None],
-                        vec![
-                            vec!["Variable".into(), "Value".into()],
-                            vec!["TARGET_HOST".into(), "192.168.1.100".into()],
-                            vec!["SERVICE_PORT".into(), "8080".into()],
-                        ]
-                    )
-                );
-                assert_eq!(children[1], DocumentElement::text("Das ist ein Text."));
-                assert_eq!(children[2], DocumentElement::text("Das auch."));
-            }
-            other => panic!("Expected BlockDirective, got {other:?}"),
-        }
-        match &doc.body[1] {
             DocumentElement::Section { title, level, .. } => {
                 assert_eq!(*level, 1);
                 assert_eq!(title, "Main Section");
             }
             other => panic!("Expected Section, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_block_directive_variables_error_when_empty() {
+        let md = "---\ntitle: \"Empty Variables\"\n---\n:::variables\n:::\n# Main Section\nContent";
+        let err = parse_d2f_markdown(md).unwrap_err();
+        let err_str = err.to_string();
+        assert!(err_str.contains("block directive ':::variables' must contain only a single table"));
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_block_directive_variables_error_with_text() {
+        let md = "---\ntitle: \"Invalid Variables\"\n---\n:::variables\n| Variable | Value |\n| --- | --- |\n| TARGET_HOST | 192.168.1.100 |\nExtra text\n:::\n# Main\nContent";
+        let err = parse_d2f_markdown(md).unwrap_err();
+        let err_str = err.to_string();
+        assert!(err_str.contains("block directive ':::variables' must contain only a single table"));
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_block_directive_variables_error_with_non_table() {
+        let md = "---\ntitle: \"Invalid Variables\"\n---\n:::variables\n- [x] Task\n:::\n# Main\nContent";
+        let err = parse_d2f_markdown(md).unwrap_err();
+        let err_str = err.to_string();
+        assert!(err_str.contains("block directive ':::variables' must contain only a single table"));
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_block_directive_variables_error_with_multiple_tables() {
+        let md = "---\ntitle: \"Invalid Variables\"\n---\n:::variables\n| A | B |\n| --- | --- |\n| 1 | 2 |\n\n| C | D |\n| --- | --- |\n| 3 | 4 |\n:::\n# Main\nContent";
+        let err = parse_d2f_markdown(md).unwrap_err();
+        let err_str = err.to_string();
+        assert!(err_str.contains("block directive ':::variables' must contain only a single table"));
     }
 
     #[test]
@@ -2552,15 +2604,18 @@ Body text
 
     #[test]
     fn test_parse_d2f_markdown_multiple_block_directives() {
-        let md = "---\ntitle: \"Multiple Directives\"\n---\n:::variables\nVar text\n:::\n# Main\n:::blockA\nText A\n:::\n\nMiddle text\n\n:::blockB\nText B\n:::";
+        let md = "---\ntitle: \"Multiple Directives\"\n---\n:::variables\n| Var | Val |\n| --- | --- |\n| A | 1 |\n:::\n# Main\n:::blockA\nText A\n:::\n\nMiddle text\n\n:::blockB\nText B\n:::";
         let doc = parse_d2f_markdown(md).unwrap();
 
-        assert_eq!(doc.body.len(), 2);
         assert_eq!(
-            doc.body[0],
-            DocumentElement::block_directive("variables", vec![DocumentElement::text("Var text")])
+            doc.header.variables,
+            Some(DocumentElement::table(
+                vec![TableAlignment::None, TableAlignment::None],
+                vec![vec!["Var".into(), "Val".into()], vec!["A".into(), "1".into()]]
+            ))
         );
-        match &doc.body[1] {
+        assert_eq!(doc.body.len(), 1);
+        match &doc.body[0] {
             DocumentElement::Section { children, .. } => {
                 assert_eq!(children.len(), 3);
                 assert_eq!(
@@ -2898,7 +2953,7 @@ Body text
 
     #[test]
     fn test_parse_d2f_markdown_section_with_mixed_elements() {
-        let md = "---\ntitle: \"Mixed Elements\"\n---\n# Main Heading\nParagraph line\n- [ ] Task 1\n- Bullet 1\n>! Important note\n```rust\nfn main() {}\n```\n| H1 | H2 |\n| --- | --- |\n| D1 | D2 |\n:::variables\n| KEY | VAL |\n| --- | --- |\n| PORT | 8080 |\n:::\n![Diagram](arch.png)";
+        let md = "---\ntitle: \"Mixed Elements\"\n---\n# Main Heading\nParagraph line\n- [ ] Task 1\n- Bullet 1\n>! Important note\n```rust\nfn main() {}\n```\n| H1 | H2 |\n| --- | --- |\n| D1 | D2 |\n:::customblock\n| KEY | VAL |\n| --- | --- |\n| PORT | 8080 |\n:::\n![Diagram](arch.png)";
         let doc = parse_d2f_markdown(md).unwrap();
 
         assert_eq!(doc.body.len(), 1);
@@ -2938,7 +2993,7 @@ Body text
             assert_eq!(
                 children[6],
                 DocumentElement::block_directive(
-                    "variables",
+                    "customblock",
                     vec![DocumentElement::table(
                         vec![TableAlignment::None, TableAlignment::None],
                         vec![
