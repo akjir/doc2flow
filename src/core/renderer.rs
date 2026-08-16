@@ -1,11 +1,10 @@
 //! HTML AST renderer and element formatting engine.
 
 use std::cell::Cell;
-use std::fmt::{self, Write as _};
+use std::fmt::{self};
 
 use crate::core::document::{DocumentElement, DocumentElementId, DocumentParameters};
 use crate::core::feature::FeatureModule;
-use crate::core::format::{format_inline_into, push_indent};
 
 /// Maximum capacity of active feature modules tracked concurrently.
 pub const MAX_ACTIVE_FEATURES: usize = 32;
@@ -112,7 +111,7 @@ impl<'a> HtmlRenderer<'a> {
             self.mark_module_active(index);
             module.render_element(element, indent, depth, parameters, out, self);
         } else {
-            self.render_fallback(element, indent, depth, parameters, out);
+            panic!("No feature module registered for element {}", id as usize);
         }
     }
 
@@ -127,66 +126,6 @@ impl<'a> HtmlRenderer<'a> {
     ) {
         for child in children {
             self.render_element(child, indent, depth, parameters, out);
-        }
-    }
-
-    /// Fallback rendering for elements not intercepted by any registered feature.
-    fn render_fallback(
-        &self,
-        element: &DocumentElement,
-        indent: usize,
-        _depth: usize,
-        parameters: &DocumentParameters,
-        out: &mut String,
-    ) {
-        match element {
-            DocumentElement::BlockDirective { children, .. } => {
-                self.render_children(children, indent + 1, 0, parameters, out);
-            }
-            DocumentElement::Section {
-                children,
-                level,
-                title,
-            } => {
-                push_indent(out, indent);
-                out.push_str("<section class=\"section\" data-level=\"");
-                let _ = write!(out, "{level}");
-                out.push_str("\">\n");
-
-                push_indent(out, indent + 1);
-                let _ = writeln!(out, "<h{level}>{title}</h{level}>");
-
-                push_indent(out, indent + 1);
-                out.push_str("<div class=\"section-body\">\n");
-
-                self.render_children(children, indent + 2, 0, parameters, out);
-
-                push_indent(out, indent + 1);
-                out.push_str("</div>\n");
-
-                push_indent(out, indent);
-                out.push_str("</section>\n");
-            }
-            DocumentElement::Text(text) => {
-                push_indent(out, indent);
-                out.push_str("<div class=\"item text-item\">\n");
-                push_indent(out, indent + 1);
-                out.push_str("<span class=\"text-content\">\n");
-                for line in text.lines() {
-                    push_indent(out, indent + 2);
-                    format_inline_into(out, line);
-                    out.push('\n');
-                }
-                push_indent(out, indent + 1);
-                out.push_str("</span>\n");
-                push_indent(out, indent);
-                out.push_str("</div>\n");
-            }
-            DocumentElement::HorizontalRule => {
-                push_indent(out, indent);
-                out.push_str("<hr />\n");
-            }
-            _ => {}
         }
     }
 }
@@ -398,7 +337,7 @@ mod tests {
     }
 
     #[test]
-    fn test_render_element_unregistered_feature_fallback() {
+    fn test_render_element_shoutout_and_block_directive() {
         let shoutout = DocumentElement::shoutout(
             crate::core::document::ShoutoutElementKind::Note,
             "Unregistered shoutout",
@@ -414,7 +353,7 @@ mod tests {
         );
         assert_eq!(
             render_element(&directive, 1, &DocumentParameters::default()),
-            "    <div class=\"item text-item\">\n      <span class=\"text-content\">\n        Directive child\n      </span>\n    </div>\n"
+            ""
         );
     }
 
@@ -441,28 +380,17 @@ mod tests {
     }
 
     #[test]
-    fn test_render_fallback_unhandled_element_branches() {
+    #[should_panic(expected = "No feature module registered for element")]
+    fn test_render_element_panics_on_unregistered_element() {
         let mut out = String::new();
         let renderer = HtmlRenderer::new(&[]);
         let dummy_params = DocumentParameters::default();
 
-        // Shoutout in fallback
         let shoutout = DocumentElement::shoutout(
             crate::core::document::ShoutoutElementKind::Caution,
             "caution message",
         );
         renderer.render_element(&shoutout, 0, 0, &dummy_params, &mut out);
-        assert!(out.is_empty());
-
-        // Table in fallback (_ => {})
-        let table = DocumentElement::table(vec![], vec![]);
-        renderer.render_element(&table, 0, 0, &dummy_params, &mut out);
-        assert!(out.is_empty());
-
-        // TableVariables in fallback (_ => {})
-        let vars = DocumentElement::table_variables(std::collections::HashMap::new());
-        renderer.render_element(&vars, 0, 0, &dummy_params, &mut out);
-        assert!(out.is_empty());
     }
 
     #[test]
