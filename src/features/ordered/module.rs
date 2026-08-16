@@ -2,10 +2,10 @@
 
 use std::fmt::Write as _;
 
-use crate::core::builder::HtmlRenderer;
 use crate::core::document::{DocumentElement, DocumentParameters};
 use crate::core::feature::Feature;
 use crate::core::format::{format_inline_into, push_indent};
+use crate::core::renderer::HtmlRenderer;
 
 /// Embedded ordered list CSS stylesheet.
 pub const CSS: &str = include_str!("ordered.css");

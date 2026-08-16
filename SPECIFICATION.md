@@ -296,6 +296,7 @@ doc2flow/
 │   │   ├── format.rs         # Text formatting and escaping utilities
 │   │   ├── language.rs       # Embedded locale loader
 │   │   ├── markdown.rs       # Zero-alloc Markdown parser
+│   │   ├── renderer.rs       # HTML AST renderer and element formatter
 │   │   └── utils/            # Domain-agnostic utilities (IO, Base64, MIME, Hasher, URI, Time)
 │   └── features/             # Vertical slice feature modules
 │       ├── mod.rs            # Feature registry and dispatcher

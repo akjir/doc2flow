@@ -1,9 +1,9 @@
 //! Image vertical slice feature module.
 
-use crate::core::builder::HtmlRenderer;
 use crate::core::document::{DocumentElement, DocumentParameters};
 use crate::core::feature::Feature;
 use crate::core::format::{escape_html_into, push_indent};
+use crate::core::renderer::HtmlRenderer;
 
 /// Embedded image CSS stylesheet.
 pub const CSS: &str = include_str!("image.css");

@@ -9,10 +9,11 @@ pub mod feature;
 pub mod format;
 pub mod language;
 pub mod markdown;
+pub mod renderer;
 pub mod utils;
 
 pub use arguments::{Args, help_message, parse_args};
-pub use builder::{HtmlRenderer, build, render_element, render_element_into};
+pub use builder::{assemble_assets, build};
 pub use constants::{
     APP_NAME, APP_VERSION, CLI_ALIAS, CLI_BANNER, LICENSE_TERMS, LICENSE_URL, REPOSITORY_URL,
 };
@@ -22,6 +23,7 @@ pub use document::{
 };
 pub use error::{DiagnosticError, Error, Result, build_caret_annotation};
 pub use feature::{DocumentFeature, Feature};
-pub use format::{escape_html_into, format_inline_into, push_indent};
+pub use format::{append_indented, escape_html_into, format_inline_into, push_indent};
 pub use language::get_language_json;
 pub use markdown::parse_d2f_markdown;
+pub use renderer::{HtmlRenderer, render_element, render_element_into};

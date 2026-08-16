@@ -133,8 +133,8 @@ pub fn get_feature(name: &str) -> Option<&'static dyn Feature> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::builder::HtmlRenderer;
     use crate::core::document::{DocumentElement, DocumentParameters};
+    use crate::core::renderer::HtmlRenderer;
 
     #[test]
     fn test_get_feature_returns_bullet() {

@@ -1,9 +1,9 @@
 //! Unknown vertical slice feature module.
 
-use crate::core::builder::HtmlRenderer;
 use crate::core::document::{DocumentElement, DocumentParameters};
 use crate::core::feature::Feature;
 use crate::core::format::push_indent;
+use crate::core::renderer::HtmlRenderer;
 
 /// Embedded unknown CSS styles for fallback elements.
 pub const CSS: &str = include_str!("unknown.css");

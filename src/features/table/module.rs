@@ -1,9 +1,9 @@
 //! Table vertical slice feature module.
 
-use crate::core::builder::HtmlRenderer;
 use crate::core::document::{DocumentElement, DocumentParameters, TableAlignment};
 use crate::core::feature::Feature;
 use crate::core::format::{format_inline_into, push_indent};
+use crate::core::renderer::HtmlRenderer;
 
 /// Embedded table CSS stylesheet.
 pub const CSS: &str = include_str!("table.css");

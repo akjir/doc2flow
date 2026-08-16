@@ -436,6 +436,17 @@ pub fn format_inline_into(out: &mut String, input: &str) {
     }
 }
 
+/// Appends multiline text to a buffer, indenting every non-empty line by 4 spaces.
+pub fn append_indented(out: &mut String, text: &str) {
+    for line in text.lines() {
+        if !line.is_empty() {
+            out.push_str("    ");
+            out.push_str(line);
+        }
+        out.push('\n');
+    }
+}
+
 /// Appends leading whitespace indentation to a buffer based on indent level.
 pub fn push_indent(out: &mut String, indent: usize) {
     for _ in 0..indent {
@@ -640,6 +651,13 @@ mod tests {
         let mut out = String::new();
         format_inline_into(&mut out, "Grüße **überall** & schön 🚀");
         assert_eq!(out, "Grüße <strong>überall</strong> &amp; schön 🚀");
+    }
+
+    #[test]
+    fn test_append_indented() {
+        let mut out = String::new();
+        append_indented(&mut out, "first line\n\nsecond line");
+        assert_eq!(out, "    first line\n\n    second line\n");
     }
 
     #[test]

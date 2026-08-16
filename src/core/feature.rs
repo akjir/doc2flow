@@ -3,8 +3,8 @@
 use std::fmt::{self, Display, Formatter};
 use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Not};
 
-use crate::core::builder::HtmlRenderer;
 use crate::core::document::{Document, DocumentElement, DocumentHeader, DocumentParameters};
+use crate::core::renderer::HtmlRenderer;
 
 /// Static mapping of feature flags to their canonical display identifiers.
 const FEATURE_NAMES: [(DocumentFeature, &str); 8] = [
