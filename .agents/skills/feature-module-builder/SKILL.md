@@ -16,21 +16,19 @@ description: Scaffolds, implements, and registers vertical slice feature modules
 Follow these 5 steps sequentially:
 
 1. **Scaffold Slice:** Create `src/features/<name>/` directory:
-   - `module.rs`: Feature struct `<Name>Feature` implementing `Feature` trait (`name`, `is_enabled`, `javascript`, `css`), `#[must_use] new()`, local feature constants (CSS classes, selectors, keys, defaults), and unit tests. Prohibit central constant dumpster files.
+   - `module.rs`: Feature struct `<Name>Feature` deriving `Default` (ZST), implementing `FeatureModule` / `DocumentElementRenderer`, `#[must_use] new()` delegating strictly to `Self::default()`, local feature constants (CSS classes, selectors, keys, defaults), and unit tests. Prohibit central constant dumpster files.
    - `<name>.js` *(if interactive)*: Vanilla JS logic attached to `window.d2f` namespace.
    - `<name>.css` *(if styled)*: Scoped CSS using BEM classes and `:root` variables.
-2. **Implement `Feature` Trait:**
+2. **Implement `FeatureModule` Trait:**
    - `name(&self) -> &'static str`: Return unique feature ID (e.g., `"code"`).
-   - `is_enabled(&self, ctx: &DocumentContext) -> bool`: Fast 1-pass detection on `ctx.frontmatter` or `ctx.raw_markdown`.
    - `javascript(&self) -> &[&'static str]`: `&[include_str!("<name>.js")]` or `&[]`.
    - `css(&self) -> Option<&'static str>`: `Some(include_str!("<name>.css"))` or `None`.
 3. **Register in Engine:**
-   - In `src/features/mod.rs`: Add `#[path = "<name>/module.rs"] pub mod <name>;`, export `pub use <name>::<Name>Feature;`.
-   - Add `Box::new(<Name>Feature::new())` to `get_all_features()`.
-   - Update `DocumentFeatures::is_feature_active` and `DocumentFeatures::to_features_string` if mapped to AST parser flags.
-   - Update `tests::test_feature_registry_*` with updated count and feature name.
+   - In `src/features/mod.rs`: Add `#[path = "<name>/module.rs"] pub mod <name>;`, export `pub use <name>::<Name>Feature;`, define static instance `pub static <NAME>_FEATURE: <Name>Feature = <Name>Feature;`.
+   - Register in static zero-allocation array `pub static ALL_FEATURE_MODULES: [&'static dyn FeatureModule; N]`.
+   - Update tripwire tests `tests::test_all_feature_modules_count_and_registration` with updated count and feature name.
 4. **Enforce Directives (`AGENTS.md`):**
-   - **Rust:** Zero `unsafe`, zero-alloc hot path, canonical doc headers, Stdlib+`Doc2FlowError` (`src/utils/error.rs`), local constants in `module.rs`. `#[must_use]` on constructors/factories (delegate to `Self::default()` if `Default` derived). Rely on standard traits (`Display` -> `.to_string()`), NO duplicate custom methods. `bitflags`/array state for multi-boolean flags. Inline docs for intentional domain quirks. Case-insensitive truthy matrix (`true`, `yes`, `y`, `1`) for boolean flags. DRY template contexts (`build_template_vars`), assembly pipeline parity (conditional components identical across pathways), NO `#[inline]` on heap allocs/IO. Resilient semantic token test assertions.
+   - **Rust:** Zero `unsafe`, zero-alloc hot path, canonical doc headers, Stdlib+`Doc2FlowError` (`src/utils/error.rs`), local constants in `module.rs`. Derive/implement `Default` for parameter-less structs; `#[must_use] new()` MUST strictly delegate to `Self::default()`. Static registries (`[&'static dyn Trait; N]`) for zero heap allocations. Rely on standard traits (`Display` -> `.to_string()`), NO duplicate custom methods. `bitflags`/array state for multi-boolean flags. Inline docs for intentional domain quirks. Case-insensitive truthy matrix (`true`, `yes`, `y`, `1`) for boolean flags. DRY template contexts (`build_template_vars`), assembly pipeline parity (conditional components identical across pathways), NO `#[inline]` on heap allocs/IO. Tripwire tests and resilient semantic token assertions.
    - **JS:** Vanilla JS, `window.d2f` namespace (`window.d2f.<module>`). NO build step. BANNED: `export`/`import`.
    - **CSS:** BEM classes, `:root` vars, ZERO external fonts/assets, print styles (`display:block!important`, natural page breaks, exact colors).
    - **Spec:** Sync `SPECIFICATION.md` tree and module description.

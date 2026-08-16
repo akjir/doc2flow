@@ -28,8 +28,8 @@ impl BulletFeature {
     /// let feature = BulletFeature::new();
     /// ```
     #[must_use]
-    pub const fn new() -> Self {
-        Self
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 

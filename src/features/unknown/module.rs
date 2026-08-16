@@ -18,8 +18,8 @@ pub struct UnknownFeature;
 impl UnknownFeature {
     /// Creates a new unknown feature instance.
     #[must_use]
-    pub const fn new() -> Self {
-        Self
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 

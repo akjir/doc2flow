@@ -40,12 +40,13 @@ Every `.rs` file must strictly follow this top-to-bottom sequence:
 - **Field Visibility:** `pub` fields first, then private fields.
 - **Field Sorting:** Alphabetical order within the same visibility tier.
 - **Derives:** Alphabetize macros inside `#[derive(...)]` (e.g., `#[derive(Clone, Debug, PartialEq)]`).
+- **Default over New:** Strictly derive/implement `Default` for all parameter-less structs and Zero-Sized Types (ZSTs).
 - **State Condensation:** Evaluate `bitflags` or array-backed state representation for multiple boolean configuration flags.
 
 ### B. Implementation (`impl`) Blocks
 For type `MyType`:
 1. **Primary/Inherent `impl MyType`:**
-   - **Constructors First:** `new()`, `default()`, `with_capacity()`, or custom constructors at the top (enforce `#[must_use]`). If struct derives `Default`, `new()` must delegate to `Self::default()`.
+   - **Constructors First:** `new()`, `default()`, `with_capacity()`, or custom constructors at the top (enforce `#[must_use]`). If struct implements `Default`, `new()` MUST strictly delegate to `Self::default()`. Standalone `new()` duplicating field inits is BANNED.
    - **Inherent Methods:** Sorted alphabetically after constructors.
 2. **Trait Implementations (`impl Trait for MyType`):**
    - Implement standard library traits (e.g., `impl Display for MyType` with `.to_string()`); never create custom duplicate methods (e.g., `to_string_custom()`) or standalone functions.

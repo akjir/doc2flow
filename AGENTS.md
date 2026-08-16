@@ -13,7 +13,10 @@
 
 ## 2. Rust
 - **Traits:** Rely on standard traits (`std::fmt::Display` -> `.to_string()`). NEVER create custom duplicate methods (e.g. `to_string_custom()`) or standalone functions.
-- **Constructors:** If struct derives `Default`, `new()` MUST delegate to `Self::default()` (no repeated field inits).
+- **Default over New:** Strictly implement `std::default::Default` for all parameter-less structs and Zero-Sized Types (ZSTs).
+- **Delegated Constructors:** BANNED: Implementing a standalone `new()` method that duplicates field initialization. IF `new()` is required for API ergonomics, it MUST strictly delegate to `Self::default()`.
+- **Zero-Allocation Registries:** Enforce static array definitions (`[&'static dyn Trait; N]`) for central registries (e.g., feature modules) to guarantee O(1) startup and zero runtime heap allocation.
+- **Tripwire Testing:** Use explicit lengths and hardcoded arrays in registry tests to force manual verification when expanding system features (e.g., adding a new module).
 - **State:** Multiple boolean flags -> evaluate `bitflags` or array-backed state (min memory footprint, avoid brittle `&&`/`||` chains).
 - **Dispatch:** O(1) routing ONLY (precompute array indices/masks at init). NO loops/strings/`ptr::eq` on hot-path AST handling (P-O1-DISPATCH).
 - **Bitmask:** Integer bitmasks (`u32`) MUST assert `len <= bit_width` at init (P-MASK-SAFE).

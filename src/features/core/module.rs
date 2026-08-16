@@ -28,8 +28,8 @@ pub struct CoreFeature;
 impl CoreFeature {
     /// Creates a new core feature instance.
     #[must_use]
-    pub const fn new() -> Self {
-        Self
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 

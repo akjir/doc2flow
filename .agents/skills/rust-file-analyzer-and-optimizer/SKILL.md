@@ -49,7 +49,10 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 
 ### 4: Idioms & Architecture
 - **Standard Traits:** Rely on standard traits (`std::fmt::Display` -> `.to_string()`). NEVER create custom methods (e.g., `to_string_custom()`) or standalone functions duplicating std traits.
-- **Constructor Delegation:** If a struct derives `Default`, any implementation of `new()` must delegate to `Self::default()` rather than repeating field initialization.
+- **Default over New:** Strictly implement `std::default::Default` for all parameter-less structs and Zero-Sized Types (ZSTs).
+- **Constructor Delegation:** BANNED: Implementing a standalone `new()` method that duplicates field initialization. IF `new()` is required for API ergonomics, it MUST strictly delegate to `Self::default()`.
+- **Zero-Allocation Registries:** Enforce static array definitions (`[&'static dyn Trait; N]`) for central registries (e.g., feature modules) to guarantee O(1) startup and zero runtime heap allocation.
+- **Tripwire Testing:** Use explicit lengths and hardcoded arrays in registry tests to force manual verification when expanding system features (e.g., adding a new module).
 - **O(1) Hot-Path Routing:** Precompute array indices, state masks, and routing lookups during initialization. Never use for-loops, string matching, or pointer comparisons (`std::ptr::eq`) to resolve modules/AST handlers during active parsing/rendering loops (P-O1-DISPATCH).
 - **Flatten Monolithic Dispatchers:** Avoid massive `if/else` or loop dispatchers (>50 lines). Dispatch token parsing to discrete, strongly-typed functions (e.g., `try_parse_* -> Option<usize>`) (P-FLATTEN-DISPATCH).
 - **Encapsulate UTF-8 Lookarounds:** Abstract UTF-8 boundary checks and char lookahead/lookbehind (`slice[idx..].chars().next()`) into semantic helper functions (`is_alphanumeric_at`, `is_alphanumeric_before`, `is_alphanumeric_after`) (P-UTF8-LOOKAROUND).

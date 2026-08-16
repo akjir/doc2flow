@@ -21,8 +21,8 @@ pub struct CodeFeature;
 impl CodeFeature {
     /// Creates a new code feature instance.
     #[must_use]
-    pub const fn new() -> Self {
-        Self
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 
