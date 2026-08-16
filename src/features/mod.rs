@@ -12,6 +12,9 @@ pub mod core;
 #[path = "image/module.rs"]
 pub mod image;
 
+#[path = "input/module.rs"]
+pub mod input;
+
 #[path = "ordered/module.rs"]
 pub mod ordered;
 
@@ -28,6 +31,7 @@ pub use bullet::BulletFeature;
 pub use code::CodeFeature;
 pub use core::CoreFeature;
 pub use image::ImageFeature;
+pub use input::InputFeature;
 pub use ordered::OrderedFeature;
 pub use table::TableFeature;
 pub use task::TaskFeature;
@@ -47,6 +51,9 @@ pub static CORE_FEATURE: CoreFeature = CoreFeature;
 /// Static instance of the image feature to avoid runtime allocations.
 pub static IMAGE_FEATURE: ImageFeature = ImageFeature;
 
+/// Static instance of the input feature to avoid runtime allocations.
+pub static INPUT_FEATURE: InputFeature = InputFeature;
+
 /// Static instance of the ordered list feature to avoid runtime allocations.
 pub static ORDERED_FEATURE: OrderedFeature = OrderedFeature;
 
@@ -60,11 +67,12 @@ pub static TASK_FEATURE: TaskFeature = TaskFeature;
 pub static UNKNOWN_FEATURE: UnknownFeature = UnknownFeature;
 
 /// Static collection of all standard feature modules for default dispatch and inspection.
-pub static ALL_FEATURE_MODULES: [&'static dyn FeatureModule; 8] = [
+pub static ALL_FEATURE_MODULES: [&'static dyn FeatureModule; 9] = [
     &CORE_FEATURE,
     &BULLET_FEATURE,
     &CODE_FEATURE,
     &IMAGE_FEATURE,
+    &INPUT_FEATURE,
     &ORDERED_FEATURE,
     &TABLE_FEATURE,
     &TASK_FEATURE,
@@ -77,12 +85,12 @@ mod tests {
 
     #[test]
     fn test_all_feature_modules_count_and_registration() {
-        assert_eq!(ALL_FEATURE_MODULES.len(), 8);
+        assert_eq!(ALL_FEATURE_MODULES.len(), 9);
         let names: Vec<&str> = ALL_FEATURE_MODULES.iter().map(|m| m.name()).collect();
         assert_eq!(
             names,
             [
-                "core", "bullet", "code", "image", "ordered", "table", "task", "unknown"
+                "core", "bullet", "code", "image", "input", "ordered", "table", "task", "unknown"
             ]
         );
     }
@@ -93,6 +101,7 @@ mod tests {
         assert_eq!(CODE_FEATURE, CodeFeature::default());
         assert_eq!(CORE_FEATURE, CoreFeature::default());
         assert_eq!(IMAGE_FEATURE, ImageFeature::default());
+        assert_eq!(INPUT_FEATURE, InputFeature::default());
         assert_eq!(ORDERED_FEATURE, OrderedFeature::default());
         assert_eq!(TABLE_FEATURE, TableFeature::default());
         assert_eq!(TASK_FEATURE, TaskFeature::default());

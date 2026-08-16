@@ -389,6 +389,15 @@ mod tests {
     }
 
     #[test]
+    fn test_render_element_input() {
+        let input = DocumentElement::input("test_value");
+        assert_eq!(
+            render_element(&input, 1, &DocumentParameters::default()),
+            "  <div class=\"input-wrap\">\n    <input type=\"text\" class=\"input-field\" value=\"test_value\" />\n  </div>\n"
+        );
+    }
+
+    #[test]
     fn test_render_element_unregistered_feature_fallback() {
         let shoutout = DocumentElement::shoutout(
             crate::core::document::ShoutoutElementKind::Note,

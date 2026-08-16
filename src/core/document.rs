@@ -85,6 +85,11 @@ pub enum DocumentElement {
         /// Source URL or file path location of the image.
         url: String,
     },
+    /// Input form field element with text content.
+    Input {
+        /// Input element text content.
+        text: String,
+    },
     /// Ordered list item element with sequential position and child content.
     OrderedListItem {
         /// Nested child list items.
@@ -181,6 +186,14 @@ impl DocumentElement {
         }
     }
 
+    /// Creates a new input document element.
+    #[must_use]
+    pub fn input(text: impl Into<String>) -> Self {
+        Self::Input {
+            text: text.into(),
+        }
+    }
+
     /// Returns true if this element is a list item variant.
     #[must_use]
     pub const fn is_list_item(&self) -> bool {
@@ -253,6 +266,7 @@ impl DocumentElement {
             Self::CodeBlock { .. } => DocumentElementId::CodeBlock,
             Self::HorizontalRule => DocumentElementId::HorizontalRule,
             Self::Image { .. } => DocumentElementId::Image,
+            Self::Input { .. } => DocumentElementId::Input,
             Self::OrderedListItem { .. } => DocumentElementId::OrderedListItem,
             Self::Section { .. } => DocumentElementId::Section,
             Self::Shoutout { .. } => DocumentElementId::Shoutout,
@@ -334,25 +348,27 @@ pub enum DocumentElementId {
     HorizontalRule = 4,
     /// Identifier for images.
     Image = 5,
+    /// Identifier for input elements.
+    Input = 6,
     /// Identifier for ordered list items.
-    OrderedListItem = 6,
+    OrderedListItem = 7,
     /// Identifier for sections.
-    Section = 7,
+    Section = 8,
     /// Identifier for shoutouts.
-    Shoutout = 8,
+    Shoutout = 9,
     /// Identifier for tables.
-    Table = 9,
+    Table = 10,
     /// Identifier for table variables mapping.
-    TableVariables = 10,
+    TableVariables = 11,
     /// Identifier for plain text lines.
-    Text = 11,
+    Text = 12,
     /// Identifier for unrecognized fallback content.
-    Unknown = 12,
+    Unknown = 13,
 }
 
 impl DocumentElementId {
     /// Total number of distinct document element identifiers.
-    pub const COUNT: usize = 13;
+    pub const COUNT: usize = 14;
 }
 
 /// Represents document header elements and configuration.
@@ -894,6 +910,17 @@ mod tests {
     }
 
     #[test]
+    fn test_input_element_creation() {
+        let elem = DocumentElement::input("server_host");
+        assert_eq!(
+            elem,
+            DocumentElement::Input {
+                text: "server_host".into(),
+            }
+        );
+    }
+
+    #[test]
     fn test_list_items_push_child_allowed_and_forbidden() {
         let mut bullet = DocumentElement::bullet_list_item("Parent bullet");
         let child_bullet = DocumentElement::bullet_list_item("Child bullet");
@@ -1077,7 +1104,7 @@ mod tests {
 
     #[test]
     fn test_document_element_id_mapping() {
-        assert_eq!(DocumentElementId::COUNT, 13);
+        assert_eq!(DocumentElementId::COUNT, 14);
         assert_eq!(
             DocumentElement::block_directive("test", vec![]).element_id(),
             DocumentElementId::BlockDirective
@@ -1101,6 +1128,10 @@ mod tests {
         assert_eq!(
             DocumentElement::image("alt", "url").element_id(),
             DocumentElementId::Image
+        );
+        assert_eq!(
+            DocumentElement::input("text").element_id(),
+            DocumentElementId::Input
         );
         assert_eq!(
             DocumentElement::ordered_list_item(1, "item").element_id(),

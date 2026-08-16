@@ -77,7 +77,7 @@ Doc2Flow is a high-performance, single-binary CLI tool that compiles Markdown do
 ```
 - **Utility Subsystem (`src/utils/`):** Pure, domain-agnostic library modules.
 - **Core Engine (`src/core/`):** Houses the AST data model, zero-alloc Markdown token parser, builder assembler, compiler-style error diagnostics, and filesystem I/O (`src/core/io.rs`). Direct `std::fs` calls outside `io.rs` are PROHIBITED.
-- **Vertical Feature Slices (`src/features/<feature>/`):** Isolated modules (`bullet`, `code`, `core`, `image`, `ordered`, `table`, `task`, `unknown`). Each slice encapsulates its HTML rendering, CSS (`<name>.css`), JS (`<name>.js`), and local constants.
+- **Vertical Feature Slices (`src/features/<feature>/`):** Isolated modules (`bullet`, `code`, `core`, `image`, `input`, `ordered`, `table`, `task`, `unknown`). Each slice encapsulates its HTML rendering, CSS (`<name>.css`), JS (`<name>.js`), and local constants.
 - **Conditional Asset Assembly:** If a feature is absent from a document, zero CSS rules and zero JS code for that feature SHALL be emitted into the output HTML.
 
 ---
@@ -187,6 +187,7 @@ pub enum DocumentElement {
     CodeBlock { content: String, language: Option<String> },
     HorizontalRule,
     Image { alt: String, url: String },
+    Input { text: String },
     OrderedListItem { position: usize, content: String, children: Vec<DocumentElement> },
     Section { level: usize, title: String, children: Vec<DocumentElement> },
     Shoutout { kind: ShoutoutElementKind, content: String },
@@ -216,13 +217,14 @@ pub enum DocumentElementId {
     CodeBlock = 3,
     HorizontalRule = 4,
     Image = 5,
-    OrderedListItem = 6,
-    Section = 7,
-    Shoutout = 8,
-    Table = 9,
-    TableVariables = 10,
-    Text = 11,
-    Unknown = 12,
+    Input = 6,
+    OrderedListItem = 7,
+    Section = 8,
+    Shoutout = 9,
+    Table = 10,
+    TableVariables = 11,
+    Text = 12,
+    Unknown = 13,
 }
 
 pub trait DocumentElementRenderer: Send + Sync + fmt::Debug {
@@ -330,6 +332,7 @@ doc2flow/
 │   │   ├── code/             # Code block vertical slice
 │   │   ├── core/             # Core base styles and client scripts
 │   │   ├── image/            # Image display and lightbox slice
+│   │   ├── input/            # Standalone input field vertical slice
 │   │   ├── ordered/          # Ordered list vertical slice
 │   │   ├── table/            # Table rendering slice
 │   │   ├── task/             # Interactive task checkbox slice

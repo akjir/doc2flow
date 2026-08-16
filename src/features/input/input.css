@@ -1,0 +1,55 @@
+/* ==========================================================================
+   Doc2Flow - Input Feature Styles
+   ========================================================================== */
+
+/* 1. Base Variables & Tokens */
+:root {
+  /* Input Field Tokens */
+  --input-bg: #f1f5f9;
+  --input-border: #cbd5e1;
+  --input-color: #0f172a;
+  --input-radius: 4px;
+  --input-font-size: 11.5px;
+  --input-padding: 4px 8px;
+  --input-focus-border: #2e75b6;
+  --input-focus-ring: rgba(46, 117, 182, 0.2);
+}
+
+/* 2. Input Component (input-*) */
+.input-wrap {
+  box-sizing: border-box;
+  display: flex;
+  margin: 4px 0;
+  width: 100%;
+}
+
+.input-field {
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--input-radius);
+  box-sizing: border-box;
+  color: var(--input-color);
+  font-family: var(--font-mono, 'Courier New', monospace);
+  font-size: var(--input-font-size);
+  padding: var(--input-padding);
+  transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+}
+
+.input-field:focus {
+  background-color: var(--input-bg);
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 0 2px var(--input-focus-ring);
+  outline: none;
+}
+
+/* 3. Print Styles */
+@media print {
+  .input-field {
+    background-color: transparent !important;
+    border: 1px solid #000000 !important;
+    color: #000000 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
