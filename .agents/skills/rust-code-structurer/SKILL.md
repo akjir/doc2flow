@@ -55,6 +55,8 @@ For type `MyType`:
 ### C. Control Flow & Match Sorting
 - **Match Arms:** Order `enum` variants in `match` expressions matching declaration order in `enum` definition.
 - **Catch-all Arm:** Fallback (`_ => ...`) MUST always be the last arm.
+- **Flattened Dispatchers:** Keep token dispatch loops flat (<50 lines) by delegating parsing to discrete, strongly-typed helper functions (`try_parse_*`).
+- **Encapsulated Lookarounds:** Abstract UTF-8 boundary checks and char inspection into semantic helper functions rather than inline pointer/char math.
 
 ### D. Tests & Assertions
 - **Resilient Assertions:** Assert specific semantic tokens (e.g., `.contains("bullet")`) on formatted string outputs (like `Display`) instead of brittle exact full-string matches.

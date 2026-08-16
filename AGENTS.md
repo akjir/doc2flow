@@ -27,6 +27,10 @@
 - **Docs:** English ONLY (all inline docs & comments). 15-word max start, canonical headers (Examples/Errors/Panics), NO meta/journals. Explicitly document intentional domain quirks inline (e.g. strict H1/H2->H3 AST nesting for UI layout) to prevent regressions.
 - **Perf:** Min-alloc (borrow>owned), `with_capacity`, O(N) 1-pass, zero-copy (`split_once`,`strip_prefix`), `Cow`. Safe subslice indexing ONLY; NO raw pointer arithmetic (`as_ptr` diffs) for string bound searches.
 - **Parsing:** Flexible boolean deserialization from maps/frontmatter/headers; account for case-insensitive truthy matrix (`true`, `yes`, `y`, `1`).
+- **Parser Loops:** Unified forward cursors (NO duplicated scanning loops). Encapsulate index advancement & code/token skipping in generic higher-order functions/iterators (P-UNIFIED-PARSER).
+- **Dispatchers:** Flatten monolithic dispatchers (max 50 lines). Dispatch to discrete, strongly-typed `try_parse_* -> Option<usize>` functions (P-FLATTEN-DISPATCH).
+- **UTF-8 Lookaround:** Abstract UTF-8 lookahead/lookbehind into semantically named helper functions (e.g. `is_alphanumeric_at`). NO inline char-boundary math in core logic loops (P-UTF8-LOOKAROUND).
+- **Linear Parsing:** O(N) linear parsing ONLY. Validate deeply nested/unclosed tokens prevent quadratic O(N²) scanning (cache boundaries or linear scan) (P-NO-QUADRATIC).
 - **String/Buffer:** Exact `with_capacity` pre-alloc. Direct buffer streaming (`write_str`/`push_str`). NO intermediate `Vec`/strings on hot paths.
 - **HTML/XML/SVG:** Zero-alloc tokenizers (O(N) 1-pass forward cursor). Quote-aware (single `'`, double `"`, multiline, escaped `\"`/`\'`). Sub-parsers for declarations (`<?`), DOCTYPE, comments (`<!--`), CDATA (`<![CDATA[`), tags. NO redundant scanning passes over attribute names/values. NO `println!` in core processing routines.
 - **Flow:** `match`/tables > `if-else`. Iterators > loops. `write_str`(static)/`write!`(dynamic) > `format!` (hot-path buffers).

@@ -1,5 +1,16 @@
 //! Inline markdown formatting and HTML escaping engine.
 
+/// Appends multiline text to a buffer, indenting each non-empty line.
+pub fn append_indented(out: &mut String, text: &str) {
+    for line in text.lines() {
+        if !line.is_empty() {
+            out.push_str("    ");
+            out.push_str(line);
+        }
+        out.push('\n');
+    }
+}
+
 /// Escapes special HTML characters in a string into the destination buffer.
 pub fn escape_html_into(out: &mut String, s: &str) {
     let mut last_idx = 0;
@@ -27,12 +38,36 @@ pub fn escape_html_into(out: &mut String, s: &str) {
     }
 }
 
+/// Scans forward skipping code spans until a predicate matches.
+fn find_end_delimiter<F>(slice: &str, mut predicate: F) -> Option<usize>
+where
+    F: FnMut(&str, usize) -> bool,
+{
+    let mut idx = 0;
+    let bytes = slice.as_bytes();
+
+    while idx < bytes.len() {
+        if let Some(next_idx) = skip_code_span(slice, idx) {
+            idx = next_idx;
+            continue;
+        }
+
+        if predicate(slice, idx) {
+            return Some(idx);
+        }
+
+        idx += 1;
+    }
+
+    None
+}
+
 /// Finds the index of a matching sequence of backticks in a slice.
 fn find_matching_backticks(slice: &str, count: usize) -> Option<usize> {
     let mut idx = 0;
     let bytes = slice.as_bytes();
 
-    while idx < slice.len() {
+    while idx < bytes.len() {
         if bytes[idx] == b'`' {
             let current_count = bytes[idx..].iter().take_while(|&&b| b == b'`').count();
             if current_count == count {
@@ -49,118 +84,17 @@ fn find_matching_backticks(slice: &str, count: usize) -> Option<usize> {
 
 /// Finds the index of a matching closing delimiter, skipping inner code spans.
 fn find_matching_delimiter(slice: &str, delimiter: &str) -> Option<usize> {
-    let mut idx = 0;
-    let bytes = slice.as_bytes();
     let delim_bytes = delimiter.as_bytes();
-
-    while idx < bytes.len() {
-        if bytes[idx..].starts_with(delim_bytes) {
-            return Some(idx);
-        }
-
-        if let Some(next_idx) = skip_code_span(slice, idx) {
-            idx = next_idx;
-            continue;
-        }
-
-        idx += 1;
-    }
-
-    None
+    find_end_delimiter(slice, |s, idx| s.as_bytes()[idx..].starts_with(delim_bytes))
 }
 
-/// Finds the index of a matching single asterisk delimiter, skipping code spans.
-fn find_matching_single_asterisk(slice: &str) -> Option<usize> {
-    let mut idx = 0;
-    let bytes = slice.as_bytes();
-
-    while idx < bytes.len() {
-        if let Some(next_idx) = skip_code_span(slice, idx) {
-            idx = next_idx;
-            continue;
-        }
-
-        if bytes[idx] == b'*' {
-            let is_double = (idx + 1 < bytes.len() && bytes[idx + 1] == b'*')
-                || (idx > 0 && bytes[idx - 1] == b'*');
-            if !is_double && idx > 0 && !bytes[idx - 1].is_ascii_whitespace() {
-                return Some(idx);
-            }
-        }
-
-        idx += 1;
-    }
-
-    None
-}
-
-/// Finds the index of a matching single underscore delimiter with boundary checking.
-fn find_matching_single_underscore(slice: &str) -> Option<usize> {
-    let mut idx = 0;
-    let bytes = slice.as_bytes();
-
-    while idx < bytes.len() {
-        if let Some(next_idx) = skip_code_span(slice, idx) {
-            idx = next_idx;
-            continue;
-        }
-
-        if bytes[idx] == b'_' {
-            let is_double = (idx + 1 < bytes.len() && bytes[idx + 1] == b'_')
-                || (idx > 0 && bytes[idx - 1] == b'_');
-            if !is_double && idx > 0 && !bytes[idx - 1].is_ascii_whitespace() {
-                let is_word_char_after = idx + 1 < bytes.len()
-                    && slice[idx + 1..]
-                        .chars()
-                        .next()
-                        .is_some_and(|c| c.is_alphanumeric());
-                if !is_word_char_after {
-                    return Some(idx);
-                }
-            }
-        }
-
-        idx += 1;
-    }
-
-    None
-}
-
-/// Finds the index of a matching underscore delimiter with boundary checking.
-fn find_matching_underscore_delimiter(slice: &str, delimiter: &str) -> Option<usize> {
-    let mut idx = 0;
-    let bytes = slice.as_bytes();
-    let delim_bytes = delimiter.as_bytes();
-    let delim_len = delim_bytes.len();
-
-    while idx < bytes.len() {
-        if let Some(next_idx) = skip_code_span(slice, idx) {
-            idx = next_idx;
-            continue;
-        }
-
-        if bytes[idx..].starts_with(delim_bytes) && idx > 0 && !bytes[idx - 1].is_ascii_whitespace()
-        {
-            let is_word_char_after = idx + delim_len < bytes.len()
-                && slice[idx + delim_len..]
-                    .chars()
-                    .next()
-                    .is_some_and(|c| c.is_alphanumeric());
-            if !is_word_char_after {
-                return Some(idx);
-            }
-        }
-
-        idx += 1;
-    }
-
-    None
-}
-
-/// Finds the end of link text, start of URL, and end of URL in a slice starting with `[`.
+/// Finds link text end, URL start, and URL end in a markdown link slice.
 fn find_matching_link(slice: &str) -> Option<(usize, usize, usize)> {
     let bytes = slice.as_bytes();
     if bytes.first() != Some(&b'[') {
+        return None;
+    }
+    if !bytes.contains(&b']') || !bytes.contains(&b')') {
         return None;
     }
 
@@ -208,208 +142,84 @@ fn find_matching_link(slice: &str) -> Option<(usize, usize, usize)> {
     None
 }
 
+/// Finds the index of a matching single asterisk delimiter.
+fn find_matching_single_asterisk(slice: &str) -> Option<usize> {
+    let bytes = slice.as_bytes();
+    find_end_delimiter(slice, |_s, idx| {
+        if bytes[idx] != b'*' {
+            return false;
+        }
+        let is_double = (idx + 1 < bytes.len() && bytes[idx + 1] == b'*')
+            || (idx > 0 && bytes[idx - 1] == b'*');
+        !is_double && !is_whitespace_before(slice, idx)
+    })
+}
+
+/// Finds the index of a matching single underscore delimiter.
+fn find_matching_single_underscore(slice: &str) -> Option<usize> {
+    let bytes = slice.as_bytes();
+    find_end_delimiter(slice, |s, idx| {
+        if bytes[idx] != b'_' {
+            return false;
+        }
+        let is_double = (idx + 1 < bytes.len() && bytes[idx + 1] == b'_')
+            || (idx > 0 && bytes[idx - 1] == b'_');
+        !is_double && !is_whitespace_before(s, idx) && !is_alphanumeric_after(s, idx + 1)
+    })
+}
+
+/// Finds the index of a matching underscore delimiter with boundary checks.
+fn find_matching_underscore_delimiter(slice: &str, delimiter: &str) -> Option<usize> {
+    let delim_bytes = delimiter.as_bytes();
+    let delim_len = delim_bytes.len();
+    find_end_delimiter(slice, |s, idx| {
+        s.as_bytes()[idx..].starts_with(delim_bytes)
+            && !is_whitespace_before(s, idx)
+            && !is_alphanumeric_after(s, idx + delim_len)
+    })
+}
+
 /// Formats inline markdown elements into an HTML output buffer.
 pub fn format_inline_into(out: &mut String, input: &str) {
     let mut idx = 0;
     let bytes = input.as_bytes();
 
     while idx < input.len() {
-        let remaining = &input[idx..];
+        let consumed = match bytes[idx] {
+            b'`' => try_parse_code(out, input, idx),
+            b'~' => try_parse_strikethrough(out, input, idx),
+            b'*' => try_parse_asterisks(out, input, idx),
+            b'_' => try_parse_underscores(out, input, idx),
+            b'[' => try_parse_link(out, input, idx),
+            _ => None,
+        };
 
-        // 1. Inline code span
-        if bytes[idx] == b'`' {
-            let count = bytes[idx..].iter().take_while(|&&b| b == b'`').count();
-            let after_open = idx + count;
-            if let Some(close_pos) = find_matching_backticks(&input[after_open..], count) {
-                let code_content = &input[after_open..after_open + close_pos];
-                out.push_str("<code>");
-                escape_html_into(out, code_content);
-                out.push_str("</code>");
-                idx = after_open + close_pos + count;
-                continue;
-            } else {
-                escape_html_into(out, &input[idx..after_open]);
-                idx = after_open;
-                continue;
-            }
-        }
-
-        // 2. Strikethrough
-        if remaining.starts_with("~~") {
-            let after_open = idx + 2;
-            if let Some(close_pos) =
-                find_matching_delimiter(&input[after_open..], "~~").filter(|&p| p > 0)
-            {
-                let inner = &input[after_open..after_open + close_pos];
-                out.push_str("<s>");
-                format_inline_into(out, inner);
-                out.push_str("</s>");
-                idx = after_open + close_pos + 2;
-                continue;
-            }
-            out.push_str("~~");
-            idx += 2;
+        if let Some(n) = consumed {
+            idx += n;
             continue;
         }
 
-        // 3. Bold + Italic
-        if remaining.starts_with("***") {
-            let after_open = idx + 3;
-            if let Some(close_pos) =
-                find_matching_delimiter(&input[after_open..], "***").filter(|&p| p > 0)
-            {
-                let inner = &input[after_open..after_open + close_pos];
-                out.push_str("<strong><em>");
-                format_inline_into(out, inner);
-                out.push_str("</em></strong>");
-                idx = after_open + close_pos + 3;
-                continue;
-            }
-        }
-
-        // 4. Bold
-        if remaining.starts_with("**") {
-            let after_open = idx + 2;
-            if let Some(close_pos) =
-                find_matching_delimiter(&input[after_open..], "**").filter(|&p| p > 0)
-            {
-                let inner = &input[after_open..after_open + close_pos];
-                out.push_str("<strong>");
-                format_inline_into(out, inner);
-                out.push_str("</strong>");
-                idx = after_open + close_pos + 2;
-                continue;
-            }
-            out.push_str("**");
-            idx += 2;
-            continue;
-        }
-
-        // 5. Bold + Italic with underscores
-        if remaining.starts_with("___") {
-            let is_word_char_before = idx > 0
-                && input[..idx]
-                    .chars()
-                    .next_back()
-                    .is_some_and(|c| c.is_alphanumeric());
-            if !is_word_char_before {
-                let after_open = idx + 3;
-                if let Some(close_pos) =
-                    find_matching_underscore_delimiter(&input[after_open..], "___")
-                        .filter(|&p| p > 0)
-                {
-                    let inner = &input[after_open..after_open + close_pos];
-                    out.push_str("<strong><em>");
-                    format_inline_into(out, inner);
-                    out.push_str("</em></strong>");
-                    idx = after_open + close_pos + 3;
-                    continue;
-                }
-            }
-        }
-
-        // 6. Bold with underscores
-        if remaining.starts_with("__") {
-            let is_word_char_before = idx > 0
-                && input[..idx]
-                    .chars()
-                    .next_back()
-                    .is_some_and(|c| c.is_alphanumeric());
-            if !is_word_char_before {
-                let after_open = idx + 2;
-                if let Some(close_pos) =
-                    find_matching_underscore_delimiter(&input[after_open..], "__")
-                        .filter(|&p| p > 0)
-                {
-                    let inner = &input[after_open..after_open + close_pos];
-                    out.push_str("<strong>");
-                    format_inline_into(out, inner);
-                    out.push_str("</strong>");
-                    idx = after_open + close_pos + 2;
-                    continue;
-                }
-            }
-            out.push_str("__");
-            idx += 2;
-            continue;
-        }
-
-        // 7. Italic
-        if bytes[idx] == b'*' {
-            let after_open = idx + 1;
-            let not_leading_space =
-                after_open < input.len() && !bytes[after_open].is_ascii_whitespace();
-            let close_opt = if not_leading_space {
-                find_matching_single_asterisk(&input[after_open..]).filter(|&p| p > 0)
-            } else {
-                None
-            };
-            if let Some(close_pos) = close_opt {
-                let inner = &input[after_open..after_open + close_pos];
-                out.push_str("<em>");
-                format_inline_into(out, inner);
-                out.push_str("</em>");
-                idx = after_open + close_pos + 1;
-                continue;
-            }
-            out.push('*');
-            idx += 1;
-            continue;
-        }
-
-        // 8. Italic with underscore
-        if bytes[idx] == b'_' {
-            let is_word_char_before = idx > 0
-                && input[..idx]
-                    .chars()
-                    .next_back()
-                    .is_some_and(|c| c.is_alphanumeric());
-            let after_open = idx + 1;
-            let not_leading_space =
-                after_open < input.len() && !bytes[after_open].is_ascii_whitespace();
-            let close_opt = if !is_word_char_before && not_leading_space {
-                find_matching_single_underscore(&input[after_open..]).filter(|&p| p > 0)
-            } else {
-                None
-            };
-            if let Some(close_pos) = close_opt {
-                let inner = &input[after_open..after_open + close_pos];
-                out.push_str("<em>");
-                format_inline_into(out, inner);
-                out.push_str("</em>");
-                idx = after_open + close_pos + 1;
-                continue;
-            }
-            out.push('_');
-            idx += 1;
-            continue;
-        }
-
-        // 9. Inline link
-        if bytes[idx] == b'[' {
-            if let Some((text_end, url_start, url_end)) = find_matching_link(remaining) {
-                let text = &remaining[1..text_end];
-                let url = &remaining[url_start..url_end];
-                out.push_str("<a href=\"");
-                escape_html_into(out, url.trim());
-                out.push_str("\">");
-                format_inline_into(out, text);
-                out.push_str("</a>");
-                idx += url_end + 1;
-                continue;
-            }
-            out.push('[');
-            idx += 1;
-            continue;
-        }
-
-        // 10. HTML Entities and regular characters
         match bytes[idx] {
-            b'&' => out.push_str("&amp;"),
-            b'<' => out.push_str("&lt;"),
-            b'>' => out.push_str("&gt;"),
-            b'"' => out.push_str("&quot;"),
-            b'\'' => out.push_str("&#39;"),
+            b'&' => {
+                out.push_str("&amp;");
+                idx += 1;
+            }
+            b'<' => {
+                out.push_str("&lt;");
+                idx += 1;
+            }
+            b'>' => {
+                out.push_str("&gt;");
+                idx += 1;
+            }
+            b'"' => {
+                out.push_str("&quot;");
+                idx += 1;
+            }
+            b'\'' => {
+                out.push_str("&#39;");
+                idx += 1;
+            }
             _ => {
                 let plain_len = bytes[idx..]
                     .iter()
@@ -423,28 +233,42 @@ pub fn format_inline_into(out: &mut String, input: &str) {
                 if plain_len > 0 {
                     out.push_str(&input[idx..idx + plain_len]);
                     idx += plain_len;
-                    continue;
-                }
-                if let Some(ch) = input[idx..].chars().next() {
+                } else if let Some(ch) = input[idx..].chars().next() {
                     out.push(ch);
                     idx += ch.len_utf8();
+                } else {
+                    break;
                 }
-                continue;
             }
         }
-        idx += 1;
     }
 }
 
-/// Appends multiline text to a buffer, indenting every non-empty line by 4 spaces.
-pub fn append_indented(out: &mut String, text: &str) {
-    for line in text.lines() {
-        if !line.is_empty() {
-            out.push_str("    ");
-            out.push_str(line);
-        }
-        out.push('\n');
-    }
+/// Returns true if character immediately following offset is alphanumeric.
+fn is_alphanumeric_after(slice: &str, idx: usize) -> bool {
+    idx < slice.len()
+        && slice[idx..]
+            .chars()
+            .next()
+            .is_some_and(|c| c.is_alphanumeric())
+}
+
+/// Returns true if character immediately preceding offset is alphanumeric.
+fn is_alphanumeric_before(slice: &str, idx: usize) -> bool {
+    idx > 0
+        && slice[..idx]
+            .chars()
+            .next_back()
+            .is_some_and(|c| c.is_alphanumeric())
+}
+
+/// Returns true if byte immediately preceding offset is ASCII whitespace.
+fn is_whitespace_before(slice: &str, idx: usize) -> bool {
+    idx > 0
+        && slice
+            .as_bytes()
+            .get(idx - 1)
+            .is_some_and(|b| b.is_ascii_whitespace())
 }
 
 /// Appends leading whitespace indentation to a buffer based on indent level.
@@ -464,6 +288,169 @@ fn skip_code_span(slice: &str, idx: usize) -> Option<usize> {
     let after_open = idx + count;
     find_matching_backticks(&slice[after_open..], count)
         .map(|close_pos| after_open + close_pos + count)
+}
+
+/// Attempts to parse asterisk emphasis tags and writes HTML to output.
+fn try_parse_asterisks(out: &mut String, input: &str, idx: usize) -> Option<usize> {
+    let remaining = &input[idx..];
+
+    // 1. Bold + Italic (***)
+    if remaining.starts_with("***") {
+        let after_open = idx + 3;
+        if let Some(close_pos) =
+            find_matching_delimiter(&input[after_open..], "***").filter(|&p| p > 0)
+        {
+            let inner = &input[after_open..after_open + close_pos];
+            out.push_str("<strong><em>");
+            format_inline_into(out, inner);
+            out.push_str("</em></strong>");
+            return Some(close_pos + 6);
+        }
+    }
+
+    // 2. Bold (**)
+    if remaining.starts_with("**") {
+        let after_open = idx + 2;
+        if let Some(close_pos) =
+            find_matching_delimiter(&input[after_open..], "**").filter(|&p| p > 0)
+        {
+            let inner = &input[after_open..after_open + close_pos];
+            out.push_str("<strong>");
+            format_inline_into(out, inner);
+            out.push_str("</strong>");
+            return Some(close_pos + 4);
+        }
+    }
+
+    // 3. Italic (*)
+    if remaining.starts_with('*') {
+        let after_open = idx + 1;
+        let not_leading_space =
+            after_open < input.len() && !input.as_bytes()[after_open].is_ascii_whitespace();
+        if not_leading_space
+            && let Some(close_pos) =
+                find_matching_single_asterisk(&input[after_open..]).filter(|&p| p > 0)
+        {
+            let inner = &input[after_open..after_open + close_pos];
+            out.push_str("<em>");
+            format_inline_into(out, inner);
+            out.push_str("</em>");
+            return Some(close_pos + 2);
+        }
+    }
+
+    None
+}
+
+/// Attempts to parse an inline code span and writes HTML to output.
+fn try_parse_code(out: &mut String, input: &str, idx: usize) -> Option<usize> {
+    let bytes = input.as_bytes();
+    if bytes.get(idx) != Some(&b'`') {
+        return None;
+    }
+    let count = bytes[idx..].iter().take_while(|&&b| b == b'`').count();
+    let after_open = idx + count;
+    if let Some(close_pos) = find_matching_backticks(&input[after_open..], count) {
+        let code_content = &input[after_open..after_open + close_pos];
+        out.push_str("<code>");
+        escape_html_into(out, code_content);
+        out.push_str("</code>");
+        Some(count + close_pos + count)
+    } else {
+        escape_html_into(out, &input[idx..after_open]);
+        Some(count)
+    }
+}
+
+/// Attempts to parse an inline markdown link and writes HTML to output.
+fn try_parse_link(out: &mut String, input: &str, idx: usize) -> Option<usize> {
+    let remaining = &input[idx..];
+    if let Some((text_end, url_start, url_end)) = find_matching_link(remaining) {
+        let text = &remaining[1..text_end];
+        let url = &remaining[url_start..url_end];
+        out.push_str("<a href=\"");
+        escape_html_into(out, url.trim());
+        out.push_str("\">");
+        format_inline_into(out, text);
+        out.push_str("</a>");
+        Some(url_end + 1)
+    } else {
+        None
+    }
+}
+
+/// Attempts to parse a strikethrough span and writes HTML to output.
+fn try_parse_strikethrough(out: &mut String, input: &str, idx: usize) -> Option<usize> {
+    let remaining = &input[idx..];
+    if !remaining.starts_with("~~") {
+        return None;
+    }
+    let after_open = idx + 2;
+    if let Some(close_pos) = find_matching_delimiter(&input[after_open..], "~~").filter(|&p| p > 0)
+    {
+        let inner = &input[after_open..after_open + close_pos];
+        out.push_str("<s>");
+        format_inline_into(out, inner);
+        out.push_str("</s>");
+        Some(close_pos + 4)
+    } else {
+        None
+    }
+}
+
+/// Attempts to parse underscore emphasis tags and writes HTML to output.
+fn try_parse_underscores(out: &mut String, input: &str, idx: usize) -> Option<usize> {
+    if is_alphanumeric_before(input, idx) {
+        return None;
+    }
+    let remaining = &input[idx..];
+
+    // 1. Bold + Italic (___)
+    if remaining.starts_with("___") {
+        let after_open = idx + 3;
+        if let Some(close_pos) =
+            find_matching_underscore_delimiter(&input[after_open..], "___").filter(|&p| p > 0)
+        {
+            let inner = &input[after_open..after_open + close_pos];
+            out.push_str("<strong><em>");
+            format_inline_into(out, inner);
+            out.push_str("</em></strong>");
+            return Some(close_pos + 6);
+        }
+    }
+
+    // 2. Bold (__)
+    if remaining.starts_with("__") {
+        let after_open = idx + 2;
+        if let Some(close_pos) =
+            find_matching_underscore_delimiter(&input[after_open..], "__").filter(|&p| p > 0)
+        {
+            let inner = &input[after_open..after_open + close_pos];
+            out.push_str("<strong>");
+            format_inline_into(out, inner);
+            out.push_str("</strong>");
+            return Some(close_pos + 4);
+        }
+    }
+
+    // 3. Italic (_)
+    if remaining.starts_with('_') {
+        let after_open = idx + 1;
+        let not_leading_space =
+            after_open < input.len() && !input.as_bytes()[after_open].is_ascii_whitespace();
+        if not_leading_space
+            && let Some(close_pos) =
+                find_matching_single_underscore(&input[after_open..]).filter(|&p| p > 0)
+        {
+            let inner = &input[after_open..after_open + close_pos];
+            out.push_str("<em>");
+            format_inline_into(out, inner);
+            out.push_str("</em>");
+            return Some(close_pos + 2);
+        }
+    }
+
+    None
 }
 
 #[cfg(test)]
@@ -600,6 +587,21 @@ mod tests {
     }
 
     #[test]
+    fn test_format_inline_malformed_links() {
+        let mut out = String::new();
+        format_inline_into(&mut out, "[link without close paren](https://example.com");
+        assert_eq!(out, "[link without close paren](https://example.com");
+
+        out.clear();
+        format_inline_into(&mut out, "[link without url](");
+        assert_eq!(out, "[link without url](");
+
+        out.clear();
+        format_inline_into(&mut out, "[empty url]()");
+        assert_eq!(out, "<a href=\"\">empty url</a>");
+    }
+
+    #[test]
     fn test_format_inline_nested() {
         let mut out = String::new();
         format_inline_into(
@@ -610,6 +612,41 @@ mod tests {
             out,
             "Formatted <s><strong>bold strikethrough</strong></s> with <code>code</code>."
         );
+    }
+
+    #[test]
+    fn test_format_inline_empty_emphasis() {
+        let mut out = String::new();
+        format_inline_into(&mut out, "****");
+        assert_eq!(out, "****");
+
+        out.clear();
+        format_inline_into(&mut out, "____");
+        assert_eq!(out, "____");
+
+        out.clear();
+        format_inline_into(&mut out, "~~~~");
+        assert_eq!(out, "~~~~");
+
+        out.clear();
+        format_inline_into(&mut out, "******");
+        assert_eq!(out, "******");
+
+        out.clear();
+        format_inline_into(&mut out, "______");
+        assert_eq!(out, "______");
+
+        out.clear();
+        format_inline_into(&mut out, "**");
+        assert_eq!(out, "**");
+
+        out.clear();
+        format_inline_into(&mut out, "__");
+        assert_eq!(out, "__");
+
+        out.clear();
+        format_inline_into(&mut out, "~~");
+        assert_eq!(out, "~~");
     }
 
     #[test]
@@ -651,6 +688,46 @@ mod tests {
         let mut out = String::new();
         format_inline_into(&mut out, "Grüße **überall** & schön 🚀");
         assert_eq!(out, "Grüße <strong>überall</strong> &amp; schön 🚀");
+    }
+
+    #[test]
+    fn test_format_inline_utf8_boundaries_adjacent_underscores() {
+        let mut out = String::new();
+        format_inline_into(&mut out, "ä_ö_ü");
+        assert_eq!(out, "ä_ö_ü");
+
+        out.clear();
+        format_inline_into(&mut out, " _ü_ ");
+        assert_eq!(out, " <em>ü</em> ");
+
+        out.clear();
+        format_inline_into(&mut out, " __ä__ ");
+        assert_eq!(out, " <strong>ä</strong> ");
+
+        out.clear();
+        format_inline_into(&mut out, "🚀_test_🚀");
+        assert_eq!(out, "🚀<em>test</em>🚀");
+
+        out.clear();
+        format_inline_into(&mut out, "🎉**bold**🎉");
+        assert_eq!(out, "🎉<strong>bold</strong>🎉");
+    }
+
+    #[test]
+    fn test_format_inline_deeply_nested_and_adversarial() {
+        let mut out = String::new();
+        format_inline_into(&mut out, "**~~*nested*~~**");
+        assert_eq!(out, "<strong><s><em>nested</em></s></strong>");
+
+        out.clear();
+        let unclosed = "[".repeat(50);
+        format_inline_into(&mut out, &unclosed);
+        assert_eq!(out, unclosed);
+
+        out.clear();
+        let adversarial = "[[[[[[[[[[[[not a link";
+        format_inline_into(&mut out, adversarial);
+        assert_eq!(out, adversarial);
     }
 
     #[test]

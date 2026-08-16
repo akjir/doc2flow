@@ -36,6 +36,8 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 ### 2: Parsing & Loops
 - **No Chained Regex/Replace:** Replace `.replace().replace()` cascades with single-pass state machines/scanners.
 - **Declarative Iterators:** Prefer `.filter()`, `.map()`, `.fold()` over imperative loops with mutable state.
+- **Unified Forward Parsers:** Never duplicate forward-scanning loops across token handlers. Encapsulate index advancement and token/code skipping into generic higher-order functions or reusable iterators (P-UNIFIED-PARSER).
+- **Linear Parsing & No O(N²):** Ensure token parsers and recursive descent routines parse strictly linearly (O(N)). Avoid repetitive scanning of identical byte slices on unclosed/nested tokens (P-NO-QUADRATIC).
 
 ### 3: Formatting & Buffer Directives
 - **Static:** `out.write_str("...")` STRICTLY for static literals (no variables).
@@ -47,6 +49,8 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 - **Standard Traits:** Rely on standard traits (`std::fmt::Display` -> `.to_string()`). NEVER create custom methods (e.g., `to_string_custom()`) or standalone functions duplicating std traits.
 - **Constructor Delegation:** If a struct derives `Default`, any implementation of `new()` must delegate to `Self::default()` rather than repeating field initialization.
 - **O(1) Hot-Path Routing:** Precompute array indices, state masks, and routing lookups during initialization. Never use for-loops, string matching, or pointer comparisons (`std::ptr::eq`) to resolve modules/AST handlers during active parsing/rendering loops (P-O1-DISPATCH).
+- **Flatten Monolithic Dispatchers:** Avoid massive `if/else` or loop dispatchers (>50 lines). Dispatch token parsing to discrete, strongly-typed functions (e.g., `try_parse_* -> Option<usize>`) (P-FLATTEN-DISPATCH).
+- **Encapsulate UTF-8 Lookarounds:** Abstract UTF-8 boundary checks and char lookahead/lookbehind (`slice[idx..].chars().next()`) into semantic helper functions (`is_alphanumeric_at`, `is_alphanumeric_before`, `is_alphanumeric_after`) (P-UTF8-LOOKAROUND).
 - **Layering:** `src/utils/` = generic project-agnostic library (NO domain logic). `src/core/` & `src/features/` consume it via `src/utils/mod.rs` API.
 - **Errors:** Stdlib + `Doc2FlowError` (`src/utils/error.rs`). Avoid complex custom `Enum`s for basic app errors.
 - **Panics:** `unwrap()`/`expect()` ONLY for true invariants with descriptive msgs. NEVER for runtime/user I/O.
