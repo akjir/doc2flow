@@ -139,9 +139,7 @@ fn find_matching_underscore_delimiter(slice: &str, delimiter: &str) -> Option<us
             continue;
         }
 
-        if bytes[idx..].starts_with(delim_bytes)
-            && idx > 0
-            && !bytes[idx - 1].is_ascii_whitespace()
+        if bytes[idx..].starts_with(delim_bytes) && idx > 0 && !bytes[idx - 1].is_ascii_whitespace()
         {
             let is_word_char_after = idx + delim_len < bytes.len()
                 && slice[idx + delim_len..]

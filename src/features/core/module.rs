@@ -296,13 +296,7 @@ mod tests {
             vec![DocumentElement::text("Section body content")],
         );
         let child_html = "        <div class=\"item text-item\">\n          <span class=\"text-content\">\n            Section body content\n          </span>\n        </div>\n";
-        let html = feature.to_html(
-            &section,
-            child_html,
-            2,
-            0,
-            &DocumentParameters::default(),
-        );
+        let html = feature.to_html(&section, child_html, 2, 0, &DocumentParameters::default());
         let expected = concat!(
             "    <section class=\"section\" data-level=\"1\">\n",
             "      <h1>Overview</h1>\n",

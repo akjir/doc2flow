@@ -164,14 +164,24 @@ fn render_element_with_depth(
         DocumentElement::BulletListItem { children, .. } => {
             let mut inner = String::new();
             for child in children {
-                inner.push_str(&render_element_with_depth(child, indent, depth + 1, parameters));
+                inner.push_str(&render_element_with_depth(
+                    child,
+                    indent,
+                    depth + 1,
+                    parameters,
+                ));
             }
             ("bullet", inner)
         }
         DocumentElement::CheckBoxItem { children, .. } => {
             let mut inner = String::new();
             for child in children {
-                inner.push_str(&render_element_with_depth(child, indent, depth + 1, parameters));
+                inner.push_str(&render_element_with_depth(
+                    child,
+                    indent,
+                    depth + 1,
+                    parameters,
+                ));
             }
             ("task", inner)
         }
@@ -181,7 +191,12 @@ fn render_element_with_depth(
         DocumentElement::OrderedListItem { children, .. } => {
             let mut inner = String::new();
             for child in children {
-                inner.push_str(&render_element_with_depth(child, indent, depth + 1, parameters));
+                inner.push_str(&render_element_with_depth(
+                    child,
+                    indent,
+                    depth + 1,
+                    parameters,
+                ));
             }
             ("ordered", inner)
         }

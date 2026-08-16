@@ -183,13 +183,7 @@ mod tests {
         let feature = BulletFeature::new();
         let element = DocumentElement::bullet_list_item("Parent item");
         let child_html = "    <div class=\"item bullet-item\" style=\"--indent: 1;\">\n      <span class=\"bullet-marker\">&bull;</span>\n      <span class=\"bullet-content\">\n        Child item\n      </span>\n    </div>\n";
-        let html = feature.to_html(
-            &element,
-            child_html,
-            1,
-            0,
-            &DocumentParameters::default(),
-        );
+        let html = feature.to_html(&element, child_html, 1, 0, &DocumentParameters::default());
         let expected_prefix = "  <div class=\"item bullet-item\">\n    <span class=\"bullet-marker\">&bull;</span>\n    <span class=\"bullet-content\">\n      Parent item\n    </span>\n  </div>\n";
         assert_eq!(html, format!("{expected_prefix}{child_html}"));
     }

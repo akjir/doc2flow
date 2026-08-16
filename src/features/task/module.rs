@@ -230,13 +230,7 @@ mod tests {
         let feature = TaskFeature::new();
         let element = DocumentElement::check_box_item(false, "Parent task");
         let child_html = "    <div class=\"item check-item\" style=\"--indent: 1;\">\n      <span class=\"check-marker\">\n        <input type=\"checkbox\" class=\"check-box\" />\n      </span>\n      <span class=\"check-content\">\n        Child task\n      </span>\n    </div>\n";
-        let html = feature.to_html(
-            &element,
-            child_html,
-            1,
-            0,
-            &DocumentParameters::default(),
-        );
+        let html = feature.to_html(&element, child_html, 1, 0, &DocumentParameters::default());
         let expected_prefix = "  <div class=\"item check-item\">\n    <span class=\"check-marker\">\n      <input type=\"checkbox\" class=\"check-box\" />\n    </span>\n    <span class=\"check-content\">\n      Parent task\n    </span>\n  </div>\n";
         assert_eq!(html, format!("{expected_prefix}{child_html}"));
     }

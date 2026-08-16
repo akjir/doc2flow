@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added modular code feature slice for syntax and fenced code block rendering.
 - Added support for optional header layout (`header: "flex"`) rendering a structured banner card with logo, title, and subtitle before sections.
 - Added automatic SVG fallback placeholder display for broken or unreachable external image loads.
+- Added validation enforcing mandatory level-1 headings and restricting pre-heading content to whitelisted block directives (`:::variables`).
 - Updated starter template (`templates/template.md`) with GFM table support, variables table documentation, and sample code variable usage.
 
 ### Changed

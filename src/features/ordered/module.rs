@@ -188,13 +188,7 @@ mod tests {
         let feature = OrderedFeature::new();
         let element = DocumentElement::ordered_list_item(1, "Parent order");
         let child_html = "    <div class=\"item order-item\" style=\"--indent: 1;\">\n      <span class=\"order-marker\">1.</span>\n      <span class=\"order-content\">\n        Child item\n      </span>\n    </div>\n";
-        let html = feature.to_html(
-            &element,
-            child_html,
-            1,
-            0,
-            &DocumentParameters::default(),
-        );
+        let html = feature.to_html(&element, child_html, 1, 0, &DocumentParameters::default());
         let expected_prefix = "  <div class=\"item order-item\">\n    <span class=\"order-marker\">1.</span>\n    <span class=\"order-content\">\n      Parent order\n    </span>\n  </div>\n";
         assert_eq!(html, format!("{expected_prefix}{child_html}"));
     }

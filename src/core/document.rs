@@ -346,9 +346,7 @@ impl From<HashMap<String, String>> for DocumentParameters {
         let subtitle = map.remove("subtitle").unwrap_or_default();
         let date = map.remove("date").unwrap_or_default();
         let version = map.remove("version").unwrap_or_default();
-        let language = map
-            .remove("language")
-            .unwrap_or_else(|| "en".to_string());
+        let language = map.remove("language").unwrap_or_else(|| "en".to_string());
         let logo = map.remove("logo").unwrap_or_default();
         let header = map.remove("header").unwrap_or_default();
         let numbered_sections = match map.remove("numbered_sections") {
@@ -577,13 +575,19 @@ mod tests {
         // Variables map contains unknown frontmatter parameters
         assert_eq!(from_map.get_variable("custom_key"), Some("custom_val"));
         assert_eq!(from_map.get_variable("env"), Some("production"));
-        assert_eq!(from_map.variables.get("custom_key").map(|s| s.as_str()), Some("custom_val"));
+        assert_eq!(
+            from_map.variables.get("custom_key").map(|s| s.as_str()),
+            Some("custom_val")
+        );
         assert_eq!(from_map.get_variable("unknown_key"), None);
 
         // Mutating variables map
         from_map.set_variable("port", "8080");
         assert_eq!(from_map.get_variable("port"), Some("8080"));
-        assert_eq!(from_map.remove_variable("custom_key"), Some("custom_val".into()));
+        assert_eq!(
+            from_map.remove_variable("custom_key"),
+            Some("custom_val".into())
+        );
         assert_eq!(from_map.get_variable("custom_key"), None);
 
         // Unrecognized 'lang' key is preserved in variables without overriding language

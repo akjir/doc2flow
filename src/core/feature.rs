@@ -442,8 +442,7 @@ mod tests {
             task: true,
             unknown: true,
         };
-        let expected =
-            "core, bullet, code_block, image, ordered, shoutout, table, task, unknown";
+        let expected = "core, bullet, code_block, image, ordered, shoutout, table, task, unknown";
         assert_eq!(features.to_features_string(), expected);
         assert_eq!(to_features_string(&features), expected);
         assert_eq!(features.to_string(), expected);
@@ -457,10 +456,7 @@ mod tests {
         assert_eq!(features.to_features_string(), "core, bullet, table");
 
         features.image = true;
-        assert_eq!(
-            features.to_features_string(),
-            "core, bullet, image, table"
-        );
+        assert_eq!(features.to_features_string(), "core, bullet, image, table");
 
         features.unknown = true;
         assert_eq!(

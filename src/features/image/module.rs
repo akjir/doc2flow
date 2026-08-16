@@ -58,9 +58,8 @@ impl Feature for ImageFeature {
             DocumentElement::Image { alt, url } => {
                 let spaces = indent * 2;
                 let inner_spaces = (indent + 1) * 2;
-                let mut out = String::with_capacity(
-                    url.len() + alt.len() + spaces * 2 + inner_spaces + 64,
-                );
+                let mut out =
+                    String::with_capacity(url.len() + alt.len() + spaces * 2 + inner_spaces + 64);
                 push_indent(&mut out, indent);
                 out.push_str("<div class=\"image-item\">\n");
 

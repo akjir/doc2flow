@@ -91,7 +91,9 @@ impl Feature for TableFeature {
                         push_indent(&mut out, indent + 4);
                         out.push_str("<th");
                         match alignments.get(col_idx) {
-                            Some(TableAlignment::Left) => out.push_str(" style=\"text-align: left;\""),
+                            Some(TableAlignment::Left) => {
+                                out.push_str(" style=\"text-align: left;\"")
+                            }
                             Some(TableAlignment::Center) => {
                                 out.push_str(" style=\"text-align: center;\"")
                             }
