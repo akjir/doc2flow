@@ -24,6 +24,7 @@ impl OrderedFeature {
     ///
     /// let feature = OrderedFeature::new();
     /// ```
+    #[must_use]
     pub const fn new() -> Self {
         Self
     }

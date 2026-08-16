@@ -40,13 +40,15 @@ Every `.rs` file must strictly follow this top-to-bottom sequence:
 - **Field Visibility:** `pub` fields first, then private fields.
 - **Field Sorting:** Alphabetical order within the same visibility tier.
 - **Derives:** Alphabetize macros inside `#[derive(...)]` (e.g., `#[derive(Clone, Debug, PartialEq)]`).
+- **State Condensation:** Evaluate `bitflags` or array-backed state representation for multiple boolean configuration flags.
 
 ### B. Implementation (`impl`) Blocks
 For type `MyType`:
 1. **Primary/Inherent `impl MyType`:**
-   - **Constructors First:** `new()`, `default()`, `with_capacity()`, or custom constructors at the top.
+   - **Constructors First:** `new()`, `default()`, `with_capacity()`, or custom constructors at the top (enforce `#[must_use]`). If struct derives `Default`, `new()` must delegate to `Self::default()`.
    - **Inherent Methods:** Sorted alphabetically after constructors.
 2. **Trait Implementations (`impl Trait for MyType`):**
+   - Implement standard library traits (e.g., `impl Display for MyType` with `.to_string()`); never create custom duplicate methods (e.g., `to_string_custom()`) or standalone functions.
    - Directly below primary `impl MyType`.
    - Sorted alphabetically by Trait name (e.g., `impl Display` before `impl From<T>`).
 
@@ -54,8 +56,12 @@ For type `MyType`:
 - **Match Arms:** Order `enum` variants in `match` expressions matching declaration order in `enum` definition.
 - **Catch-all Arm:** Fallback (`_ => ...`) MUST always be the last arm.
 
+### D. Tests & Assertions
+- **Resilient Assertions:** Assert specific semantic tokens (e.g., `.contains("bullet")`) on formatted string outputs (like `Display`) instead of brittle exact full-string matches.
+
 ## 3. DOCUMENTATION & VISIBILITY STANDARDS
 - **Rustdoc Comments:** Retain `/// ...` comments directly above items/attributes with no blank lines.
+- **Domain Quirks:** Retain and enforce `// ...` inline documentation explaining intentional structural deviations (e.g. AST nesting constraints).
 - **Export Hygiene:** Prefer explicit named imports/exports (`pub use module::{A, B};`) over wildcards (`pub use module::*`).
 
 ## EXECUTION WORKFLOW

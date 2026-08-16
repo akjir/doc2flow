@@ -24,6 +24,7 @@ impl<'a> DocumentContext<'a> {
     /// let ctx = DocumentContext::new(&fm, "# Heading");
     /// assert_eq!(ctx.raw_markdown, "# Heading");
     /// ```
+    #[must_use]
     pub const fn new(frontmatter: &'a HashMap<String, String>, raw_markdown: &'a str) -> Self {
         Self {
             frontmatter,

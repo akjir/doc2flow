@@ -24,6 +24,7 @@ impl TaskFeature {
     ///
     /// let feature = TaskFeature::new();
     /// ```
+    #[must_use]
     pub const fn new() -> Self {
         Self
     }

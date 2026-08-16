@@ -18,6 +18,7 @@ pub struct Document {
 
 impl Document {
     /// Creates an empty document.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             body: Vec::new(),
@@ -27,6 +28,7 @@ impl Document {
     }
 
     /// Creates an empty document with pre-allocated capacities.
+    #[must_use]
     pub fn with_capacity(body_capacity: usize) -> Self {
         Self {
             body: Vec::with_capacity(body_capacity),
@@ -123,6 +125,7 @@ pub enum DocumentElement {
 
 impl DocumentElement {
     /// Creates a new block directive document element with name and children.
+    #[must_use]
     pub fn block_directive(name: impl Into<String>, children: Vec<DocumentElement>) -> Self {
         Self::BlockDirective {
             children,
@@ -131,6 +134,7 @@ impl DocumentElement {
     }
 
     /// Creates a new bullet list item document element with child content.
+    #[must_use]
     pub fn bullet_list_item(content: impl Into<String>) -> Self {
         Self::BulletListItem {
             children: Vec::new(),
@@ -139,6 +143,7 @@ impl DocumentElement {
     }
 
     /// Creates a new checkbox list item document element with checked state and child content.
+    #[must_use]
     pub fn check_box_item(checked: bool, content: impl Into<String>) -> Self {
         Self::CheckBoxItem {
             checked,
@@ -148,6 +153,7 @@ impl DocumentElement {
     }
 
     /// Creates a new code block document element.
+    #[must_use]
     pub fn code_block(language: Option<impl Into<String>>, content: impl Into<String>) -> Self {
         Self::CodeBlock {
             content: content.into(),
@@ -156,11 +162,13 @@ impl DocumentElement {
     }
 
     /// Creates a new horizontal rule document element.
+    #[must_use]
     pub const fn horizontal_rule() -> Self {
         Self::HorizontalRule
     }
 
     /// Creates a new image document element with alt text and target URL.
+    #[must_use]
     pub fn image(alt: impl Into<String>, url: impl Into<String>) -> Self {
         Self::Image {
             alt: alt.into(),
@@ -169,6 +177,7 @@ impl DocumentElement {
     }
 
     /// Returns true if this element is a list item variant.
+    #[must_use]
     pub const fn is_list_item(&self) -> bool {
         matches!(
             self,
@@ -177,6 +186,7 @@ impl DocumentElement {
     }
 
     /// Creates a new ordered list item document element with position and child content.
+    #[must_use]
     pub fn ordered_list_item(position: usize, content: impl Into<String>) -> Self {
         Self::OrderedListItem {
             children: Vec::new(),
@@ -186,6 +196,7 @@ impl DocumentElement {
     }
 
     /// Creates a new section document element with level, title, and children.
+    #[must_use]
     pub fn section(level: usize, title: impl Into<String>, children: Vec<DocumentElement>) -> Self {
         Self::Section {
             children,
@@ -195,6 +206,7 @@ impl DocumentElement {
     }
 
     /// Creates a new shoutout document element.
+    #[must_use]
     pub fn shoutout(kind: ShoutoutElementKind, content: impl Into<String>) -> Self {
         Self::Shoutout {
             content: content.into(),
@@ -203,16 +215,19 @@ impl DocumentElement {
     }
 
     /// Creates a new table document element with column alignments and row matrix.
+    #[must_use]
     pub fn table(alignments: Vec<TableAlignment>, rows: Vec<Vec<String>>) -> Self {
         Self::Table { alignments, rows }
     }
 
     /// Creates a new plain text document element.
+    #[must_use]
     pub fn text(content: impl Into<String>) -> Self {
         Self::Text(content.into())
     }
 
     /// Creates a new unknown fallback document element.
+    #[must_use]
     pub fn unknown(content: impl Into<String>) -> Self {
         Self::Unknown(content.into())
     }
@@ -233,6 +248,9 @@ impl DocumentElement {
                     level: child_level, ..
                 } = &child
                 {
+                    // Strict nesting rule: In Doc2Flow, H1 and H2 sections can strictly accept only H3 section children.
+                    // This is an intentional, Doc2Flow-specific requirement driven by the final HTML rendering layout
+                    // and collapsible section structure.
                     if (*parent_level == 1 || *parent_level == 2) && *child_level == 3 {
                         children.push(child);
                         Ok(())
@@ -278,6 +296,7 @@ pub struct DocumentHeader {
 
 impl DocumentHeader {
     /// Creates a new empty document header.
+    #[must_use]
     pub fn new() -> Self {
         Self { variables: None }
     }
@@ -308,16 +327,19 @@ pub struct DocumentParameters {
 
 impl DocumentParameters {
     /// Creates a new document parameters instance with default settings.
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Creates document parameters by consuming a frontmatter key-value map.
+    #[must_use]
     pub fn from_map(map: HashMap<String, String>) -> Self {
         Self::from(map)
     }
 
     /// Returns a reference to a variable value if present.
+    #[must_use]
     pub fn get_variable(&self, key: &str) -> Option<&str> {
         self.variables.get(key).map(String::as_str)
     }
@@ -359,7 +381,13 @@ impl From<HashMap<String, String>> for DocumentParameters {
         let logo = map.remove("logo").unwrap_or_default();
         let header = map.remove("header").unwrap_or_default();
         let numbered_sections = match map.remove("numbered_sections") {
-            Some(val) => val.eq_ignore_ascii_case("true"),
+            Some(val) => {
+                const TRUTHY_VALUES: &[&str] = &["true", "yes", "y", "1"];
+                let trimmed = val.trim();
+                TRUTHY_VALUES
+                    .iter()
+                    .any(|&truthy| truthy.eq_ignore_ascii_case(trimmed))
+            }
             None => true,
         };
 
@@ -394,6 +422,7 @@ pub enum ShoutoutElementKind {
 
 impl ShoutoutElementKind {
     /// Returns the static lowercase string identifier.
+    #[must_use]
     pub const fn as_str(self) -> &'static str {
         match self {
             Self::Caution => "caution",
@@ -427,6 +456,7 @@ pub enum TableAlignment {
 
 impl TableAlignment {
     /// Returns the static lowercase string identifier.
+    #[must_use]
     pub const fn as_str(self) -> &'static str {
         match self {
             Self::Center => "center",
@@ -544,6 +574,39 @@ mod tests {
                 title: "Heading".into(),
             }
         );
+    }
+
+    #[test]
+    fn test_document_parameters_boolean_parsing() {
+        let truthy_cases = [
+            "true", "True", "TRUE", "yes", "Yes", "YES", "y", "Y", "1", " true ", " yes ",
+            " 1 ",
+        ];
+        for val in truthy_cases {
+            let mut map = HashMap::new();
+            map.insert("numbered_sections".into(), val.into());
+            let params = DocumentParameters::from(map);
+            assert!(
+                params.numbered_sections,
+                "Expected '{val}' to evaluate to true"
+            );
+        }
+
+        let falsy_cases = [
+            "false", "False", "FALSE", "no", "No", "0", "n", "N", "random", "", "off",
+        ];
+        for val in falsy_cases {
+            let mut map = HashMap::new();
+            map.insert("numbered_sections".into(), val.into());
+            let params = DocumentParameters::from(map);
+            assert!(
+                !params.numbered_sections,
+                "Expected '{val}' to evaluate to false"
+            );
+        }
+
+        let empty_params = DocumentParameters::from(HashMap::new());
+        assert!(empty_params.numbered_sections);
     }
 
     #[test]

@@ -58,6 +58,7 @@ impl HeaderFeature {
     /// let feature = HeaderFeature::new();
     /// ```
     #[inline]
+    #[must_use]
     pub const fn new() -> Self {
         Self
     }

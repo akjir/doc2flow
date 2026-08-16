@@ -30,6 +30,7 @@ pub struct DiagnosticError<'a> {
 
 impl DiagnosticError<'_> {
     /// Formats the diagnostic error into a rustc-style string.
+    #[must_use]
     pub fn render(&self) -> String {
         let line_len = self.line_number.checked_ilog10().unwrap_or(0) as usize + 1;
         let cap = 80

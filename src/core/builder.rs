@@ -32,11 +32,13 @@ pub struct HtmlRenderer<'a> {
 
 impl<'a> HtmlRenderer<'a> {
     /// Creates a new HTML renderer configured with the specified slice of active features.
+    #[must_use]
     pub const fn new(features: &'a [&'static dyn Feature]) -> Self {
         Self { features }
     }
 
     /// Creates an HTML renderer with all default features enabled.
+    #[must_use]
     pub fn default_renderer() -> HtmlRenderer<'static> {
         HtmlRenderer::new(&crate::features::ALL_FEATURES)
     }

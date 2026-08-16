@@ -289,11 +289,13 @@ impl Default for Frontmatter {
 
 impl Frontmatter {
     /// Creates a new `Frontmatter` instance with default optional values and flags.
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Converts all frontmatter metadata fields into a key-value hash map.
+    #[must_use]
     pub fn to_hashmap(&self) -> std::collections::HashMap<String, String> {
         let mut map = std::collections::HashMap::with_capacity(8 + self.custom.len());
         if let Some(ref t) = self.title {

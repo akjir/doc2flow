@@ -17,6 +17,7 @@ impl FieldsFeature {
     ///
     /// let feature = FieldsFeature::new();
     /// ```
+    #[must_use]
     pub const fn new() -> Self {
         Self
     }

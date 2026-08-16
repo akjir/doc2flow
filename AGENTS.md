@@ -12,14 +12,18 @@
 - **Flow:** CLI > MD > Img > UI
 
 ## 2. Rust
+- **Traits:** Rely on standard traits (`std::fmt::Display` -> `.to_string()`). NEVER create custom duplicate methods (e.g. `to_string_custom()`) or standalone functions.
+- **Constructors:** If struct derives `Default`, `new()` MUST delegate to `Self::default()` (no repeated field inits).
+- **State:** Multiple boolean flags -> evaluate `bitflags` or array-backed state (min memory footprint, avoid brittle `&&`/`||` chains).
 - **Core:** Idiomatic, newtypes, 1-path exports, NO `unsafe`
 - **Clean:** Zero legacy debt/compat shims. Remove dead/obsolete code when adding new code.
 - **Consts:** Feature constants local in `src/features/<name>/module.rs` (NO central dumpster). App metadata/limits ONLY in `src/core/constants.rs`.
 - **CLI:** Identical validation for space (`-o ""`) vs equals (`-o=`) syntax. Reject empty values uniformly (`val.as_ref().is_empty()`).
 - **Errors:** Stdlib+`Doc2FlowError` (NO `anyhow`/`eyre`). `Result`=expected. `panic!`=bugs/stop (detailed msgs). NO `catch_unwind`. Safe bounds/slicing on diagnostic buffers. `From` conversions (NO `.to_<domain>()`). NO manual buffer micro-allocs on error paths; use `format!` or static strings.
-- **Attributes:** Reserve `#[inline]` exclusively for trivial getters/wrappers and hot-path loops. NO `#[inline]` on heap allocs (`String::with_capacity`), I/O, multi-branch, init, setup, CLI parsing, parser helpers, or simple `const` fns.
-- **Docs:** English ONLY (all inline docs & comments). 15-word max start, canonical headers (Examples/Errors/Panics), NO meta/journals
+- **Attributes:** Enforce `#[must_use]` on all constructors, factories, and pure builders (`new`, `with_capacity`). Reserve `#[inline]` exclusively for trivial getters/wrappers and hot-path loops. NO `#[inline]` on heap allocs (`String::with_capacity`), I/O, multi-branch, init, setup, CLI parsing, parser helpers, or simple `const` fns.
+- **Docs:** English ONLY (all inline docs & comments). 15-word max start, canonical headers (Examples/Errors/Panics), NO meta/journals. Explicitly document intentional domain quirks inline (e.g. strict H1/H2->H3 AST nesting for UI layout) to prevent regressions.
 - **Perf:** Min-alloc (borrow>owned), `with_capacity`, O(N) 1-pass, zero-copy (`split_once`,`strip_prefix`), `Cow`. Safe subslice indexing ONLY; NO raw pointer arithmetic (`as_ptr` diffs) for string bound searches.
+- **Parsing:** Flexible boolean deserialization from maps/frontmatter/headers; account for case-insensitive truthy matrix (`true`, `yes`, `y`, `1`).
 - **String/Buffer:** Exact `with_capacity` pre-alloc. Direct buffer streaming (`write_str`/`push_str`). NO intermediate `Vec`/strings on hot paths.
 - **HTML/XML/SVG:** Zero-alloc tokenizers (O(N) 1-pass forward cursor). Quote-aware (single `'`, double `"`, multiline, escaped `\"`/`\'`). Sub-parsers for declarations (`<?`), DOCTYPE, comments (`<!--`), CDATA (`<![CDATA[`), tags. NO redundant scanning passes over attribute names/values. NO `println!` in core processing routines.
 - **Flow:** `match`/tables > `if-else`. Iterators > loops. `write_str`(static)/`write!`(dynamic) > `format!` (hot-path buffers).
@@ -29,7 +33,7 @@
 - **Comm:** English ONLY. 1-line concise AI responses.
 - **OS:** Linux dev, Win64 target. `std::path::Path/Buf` ONLY.
 - **Git:** Commit ONLY if requested AND tests pass (or user overrides).
-- **Test:** Priority 1. Negative/edge cases. Regen `showcase_*.html` on UI changes.
+- **Test:** Priority 1. Negative/edge cases. Semantic token assertions (e.g. `.contains("bullet")`) over exact full strings on formatted output (`Display`). Regen `showcase_*.html` on UI changes.
 
 ## 4. Frontend (HTML/JS/CSS)
 - **HTML (Generic):**

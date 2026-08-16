@@ -32,6 +32,7 @@ struct CommentFilterState {
 
 impl CommentFilterState {
     /// Creates a new comment filter in standard mode.
+    #[must_use]
     fn new() -> Self {
         Self { in_comment: false }
     }
@@ -110,6 +111,7 @@ struct ListState {
 
 impl ListState {
     /// Creates a new empty list parsing state.
+    #[must_use]
     const fn new() -> Self {
         Self {
             root_ordered_position: None,

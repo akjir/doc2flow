@@ -18,6 +18,7 @@ impl TableFeature {
     /// let feature = TableFeature::new();
     /// ```
     #[inline]
+    #[must_use]
     pub const fn new() -> Self {
         Self
     }

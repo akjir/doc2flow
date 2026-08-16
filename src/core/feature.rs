@@ -56,6 +56,7 @@ impl DocumentFeature {
     /// let features = DocumentFeature::new();
     /// assert!(features.is_empty());
     /// ```
+    #[must_use]
     pub const fn new() -> Self {
         Self::NONE
     }
@@ -71,6 +72,7 @@ impl DocumentFeature {
     /// assert!(features.contains(DocumentFeature::CODE));
     /// assert!(!features.contains(DocumentFeature::BULLET));
     /// ```
+    #[must_use]
     pub const fn contains(self, other: Self) -> bool {
         (self.bits & other.bits) == other.bits
     }
@@ -91,11 +93,13 @@ impl DocumentFeature {
     }
 
     /// Returns `true` if all feature flags are enabled.
+    #[must_use]
     pub const fn is_all(self) -> bool {
         (self.bits & Self::ALL.bits) == Self::ALL.bits
     }
 
     /// Returns `true` if no feature flags are enabled.
+    #[must_use]
     pub const fn is_empty(self) -> bool {
         self.bits == 0
     }

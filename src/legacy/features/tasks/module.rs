@@ -76,6 +76,7 @@ impl TasksFeature {
     /// let feature = TasksFeature::new();
     /// ```
     #[inline]
+    #[must_use]
     pub const fn new() -> Self {
         Self
     }

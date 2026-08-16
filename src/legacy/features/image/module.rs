@@ -36,6 +36,7 @@ impl ImageFeature {
     /// let feature = ImageFeature::new();
     /// ```
     #[inline]
+    #[must_use]
     pub const fn new() -> Self {
         Self
     }

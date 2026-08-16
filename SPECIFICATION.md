@@ -108,7 +108,7 @@ The CLI executable MUST support the following grammar: `d2f [OPTIONS] [INPUT]`
   - `language` (string): Locale code (`en`, `de`) for UI localization (default: `"en"`).
   - `logo` (string): Relative path or URI to header logo (overridden by CLI `-l`).
   - `header` (string): Header layout mode (`"flex"`, `"none"`, default: `"none"`).
-  - `numbered_sections` (bool): Automatic heading numbering (`1.`, `1.1`) (default: `true`).
+  - `numbered_sections` (bool): Automatic heading numbering (`1.`, `1.1`) (default: `true`, accepts case-insensitive `"true"`, `"yes"`, `"y"`, `"1"`).
   - Custom keys: Preserved in `DocumentParameters.variables` map.
 - **Heading Hierarchy:**
   - `# Heading 1`: Primary section container (`.section`, `.sh.sh-h1`, `.sb`).
@@ -247,6 +247,8 @@ pub struct DocumentFeature {
 ### 8.1 Rust Coding Standards
 - **Zero Unsafe:** Strictly zero `unsafe` blocks across all crates.
 - **Idiomatic Types:** Newtypes, strong enum variants, and `Result<T, Error>` return types.
+- **Enforce #[must_use]:** All constructors, factories, and pure builder methods MUST be annotated with `#[must_use]`.
+- **Explicit Domain Documentation:** Intentional structural deviations (e.g. strict H1/H2 -> H3 AST nesting for UI layout) MUST be heavily documented inline.
 - **Single Source of Constants:** Feature-specific constants MUST reside exclusively inside `src/features/<feature>/module.rs`. Global application metadata MUST reside in `src/core/constants.rs`.
 - **Inline Attributes:** `#[inline]` MUST NOT be used on heap-allocating functions, I/O routines, CLI parsers, or multi-branch logic.
 - **Documentation:** Inline docs MUST be written in concise English with standard headers (`# Examples`, `# Errors`, `# Panics`).
