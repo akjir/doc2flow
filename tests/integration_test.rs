@@ -485,19 +485,19 @@ fn test_cli_parse_args_error_handling() {
     use doc2flow::legacy::args::parse_args;
 
     // Unknown option
-    let err = parse_args(&["d2f", "--unknown-flag"]).unwrap_err();
+    let err = parse_args(["d2f", "--unknown-flag"]).unwrap_err();
     assert!(err.contains("Unrecognized option '--unknown-flag'"));
 
     // Missing value for -o
-    let err_o = parse_args(&["d2f", "-o"]).unwrap_err();
+    let err_o = parse_args(["d2f", "-o"]).unwrap_err();
     assert!(err_o.contains("Option '--output' requires a path value"));
 
     // Empty value for --output=
-    let err_empty = parse_args(&["d2f", "--output="]).unwrap_err();
+    let err_empty = parse_args(["d2f", "--output="]).unwrap_err();
     assert!(err_empty.contains("Option '--output' requires a non-empty path value"));
 
     // Multiple positional arguments
-    let err_pos = parse_args(&["d2f", "doc1.md", "doc2.md"]).unwrap_err();
+    let err_pos = parse_args(["d2f", "doc1.md", "doc2.md"]).unwrap_err();
     assert!(err_pos.contains("Unexpected positional argument 'doc2.md'"));
 }
 
@@ -505,7 +505,7 @@ fn test_cli_parse_args_error_handling() {
 fn test_cli_version_output_formatting() {
     use doc2flow::legacy::args::parse_args;
 
-    let args = parse_args(&["d2f", "--version"]).unwrap();
+    let args = parse_args(["d2f", "--version"]).unwrap();
     assert!(args.show_version);
     let full_version = env!("D2F_FULL_VERSION");
     assert!(
@@ -807,7 +807,7 @@ date: "2026-07-29"
             .unwrap();
     let locale = doc2flow::legacy::locales::Locale::from_lang_code("en");
     let (html_body, features) =
-        doc2flow::legacy::converter::convert_markdown_to_html(&body).unwrap();
+        doc2flow::legacy::converter::convert_markdown_to_html(body).unwrap();
     let full_doc =
         doc2flow::legacy::builder::render(&fm, &locale, &html_body, "doc123", None, &features)
             .unwrap();
@@ -885,11 +885,11 @@ header: "flex"
 
     let locale = doc2flow::legacy::locales::Locale::from_lang_code("en");
     let (html_body, mut features) =
-        doc2flow::legacy::converter::convert_markdown_to_html(&body).unwrap();
+        doc2flow::legacy::converter::convert_markdown_to_html(body).unwrap();
     if fm
         .header
         .as_deref()
-        .map_or(false, |v| v.eq_ignore_ascii_case("flex"))
+        .is_some_and(|v| v.eq_ignore_ascii_case("flex"))
     {
         features.has_header = true;
     }
@@ -943,8 +943,7 @@ header: "flex"
 #[test]
 fn test_header_none_or_missing_feature_integration() {
     let input_none = r#"---
-title: "Default Guide"
-subtitle: "Default Subtitle"
+title: "No Header Test"
 header: "none"
 ---
 
@@ -960,11 +959,11 @@ header: "none"
     .unwrap();
     let locale = doc2flow::legacy::locales::Locale::from_lang_code("en");
     let (html_body, mut features) =
-        doc2flow::legacy::converter::convert_markdown_to_html(&body).unwrap();
+        doc2flow::legacy::converter::convert_markdown_to_html(body).unwrap();
     if fm
         .header
         .as_deref()
-        .map_or(false, |v| v.eq_ignore_ascii_case("flex"))
+        .is_some_and(|v| v.eq_ignore_ascii_case("flex"))
     {
         features.has_header = true;
     }
@@ -1003,7 +1002,7 @@ title: "Image Fallback Test"
             .unwrap();
     let locale = doc2flow::legacy::locales::Locale::from_lang_code("en");
     let (html_body, features) =
-        doc2flow::legacy::converter::convert_markdown_to_html(&body).unwrap();
+        doc2flow::legacy::converter::convert_markdown_to_html(body).unwrap();
     assert!(features.has_images);
 
     let full_doc = doc2flow::legacy::builder::render(
@@ -1050,7 +1049,7 @@ fn test_core_parser_integration() {
 fn test_cli_core_arguments_defaults() {
     use doc2flow::core::arguments::parse_args;
 
-    let args = parse_args(&["d2f", "input.md"]).unwrap();
+    let args = parse_args(["d2f", "input.md"]).unwrap();
     assert_eq!(args.input, Some(std::path::PathBuf::from("input.md")));
     assert!(!args.legacy);
 }
@@ -1059,7 +1058,7 @@ fn test_cli_core_arguments_defaults() {
 fn test_cli_core_arguments_legacy_flag() {
     use doc2flow::core::arguments::parse_args;
 
-    let args = parse_args(&["d2f", "input.md", "--legacy"]).unwrap();
+    let args = parse_args(["d2f", "input.md", "--legacy"]).unwrap();
     assert_eq!(args.input, Some(std::path::PathBuf::from("input.md")));
     assert!(args.legacy);
 }
@@ -1073,7 +1072,7 @@ fn test_parser_and_builder_pipeline_integration() {
     assert!(!features.table);
     assert_eq!(features.to_features_string(), "core, task");
     let content = doc2flow::core::builder::build(&document, &features);
-    assert!(!content.as_bytes().is_empty());
+    assert!(!content.is_empty());
     assert!(content.contains("      <h1>Pipeline Heading</h1>"));
     assert!(
         content.contains(

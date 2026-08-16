@@ -1,5 +1,6 @@
 //! Unknown vertical slice feature module.
 
+use crate::core::builder::HtmlRenderer;
 use crate::core::document::{DocumentElement, DocumentParameters};
 use crate::core::feature::Feature;
 use crate::core::format::push_indent;
@@ -19,32 +20,30 @@ impl UnknownFeature {
 }
 
 impl Feature for UnknownFeature {
-    /// Converts a document element and inner content into an HTML string representation.
-    fn to_html(
+    /// Intercepts the rendering of unknown fallback elements into the output buffer.
+    fn try_render(
         &self,
         element: &DocumentElement,
-        _content: &str,
         indent: usize,
         _depth: usize,
         _parameters: &DocumentParameters,
-    ) -> String {
+        out: &mut String,
+        _renderer: &HtmlRenderer,
+    ) -> bool {
         match element {
             DocumentElement::Unknown(text) => {
-                let spaces = indent * 2;
-                let inner_spaces = (indent + 1) * 2;
-                let mut out = String::with_capacity(text.len() + spaces * 2 + inner_spaces + 32);
-                push_indent(&mut out, indent);
+                push_indent(out, indent);
                 out.push_str("<p class=\"unknown-default\">\n");
                 for line in text.lines() {
-                    push_indent(&mut out, indent + 1);
+                    push_indent(out, indent + 1);
                     out.push_str(line);
                     out.push('\n');
                 }
-                push_indent(&mut out, indent);
+                push_indent(out, indent);
                 out.push_str("</p>\n");
-                out
+                true
             }
-            _ => String::new(),
+            _ => false,
         }
     }
 
@@ -70,8 +69,18 @@ mod tests {
     fn test_unknown_feature_renders_unknown_element() {
         let feature = UnknownFeature::new();
         let element = DocumentElement::unknown("Unrecognized raw markdown line");
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        assert!(feature.try_render(
+            &element,
+            1,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        ));
         assert_eq!(
-            feature.to_html(&element, "", 1, 0, &DocumentParameters::default()),
+            out,
             "  <p class=\"unknown-default\">\n    Unrecognized raw markdown line\n  </p>\n"
         );
     }
@@ -80,9 +89,16 @@ mod tests {
     fn test_unknown_feature_empty_for_unsupported_elements() {
         let feature = UnknownFeature::new();
         let text = DocumentElement::text("Regular text");
-        assert_eq!(
-            feature.to_html(&text, "", 0, 0, &DocumentParameters::default()),
-            ""
-        );
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        assert!(!feature.try_render(
+            &text,
+            0,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        ));
+        assert!(out.is_empty());
     }
 }

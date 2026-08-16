@@ -1,5 +1,6 @@
 //! Table vertical slice feature module.
 
+use crate::core::builder::HtmlRenderer;
 use crate::core::document::{DocumentElement, DocumentParameters, TableAlignment};
 use crate::core::feature::Feature;
 use crate::core::format::{format_inline_into, push_indent};
@@ -30,65 +31,37 @@ impl TableFeature {
 }
 
 impl Feature for TableFeature {
-    /// Converts a table document element into an HTML string representation.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use doc2flow::core::document::{DocumentElement, DocumentParameters, TableAlignment};
-    /// use doc2flow::core::feature::Feature;
-    /// use doc2flow::features::table::TableFeature;
-    ///
-    /// let feature = TableFeature::new();
-    /// let elem = DocumentElement::table(
-    ///     vec![TableAlignment::Left, TableAlignment::Right],
-    ///     vec![
-    ///         vec!["Name".into(), "Count".into()],
-    ///         vec!["Item A".into(), "10".into()],
-    ///     ],
-    /// );
-    /// let params = DocumentParameters::default();
-    /// let html = feature.to_html(&elem, "", 1, 0, &params);
-    /// assert!(html.contains("class=\"table-wrap\""));
-    /// assert!(html.contains("class=\"table-default\""));
-    /// ```
-    fn to_html(
+    /// Intercepts the rendering of table elements into the output buffer.
+    fn try_render(
         &self,
         element: &DocumentElement,
-        _content: &str,
         indent: usize,
         _depth: usize,
         _parameters: &DocumentParameters,
-    ) -> String {
+        out: &mut String,
+        _renderer: &HtmlRenderer,
+    ) -> bool {
         match element {
             DocumentElement::Table { alignments, rows } => {
                 if rows.is_empty() {
-                    return String::new();
+                    return true;
                 }
 
-                let mut total_len = 0;
-                for row in rows {
-                    for cell in row {
-                        total_len += cell.len();
-                    }
-                }
-
-                let mut out = String::with_capacity(total_len * 2 + rows.len() * 128 + 256);
-                push_indent(&mut out, indent);
+                push_indent(out, indent);
                 out.push_str("<div class=\"table-wrap\">\n");
 
-                push_indent(&mut out, indent + 1);
+                push_indent(out, indent + 1);
                 out.push_str("<table class=\"table-default\">\n");
 
                 if let Some(header_row) = rows.first() {
-                    push_indent(&mut out, indent + 2);
+                    push_indent(out, indent + 2);
                     out.push_str("<thead>\n");
 
-                    push_indent(&mut out, indent + 3);
+                    push_indent(out, indent + 3);
                     out.push_str("<tr>\n");
 
                     for (col_idx, cell) in header_row.iter().enumerate() {
-                        push_indent(&mut out, indent + 4);
+                        push_indent(out, indent + 4);
                         out.push_str("<th");
                         match alignments.get(col_idx) {
                             Some(TableAlignment::Left) => {
@@ -103,27 +76,27 @@ impl Feature for TableFeature {
                             _ => {}
                         }
                         out.push('>');
-                        format_inline_into(&mut out, cell);
+                        format_inline_into(out, cell);
                         out.push_str("</th>\n");
                     }
 
-                    push_indent(&mut out, indent + 3);
+                    push_indent(out, indent + 3);
                     out.push_str("</tr>\n");
 
-                    push_indent(&mut out, indent + 2);
+                    push_indent(out, indent + 2);
                     out.push_str("</thead>\n");
                 }
 
                 if rows.len() > 1 {
-                    push_indent(&mut out, indent + 2);
+                    push_indent(out, indent + 2);
                     out.push_str("<tbody>\n");
 
                     for row in &rows[1..] {
-                        push_indent(&mut out, indent + 3);
+                        push_indent(out, indent + 3);
                         out.push_str("<tr>\n");
 
                         for (col_idx, cell) in row.iter().enumerate() {
-                            push_indent(&mut out, indent + 4);
+                            push_indent(out, indent + 4);
                             out.push_str("<td");
                             match alignments.get(col_idx) {
                                 Some(TableAlignment::Left) => {
@@ -138,27 +111,27 @@ impl Feature for TableFeature {
                                 _ => {}
                             }
                             out.push('>');
-                            format_inline_into(&mut out, cell);
+                            format_inline_into(out, cell);
                             out.push_str("</td>\n");
                         }
 
-                        push_indent(&mut out, indent + 3);
+                        push_indent(out, indent + 3);
                         out.push_str("</tr>\n");
                     }
 
-                    push_indent(&mut out, indent + 2);
+                    push_indent(out, indent + 2);
                     out.push_str("</tbody>\n");
                 }
 
-                push_indent(&mut out, indent + 1);
+                push_indent(out, indent + 1);
                 out.push_str("</table>\n");
 
-                push_indent(&mut out, indent);
+                push_indent(out, indent);
                 out.push_str("</div>\n");
 
-                out
+                true
             }
-            _ => String::new(),
+            _ => false,
         }
     }
 
@@ -210,20 +183,34 @@ mod tests {
     fn test_table_feature_empty_for_unsupported_elements() {
         let feature = TableFeature::new();
         let text = DocumentElement::text("Regular text");
-        assert_eq!(
-            feature.to_html(&text, "", 0, 0, &DocumentParameters::default()),
-            ""
-        );
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        assert!(!feature.try_render(
+            &text,
+            0,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        ));
+        assert!(out.is_empty());
     }
 
     #[test]
     fn test_table_feature_empty_rows() {
         let feature = TableFeature::new();
         let element = DocumentElement::table(vec![], vec![]);
-        assert_eq!(
-            feature.to_html(&element, "", 0, 0, &DocumentParameters::default()),
-            ""
-        );
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        assert!(feature.try_render(
+            &element,
+            0,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        ));
+        assert!(out.is_empty());
     }
 
     #[test]
@@ -233,7 +220,16 @@ mod tests {
             vec![TableAlignment::None, TableAlignment::None],
             vec![vec!["Col 1".into(), "Col 2".into()]],
         );
-        let html = feature.to_html(&element, "", 0, 0, &DocumentParameters::default());
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        assert!(feature.try_render(
+            &element,
+            0,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        ));
         let expected = concat!(
             "<div class=\"table-wrap\">\n",
             "  <table class=\"table-default\">\n",
@@ -246,7 +242,7 @@ mod tests {
             "  </table>\n",
             "</div>\n"
         );
-        assert_eq!(html, expected);
+        assert_eq!(out, expected);
     }
 
     #[test]
@@ -264,7 +260,16 @@ mod tests {
                 vec!["1".into(), "2".into(), "3".into(), "4".into()],
             ],
         );
-        let html = feature.to_html(&element, "", 1, 0, &DocumentParameters::default());
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        assert!(feature.try_render(
+            &element,
+            1,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        ));
         let expected = concat!(
             "  <div class=\"table-wrap\">\n",
             "    <table class=\"table-default\">\n",
@@ -287,7 +292,7 @@ mod tests {
             "    </table>\n",
             "  </div>\n"
         );
-        assert_eq!(html, expected);
+        assert_eq!(out, expected);
     }
 
     #[test]
@@ -303,7 +308,16 @@ mod tests {
                 ],
             ],
         );
-        let html = feature.to_html(&element, "", 0, 0, &DocumentParameters::default());
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        assert!(feature.try_render(
+            &element,
+            0,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        ));
         let expected = concat!(
             "<div class=\"table-wrap\">\n",
             "  <table class=\"table-default\">\n",
@@ -322,6 +336,6 @@ mod tests {
             "  </table>\n",
             "</div>\n"
         );
-        assert_eq!(html, expected);
+        assert_eq!(out, expected);
     }
 }

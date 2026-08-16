@@ -41,15 +41,11 @@ impl CommentFilterState {
     /// Returns `Some(processed_line)` or `None` if the line was fully swallowed by comments.
     fn process_line<'a>(&mut self, mut current: &'a str, buf: &'a mut String) -> Option<&'a str> {
         if self.in_comment {
-            match current.find("-->") {
-                Some(end_idx) => {
-                    self.in_comment = false;
-                    current = &current[end_idx + 3..];
-                    if current.trim().is_empty() {
-                        return None;
-                    }
-                }
-                None => return None,
+            let end_idx = current.find("-->")?;
+            self.in_comment = false;
+            current = &current[end_idx + 3..];
+            if current.trim().is_empty() {
+                return None;
             }
         }
 
@@ -528,13 +524,11 @@ fn parse_check_box_item(line: &str) -> Option<(usize, bool, &str)> {
 
     let (checked, after_box) = if let Some(after_box) = after_space.strip_prefix("[ ]") {
         (false, after_box)
-    } else if let Some(after_box) = after_space
-        .strip_prefix("[x]")
-        .or_else(|| after_space.strip_prefix("[X]"))
-    {
-        (true, after_box)
     } else {
-        return None;
+        let after_box = after_space
+            .strip_prefix("[x]")
+            .or_else(|| after_space.strip_prefix("[X]"))?;
+        (true, after_box)
     };
 
     if after_box.is_empty() {
@@ -726,12 +720,10 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
                     if trimmed.is_empty() {
                         continue;
                     }
-                    if let Some((level, title)) = parse_heading_line(effective_line) {
-                        if level == 1 {
-                            has_seen_first_h1 = true;
-                            push_section(&mut doc, &mut section_stack, 1, title);
-                            continue;
-                        }
+                    if let Some((1, title)) = parse_heading_line(effective_line) {
+                        has_seen_first_h1 = true;
+                        push_section(&mut doc, &mut section_stack, 1, title);
+                        continue;
                     }
                     return Err(build_content_before_h1_err(line_no, line));
                 }
@@ -1109,12 +1101,10 @@ fn parse_table_row(line: &str) -> Vec<String> {
 
     while let Some(ch) = chars.next() {
         if ch == '\\' {
-            if let Some(&next_ch) = chars.peek() {
-                if next_ch == '|' {
-                    current_cell.push('|');
-                    chars.next();
-                    continue;
-                }
+            if chars.peek() == Some(&'|') {
+                current_cell.push('|');
+                chars.next();
+                continue;
             }
             current_cell.push('\\');
         } else if ch == '|' {

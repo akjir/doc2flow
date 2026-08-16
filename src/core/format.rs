@@ -237,15 +237,15 @@ pub fn format_inline_into(out: &mut String, input: &str) {
         // 2. Strikethrough
         if remaining.starts_with("~~") {
             let after_open = idx + 2;
-            if let Some(close_pos) = find_matching_delimiter(&input[after_open..], "~~") {
-                if close_pos > 0 {
-                    let inner = &input[after_open..after_open + close_pos];
-                    out.push_str("<s>");
-                    format_inline_into(out, inner);
-                    out.push_str("</s>");
-                    idx = after_open + close_pos + 2;
-                    continue;
-                }
+            if let Some(close_pos) =
+                find_matching_delimiter(&input[after_open..], "~~").filter(|&p| p > 0)
+            {
+                let inner = &input[after_open..after_open + close_pos];
+                out.push_str("<s>");
+                format_inline_into(out, inner);
+                out.push_str("</s>");
+                idx = after_open + close_pos + 2;
+                continue;
             }
             out.push_str("~~");
             idx += 2;
@@ -255,30 +255,30 @@ pub fn format_inline_into(out: &mut String, input: &str) {
         // 3. Bold + Italic
         if remaining.starts_with("***") {
             let after_open = idx + 3;
-            if let Some(close_pos) = find_matching_delimiter(&input[after_open..], "***") {
-                if close_pos > 0 {
-                    let inner = &input[after_open..after_open + close_pos];
-                    out.push_str("<strong><em>");
-                    format_inline_into(out, inner);
-                    out.push_str("</em></strong>");
-                    idx = after_open + close_pos + 3;
-                    continue;
-                }
+            if let Some(close_pos) =
+                find_matching_delimiter(&input[after_open..], "***").filter(|&p| p > 0)
+            {
+                let inner = &input[after_open..after_open + close_pos];
+                out.push_str("<strong><em>");
+                format_inline_into(out, inner);
+                out.push_str("</em></strong>");
+                idx = after_open + close_pos + 3;
+                continue;
             }
         }
 
         // 4. Bold
         if remaining.starts_with("**") {
             let after_open = idx + 2;
-            if let Some(close_pos) = find_matching_delimiter(&input[after_open..], "**") {
-                if close_pos > 0 {
-                    let inner = &input[after_open..after_open + close_pos];
-                    out.push_str("<strong>");
-                    format_inline_into(out, inner);
-                    out.push_str("</strong>");
-                    idx = after_open + close_pos + 2;
-                    continue;
-                }
+            if let Some(close_pos) =
+                find_matching_delimiter(&input[after_open..], "**").filter(|&p| p > 0)
+            {
+                let inner = &input[after_open..after_open + close_pos];
+                out.push_str("<strong>");
+                format_inline_into(out, inner);
+                out.push_str("</strong>");
+                idx = after_open + close_pos + 2;
+                continue;
             }
             out.push_str("**");
             idx += 2;
@@ -296,15 +296,14 @@ pub fn format_inline_into(out: &mut String, input: &str) {
                 let after_open = idx + 3;
                 if let Some(close_pos) =
                     find_matching_underscore_delimiter(&input[after_open..], "___")
+                        .filter(|&p| p > 0)
                 {
-                    if close_pos > 0 {
-                        let inner = &input[after_open..after_open + close_pos];
-                        out.push_str("<strong><em>");
-                        format_inline_into(out, inner);
-                        out.push_str("</em></strong>");
-                        idx = after_open + close_pos + 3;
-                        continue;
-                    }
+                    let inner = &input[after_open..after_open + close_pos];
+                    out.push_str("<strong><em>");
+                    format_inline_into(out, inner);
+                    out.push_str("</em></strong>");
+                    idx = after_open + close_pos + 3;
+                    continue;
                 }
             }
         }
@@ -320,15 +319,14 @@ pub fn format_inline_into(out: &mut String, input: &str) {
                 let after_open = idx + 2;
                 if let Some(close_pos) =
                     find_matching_underscore_delimiter(&input[after_open..], "__")
+                        .filter(|&p| p > 0)
                 {
-                    if close_pos > 0 {
-                        let inner = &input[after_open..after_open + close_pos];
-                        out.push_str("<strong>");
-                        format_inline_into(out, inner);
-                        out.push_str("</strong>");
-                        idx = after_open + close_pos + 2;
-                        continue;
-                    }
+                    let inner = &input[after_open..after_open + close_pos];
+                    out.push_str("<strong>");
+                    format_inline_into(out, inner);
+                    out.push_str("</strong>");
+                    idx = after_open + close_pos + 2;
+                    continue;
                 }
             }
             out.push_str("__");
@@ -341,17 +339,18 @@ pub fn format_inline_into(out: &mut String, input: &str) {
             let after_open = idx + 1;
             let not_leading_space =
                 after_open < input.len() && !bytes[after_open].is_ascii_whitespace();
-            if not_leading_space {
-                if let Some(close_pos) = find_matching_single_asterisk(&input[after_open..]) {
-                    if close_pos > 0 {
-                        let inner = &input[after_open..after_open + close_pos];
-                        out.push_str("<em>");
-                        format_inline_into(out, inner);
-                        out.push_str("</em>");
-                        idx = after_open + close_pos + 1;
-                        continue;
-                    }
-                }
+            let close_opt = if not_leading_space {
+                find_matching_single_asterisk(&input[after_open..]).filter(|&p| p > 0)
+            } else {
+                None
+            };
+            if let Some(close_pos) = close_opt {
+                let inner = &input[after_open..after_open + close_pos];
+                out.push_str("<em>");
+                format_inline_into(out, inner);
+                out.push_str("</em>");
+                idx = after_open + close_pos + 1;
+                continue;
             }
             out.push('*');
             idx += 1;
@@ -368,17 +367,18 @@ pub fn format_inline_into(out: &mut String, input: &str) {
             let after_open = idx + 1;
             let not_leading_space =
                 after_open < input.len() && !bytes[after_open].is_ascii_whitespace();
-            if !is_word_char_before && not_leading_space {
-                if let Some(close_pos) = find_matching_single_underscore(&input[after_open..]) {
-                    if close_pos > 0 {
-                        let inner = &input[after_open..after_open + close_pos];
-                        out.push_str("<em>");
-                        format_inline_into(out, inner);
-                        out.push_str("</em>");
-                        idx = after_open + close_pos + 1;
-                        continue;
-                    }
-                }
+            let close_opt = if !is_word_char_before && not_leading_space {
+                find_matching_single_underscore(&input[after_open..]).filter(|&p| p > 0)
+            } else {
+                None
+            };
+            if let Some(close_pos) = close_opt {
+                let inner = &input[after_open..after_open + close_pos];
+                out.push_str("<em>");
+                format_inline_into(out, inner);
+                out.push_str("</em>");
+                idx = after_open + close_pos + 1;
+                continue;
             }
             out.push('_');
             idx += 1;

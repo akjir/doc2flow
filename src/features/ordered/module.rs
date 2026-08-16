@@ -2,6 +2,7 @@
 
 use std::fmt::Write as _;
 
+use crate::core::builder::HtmlRenderer;
 use crate::core::document::{DocumentElement, DocumentParameters};
 use crate::core::feature::Feature;
 use crate::core::format::{format_inline_into, push_indent};
@@ -29,71 +30,53 @@ impl OrderedFeature {
 }
 
 impl Feature for OrderedFeature {
-    /// Converts an ordered list item document element into an HTML string representation.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use doc2flow::core::document::{DocumentElement, DocumentParameters};
-    /// use doc2flow::core::feature::Feature;
-    /// use doc2flow::features::ordered::OrderedFeature;
-    ///
-    /// let feature = OrderedFeature::new();
-    /// let elem = DocumentElement::ordered_list_item(1, "First item");
-    /// let params = DocumentParameters::default();
-    /// let html = feature.to_html(&elem, "", 1, 0, &params);
-    /// assert!(html.contains("class=\"item order-item\""));
-    /// ```
-    fn to_html(
+    /// Intercepts the rendering of ordered list elements into the output buffer.
+    fn try_render(
         &self,
         element: &DocumentElement,
-        _content: &str,
         indent: usize,
         depth: usize,
-        _parameters: &DocumentParameters,
-    ) -> String {
+        parameters: &DocumentParameters,
+        out: &mut String,
+        renderer: &HtmlRenderer,
+    ) -> bool {
         match element {
             DocumentElement::OrderedListItem {
-                content, position, ..
+                content,
+                position,
+                children,
             } => {
-                let spaces = indent * 2;
-                let inner_spaces = (indent + 1) * 2;
-                let content_len = content.len() * 2;
-
-                let mut out = String::with_capacity(
-                    content_len + _content.len() + spaces * 2 + inner_spaces * 2 + 128,
-                );
-                push_indent(&mut out, indent);
+                push_indent(out, indent);
                 out.push_str("<div class=\"item order-item\"");
                 if depth > 0 {
                     let _ = write!(out, " style=\"--indent: {depth};\"");
                 }
                 out.push_str(">\n");
 
-                push_indent(&mut out, indent + 1);
+                push_indent(out, indent + 1);
                 out.push_str("<span class=\"order-marker\">");
                 let _ = write!(out, "{position}.");
                 out.push_str("</span>\n");
 
-                push_indent(&mut out, indent + 1);
+                push_indent(out, indent + 1);
                 out.push_str("<span class=\"order-content\">\n");
 
                 for line in content.lines() {
-                    push_indent(&mut out, indent + 2);
-                    format_inline_into(&mut out, line);
+                    push_indent(out, indent + 2);
+                    format_inline_into(out, line);
                     out.push('\n');
                 }
 
-                push_indent(&mut out, indent + 1);
+                push_indent(out, indent + 1);
                 out.push_str("</span>\n");
 
-                push_indent(&mut out, indent);
+                push_indent(out, indent);
                 out.push_str("</div>\n");
-                out.push_str(_content);
 
-                out
+                renderer.render_children(children, indent, depth + 1, parameters, out);
+                true
             }
-            _ => String::new(),
+            _ => false,
         }
     }
 
@@ -111,10 +94,17 @@ mod tests {
     fn test_ordered_empty_for_unsupported_elements() {
         let feature = OrderedFeature::new();
         let text = DocumentElement::text("Regular text");
-        assert_eq!(
-            feature.to_html(&text, "", 0, 0, &DocumentParameters::default()),
-            ""
-        );
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        assert!(!feature.try_render(
+            &text,
+            0,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        ));
+        assert!(out.is_empty());
     }
 
     #[test]
@@ -136,7 +126,16 @@ mod tests {
     fn test_ordered_renders_root() {
         let feature = OrderedFeature::new();
         let element = DocumentElement::ordered_list_item(1, "First numbered item");
-        let html = feature.to_html(&element, "", 1, 0, &DocumentParameters::default());
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        assert!(feature.try_render(
+            &element,
+            1,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        ));
         let expected = concat!(
             "  <div class=\"item order-item\">\n",
             "    <span class=\"order-marker\">1.</span>\n",
@@ -145,7 +144,7 @@ mod tests {
             "    </span>\n",
             "  </div>\n"
         );
-        assert_eq!(html, expected);
+        assert_eq!(out, expected);
     }
 
     #[test]
@@ -155,7 +154,16 @@ mod tests {
             2,
             "Step with **bold**, *italic*, ~~strike~~, `code`, [link](https://example.com), and <special> & characters",
         );
-        let html = feature.to_html(&element, "", 0, 0, &DocumentParameters::default());
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        assert!(feature.try_render(
+            &element,
+            0,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        ));
         let expected = concat!(
             "<div class=\"item order-item\">\n",
             "  <span class=\"order-marker\">2.</span>\n",
@@ -164,14 +172,23 @@ mod tests {
             "  </span>\n",
             "</div>\n"
         );
-        assert_eq!(html, expected);
+        assert_eq!(out, expected);
     }
 
     #[test]
     fn test_ordered_renders_with_depth() {
         let feature = OrderedFeature::new();
         let element = DocumentElement::ordered_list_item(1, "Sub-step item");
-        let html = feature.to_html(&element, "", 2, 1, &DocumentParameters::default());
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        assert!(feature.try_render(
+            &element,
+            2,
+            1,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        ));
         let expected = concat!(
             "    <div class=\"item order-item\" style=\"--indent: 1;\">\n",
             "      <span class=\"order-marker\">1.</span>\n",
@@ -180,16 +197,40 @@ mod tests {
             "      </span>\n",
             "    </div>\n"
         );
-        assert_eq!(html, expected);
+        assert_eq!(out, expected);
     }
 
     #[test]
     fn test_ordered_renders_with_children() {
         let feature = OrderedFeature::new();
-        let element = DocumentElement::ordered_list_item(1, "Parent order");
-        let child_html = "    <div class=\"item order-item\" style=\"--indent: 1;\">\n      <span class=\"order-marker\">1.</span>\n      <span class=\"order-content\">\n        Child item\n      </span>\n    </div>\n";
-        let html = feature.to_html(&element, child_html, 1, 0, &DocumentParameters::default());
-        let expected_prefix = "  <div class=\"item order-item\">\n    <span class=\"order-marker\">1.</span>\n    <span class=\"order-content\">\n      Parent order\n    </span>\n  </div>\n";
-        assert_eq!(html, format!("{expected_prefix}{child_html}"));
+        let mut element = DocumentElement::ordered_list_item(1, "Parent order");
+        let child = DocumentElement::ordered_list_item(1, "Child item");
+        element.push_child(child).unwrap();
+
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        assert!(feature.try_render(
+            &element,
+            1,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        ));
+        let expected = concat!(
+            "  <div class=\"item order-item\">\n",
+            "    <span class=\"order-marker\">1.</span>\n",
+            "    <span class=\"order-content\">\n",
+            "      Parent order\n",
+            "    </span>\n",
+            "  </div>\n",
+            "  <div class=\"item order-item\" style=\"--indent: 1;\">\n",
+            "    <span class=\"order-marker\">1.</span>\n",
+            "    <span class=\"order-content\">\n",
+            "      Child item\n",
+            "    </span>\n",
+            "  </div>\n",
+        );
+        assert_eq!(out, expected);
     }
 }

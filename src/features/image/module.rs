@@ -1,5 +1,6 @@
 //! Image vertical slice feature module.
 
+use crate::core::builder::HtmlRenderer;
 use crate::core::document::{DocumentElement, DocumentParameters};
 use crate::core::feature::Feature;
 use crate::core::format::{escape_html_into, push_indent};
@@ -30,52 +31,33 @@ impl ImageFeature {
 }
 
 impl Feature for ImageFeature {
-    /// Converts an image document element into an HTML string representation.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use doc2flow::core::document::{DocumentElement, DocumentParameters};
-    /// use doc2flow::core::feature::Feature;
-    /// use doc2flow::features::image::ImageFeature;
-    ///
-    /// let feature = ImageFeature::new();
-    /// let elem = DocumentElement::image("Alt text", "photo.png");
-    /// let params = DocumentParameters::default();
-    /// let html = feature.to_html(&elem, "", 1, 0, &params);
-    /// assert!(html.contains("class=\"image-item\""));
-    /// assert!(html.contains("src=\"photo.png\""));
-    /// ```
-    fn to_html(
+    /// Intercepts the rendering of image elements into the output buffer.
+    fn try_render(
         &self,
         element: &DocumentElement,
-        _content: &str,
         indent: usize,
         _depth: usize,
         _parameters: &DocumentParameters,
-    ) -> String {
+        out: &mut String,
+        _renderer: &HtmlRenderer,
+    ) -> bool {
         match element {
             DocumentElement::Image { alt, url } => {
-                let spaces = indent * 2;
-                let inner_spaces = (indent + 1) * 2;
-                let mut out =
-                    String::with_capacity(url.len() + alt.len() + spaces * 2 + inner_spaces + 64);
-                push_indent(&mut out, indent);
+                push_indent(out, indent);
                 out.push_str("<div class=\"image-item\">\n");
 
-                push_indent(&mut out, indent + 1);
+                push_indent(out, indent + 1);
                 out.push_str("<img src=\"");
-                escape_html_into(&mut out, url);
+                escape_html_into(out, url);
                 out.push_str("\" alt=\"");
-                escape_html_into(&mut out, alt);
+                escape_html_into(out, alt);
                 out.push_str("\" />\n");
 
-                push_indent(&mut out, indent);
+                push_indent(out, indent);
                 out.push_str("</div>\n");
-
-                out
+                true
             }
-            _ => String::new(),
+            _ => false,
         }
     }
 
@@ -130,13 +112,22 @@ mod tests {
     fn test_image_feature_renders_image_element() {
         let feature = ImageFeature::new();
         let element = DocumentElement::image("Architecture Diagram", "assets/arch.png");
-        let html = feature.to_html(&element, "", 1, 0, &DocumentParameters::default());
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        assert!(feature.try_render(
+            &element,
+            1,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        ));
         let expected = concat!(
             "  <div class=\"image-item\">\n",
             "    <img src=\"assets/arch.png\" alt=\"Architecture Diagram\" />\n",
             "  </div>\n"
         );
-        assert_eq!(html, expected);
+        assert_eq!(out, expected);
     }
 
     #[test]
@@ -146,22 +137,38 @@ mod tests {
             "Picture <with> \"quotes\" & symbols",
             "https://example.com/pic.png?a=1&b=2",
         );
-        let html = feature.to_html(&element, "", 2, 0, &DocumentParameters::default());
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        assert!(feature.try_render(
+            &element,
+            2,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        ));
         let expected = concat!(
             "    <div class=\"image-item\">\n",
             "      <img src=\"https://example.com/pic.png?a=1&amp;b=2\" alt=\"Picture &lt;with&gt; &quot;quotes&quot; &amp; symbols\" />\n",
             "    </div>\n"
         );
-        assert_eq!(html, expected);
+        assert_eq!(out, expected);
     }
 
     #[test]
     fn test_image_feature_empty_for_unsupported_elements() {
         let feature = ImageFeature::new();
         let text = DocumentElement::text("Regular text");
-        assert_eq!(
-            feature.to_html(&text, "", 0, 0, &DocumentParameters::default()),
-            ""
-        );
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        assert!(!feature.try_render(
+            &text,
+            0,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        ));
+        assert!(out.is_empty());
     }
 }

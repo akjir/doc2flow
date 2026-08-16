@@ -1,11 +1,14 @@
 //! Document build and rendering module.
 
+use std::fmt::Write as _;
+
 use crate::core::constants::{APP_VERSION, LICENSE_URL, REPOSITORY_URL};
 use crate::core::document::{Document, DocumentElement, DocumentParameters};
-use crate::core::feature::DocumentFeature;
+use crate::core::feature::{DocumentFeature, Feature};
+use crate::core::format::{format_inline_into, push_indent};
 use crate::core::language::get_language_json;
 use crate::core::utils::format_iso8601_utc;
-use crate::features::get_feature;
+use crate::features::{CORE_FEATURE, get_active_features};
 
 /// Embedded base HTML template.
 pub const TEMPLATE_HTML: &str = include_str!("../../resources/templates/template.html");
@@ -18,6 +21,116 @@ fn append_indented(out: &mut String, text: &str) {
             out.push_str(line);
         }
         out.push('\n');
+    }
+}
+
+/// Document AST HTML renderer managing active features and element interception.
+#[derive(Clone, Copy, Debug)]
+pub struct HtmlRenderer<'a> {
+    features: &'a [&'static dyn Feature],
+}
+
+impl<'a> HtmlRenderer<'a> {
+    /// Creates a new HTML renderer configured with the specified slice of active features.
+    pub const fn new(features: &'a [&'static dyn Feature]) -> Self {
+        Self { features }
+    }
+
+    /// Creates an HTML renderer with all default features enabled.
+    pub fn default_renderer() -> HtmlRenderer<'static> {
+        HtmlRenderer::new(&crate::features::ALL_FEATURES)
+    }
+
+    /// Renders a single document element and its children into the output buffer.
+    pub fn render_element(
+        &self,
+        element: &DocumentElement,
+        indent: usize,
+        depth: usize,
+        parameters: &DocumentParameters,
+        out: &mut String,
+    ) {
+        for feature in self.features {
+            if feature.try_render(element, indent, depth, parameters, out, self) {
+                return;
+            }
+        }
+
+        self.render_fallback(element, indent, depth, parameters, out);
+    }
+
+    /// Renders a slice of document elements sequentially into the output buffer.
+    pub fn render_children(
+        &self,
+        children: &[DocumentElement],
+        indent: usize,
+        depth: usize,
+        parameters: &DocumentParameters,
+        out: &mut String,
+    ) {
+        for child in children {
+            self.render_element(child, indent, depth, parameters, out);
+        }
+    }
+
+    /// Fallback rendering for elements not intercepted by any registered feature.
+    fn render_fallback(
+        &self,
+        element: &DocumentElement,
+        indent: usize,
+        _depth: usize,
+        parameters: &DocumentParameters,
+        out: &mut String,
+    ) {
+        match element {
+            DocumentElement::BlockDirective { children, .. } => {
+                self.render_children(children, indent + 1, 0, parameters, out);
+            }
+            DocumentElement::Section {
+                children,
+                level,
+                title,
+            } => {
+                push_indent(out, indent);
+                out.push_str("<section class=\"section\" data-level=\"");
+                let _ = write!(out, "{level}");
+                out.push_str("\">\n");
+
+                push_indent(out, indent + 1);
+                let _ = writeln!(out, "<h{level}>{title}</h{level}>");
+
+                push_indent(out, indent + 1);
+                out.push_str("<div class=\"section-body\">\n");
+
+                self.render_children(children, indent + 2, 0, parameters, out);
+
+                push_indent(out, indent + 1);
+                out.push_str("</div>\n");
+
+                push_indent(out, indent);
+                out.push_str("</section>\n");
+            }
+            DocumentElement::Text(text) => {
+                push_indent(out, indent);
+                out.push_str("<div class=\"item text-item\">\n");
+                push_indent(out, indent + 1);
+                out.push_str("<span class=\"text-content\">\n");
+                for line in text.lines() {
+                    push_indent(out, indent + 2);
+                    format_inline_into(out, line);
+                    out.push('\n');
+                }
+                push_indent(out, indent + 1);
+                out.push_str("</span>\n");
+                push_indent(out, indent);
+                out.push_str("</div>\n");
+            }
+            DocumentElement::HorizontalRule => {
+                push_indent(out, indent);
+                out.push_str("<hr />\n");
+            }
+            _ => {}
+        }
     }
 }
 
@@ -40,34 +153,15 @@ pub fn assemble_assets(features: &DocumentFeature) -> (String, String) {
     let mut css_out = String::with_capacity(12288);
     let mut js_out = String::with_capacity(4096);
 
-    if let Some(feature) = get_feature("core") {
+    let mut active_buffer = [&CORE_FEATURE as &'static dyn Feature; 8];
+    let active_features = get_active_features(features, &mut active_buffer);
+
+    for feature in active_features {
         if let Some(css) = feature.css() {
             append_indented(&mut css_out, css);
         }
         for js in feature.javascript() {
             append_indented(&mut js_out, js);
-        }
-    }
-
-    for (name, is_active) in [
-        ("bullet", features.bullet),
-        ("code", features.code),
-        ("image", features.image),
-        ("ordered", features.ordered),
-        ("shoutout", features.shoutout),
-        ("table", features.table),
-        ("task", features.task),
-        ("unknown", features.unknown),
-    ] {
-        if is_active {
-            if let Some(feature) = get_feature(name) {
-                if let Some(css) = feature.css() {
-                    append_indented(&mut css_out, css);
-                }
-                for js in feature.javascript() {
-                    append_indented(&mut js_out, js);
-                }
-            }
         }
     }
 
@@ -103,12 +197,16 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
     let (css_content, js_content) = assemble_assets(features);
     let i18n_json = get_language_json(lang_code);
 
-    let mut html_content = String::new();
+    let mut html_content = String::with_capacity(32768);
+    let mut active_buffer = [&CORE_FEATURE as &'static dyn Feature; 8];
+    let active_features = get_active_features(features, &mut active_buffer);
+    let renderer = HtmlRenderer::new(active_features);
+
     if let Some(ref variables) = document.header.variables {
-        html_content.push_str(&render_element(variables, 2, &document.parameters));
+        renderer.render_element(variables, 2, 0, &document.parameters, &mut html_content);
     }
     for element in &document.body {
-        html_content.push_str(&render_element(element, 2, &document.parameters));
+        renderer.render_element(element, 2, 0, &document.parameters, &mut html_content);
     }
 
     TEMPLATE_HTML
@@ -124,6 +222,19 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
         .replace("{{JS}}", &js_content)
         .replace("{{I18N_JSON}}", i18n_json)
         .replace("{{CONTENT}}", &html_content)
+}
+
+/// Renders a document element and its children directly into an output buffer.
+///
+/// Recursively processes nested child elements and delegates to registered feature renderers.
+pub fn render_element_into(
+    element: &DocumentElement,
+    indent: usize,
+    parameters: &DocumentParameters,
+    out: &mut String,
+) {
+    let renderer = HtmlRenderer::default_renderer();
+    renderer.render_element(element, indent, 0, parameters, out);
 }
 
 /// Renders a document element and its children into an HTML string representation.
@@ -146,80 +257,9 @@ pub fn render_element(
     indent: usize,
     parameters: &DocumentParameters,
 ) -> String {
-    render_element_with_depth(element, indent, 0, parameters)
-}
-
-/// Renders a document element and its children with an explicit list nesting depth.
-fn render_element_with_depth(
-    element: &DocumentElement,
-    indent: usize,
-    depth: usize,
-    parameters: &DocumentParameters,
-) -> String {
-    let (feature_name, inner_content) = match element {
-        DocumentElement::BlockDirective { children, name } => {
-            let mut inner = String::new();
-            for child in children {
-                inner.push_str(&render_element_with_depth(child, indent + 1, 0, parameters));
-            }
-            (name.as_str(), inner)
-        }
-        DocumentElement::BulletListItem { children, .. } => {
-            let mut inner = String::new();
-            for child in children {
-                inner.push_str(&render_element_with_depth(
-                    child,
-                    indent,
-                    depth + 1,
-                    parameters,
-                ));
-            }
-            ("bullet", inner)
-        }
-        DocumentElement::CheckBoxItem { children, .. } => {
-            let mut inner = String::new();
-            for child in children {
-                inner.push_str(&render_element_with_depth(
-                    child,
-                    indent,
-                    depth + 1,
-                    parameters,
-                ));
-            }
-            ("task", inner)
-        }
-        DocumentElement::CodeBlock { .. } => ("code", String::new()),
-        DocumentElement::HorizontalRule => ("core", String::new()),
-        DocumentElement::Image { .. } => ("image", String::new()),
-        DocumentElement::OrderedListItem { children, .. } => {
-            let mut inner = String::new();
-            for child in children {
-                inner.push_str(&render_element_with_depth(
-                    child,
-                    indent,
-                    depth + 1,
-                    parameters,
-                ));
-            }
-            ("ordered", inner)
-        }
-        DocumentElement::Section { children, .. } => {
-            let mut inner = String::new();
-            for child in children {
-                inner.push_str(&render_element_with_depth(child, indent + 2, 0, parameters));
-            }
-            ("core", inner)
-        }
-        DocumentElement::Shoutout { .. } => ("shoutout", String::new()),
-        DocumentElement::Table { .. } => ("table", String::new()),
-        DocumentElement::Text(_) => ("core", String::new()),
-        DocumentElement::Unknown(_) => ("unknown", String::new()),
-    };
-
-    match get_feature(feature_name) {
-        Some(feature) => feature.to_html(element, &inner_content, indent, depth, parameters),
-        None => inner_content,
-    }
+    let mut out = String::with_capacity(512);
+    render_element_into(element, indent, parameters, &mut out);
+    out
 }
 
 #[cfg(test)]
@@ -232,7 +272,7 @@ mod tests {
         doc.push_body(DocumentElement::text("Document body text"));
         let features = DocumentFeature::default();
         let content = build(&doc, &features);
-        assert!(!content.as_bytes().is_empty());
+        assert!(!content.is_empty());
         assert!(content.contains("<!DOCTYPE html>"));
         assert!(content.contains(APP_VERSION));
         assert!(content.contains(REPOSITORY_URL));
@@ -291,8 +331,10 @@ mod tests {
 
     #[test]
     fn test_assemble_styles_with_unknown_feature() {
-        let mut features = DocumentFeature::default();
-        features.unknown = true;
+        let features = DocumentFeature {
+            unknown: true,
+            ..Default::default()
+        };
         let (css, _) = assemble_assets(&features);
         assert!(css.contains("    --bg-body:"));
         assert!(css.contains("    .txt-default"));
@@ -454,8 +496,10 @@ mod tests {
 
     #[test]
     fn test_assemble_styles_with_code_feature() {
-        let mut features = DocumentFeature::default();
-        features.code = true;
+        let features = DocumentFeature {
+            code: true,
+            ..Default::default()
+        };
         let (css, _) = assemble_assets(&features);
         assert!(css.contains("    --bg-body:"));
         assert!(css.contains("    --code-bg:"));

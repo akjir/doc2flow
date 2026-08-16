@@ -2,19 +2,26 @@
 
 use std::fmt::{self, Display, Formatter};
 
+use crate::core::builder::HtmlRenderer;
 use crate::core::document::{Document, DocumentElement, DocumentParameters};
 
 /// Trait for document feature renderers converting AST elements to HTML.
-pub trait Feature {
-    /// Converts a document element and inner content into an HTML string representation.
-    fn to_html(
+pub trait Feature: Send + Sync + fmt::Debug {
+    /// Intercepts the rendering of a document element into an output buffer.
+    ///
+    /// Returns `true` if this feature handled rendering the element, or `false`
+    /// to delegate to subsequent features or core fallback rendering.
+    fn try_render(
         &self,
-        element: &DocumentElement,
-        content: &str,
-        indent: usize,
-        depth: usize,
-        parameters: &DocumentParameters,
-    ) -> String;
+        _element: &DocumentElement,
+        _indent: usize,
+        _depth: usize,
+        _parameters: &DocumentParameters,
+        _out: &mut String,
+        _renderer: &HtmlRenderer,
+    ) -> bool {
+        false
+    }
 
     /// Returns optional CSS stylesheet rules for this feature, defaulting to `None`.
     fn css(&self) -> Option<&'static str> {
@@ -472,9 +479,11 @@ mod tests {
 
     #[test]
     fn test_to_features_string_combinations() {
-        let mut features = DocumentFeature::default();
-        features.bullet = true;
-        features.table = true;
+        let mut features = DocumentFeature {
+            bullet: true,
+            table: true,
+            ..Default::default()
+        };
         assert_eq!(features.to_features_string(), "core, bullet, table");
 
         features.image = true;
@@ -497,14 +506,18 @@ mod tests {
 
     #[test]
     fn test_to_features_string_single() {
-        let mut features = DocumentFeature::default();
-        features.code = true;
+        let features = DocumentFeature {
+            code: true,
+            ..Default::default()
+        };
         assert_eq!(features.to_features_string(), "core, code");
         assert_eq!(to_features_string(&features), "core, code");
         assert_eq!(features.to_string(), "core, code");
 
-        let mut unknown_feature = DocumentFeature::default();
-        unknown_feature.unknown = true;
+        let unknown_feature = DocumentFeature {
+            unknown: true,
+            ..Default::default()
+        };
         assert_eq!(unknown_feature.to_features_string(), "core, unknown");
     }
 
@@ -520,22 +533,18 @@ mod tests {
 
     #[test]
     fn test_feature_trait_default_methods() {
+        #[derive(Debug)]
         struct MinimalFeature;
-        impl Feature for MinimalFeature {
-            fn to_html(
-                &self,
-                _element: &DocumentElement,
-                _content: &str,
-                _indent: usize,
-                _depth: usize,
-                _parameters: &DocumentParameters,
-            ) -> String {
-                String::new()
-            }
-        }
+        impl Feature for MinimalFeature {}
 
         let feature = MinimalFeature;
         assert_eq!(feature.css(), None);
         assert!(feature.javascript().is_empty());
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        let element = DocumentElement::text("Test");
+        let params = DocumentParameters::default();
+        assert!(!feature.try_render(&element, 0, 0, &params, &mut out, &renderer));
+        assert!(out.is_empty());
     }
 }

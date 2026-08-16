@@ -188,7 +188,7 @@ mod tests {
 
     #[test]
     fn test_parse_args_defaults_and_positional() {
-        let args = parse_args(&["d2f", "input.md"]).unwrap();
+        let args = parse_args(["d2f", "input.md"]).unwrap();
         assert_eq!(args.input, Some(PathBuf::from("input.md")));
         assert_eq!(args.output, None);
         assert_eq!(args.init, None);
@@ -207,88 +207,88 @@ mod tests {
 
     #[test]
     fn test_parse_args_errors() {
-        assert!(parse_args(&["d2f", "--unknown"]).is_err());
-        assert!(parse_args(&["d2f", "-o"]).is_err());
-        assert!(parse_args(&["d2f", "-l"]).is_err());
-        assert!(parse_args(&["d2f", "--output="]).is_err());
-        assert!(parse_args(&["d2f", "-o="]).is_err());
-        assert!(parse_args(&["d2f", "--output", ""]).is_err());
-        assert!(parse_args(&["d2f", "-o", ""]).is_err());
-        assert!(parse_args(&["d2f", "--logo="]).is_err());
-        assert!(parse_args(&["d2f", "-l="]).is_err());
-        assert!(parse_args(&["d2f", "--logo", ""]).is_err());
-        assert!(parse_args(&["d2f", "-l", ""]).is_err());
-        assert!(parse_args(&["d2f", "input1.md", "input2.md"]).is_err());
-        assert!(parse_args(&["d2f", "--unknown=value"]).is_err());
+        assert!(parse_args(["d2f", "--unknown"]).is_err());
+        assert!(parse_args(["d2f", "-o"]).is_err());
+        assert!(parse_args(["d2f", "-l"]).is_err());
+        assert!(parse_args(["d2f", "--output="]).is_err());
+        assert!(parse_args(["d2f", "-o="]).is_err());
+        assert!(parse_args(["d2f", "--output", ""]).is_err());
+        assert!(parse_args(["d2f", "-o", ""]).is_err());
+        assert!(parse_args(["d2f", "--logo="]).is_err());
+        assert!(parse_args(["d2f", "-l="]).is_err());
+        assert!(parse_args(["d2f", "--logo", ""]).is_err());
+        assert!(parse_args(["d2f", "-l", ""]).is_err());
+        assert!(parse_args(["d2f", "input1.md", "input2.md"]).is_err());
+        assert!(parse_args(["d2f", "--unknown=value"]).is_err());
     }
 
     #[test]
     fn test_parse_args_help_and_version() {
-        let args = parse_args(&["d2f", "-h"]).unwrap();
+        let args = parse_args(["d2f", "-h"]).unwrap();
         assert!(args.show_help);
 
-        let args_long_h = parse_args(&["d2f", "--help"]).unwrap();
+        let args_long_h = parse_args(["d2f", "--help"]).unwrap();
         assert!(args_long_h.show_help);
 
-        let args_v = parse_args(&["d2f", "--version"]).unwrap();
+        let args_v = parse_args(["d2f", "--version"]).unwrap();
         assert!(args_v.show_version);
 
-        let args_v_short = parse_args(&["d2f", "-V"]).unwrap();
+        let args_v_short = parse_args(["d2f", "-V"]).unwrap();
         assert!(args_v_short.show_version);
     }
 
     #[test]
     fn test_parse_args_init_custom_and_defaults() {
-        let args_short = parse_args(&["d2f", "-i"]).unwrap();
+        let args_short = parse_args(["d2f", "-i"]).unwrap();
         assert_eq!(args_short.init, Some(PathBuf::from("template.md")));
 
-        let args_long = parse_args(&["d2f", "--init"]).unwrap();
+        let args_long = parse_args(["d2f", "--init"]).unwrap();
         assert_eq!(args_long.init, Some(PathBuf::from("template.md")));
 
-        let args_short_eq = parse_args(&["d2f", "-i="]).unwrap();
+        let args_short_eq = parse_args(["d2f", "-i="]).unwrap();
         assert_eq!(args_short_eq.init, Some(PathBuf::from("template.md")));
 
-        let args_long_eq = parse_args(&["d2f", "--init="]).unwrap();
+        let args_long_eq = parse_args(["d2f", "--init="]).unwrap();
         assert_eq!(args_long_eq.init, Some(PathBuf::from("template.md")));
 
-        let args_short_empty = parse_args(&["d2f", "-i", ""]).unwrap();
+        let args_short_empty = parse_args(["d2f", "-i", ""]).unwrap();
         assert_eq!(args_short_empty.init, Some(PathBuf::from("template.md")));
 
-        let args_long_empty = parse_args(&["d2f", "--init", ""]).unwrap();
+        let args_long_empty = parse_args(["d2f", "--init", ""]).unwrap();
         assert_eq!(args_long_empty.init, Some(PathBuf::from("template.md")));
 
-        let args_space_val = parse_args(&["d2f", "-i", "starter.md"]).unwrap();
+        let args_space_val = parse_args(["d2f", "-i", "starter.md"]).unwrap();
         assert_eq!(args_space_val.init, Some(PathBuf::from("starter.md")));
 
-        let args_next_flag = parse_args(&["d2f", "-i", "-s"]).unwrap();
+        let args_next_flag = parse_args(["d2f", "-i", "-s"]).unwrap();
         assert_eq!(args_next_flag.init, Some(PathBuf::from("template.md")));
         assert!(args_next_flag.auto_scale);
     }
 
     #[test]
     fn test_parse_args_legacy() {
-        let args = parse_args(&["d2f", "input.md", "--legacy"]).unwrap();
+        let args = parse_args(["d2f", "input.md", "--legacy"]).unwrap();
         assert!(args.legacy);
     }
 
     #[test]
     fn test_parse_args_logo_options() {
-        let args_l = parse_args(&["d2f", "input.md", "-l", "my_logo.png"]).unwrap();
+        let args_l = parse_args(["d2f", "input.md", "-l", "my_logo.png"]).unwrap();
         assert_eq!(args_l.logo, Some(PathBuf::from("my_logo.png")));
 
-        let args_long = parse_args(&["d2f", "input.md", "--logo", "brand/logo.svg"]).unwrap();
+        let args_long = parse_args(["d2f", "input.md", "--logo", "brand/logo.svg"]).unwrap();
         assert_eq!(args_long.logo, Some(PathBuf::from("brand/logo.svg")));
 
-        let args_eq = parse_args(&["d2f", "input.md", "--logo=assets/logo.webp"]).unwrap();
+        let args_eq = parse_args(["d2f", "input.md", "--logo=assets/logo.webp"]).unwrap();
         assert_eq!(args_eq.logo, Some(PathBuf::from("assets/logo.webp")));
 
-        let args_short_eq = parse_args(&["d2f", "input.md", "-l=assets/logo.png"]).unwrap();
+        let args_short_eq = parse_args(["d2f", "input.md", "-l=assets/logo.png"]).unwrap();
         assert_eq!(args_short_eq.logo, Some(PathBuf::from("assets/logo.png")));
     }
 
     #[test]
     fn test_parse_args_options() {
-        let args = parse_args(&[
+        let args = parse_args([
             "d2f",
             "input.md",
             "-o",

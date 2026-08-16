@@ -2,6 +2,7 @@
 
 use std::fmt::Write as _;
 
+use crate::core::builder::HtmlRenderer;
 use crate::core::document::{DocumentElement, DocumentParameters};
 use crate::core::feature::Feature;
 use crate::core::format::{format_inline_into, push_indent};
@@ -29,67 +30,47 @@ impl BulletFeature {
 }
 
 impl Feature for BulletFeature {
-    /// Converts a bullet list item document element into an HTML string representation.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use doc2flow::core::document::{DocumentElement, DocumentParameters};
-    /// use doc2flow::core::feature::Feature;
-    /// use doc2flow::features::bullet::BulletFeature;
-    ///
-    /// let feature = BulletFeature::new();
-    /// let elem = DocumentElement::bullet_list_item("List item");
-    /// let params = DocumentParameters::default();
-    /// let html = feature.to_html(&elem, "", 1, 0, &params);
-    /// assert!(html.contains("class=\"item bullet-item\""));
-    /// ```
-    fn to_html(
+    /// Intercepts the rendering of bullet list elements into the output buffer.
+    fn try_render(
         &self,
         element: &DocumentElement,
-        _content: &str,
         indent: usize,
         depth: usize,
-        _parameters: &DocumentParameters,
-    ) -> String {
+        parameters: &DocumentParameters,
+        out: &mut String,
+        renderer: &HtmlRenderer,
+    ) -> bool {
         match element {
-            DocumentElement::BulletListItem { content, .. } => {
-                let spaces = indent * 2;
-                let inner_spaces = (indent + 1) * 2;
-                let content_len = content.len() * 2;
-
-                let mut out = String::with_capacity(
-                    content_len + _content.len() + spaces * 2 + inner_spaces * 2 + 128,
-                );
-                push_indent(&mut out, indent);
+            DocumentElement::BulletListItem { content, children } => {
+                push_indent(out, indent);
                 out.push_str("<div class=\"item bullet-item\"");
                 if depth > 0 {
                     let _ = write!(out, " style=\"--indent: {depth};\"");
                 }
                 out.push_str(">\n");
 
-                push_indent(&mut out, indent + 1);
+                push_indent(out, indent + 1);
                 out.push_str("<span class=\"bullet-marker\">&bull;</span>\n");
 
-                push_indent(&mut out, indent + 1);
+                push_indent(out, indent + 1);
                 out.push_str("<span class=\"bullet-content\">\n");
 
                 for line in content.lines() {
-                    push_indent(&mut out, indent + 2);
-                    format_inline_into(&mut out, line);
+                    push_indent(out, indent + 2);
+                    format_inline_into(out, line);
                     out.push('\n');
                 }
 
-                push_indent(&mut out, indent + 1);
+                push_indent(out, indent + 1);
                 out.push_str("</span>\n");
 
-                push_indent(&mut out, indent);
+                push_indent(out, indent);
                 out.push_str("</div>\n");
-                out.push_str(_content);
 
-                out
+                renderer.render_children(children, indent, depth + 1, parameters, out);
+                true
             }
-            _ => String::new(),
+            _ => false,
         }
     }
 
@@ -107,10 +88,17 @@ mod tests {
     fn test_bullet_empty_for_unsupported_elements() {
         let feature = BulletFeature::new();
         let text = DocumentElement::text("Regular text");
-        assert_eq!(
-            feature.to_html(&text, "", 0, 0, &DocumentParameters::default()),
-            ""
-        );
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        assert!(!feature.try_render(
+            &text,
+            0,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        ));
+        assert!(out.is_empty());
     }
 
     #[test]
@@ -134,7 +122,16 @@ mod tests {
         let element = DocumentElement::bullet_list_item(
             "Item with **bold**, *italic*, ~~strike~~, `code`, and [link](https://example.com) span",
         );
-        let html = feature.to_html(&element, "", 0, 0, &DocumentParameters::default());
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        assert!(feature.try_render(
+            &element,
+            0,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        ));
         let expected = concat!(
             "<div class=\"item bullet-item\">\n",
             "  <span class=\"bullet-marker\">&bull;</span>\n",
@@ -143,14 +140,23 @@ mod tests {
             "  </span>\n",
             "</div>\n"
         );
-        assert_eq!(html, expected);
+        assert_eq!(out, expected);
     }
 
     #[test]
     fn test_bullet_renders_with_indent() {
         let feature = BulletFeature::new();
         let element = DocumentElement::bullet_list_item("Nested level 2 item");
-        let html = feature.to_html(&element, "", 2, 0, &DocumentParameters::default());
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        assert!(feature.try_render(
+            &element,
+            2,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        ));
         let expected = concat!(
             "    <div class=\"item bullet-item\">\n",
             "      <span class=\"bullet-marker\">&bull;</span>\n",
@@ -159,14 +165,23 @@ mod tests {
             "      </span>\n",
             "    </div>\n"
         );
-        assert_eq!(html, expected);
+        assert_eq!(out, expected);
     }
 
     #[test]
     fn test_bullet_renders_with_depth() {
         let feature = BulletFeature::new();
         let element = DocumentElement::bullet_list_item("Indented child item");
-        let html = feature.to_html(&element, "", 2, 1, &DocumentParameters::default());
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        assert!(feature.try_render(
+            &element,
+            2,
+            1,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        ));
         let expected = concat!(
             "    <div class=\"item bullet-item\" style=\"--indent: 1;\">\n",
             "      <span class=\"bullet-marker\">&bull;</span>\n",
@@ -175,16 +190,40 @@ mod tests {
             "      </span>\n",
             "    </div>\n"
         );
-        assert_eq!(html, expected);
+        assert_eq!(out, expected);
     }
 
     #[test]
     fn test_bullet_renders_with_children() {
         let feature = BulletFeature::new();
-        let element = DocumentElement::bullet_list_item("Parent item");
-        let child_html = "    <div class=\"item bullet-item\" style=\"--indent: 1;\">\n      <span class=\"bullet-marker\">&bull;</span>\n      <span class=\"bullet-content\">\n        Child item\n      </span>\n    </div>\n";
-        let html = feature.to_html(&element, child_html, 1, 0, &DocumentParameters::default());
-        let expected_prefix = "  <div class=\"item bullet-item\">\n    <span class=\"bullet-marker\">&bull;</span>\n    <span class=\"bullet-content\">\n      Parent item\n    </span>\n  </div>\n";
-        assert_eq!(html, format!("{expected_prefix}{child_html}"));
+        let mut element = DocumentElement::bullet_list_item("Parent item");
+        let child = DocumentElement::bullet_list_item("Child item");
+        element.push_child(child).unwrap();
+
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        assert!(feature.try_render(
+            &element,
+            1,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        ));
+        let expected = concat!(
+            "  <div class=\"item bullet-item\">\n",
+            "    <span class=\"bullet-marker\">&bull;</span>\n",
+            "    <span class=\"bullet-content\">\n",
+            "      Parent item\n",
+            "    </span>\n",
+            "  </div>\n",
+            "  <div class=\"item bullet-item\" style=\"--indent: 1;\">\n",
+            "    <span class=\"bullet-marker\">&bull;</span>\n",
+            "    <span class=\"bullet-content\">\n",
+            "      Child item\n",
+            "    </span>\n",
+            "  </div>\n",
+        );
+        assert_eq!(out, expected);
     }
 }

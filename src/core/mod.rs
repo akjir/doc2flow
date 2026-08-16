@@ -12,7 +12,7 @@ pub mod markdown;
 pub mod utils;
 
 pub use arguments::{Args, help_message, parse_args};
-pub use builder::{build, render_element};
+pub use builder::{HtmlRenderer, build, render_element, render_element_into};
 pub use constants::{
     APP_NAME, APP_VERSION, CLI_ALIAS, CLI_BANNER, LICENSE_TERMS, LICENSE_URL, REPOSITORY_URL,
 };
