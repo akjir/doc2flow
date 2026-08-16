@@ -7,6 +7,29 @@ use std::fmt::{self, Display, Formatter};
 const STATIC_CARETS: &str =
     "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^";
 
+/// Errors that can occur during CLI argument parsing.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum CliError {
+    /// An invalid argument or flag value was provided.
+    InvalidArgument(String),
+    /// An option flag was provided without a required value.
+    MissingArgument(String),
+    /// An unexpected extra positional argument was provided.
+    UnexpectedPositional(String),
+}
+
+impl Display for CliError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::InvalidArgument(msg)
+            | Self::MissingArgument(msg)
+            | Self::UnexpectedPositional(msg) => write!(f, "{msg}"),
+        }
+    }
+}
+
+impl std::error::Error for CliError {}
+
 /// Compiler-style diagnostic error representation.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DiagnosticError<'a> {
@@ -96,6 +119,12 @@ impl From<&DiagnosticError<'_>> for Error {
 impl From<&str> for Error {
     fn from(msg: &str) -> Self {
         Self::Message(msg.to_string())
+    }
+}
+
+impl From<CliError> for Error {
+    fn from(err: CliError) -> Self {
+        Self::Message(err.to_string())
     }
 }
 
@@ -323,6 +352,29 @@ mod tests {
     }
 
     #[test]
+    fn test_cli_error_display_and_trait() {
+        let err_missing =
+            CliError::MissingArgument("Option '--output' requires a path value".into());
+        assert_eq!(
+            err_missing.to_string(),
+            "Option '--output' requires a path value"
+        );
+
+        let err_invalid = CliError::InvalidArgument("Unrecognized option '--bad'".into());
+        assert_eq!(err_invalid.to_string(), "Unrecognized option '--bad'");
+
+        let err_pos =
+            CliError::UnexpectedPositional("Unexpected positional argument 'extra'".into());
+        assert_eq!(
+            err_pos.to_string(),
+            "Unexpected positional argument 'extra'"
+        );
+
+        let std_err: &dyn std::error::Error = &err_missing;
+        assert!(std_err.source().is_none());
+    }
+
+    #[test]
     fn test_diagnostic_error_trait_impl() {
         let diag = DiagnosticError {
             message: "sample".into(),
@@ -345,6 +397,13 @@ mod tests {
 
         let diag_err = Error::Diagnostic("diagnostic error".to_string());
         assert_eq!(diag_err.to_string(), "diagnostic error");
+    }
+
+    #[test]
+    fn test_error_from_cli_error() {
+        let cli_err = CliError::MissingArgument("Option '--output' requires a path value".into());
+        let err: Error = cli_err.into();
+        assert_eq!(err.to_string(), "Option '--output' requires a path value");
     }
 
     #[test]

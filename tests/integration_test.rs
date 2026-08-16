@@ -1049,7 +1049,7 @@ fn test_core_parser_integration() {
 fn test_cli_core_arguments_defaults() {
     use doc2flow::core::arguments::parse_args;
 
-    let args = parse_args(["d2f", "input.md"]).unwrap();
+    let args = parse_args(["input.md"]).unwrap();
     assert_eq!(args.input, Some(std::path::PathBuf::from("input.md")));
     assert!(!args.legacy);
 }
@@ -1058,7 +1058,7 @@ fn test_cli_core_arguments_defaults() {
 fn test_cli_core_arguments_legacy_flag() {
     use doc2flow::core::arguments::parse_args;
 
-    let args = parse_args(["d2f", "input.md", "--legacy"]).unwrap();
+    let args = parse_args(["input.md", "--legacy"]).unwrap();
     assert_eq!(args.input, Some(std::path::PathBuf::from("input.md")));
     assert!(args.legacy);
 }

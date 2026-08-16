@@ -41,6 +41,7 @@ Every `.rs` file must strictly follow this top-to-bottom sequence:
 - **Field Sorting:** Alphabetical order within the same visibility tier.
 - **Derives:** Alphabetize macros inside `#[derive(...)]` (e.g., `#[derive(Clone, Debug, PartialEq)]`).
 - **Default over New:** Strictly derive/implement `Default` for all parameter-less structs and Zero-Sized Types (ZSTs).
+- **Strongly Typed Errors:** Define descriptive Error enums (implementing `Display` and `std::error::Error`) for modules and parsing logic; never use `Result<T, String>`.
 - **State Condensation:** Evaluate `bitflags` or array-backed state representation for multiple boolean configuration flags.
 
 ### B. Implementation (`impl`) Blocks
@@ -58,6 +59,7 @@ For type `MyType`:
 - **Catch-all Arm:** Fallback (`_ => ...`) MUST always be the last arm.
 - **Flattened Dispatchers:** Keep token dispatch loops flat (<50 lines) by delegating parsing to discrete, strongly-typed helper functions (`try_parse_*`).
 - **Encapsulated Lookarounds:** Abstract UTF-8 boundary checks and char inspection into semantic helper functions rather than inline pointer/char math.
+- **Pure CLI & OS-Agnostic Paths:** Parser functions must accept pure argument iterators (caller strips binary via `args_os().skip(1)`), use `std::ffi::OsStr`/`OsString` for filesystem paths without assuming UTF-8, and avoid fragile flag peeking.
 
 ### D. Tests & Assertions
 - **Resilient Assertions:** Assert specific semantic tokens (e.g., `.contains("bullet")`) on formatted string outputs (like `Display`) instead of brittle exact full-string matches.

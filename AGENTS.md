@@ -3,7 +3,7 @@
 ## 1. Arch & Stack
 - **Spec:** `SPECIFICATION.md` (sync structure on central file changes)
 - **Layering:** `src/utils/` (generic library), `src/core/` (domain engine), `src/features/` (vertical slices). Core/features access `utils` through `src/utils/mod.rs` API.
-- **CLI:** `std::env::args()`
+- **CLI:** `std::env::args_os().skip(1)` (pure parser: callers strip binary; `OsStr`/`OsString` paths)
 - **MD:** `pulldown-cmark`+GFM
 - **Assets:** Custom Base64/MIME (`src/utils/`), WebP/compress (`src/core/image.rs`)
 - **i18n:** `HashMap` via embedded JSON (`build.rs`)
@@ -25,8 +25,8 @@
 - **Core:** Idiomatic, newtypes, 1-path exports, NO `unsafe`
 - **Clean:** Zero legacy debt/compat shims. Remove dead/obsolete code when adding new code.
 - **Consts:** Feature constants local in `src/features/<name>/module.rs` (NO central dumpster). App metadata/limits ONLY in `src/core/constants.rs`.
-- **CLI:** Identical validation for space (`-o ""`) vs equals (`-o=`) syntax. Reject empty values uniformly (`val.as_ref().is_empty()`).
-- **Errors:** Stdlib+`Doc2FlowError` (NO `anyhow`/`eyre`). `Result`=expected. `panic!`=bugs/stop (detailed msgs). NO `catch_unwind`. Safe bounds/slicing on diagnostic buffers. `From` conversions (NO `.to_<domain>()`). NO manual buffer micro-allocs on error paths; use `format!` or static strings.
+- **CLI:** Pure parser inputs (callers strip binary with `args_os().skip(1)`). OS-agnostic paths via `std::ffi::OsStr`/`OsString` (no UTF-8 assumption). Identical validation for space (`-o ""`) vs equals (`-o=`) syntax; reject empty values uniformly (`val.as_ref().is_empty()`). Avoid fragile flag peeking: require explicit `=` or strict bounds for optional values/hyphenated args (P-CLI-PURE).
+- **Errors:** Stdlib+`Doc2FlowError` (NO `anyhow`/`eyre`). Strongly typed error enums for modules/parsing (NO `Result<T, String>`). `Result`=expected. `panic!`=bugs/stop (detailed msgs). NO `catch_unwind`. Safe bounds/slicing on diagnostic buffers. `From` conversions (NO `.to_<domain>()`). NO manual buffer micro-allocs on error paths; use `format!` or static strings.
 - **Attributes:** Enforce `#[must_use]` on all constructors, factories, and pure builders (`new`, `with_capacity`). Reserve `#[inline]` exclusively for trivial getters/wrappers and hot-path loops. NO `#[inline]` on heap allocs (`String::with_capacity`), I/O, multi-branch, init, setup, CLI parsing, parser helpers, or simple `const` fns.
 - **Docs:** English ONLY (all inline docs & comments). 15-word max start, canonical headers (Examples/Errors/Panics), NO meta/journals. Explicitly document intentional domain quirks inline (e.g. strict H1/H2->H3 AST nesting for UI layout) to prevent regressions.
 - **Perf:** Min-alloc (borrow>owned), `with_capacity`, O(N) 1-pass, zero-copy (`split_once`,`strip_prefix`), `Cow`. Safe subslice indexing ONLY; NO raw pointer arithmetic (`as_ptr` diffs) for string bound searches.

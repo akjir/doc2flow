@@ -57,12 +57,12 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 - **Flatten Monolithic Dispatchers:** Avoid massive `if/else` or loop dispatchers (>50 lines). Dispatch token parsing to discrete, strongly-typed functions (e.g., `try_parse_* -> Option<usize>`) (P-FLATTEN-DISPATCH).
 - **Encapsulate UTF-8 Lookarounds:** Abstract UTF-8 boundary checks and char lookahead/lookbehind (`slice[idx..].chars().next()`) into semantic helper functions (`is_alphanumeric_at`, `is_alphanumeric_before`, `is_alphanumeric_after`) (P-UTF8-LOOKAROUND).
 - **Layering:** `src/utils/` = generic project-agnostic library (NO domain logic). `src/core/` & `src/features/` consume it via `src/utils/mod.rs` API.
-- **Errors:** Stdlib + `Doc2FlowError` (`src/utils/error.rs`). Avoid complex custom `Enum`s for basic app errors.
+- **Errors:** Stdlib + `Doc2FlowError` (`src/utils/error.rs`). Strongly typed error enums for modules/parsing (NO `Result<T, String>`).
 - **Panics:** `unwrap()`/`expect()` ONLY for true invariants with descriptive msgs. NEVER for runtime/user I/O.
 - **Safety:** ZERO `unsafe` blocks.
 - **Consts:** Feature constants local in `src/features/<name>/module.rs` (NO central dumpster). App metadata/limits ONLY in `src/core/constants.rs`.
 - **Logic:** Prefer `match` or lookup tables over `if-else` chains.
-- **CLI Parsing:** Enforce identical validation for space-separated vs equals-separated flags; reject empty values uniformly (`val.as_ref().is_empty()`).
+- **CLI Parsing:** Pure parser inputs (callers strip binary with `args_os().skip(1)`). OS-agnostic paths via `std::ffi::OsStr`/`OsString` (no UTF-8 assumption). Identical validation for space (`-o ""`) vs equals (`-o=`) syntax; reject empty values uniformly (`val.as_ref().is_empty()`). Avoid fragile flag peeking: require explicit `=` or strict bounds for optional values/hyphenated args (P-CLI-PURE).
 - **Attributes:** Enforce `#[must_use]` on all constructors, factories, and pure builder methods (`new`, `with_capacity`). Reserve `#[inline]` strictly for trivial getters/wrappers and hot-path inner loops. NEVER apply `#[inline]` to functions performing heap allocs (`String::with_capacity`), I/O, multi-branch logic, setup, init, parser helpers, or CLI parsing logic.
 - **Domain Quirks:** Explicitly document intentional domain deviations inline (e.g. strict H1/H2->H3 AST nesting for UI layout) to protect against accidental refactoring.
 - **Boolean Parsing:** Account for multiple case-insensitive truthy variants (`true`, `yes`, `y`, `1`) when deserializing boolean parameters from maps/frontmatter/headers.

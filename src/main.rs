@@ -1,15 +1,16 @@
 //! Doc2Flow CLI entry point.
 
+use std::env;
+use std::process::ExitCode;
+
 use doc2flow::core::arguments::{help_message, parse_args};
 use doc2flow::core::builder;
 use doc2flow::core::error::{Error, Result};
 use doc2flow::core::io;
 use doc2flow::core::markdown::parse_d2f_markdown;
-use std::env;
-use std::process::ExitCode;
 
 fn run() -> Result<()> {
-    let args = parse_args(env::args())?;
+    let args = parse_args(env::args_os().skip(1))?;
 
     if args.show_help {
         println!("{}", help_message());
