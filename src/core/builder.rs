@@ -243,10 +243,7 @@ mod tests {
     #[test]
     fn test_builder_build_with_features() {
         let mut doc = Document::new();
-        doc.push_body(DocumentElement::code_block(
-            None::<String>,
-            "test code",
-        ));
+        doc.push_body(DocumentElement::code_block(None::<String>, "test code"));
         let content = build(&doc);
         assert!(content.contains("<meta name=\"features\" content=\"core, code\">"));
         assert!(!content.contains("{{FEATURES}}"));
@@ -268,9 +265,9 @@ mod tests {
         doc.header.variables = Some(DocumentElement::table_variables(vars));
         doc.push_body(DocumentElement::text("Body text"));
         let content = build(&doc);
-        assert!(content.contains("TODO"));
+        assert!(content.contains("code-table-wrap"));
+        assert!(content.contains("value=\"8080\""));
         assert!(content.contains("Body text"));
         assert!(content.contains("<meta name=\"features\" content=\"core, code\">"));
-        assert!(!content.contains("table"));
     }
 }

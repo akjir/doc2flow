@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+242.3859907.dev">
-  <meta name="version" content="0.9.4+242.3859907.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+243.6f3a98b.dev">
+  <meta name="version" content="0.9.4+243.6f3a98b.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-16T20:00:23Z">
+  <meta name="dcterms.created" content="2026-08-16T20:21:06Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, bullet, code, image, ordered, table, task">
   <title>Doc2Flow Deutscher Showcase</title>
@@ -713,7 +713,7 @@
       }
     }
     /* ==========================================================================
-       Doc2Flow - Code Feature Styles (Code Blocks)
+       Doc2Flow - Code Feature Styles (Code Blocks & Variables Table)
        ========================================================================== */
 
     /* 1. Base Variables & Tokens */
@@ -722,6 +722,18 @@
       --code-font-size: 13px;
       --code-line-height: 1.6;
       --code-radius: 10px;
+
+      /* Code Variables Table Tokens */
+      --code-table-bg: #e2e8f0;
+      --code-table-border: #94a3b8;
+      --code-table-header-bg: #cbd5e1;
+      --code-table-header-color: #1e293b;
+      --code-table-row-border: #cbd5e1;
+      --code-table-key-color: #0f172a;
+      --code-table-val-color: #334155;
+      --code-table-input-bg: #f1f5f9;
+      --code-table-radius: 10px;
+      --code-table-input-radius: 4px;
     }
 
     /* 2. Code Component (code-*) */
@@ -749,7 +761,76 @@
       padding: 0;
     }
 
-    /* 3. Print Styles */
+    /* 3. Variables Table Component (.code-table-*) */
+    .code-table-wrap {
+      background-color: var(--code-table-bg);
+      border: 1px solid var(--code-table-border);
+      border-radius: var(--code-table-radius);
+      margin: 12px 0 16px;
+      overflow: hidden;
+    }
+
+    .code-table-default {
+      border-collapse: collapse;
+      font-family: var(--font-sans, Arial, sans-serif);
+      font-size: 12px;
+      width: 100%;
+    }
+
+    .code-table-default th,
+    .code-table-default td {
+      border-bottom: 1px solid var(--code-table-row-border);
+      padding: 8px 12px;
+      text-align: left;
+    }
+
+    .code-table-default th {
+      background-color: var(--code-table-header-bg);
+      color: var(--code-table-header-color);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .code-table-default tr:last-child td {
+      border-bottom: none;
+    }
+
+    .code-table-default td:first-child {
+      color: var(--code-table-key-color);
+      font-family: var(--font-mono, 'Courier New', monospace);
+      font-weight: 600;
+      width: 35%;
+    }
+
+    .code-table-default td:nth-child(2) {
+      color: var(--code-table-val-color);
+      font-family: var(--font-mono, 'Courier New', monospace);
+      padding: 4px 8px;
+    }
+
+    .code-table-input {
+      background-color: var(--code-table-input-bg);
+      border: 1px solid var(--code-table-row-border);
+      border-radius: var(--code-table-input-radius);
+      box-sizing: border-box;
+      color: var(--code-table-key-color);
+      font-family: var(--font-mono, 'Courier New', monospace);
+      font-size: 11.5px;
+      padding: 4px 8px;
+      transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+      width: 100%;
+    }
+
+    .code-table-input:focus {
+      background-color: var(--code-table-input-bg);
+      border-color: #2e75b6;
+      box-shadow: 0 0 0 2px rgba(46, 117, 182, 0.2);
+      outline: none;
+    }
+
+    /* 4. Print Styles */
     @media print {
       .code-default {
         background-color: var(--code-bg) !important;
@@ -759,6 +840,10 @@
         white-space: pre-wrap;
         word-break: break-all;
         -webkit-print-color-adjust: exact;
+      }
+
+      .code-table-wrap {
+        display: none !important;
       }
     }
     /* ==========================================================================
@@ -1128,7 +1213,30 @@
   <header class="doc-header">
   </header>
   <main class="doc-body">
-    TODO
+    <div class="code-table-wrap">
+      <table class="code-table-default">
+        <thead>
+          <tr>
+            <th>Variable</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>API_KEY</td>
+            <td><input type="text" class="code-table-input" value="secret-key-de-12345"></td>
+          </tr>
+          <tr>
+            <td>PORT</td>
+            <td><input type="text" class="code-table-input" value="8080"></td>
+          </tr>
+          <tr>
+            <td>SERVER_NAME</td>
+            <td><input type="text" class="code-table-input" value="prod-srv-de-01"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <section class="section" data-level="1">
       <h1>Teil 1: Systemeinrichtung & Vorbereitung</h1>
       <div class="section-body">

@@ -47,9 +47,67 @@ impl DocumentElementRenderer for CodeFeature {
                 escape_html_into(out, content);
                 out.push_str("</code></pre>\n");
             }
-            DocumentElement::TableVariables { .. } => {
+            DocumentElement::TableVariables { variables } => {
+                if variables.is_empty() {
+                    return;
+                }
+
+                let mut entries: Vec<_> = variables.iter().collect();
+                entries.sort_by_key(|(k, _)| *k);
+
                 push_indent(out, indent);
-                out.push_str("TODO\n");
+                out.push_str("<div class=\"code-table-wrap\">\n");
+
+                push_indent(out, indent + 1);
+                out.push_str("<table class=\"code-table-default\">\n");
+
+                push_indent(out, indent + 2);
+                out.push_str("<thead>\n");
+
+                push_indent(out, indent + 3);
+                out.push_str("<tr>\n");
+
+                push_indent(out, indent + 4);
+                out.push_str("<th>Variable</th>\n");
+
+                push_indent(out, indent + 4);
+                out.push_str("<th>Value</th>\n");
+
+                push_indent(out, indent + 3);
+                out.push_str("</tr>\n");
+
+                push_indent(out, indent + 2);
+                out.push_str("</thead>\n");
+
+                push_indent(out, indent + 2);
+                out.push_str("<tbody>\n");
+
+                for (key, val) in entries {
+                    push_indent(out, indent + 3);
+                    out.push_str("<tr>\n");
+
+                    push_indent(out, indent + 4);
+                    out.push_str("<td>");
+                    escape_html_into(out, key);
+                    out.push_str("</td>\n");
+
+                    push_indent(out, indent + 4);
+                    out.push_str("<td><input type=\"text\" class=\"code-table-input\" value=\"");
+                    escape_html_into(out, val);
+                    out.push_str("\"></td>\n");
+
+                    push_indent(out, indent + 3);
+                    out.push_str("</tr>\n");
+                }
+
+                push_indent(out, indent + 2);
+                out.push_str("</tbody>\n");
+
+                push_indent(out, indent + 1);
+                out.push_str("</table>\n");
+
+                push_indent(out, indent);
+                out.push_str("</div>\n");
             }
             _ => {}
         }
@@ -84,6 +142,10 @@ mod tests {
         assert!(css.contains("--code-line-height:"));
         assert!(css.contains("--code-radius:"));
         assert!(css.contains(".code-default"));
+        assert!(css.contains("--code-table-bg:"));
+        assert!(css.contains(".code-table-wrap"));
+        assert!(css.contains(".code-table-default"));
+        assert!(css.contains(".code-table-input"));
     }
 
     #[test]
@@ -144,7 +206,84 @@ mod tests {
             &mut out,
             &renderer,
         );
-        assert_eq!(out, "    TODO\n");
+        let expected = concat!(
+            "    <div class=\"code-table-wrap\">\n",
+            "      <table class=\"code-table-default\">\n",
+            "        <thead>\n",
+            "          <tr>\n",
+            "            <th>Variable</th>\n",
+            "            <th>Value</th>\n",
+            "          </tr>\n",
+            "        </thead>\n",
+            "        <tbody>\n",
+            "          <tr>\n",
+            "            <td>PORT</td>\n",
+            "            <td><input type=\"text\" class=\"code-table-input\" value=\"8080\"></td>\n",
+            "          </tr>\n",
+            "        </tbody>\n",
+            "      </table>\n",
+            "    </div>\n"
+        );
+        assert_eq!(out, expected);
+    }
+
+    #[test]
+    fn test_code_feature_renders_table_variables_empty() {
+        let feature = CodeFeature::new();
+        let element = DocumentElement::table_variables(std::collections::HashMap::new());
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        feature.render_element(
+            &element,
+            2,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        );
+        assert!(out.is_empty());
+    }
+
+    #[test]
+    fn test_code_feature_renders_table_variables_sorted_and_escaped() {
+        let feature = CodeFeature::new();
+        let mut vars = std::collections::HashMap::new();
+        vars.insert("Z_KEY".into(), "<script>alert('xss')</script>".into());
+        vars.insert("A_KEY".into(), "value & \"quotes\"".into());
+        let element = DocumentElement::table_variables(vars);
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        feature.render_element(
+            &element,
+            1,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        );
+        let expected = concat!(
+            "  <div class=\"code-table-wrap\">\n",
+            "    <table class=\"code-table-default\">\n",
+            "      <thead>\n",
+            "        <tr>\n",
+            "          <th>Variable</th>\n",
+            "          <th>Value</th>\n",
+            "        </tr>\n",
+            "      </thead>\n",
+            "      <tbody>\n",
+            "        <tr>\n",
+            "          <td>A_KEY</td>\n",
+            "          <td><input type=\"text\" class=\"code-table-input\" value=\"value &amp; &quot;quotes&quot;\"></td>\n",
+            "        </tr>\n",
+            "        <tr>\n",
+            "          <td>Z_KEY</td>\n",
+            "          <td><input type=\"text\" class=\"code-table-input\" value=\"&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;\"></td>\n",
+            "        </tr>\n",
+            "      </tbody>\n",
+            "    </table>\n",
+            "  </div>\n"
+        );
+        assert_eq!(out, expected);
     }
 
     #[test]
