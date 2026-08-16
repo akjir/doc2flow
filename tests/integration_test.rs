@@ -1110,15 +1110,15 @@ fn test_core_horizontal_rule_pipeline_integration() {
 }
 
 #[test]
-fn test_bullet_list_pipeline_integration() {
+fn test_bullet_pipeline_integration() {
     let input = "---\ntitle: \"Bullet Pipeline Test\"\n---\n# List Section\n\n- Root bullet item\n  - Nested bullet **item** with `code`";
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
     let features = doc2flow::core::DocumentFeature::from(&document);
-    assert!(features.bullet_list);
-    assert_eq!(features.to_features_string(), "core, bullet_list");
+    assert!(features.bullet);
+    assert_eq!(features.to_features_string(), "core, bullet");
     let content = doc2flow::core::builder::build(&document, &features);
     assert!(content.contains("<title>Bullet Pipeline Test</title>"));
-    assert!(content.contains("<meta name=\"features\" content=\"core, bullet_list\">"));
+    assert!(content.contains("<meta name=\"features\" content=\"core, bullet\">"));
     assert!(content.contains("--bullet-marker-color:"));
     assert!(content.contains(".bullet-marker"));
     assert!(content.contains("        <div class=\"item bullet-item\">\n          <span class=\"bullet-marker\">&bull;</span>\n          <span class=\"bullet-content\">\n            Root bullet item\n          </span>\n        </div>"));
@@ -1126,15 +1126,15 @@ fn test_bullet_list_pipeline_integration() {
 }
 
 #[test]
-fn test_ordered_list_pipeline_integration() {
+fn test_ordered_pipeline_integration() {
     let input = "---\ntitle: \"Ordered Pipeline Test\"\n---\n# Ordered Section\n\n1. First ordered step\n2. Second **ordered** step\n  1. Sub-step alpha\n    1. Sub-sub-step roman";
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
     let features = doc2flow::core::DocumentFeature::from(&document);
-    assert!(features.ordered_list);
-    assert_eq!(features.to_features_string(), "core, ordered_list");
+    assert!(features.ordered);
+    assert_eq!(features.to_features_string(), "core, ordered");
     let content = doc2flow::core::builder::build(&document, &features);
     assert!(content.contains("<title>Ordered Pipeline Test</title>"));
-    assert!(content.contains("<meta name=\"features\" content=\"core, ordered_list\">"));
+    assert!(content.contains("<meta name=\"features\" content=\"core, ordered\">"));
     assert!(content.contains("--order-marker-color:"));
     assert!(content.contains(".order-marker"));
     assert!(content.contains(".order-content"));

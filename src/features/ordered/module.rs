@@ -7,28 +7,28 @@ use crate::core::feature::Feature;
 use crate::core::format::{format_inline_into, push_indent};
 
 /// Embedded ordered list CSS stylesheet.
-pub const CSS: &str = include_str!("ordered_list.css");
+pub const CSS: &str = include_str!("ordered.css");
 
 /// Ordered list feature renderer handling numbered and ordered list items.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
-pub struct OrderedListFeature;
+pub struct OrderedFeature;
 
-impl OrderedListFeature {
+impl OrderedFeature {
     /// Creates a new ordered list feature instance.
     ///
     /// # Examples
     ///
     /// ```
-    /// use doc2flow::features::ordered_list::OrderedListFeature;
+    /// use doc2flow::features::ordered::OrderedFeature;
     ///
-    /// let feature = OrderedListFeature::new();
+    /// let feature = OrderedFeature::new();
     /// ```
     pub const fn new() -> Self {
         Self
     }
 }
 
-impl Feature for OrderedListFeature {
+impl Feature for OrderedFeature {
     /// Converts an ordered list item document element into an HTML string representation.
     ///
     /// # Examples
@@ -36,9 +36,9 @@ impl Feature for OrderedListFeature {
     /// ```
     /// use doc2flow::core::document::{DocumentElement, DocumentParameters};
     /// use doc2flow::core::feature::Feature;
-    /// use doc2flow::features::ordered_list::OrderedListFeature;
+    /// use doc2flow::features::ordered::OrderedFeature;
     ///
-    /// let feature = OrderedListFeature::new();
+    /// let feature = OrderedFeature::new();
     /// let elem = DocumentElement::ordered_list_item(1, "First item");
     /// let params = DocumentParameters::default();
     /// let html = feature.to_html(&elem, "", 1, 0, &params);
@@ -108,8 +108,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ordered_list_empty_for_unsupported_elements() {
-        let feature = OrderedListFeature::new();
+    fn test_ordered_empty_for_unsupported_elements() {
+        let feature = OrderedFeature::new();
         let text = DocumentElement::text("Regular text");
         assert_eq!(
             feature.to_html(&text, "", 0, 0, &DocumentParameters::default()),
@@ -118,14 +118,14 @@ mod tests {
     }
 
     #[test]
-    fn test_ordered_list_feature_constructor_new() {
-        let feature = OrderedListFeature::new();
-        assert_eq!(feature, OrderedListFeature);
+    fn test_ordered_feature_constructor_new() {
+        let feature = OrderedFeature::new();
+        assert_eq!(feature, OrderedFeature);
     }
 
     #[test]
-    fn test_ordered_list_feature_css() {
-        let feature = OrderedListFeature::new();
+    fn test_ordered_feature_css() {
+        let feature = OrderedFeature::new();
         let css = feature.css().expect("ordered list css should exist");
         assert!(css.contains("--order-marker-color:"));
         assert!(css.contains(".order-marker"));
@@ -133,8 +133,8 @@ mod tests {
     }
 
     #[test]
-    fn test_ordered_list_renders_root() {
-        let feature = OrderedListFeature::new();
+    fn test_ordered_renders_root() {
+        let feature = OrderedFeature::new();
         let element = DocumentElement::ordered_list_item(1, "First numbered item");
         let html = feature.to_html(&element, "", 1, 0, &DocumentParameters::default());
         let expected = concat!(
@@ -149,8 +149,8 @@ mod tests {
     }
 
     #[test]
-    fn test_ordered_list_renders_inline_formatting() {
-        let feature = OrderedListFeature::new();
+    fn test_ordered_renders_inline_formatting() {
+        let feature = OrderedFeature::new();
         let element = DocumentElement::ordered_list_item(
             2,
             "Step with **bold**, *italic*, ~~strike~~, `code`, [link](https://example.com), and <special> & characters",
@@ -168,8 +168,8 @@ mod tests {
     }
 
     #[test]
-    fn test_ordered_list_renders_with_depth() {
-        let feature = OrderedListFeature::new();
+    fn test_ordered_renders_with_depth() {
+        let feature = OrderedFeature::new();
         let element = DocumentElement::ordered_list_item(1, "Sub-step item");
         let html = feature.to_html(&element, "", 2, 1, &DocumentParameters::default());
         let expected = concat!(
@@ -184,8 +184,8 @@ mod tests {
     }
 
     #[test]
-    fn test_ordered_list_renders_with_children() {
-        let feature = OrderedListFeature::new();
+    fn test_ordered_renders_with_children() {
+        let feature = OrderedFeature::new();
         let element = DocumentElement::ordered_list_item(1, "Parent order");
         let child_html = "    <div class=\"item order-item\" style=\"--indent: 1;\">\n      <span class=\"order-marker\">1.</span>\n      <span class=\"order-content\">\n        Child item\n      </span>\n    </div>\n";
         let html = feature.to_html(

@@ -13,7 +13,7 @@
 
 ## 2. Rust
 - **Core:** Idiomatic, newtypes, 1-path exports, NO `unsafe`
-- **Clean:** Remove dead/obsolete code when adding new code.
+- **Clean:** Zero legacy debt/compat shims. Remove dead/obsolete code when adding new code.
 - **Consts:** Feature constants local in `src/features/<name>/module.rs` (NO central dumpster). App metadata/limits ONLY in `src/core/constants.rs`.
 - **CLI:** Identical validation for space (`-o ""`) vs equals (`-o=`) syntax. Reject empty values uniformly (`val.as_ref().is_empty()`).
 - **Errors:** Stdlib+`Doc2FlowError` (NO `anyhow`/`eyre`). `Result`=expected. `panic!`=bugs/stop (detailed msgs). NO `catch_unwind`. Safe bounds/slicing on diagnostic buffers. `From` conversions (NO `.to_<domain>()`). NO manual buffer micro-allocs on error paths; use `format!` or static strings.

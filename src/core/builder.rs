@@ -50,10 +50,10 @@ pub fn assemble_assets(features: &DocumentFeature) -> (String, String) {
     }
 
     for (name, is_active) in [
-        ("bullet_list", features.bullet_list),
-        ("code_block", features.code_block),
+        ("bullet", features.bullet),
+        ("code", features.code_block),
         ("image", features.image),
-        ("ordered_list", features.ordered_list),
+        ("ordered", features.ordered),
         ("shoutout", features.shoutout),
         ("table", features.table),
         ("task", features.task),
@@ -166,7 +166,7 @@ fn render_element_with_depth(
             for child in children {
                 inner.push_str(&render_element_with_depth(child, indent, depth + 1, parameters));
             }
-            ("bullet_list", inner)
+            ("bullet", inner)
         }
         DocumentElement::CheckBoxItem { children, .. } => {
             let mut inner = String::new();
@@ -175,7 +175,7 @@ fn render_element_with_depth(
             }
             ("task", inner)
         }
-        DocumentElement::CodeBlock { .. } => ("code_block", String::new()),
+        DocumentElement::CodeBlock { .. } => ("code", String::new()),
         DocumentElement::HorizontalRule => ("core", String::new()),
         DocumentElement::Image { .. } => ("image", String::new()),
         DocumentElement::OrderedListItem { children, .. } => {
@@ -183,7 +183,7 @@ fn render_element_with_depth(
             for child in children {
                 inner.push_str(&render_element_with_depth(child, indent, depth + 1, parameters));
             }
-            ("ordered_list", inner)
+            ("ordered", inner)
         }
         DocumentElement::Section { children, .. } => {
             let mut inner = String::new();

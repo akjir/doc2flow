@@ -31,13 +31,13 @@ pub trait Feature {
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct DocumentFeature {
     /// Indicates whether bullet lists are present.
-    pub bullet_list: bool,
+    pub bullet: bool,
     /// Indicates whether code blocks are present.
     pub code_block: bool,
     /// Indicates whether images are present.
     pub image: bool,
     /// Indicates whether ordered lists are present.
-    pub ordered_list: bool,
+    pub ordered: bool,
     /// Indicates whether shoutout callouts are present.
     pub shoutout: bool,
     /// Indicates whether tables are present.
@@ -61,10 +61,10 @@ impl DocumentFeature {
     /// ```
     pub const fn new() -> Self {
         Self {
-            bullet_list: false,
+            bullet: false,
             code_block: false,
             image: false,
-            ordered_list: false,
+            ordered: false,
             shoutout: false,
             table: false,
             task: false,
@@ -74,10 +74,10 @@ impl DocumentFeature {
 
     /// Returns `true` if all feature flags are enabled.
     pub const fn is_all(self) -> bool {
-        self.bullet_list
+        self.bullet
             && self.code_block
             && self.image
-            && self.ordered_list
+            && self.ordered
             && self.shoutout
             && self.table
             && self.task
@@ -86,10 +86,10 @@ impl DocumentFeature {
 
     /// Returns `true` if no feature flags are enabled.
     pub const fn is_empty(self) -> bool {
-        !self.bullet_list
+        !self.bullet
             && !self.code_block
             && !self.image
-            && !self.ordered_list
+            && !self.ordered
             && !self.shoutout
             && !self.table
             && !self.task
@@ -115,8 +115,8 @@ impl DocumentFeature {
     pub fn to_features_string(&self) -> String {
         let mut out = String::with_capacity(96);
         out.push_str("core");
-        if self.bullet_list {
-            out.push_str(", bullet_list");
+        if self.bullet {
+            out.push_str(", bullet");
         }
         if self.code_block {
             out.push_str(", code_block");
@@ -124,8 +124,8 @@ impl DocumentFeature {
         if self.image {
             out.push_str(", image");
         }
-        if self.ordered_list {
-            out.push_str(", ordered_list");
+        if self.ordered {
+            out.push_str(", ordered");
         }
         if self.shoutout {
             out.push_str(", shoutout");
@@ -193,7 +193,7 @@ fn scan_element(element: &DocumentElement, features: &mut DocumentFeature) {
             scan_elements(children, features);
         }
         DocumentElement::BulletListItem { children, .. } => {
-            features.bullet_list = true;
+            features.bullet = true;
             scan_elements(children, features);
         }
         DocumentElement::CheckBoxItem { children, .. } => {
@@ -207,7 +207,7 @@ fn scan_element(element: &DocumentElement, features: &mut DocumentFeature) {
             features.image = true;
         }
         DocumentElement::OrderedListItem { children, .. } => {
-            features.ordered_list = true;
+            features.ordered = true;
             scan_elements(children, features);
         }
         DocumentElement::Shoutout { .. } => {
@@ -278,11 +278,11 @@ mod tests {
         let features = DocumentFeature::from(&doc);
         assert!(!features.is_empty());
         assert!(features.is_all());
-        assert!(features.bullet_list);
+        assert!(features.bullet);
         assert!(features.task);
         assert!(features.code_block);
         assert!(features.image);
-        assert!(features.ordered_list);
+        assert!(features.ordered);
         assert!(features.shoutout);
         assert!(features.table);
         assert!(features.unknown);
@@ -328,8 +328,8 @@ mod tests {
         let features = DocumentFeature::from(&doc);
         assert!(!features.is_empty());
         assert!(!features.is_all());
-        assert!(features.bullet_list);
-        assert!(features.ordered_list);
+        assert!(features.bullet);
+        assert!(features.ordered);
         assert!(features.task);
         assert!(!features.image);
         assert!(!features.code_block);
@@ -373,11 +373,11 @@ mod tests {
         assert_eq!(features, DocumentFeature::default());
         assert!(features.is_empty());
         assert!(!features.is_all());
-        assert!(!features.bullet_list);
+        assert!(!features.bullet);
         assert!(!features.task);
         assert!(!features.code_block);
         assert!(!features.image);
-        assert!(!features.ordered_list);
+        assert!(!features.ordered);
         assert!(!features.shoutout);
         assert!(!features.table);
         assert!(!features.unknown);
@@ -390,7 +390,7 @@ mod tests {
         let single_features = DocumentFeature::from(&single_feature_doc);
         assert!(!single_features.is_empty());
         assert!(!single_features.is_all());
-        assert!(single_features.bullet_list);
+        assert!(single_features.bullet);
         assert!(!single_features.code_block);
         assert!(!single_features.table);
         assert!(!single_features.unknown);
@@ -421,10 +421,10 @@ mod tests {
         assert!(!six_features.is_empty());
         assert!(!six_features.is_all());
         assert!(!six_features.image);
-        assert!(six_features.bullet_list);
+        assert!(six_features.bullet);
         assert!(six_features.task);
         assert!(six_features.code_block);
-        assert!(six_features.ordered_list);
+        assert!(six_features.ordered);
         assert!(six_features.shoutout);
         assert!(six_features.table);
         assert!(!six_features.unknown);
@@ -433,17 +433,17 @@ mod tests {
     #[test]
     fn test_to_features_string_all() {
         let features = DocumentFeature {
-            bullet_list: true,
+            bullet: true,
             code_block: true,
             image: true,
-            ordered_list: true,
+            ordered: true,
             shoutout: true,
             table: true,
             task: true,
             unknown: true,
         };
         let expected =
-            "core, bullet_list, code_block, image, ordered_list, shoutout, table, task, unknown";
+            "core, bullet, code_block, image, ordered, shoutout, table, task, unknown";
         assert_eq!(features.to_features_string(), expected);
         assert_eq!(to_features_string(&features), expected);
         assert_eq!(features.to_string(), expected);
@@ -452,20 +452,20 @@ mod tests {
     #[test]
     fn test_to_features_string_combinations() {
         let mut features = DocumentFeature::default();
-        features.bullet_list = true;
+        features.bullet = true;
         features.table = true;
-        assert_eq!(features.to_features_string(), "core, bullet_list, table");
+        assert_eq!(features.to_features_string(), "core, bullet, table");
 
         features.image = true;
         assert_eq!(
             features.to_features_string(),
-            "core, bullet_list, image, table"
+            "core, bullet, image, table"
         );
 
         features.unknown = true;
         assert_eq!(
             features.to_features_string(),
-            "core, bullet_list, image, table, unknown"
+            "core, bullet, image, table, unknown"
         );
     }
 

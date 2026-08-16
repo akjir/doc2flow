@@ -1,7 +1,7 @@
 //! Central feature registry exposing available vertical slices.
 
-#[path = "bullet_list/module.rs"]
-pub mod bullet_list;
+#[path = "bullet/module.rs"]
+pub mod bullet;
 
 #[path = "code/module.rs"]
 pub mod code;
@@ -12,8 +12,8 @@ pub mod core;
 #[path = "image/module.rs"]
 pub mod image;
 
-#[path = "ordered_list/module.rs"]
-pub mod ordered_list;
+#[path = "ordered/module.rs"]
+pub mod ordered;
 
 #[path = "table/module.rs"]
 pub mod table;
@@ -25,17 +25,17 @@ pub mod task;
 pub mod unknown;
 
 use crate::core::feature::Feature;
-pub use bullet_list::BulletListFeature;
+pub use bullet::BulletFeature;
 pub use code::CodeFeature;
 pub use core::CoreFeature;
 pub use image::ImageFeature;
-pub use ordered_list::OrderedListFeature;
+pub use ordered::OrderedFeature;
 pub use table::TableFeature;
 pub use task::TaskFeature;
 pub use unknown::UnknownFeature;
 
 /// Static instance of the bullet list feature to avoid runtime allocations.
-static BULLET_LIST_FEATURE: BulletListFeature = BulletListFeature;
+static BULLET_FEATURE: BulletFeature = BulletFeature;
 
 /// Static instance of the code feature to avoid runtime allocations.
 static CODE_FEATURE: CodeFeature = CodeFeature;
@@ -47,7 +47,7 @@ static CORE_FEATURE: CoreFeature = CoreFeature;
 static IMAGE_FEATURE: ImageFeature = ImageFeature;
 
 /// Static instance of the ordered list feature to avoid runtime allocations.
-static ORDERED_LIST_FEATURE: OrderedListFeature = OrderedListFeature;
+static ORDERED_FEATURE: OrderedFeature = OrderedFeature;
 
 /// Static instance of the table feature to avoid runtime allocations.
 static TABLE_FEATURE: TableFeature = TableFeature;
@@ -65,27 +65,24 @@ static UNKNOWN_FEATURE: UnknownFeature = UnknownFeature;
 /// ```
 /// use doc2flow::features::get_feature;
 ///
-/// assert!(get_feature("bullet_list").is_some());
+/// assert!(get_feature("bullet").is_some());
 /// assert!(get_feature("code").is_some());
-/// assert!(get_feature("code_block").is_some());
 /// assert!(get_feature("core").is_some());
 /// assert!(get_feature("image").is_some());
-/// assert!(get_feature("images").is_some());
-/// assert!(get_feature("ordered_list").is_some());
+/// assert!(get_feature("ordered").is_some());
 /// assert!(get_feature("table").is_some());
-/// assert!(get_feature("tables").is_some());
 /// assert!(get_feature("task").is_some());
 /// assert!(get_feature("unknown").is_some());
 /// assert!(get_feature("non_existent").is_none());
 /// ```
 pub fn get_feature(name: &str) -> Option<&'static dyn Feature> {
     match name {
-        "bullet_list" => Some(&BULLET_LIST_FEATURE),
-        "code" | "code_block" => Some(&CODE_FEATURE),
+        "bullet" => Some(&BULLET_FEATURE),
+        "code" => Some(&CODE_FEATURE),
         "core" => Some(&CORE_FEATURE),
-        "image" | "images" => Some(&IMAGE_FEATURE),
-        "ordered_list" => Some(&ORDERED_LIST_FEATURE),
-        "table" | "tables" => Some(&TABLE_FEATURE),
+        "image" => Some(&IMAGE_FEATURE),
+        "ordered" => Some(&ORDERED_FEATURE),
+        "table" => Some(&TABLE_FEATURE),
         "task" => Some(&TASK_FEATURE),
         "unknown" => Some(&UNKNOWN_FEATURE),
         _ => None,
@@ -98,8 +95,8 @@ mod tests {
     use crate::core::document::{DocumentElement, DocumentParameters};
 
     #[test]
-    fn test_get_feature_returns_bullet_list() {
-        let bullet_feature = get_feature("bullet_list").expect("bullet_list feature should exist");
+    fn test_get_feature_returns_bullet() {
+        let bullet_feature = get_feature("bullet").expect("bullet feature should exist");
         let element = DocumentElement::bullet_list_item("Bullet item");
         assert_eq!(
             bullet_feature.to_html(&element, "", 1, 0, &DocumentParameters::default()),
@@ -131,12 +128,6 @@ mod tests {
             code_feature.to_html(&element, "", 1, 0, &DocumentParameters::default()),
             "  <pre class=\"code-default\"><code>fn main() {}</code></pre>\n"
         );
-
-        let code_block_feature = get_feature("code_block").expect("code_block alias should exist");
-        assert_eq!(
-            code_block_feature.to_html(&element, "", 1, 0, &DocumentParameters::default()),
-            "  <pre class=\"code-default\"><code>fn main() {}</code></pre>\n"
-        );
     }
 
     #[test]
@@ -157,18 +148,11 @@ mod tests {
             image_feature.to_html(&element, "", 1, 0, &DocumentParameters::default()),
             "  <div class=\"image-item\">\n    <img src=\"pic.png\" alt=\"Alt\" />\n  </div>\n"
         );
-
-        let images_alias_feature = get_feature("images").expect("images alias should exist");
-        assert_eq!(
-            images_alias_feature.to_html(&element, "", 1, 0, &DocumentParameters::default()),
-            "  <div class=\"image-item\">\n    <img src=\"pic.png\" alt=\"Alt\" />\n  </div>\n"
-        );
     }
 
     #[test]
-    fn test_get_feature_returns_ordered_list() {
-        let ordered_feature =
-            get_feature("ordered_list").expect("ordered_list feature should exist");
+    fn test_get_feature_returns_ordered() {
+        let ordered_feature = get_feature("ordered").expect("ordered feature should exist");
         let element = DocumentElement::ordered_list_item(1, "Ordered item");
         assert_eq!(
             ordered_feature.to_html(&element, "", 1, 0, &DocumentParameters::default()),
@@ -187,12 +171,6 @@ mod tests {
             table_feature.to_html(&element, "", 1, 0, &DocumentParameters::default()),
             "  <div class=\"table-wrap\">\n    <table class=\"table-default\">\n      <thead>\n        <tr>\n          <th>Col</th>\n        </tr>\n      </thead>\n    </table>\n  </div>\n"
         );
-
-        let tables_alias_feature = get_feature("tables").expect("tables alias should exist");
-        assert_eq!(
-            tables_alias_feature.to_html(&element, "", 1, 0, &DocumentParameters::default()),
-            "  <div class=\"table-wrap\">\n    <table class=\"table-default\">\n      <thead>\n        <tr>\n          <th>Col</th>\n        </tr>\n      </thead>\n    </table>\n  </div>\n"
-        );
     }
 
     #[test]
@@ -208,6 +186,11 @@ mod tests {
     #[test]
     fn test_get_feature_unknown_returns_none() {
         assert!(get_feature("non_existent").is_none());
+        assert!(get_feature("bullet_list").is_none());
+        assert!(get_feature("ordered_list").is_none());
+        assert!(get_feature("code_block").is_none());
+        assert!(get_feature("images").is_none());
+        assert!(get_feature("tables").is_none());
         assert!(get_feature("bullet_list_item").is_none());
         assert!(get_feature("check_box_item").is_none());
         assert!(get_feature("ordered_list_item").is_none());

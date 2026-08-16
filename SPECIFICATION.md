@@ -77,7 +77,7 @@ Doc2Flow is a high-performance, single-binary CLI tool that compiles Markdown do
 ```
 - **Utility Subsystem (`src/core/utils/`):** Pure, domain-agnostic library modules. Direct `std::fs` calls outside `io.rs` are PROHIBITED.
 - **Core Engine (`src/core/`):** Houses the AST data model, zero-alloc Markdown token parser, builder assembler, and compiler-style error diagnostics.
-- **Vertical Feature Slices (`src/features/<feature>/`):** Isolated modules (`bullet_list`, `code`, `core`, `image`, `ordered_list`, `table`, `task`, `unknown`). Each slice encapsulates its HTML rendering, CSS (`<name>.css`), JS (`<name>.js`), and local constants.
+- **Vertical Feature Slices (`src/features/<feature>/`):** Isolated modules (`bullet`, `code`, `core`, `image`, `ordered`, `table`, `task`, `unknown`). Each slice encapsulates its HTML rendering, CSS (`<name>.css`), JS (`<name>.js`), and local constants.
 - **Conditional Asset Assembly:** If a feature is absent from a document, zero CSS rules and zero JS code for that feature SHALL be emitted into the output HTML.
 
 ---
@@ -204,10 +204,10 @@ pub struct DocumentParameters {
 }
 
 pub struct DocumentFeature {
-    pub bullet_list: bool,
+    pub bullet: bool,
     pub code_block: bool,
     pub image: bool,
-    pub ordered_list: bool,
+    pub ordered: bool,
     pub shoutout: bool,
     pub table: bool,
     pub task: bool,
@@ -293,10 +293,12 @@ doc2flow/
 │   │   └── utils/            # Domain-agnostic utilities (IO, Base64, MIME, Hasher, URI, Time)
 │   └── features/             # Vertical slice feature modules
 │       ├── mod.rs            # Feature registry and dispatcher
-│       ├── bullet_list/      # Bullet list vertical slice
+│       ├── bullet/           # Bullet list vertical slice
 │       ├── code/             # Code block vertical slice
 │       ├── core/             # Core base styles and client scripts
-│       ├── ordered_list/     # Ordered list vertical slice
+│       ├── image/            # Image display and lightbox slice
+│       ├── ordered/          # Ordered list vertical slice
+│       ├── table/            # Table rendering slice
 │       ├── task/             # Interactive task checkbox slice
 │       └── unknown/          # Unrecognized element fallback slice
 ├── tests/
