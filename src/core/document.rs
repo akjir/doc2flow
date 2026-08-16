@@ -232,6 +232,25 @@ impl DocumentElement {
         Self::Unknown(content.into())
     }
 
+    /// Returns the corresponding [`DocumentElementId`] for this element.
+    #[must_use]
+    pub const fn element_id(&self) -> DocumentElementId {
+        match self {
+            Self::BlockDirective { .. } => DocumentElementId::BlockDirective,
+            Self::BulletListItem { .. } => DocumentElementId::BulletListItem,
+            Self::CheckBoxItem { .. } => DocumentElementId::CheckBoxItem,
+            Self::CodeBlock { .. } => DocumentElementId::CodeBlock,
+            Self::HorizontalRule => DocumentElementId::HorizontalRule,
+            Self::Image { .. } => DocumentElementId::Image,
+            Self::OrderedListItem { .. } => DocumentElementId::OrderedListItem,
+            Self::Section { .. } => DocumentElementId::Section,
+            Self::Shoutout { .. } => DocumentElementId::Shoutout,
+            Self::Table { .. } => DocumentElementId::Table,
+            Self::Text(_) => DocumentElementId::Text,
+            Self::Unknown(_) => DocumentElementId::Unknown,
+        }
+    }
+
     /// Appends a child element to this container element.
     ///
     /// # Errors
@@ -285,6 +304,41 @@ impl DocumentElement {
             )),
         }
     }
+}
+
+/// Discriminant identifier representing each variant of [`DocumentElement`].
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[repr(u8)]
+pub enum DocumentElementId {
+    /// Identifier for block directive containers.
+    BlockDirective = 0,
+    /// Identifier for bullet list items.
+    BulletListItem = 1,
+    /// Identifier for checkbox list items.
+    CheckBoxItem = 2,
+    /// Identifier for code blocks.
+    CodeBlock = 3,
+    /// Identifier for horizontal rules.
+    HorizontalRule = 4,
+    /// Identifier for images.
+    Image = 5,
+    /// Identifier for ordered list items.
+    OrderedListItem = 6,
+    /// Identifier for sections.
+    Section = 7,
+    /// Identifier for shoutouts.
+    Shoutout = 8,
+    /// Identifier for tables.
+    Table = 9,
+    /// Identifier for plain text lines.
+    Text = 10,
+    /// Identifier for unrecognized fallback content.
+    Unknown = 11,
+}
+
+impl DocumentElementId {
+    /// Total number of distinct document element identifiers.
+    pub const COUNT: usize = 12;
 }
 
 /// Represents document header elements and configuration.
@@ -579,8 +633,7 @@ mod tests {
     #[test]
     fn test_document_parameters_boolean_parsing() {
         let truthy_cases = [
-            "true", "True", "TRUE", "yes", "Yes", "YES", "y", "Y", "1", " true ", " yes ",
-            " 1 ",
+            "true", "True", "TRUE", "yes", "Yes", "YES", "y", "Y", "1", " true ", " yes ", " 1 ",
         ];
         for val in truthy_cases {
             let mut map = HashMap::new();
@@ -896,5 +949,58 @@ mod tests {
         let table = DocumentElement::table(alignments.clone(), rows.clone());
 
         assert_eq!(table, DocumentElement::Table { alignments, rows });
+    }
+
+    #[test]
+    fn test_document_element_id_mapping() {
+        assert_eq!(DocumentElementId::COUNT, 12);
+        assert_eq!(
+            DocumentElement::block_directive("test", vec![]).element_id(),
+            DocumentElementId::BlockDirective
+        );
+        assert_eq!(
+            DocumentElement::bullet_list_item("item").element_id(),
+            DocumentElementId::BulletListItem
+        );
+        assert_eq!(
+            DocumentElement::check_box_item(false, "item").element_id(),
+            DocumentElementId::CheckBoxItem
+        );
+        assert_eq!(
+            DocumentElement::code_block(None::<String>, "code").element_id(),
+            DocumentElementId::CodeBlock
+        );
+        assert_eq!(
+            DocumentElement::horizontal_rule().element_id(),
+            DocumentElementId::HorizontalRule
+        );
+        assert_eq!(
+            DocumentElement::image("alt", "url").element_id(),
+            DocumentElementId::Image
+        );
+        assert_eq!(
+            DocumentElement::ordered_list_item(1, "item").element_id(),
+            DocumentElementId::OrderedListItem
+        );
+        assert_eq!(
+            DocumentElement::section(1, "title", vec![]).element_id(),
+            DocumentElementId::Section
+        );
+        assert_eq!(
+            DocumentElement::shoutout(ShoutoutElementKind::Note, "text").element_id(),
+            DocumentElementId::Shoutout
+        );
+        assert_eq!(
+            DocumentElement::table(vec![], vec![]).element_id(),
+            DocumentElementId::Table
+        );
+        assert_eq!(
+            DocumentElement::text("text").element_id(),
+            DocumentElementId::Text
+        );
+        assert_eq!(
+            DocumentElement::unknown("raw").element_id(),
+            DocumentElementId::Unknown
+        );
     }
 }

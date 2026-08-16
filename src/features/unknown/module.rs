@@ -1,12 +1,15 @@
 //! Unknown vertical slice feature module.
 
-use crate::core::document::{DocumentElement, DocumentParameters};
-use crate::core::feature::Feature;
+use crate::core::document::{DocumentElement, DocumentElementId, DocumentParameters};
+use crate::core::feature::FeatureModule;
 use crate::core::format::push_indent;
-use crate::core::renderer::HtmlRenderer;
+use crate::core::renderer::{DocumentElementRenderer, HtmlRenderer};
 
 /// Embedded unknown CSS styles for fallback elements.
 pub const CSS: &str = include_str!("unknown.css");
+
+/// Supported document element identifiers for unrecognized unknown elements.
+const UNKNOWN_SUPPORTED: [DocumentElementId; 1] = [DocumentElementId::Unknown];
 
 /// Unknown feature renderer handling unrecognized fallback elements.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -20,9 +23,12 @@ impl UnknownFeature {
     }
 }
 
-impl Feature for UnknownFeature {
-    /// Intercepts the rendering of unknown fallback elements into the output buffer.
-    fn try_render_body(
+impl DocumentElementRenderer for UnknownFeature {
+    fn supported(&self) -> &[DocumentElementId] {
+        &UNKNOWN_SUPPORTED
+    }
+
+    fn render_element(
         &self,
         element: &DocumentElement,
         indent: usize,
@@ -30,25 +36,26 @@ impl Feature for UnknownFeature {
         _parameters: &DocumentParameters,
         out: &mut String,
         _renderer: &HtmlRenderer,
-    ) -> bool {
-        match element {
-            DocumentElement::Unknown(text) => {
-                push_indent(out, indent);
-                out.push_str("<p class=\"unknown-default\">\n");
-                for line in text.lines() {
-                    push_indent(out, indent + 1);
-                    out.push_str(line);
-                    out.push('\n');
-                }
-                push_indent(out, indent);
-                out.push_str("</p>\n");
-                true
+    ) {
+        if let DocumentElement::Unknown(text) = element {
+            push_indent(out, indent);
+            out.push_str("<p class=\"unknown-default\">\n");
+            for line in text.lines() {
+                push_indent(out, indent + 1);
+                out.push_str(line);
+                out.push('\n');
             }
-            _ => false,
+            push_indent(out, indent);
+            out.push_str("</p>\n");
         }
     }
+}
 
-    /// Returns the embedded CSS stylesheet for the unknown feature.
+impl FeatureModule for UnknownFeature {
+    fn name(&self) -> &'static str {
+        "unknown"
+    }
+
     fn css(&self) -> Option<&'static str> {
         Some(CSS)
     }
@@ -72,14 +79,14 @@ mod tests {
         let element = DocumentElement::unknown("Unrecognized raw markdown line");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render_body(
+        feature.render_element(
             &element,
             1,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         assert_eq!(
             out,
             "  <p class=\"unknown-default\">\n    Unrecognized raw markdown line\n  </p>\n"
@@ -92,14 +99,14 @@ mod tests {
         let text = DocumentElement::text("Regular text");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(!feature.try_render_body(
+        feature.render_element(
             &text,
             0,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         assert!(out.is_empty());
     }
 }

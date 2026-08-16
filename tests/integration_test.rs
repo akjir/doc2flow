@@ -1067,11 +1067,7 @@ fn test_cli_core_arguments_legacy_flag() {
 fn test_parser_and_builder_pipeline_integration() {
     let input = "---\ntitle: \"Pipeline Test\"\n---\n# Pipeline Heading\n\nContent paragraph\n\n- [ ] Task item";
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
-    let features = doc2flow::core::DocumentFeature::from(&document);
-    assert!(features.contains(doc2flow::core::DocumentFeature::TASK));
-    assert!(!features.contains(doc2flow::core::DocumentFeature::TABLE));
-    assert!(features.to_string().contains("task"));
-    let content = doc2flow::core::builder::build(&document, &features);
+    let content = doc2flow::core::builder::build(&document);
     assert!(!content.is_empty());
     assert!(content.contains("      <h1>Pipeline Heading</h1>"));
     assert!(
@@ -1089,9 +1085,7 @@ fn test_parser_and_builder_pipeline_integration() {
 fn test_core_horizontal_rule_pipeline_integration() {
     let input = "---\ntitle: \"HR Pipeline Test\"\n---\n# Main Heading\n\nParagraph before\n\n---\n\n----\n\nParagraph after";
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
-    let features = doc2flow::core::DocumentFeature::from(&document);
-    assert!(features.to_string().contains("core"));
-    let content = doc2flow::core::builder::build(&document, &features);
+    let content = doc2flow::core::builder::build(&document);
     assert!(content.contains("<title>HR Pipeline Test</title>"));
     assert!(content.contains("<meta name=\"features\" content=\"core\">"));
     assert!(content.contains("      <h1>Main Heading</h1>"));
@@ -1112,10 +1106,7 @@ fn test_core_horizontal_rule_pipeline_integration() {
 fn test_bullet_pipeline_integration() {
     let input = "---\ntitle: \"Bullet Pipeline Test\"\n---\n# List Section\n\n- Root bullet item\n  - Nested bullet **item** with `code`";
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
-    let features = doc2flow::core::DocumentFeature::from(&document);
-    assert!(features.contains(doc2flow::core::DocumentFeature::BULLET));
-    assert!(features.to_string().contains("bullet"));
-    let content = doc2flow::core::builder::build(&document, &features);
+    let content = doc2flow::core::builder::build(&document);
     assert!(content.contains("<title>Bullet Pipeline Test</title>"));
     assert!(content.contains("<meta name=\"features\" content=\"core, bullet\">"));
     assert!(content.contains("--bullet-marker-color:"));
@@ -1128,10 +1119,7 @@ fn test_bullet_pipeline_integration() {
 fn test_ordered_pipeline_integration() {
     let input = "---\ntitle: \"Ordered Pipeline Test\"\n---\n# Ordered Section\n\n1. First ordered step\n2. Second **ordered** step\n  1. Sub-step alpha\n    1. Sub-sub-step roman";
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
-    let features = doc2flow::core::DocumentFeature::from(&document);
-    assert!(features.contains(doc2flow::core::DocumentFeature::ORDERED));
-    assert!(features.to_string().contains("ordered"));
-    let content = doc2flow::core::builder::build(&document, &features);
+    let content = doc2flow::core::builder::build(&document);
     assert!(content.contains("<title>Ordered Pipeline Test</title>"));
     assert!(content.contains("<meta name=\"features\" content=\"core, ordered\">"));
     assert!(content.contains("--order-marker-color:"));
@@ -1147,10 +1135,7 @@ fn test_ordered_pipeline_integration() {
 fn test_task_pipeline_integration() {
     let input = "---\ntitle: \"Checkbox Pipeline Test\"\n---\n# Checkbox Section\n\n- [ ] Pending task\n- [x] Done **task** with `code`\n  - [ ] Sub-task";
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
-    let features = doc2flow::core::DocumentFeature::from(&document);
-    assert!(features.contains(doc2flow::core::DocumentFeature::TASK));
-    assert!(features.to_string().contains("task"));
-    let content = doc2flow::core::builder::build(&document, &features);
+    let content = doc2flow::core::builder::build(&document);
     assert!(content.contains("<title>Checkbox Pipeline Test</title>"));
     assert!(content.contains("<meta name=\"features\" content=\"core, task\">"));
     assert!(content.contains(".check-marker"));
@@ -1166,10 +1151,7 @@ fn test_task_pipeline_integration() {
 fn test_table_pipeline_integration() {
     let input = "---\ntitle: \"Table Pipeline Test\"\n---\n# Table Section\n\n| Item | Qty | Status |\n| :--- | :---: | ---: |\n| **Widget A** | 42 | In Stock |\n| `Widget B` | 0 | *Out of Stock* |";
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
-    let features = doc2flow::core::DocumentFeature::from(&document);
-    assert!(features.contains(doc2flow::core::DocumentFeature::TABLE));
-    assert!(features.to_string().contains("table"));
-    let content = doc2flow::core::builder::build(&document, &features);
+    let content = doc2flow::core::builder::build(&document);
     assert!(content.contains("<title>Table Pipeline Test</title>"));
     assert!(content.contains("<meta name=\"features\" content=\"core, table\">"));
     assert!(content.contains("--table-border-color:"));

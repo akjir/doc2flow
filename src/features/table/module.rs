@@ -1,15 +1,18 @@
 //! Table vertical slice feature module.
 
-use crate::core::document::{DocumentElement, DocumentParameters, TableAlignment};
-use crate::core::feature::Feature;
+use crate::core::document::{DocumentElement, DocumentElementId, DocumentParameters, TableAlignment};
+use crate::core::feature::FeatureModule;
 use crate::core::format::{format_inline_into, push_indent};
-use crate::core::renderer::HtmlRenderer;
+use crate::core::renderer::{DocumentElementRenderer, HtmlRenderer};
 
 /// Embedded table CSS stylesheet.
 pub const CSS: &str = include_str!("table.css");
 
 /// Embedded table JavaScript client script.
 pub const JS: &str = include_str!("table.js");
+
+/// Supported document element identifiers for table elements.
+const TABLE_SUPPORTED: [DocumentElementId; 1] = [DocumentElementId::Table];
 
 /// Table feature renderer handling tabular layout and column alignments.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -31,9 +34,12 @@ impl TableFeature {
     }
 }
 
-impl Feature for TableFeature {
-    /// Intercepts the rendering of table elements into the output buffer.
-    fn try_render_body(
+impl DocumentElementRenderer for TableFeature {
+    fn supported(&self) -> &[DocumentElementId] {
+        &TABLE_SUPPORTED
+    }
+
+    fn render_element(
         &self,
         element: &DocumentElement,
         indent: usize,
@@ -41,29 +47,63 @@ impl Feature for TableFeature {
         _parameters: &DocumentParameters,
         out: &mut String,
         _renderer: &HtmlRenderer,
-    ) -> bool {
-        match element {
-            DocumentElement::Table { alignments, rows } => {
-                if rows.is_empty() {
-                    return true;
+    ) {
+        if let DocumentElement::Table { alignments, rows } = element {
+            if rows.is_empty() {
+                return;
+            }
+
+            push_indent(out, indent);
+            out.push_str("<div class=\"table-wrap\">\n");
+
+            push_indent(out, indent + 1);
+            out.push_str("<table class=\"table-default\">\n");
+
+            if let Some(header_row) = rows.first() {
+                push_indent(out, indent + 2);
+                out.push_str("<thead>\n");
+
+                push_indent(out, indent + 3);
+                out.push_str("<tr>\n");
+
+                for (col_idx, cell) in header_row.iter().enumerate() {
+                    push_indent(out, indent + 4);
+                    out.push_str("<th");
+                    match alignments.get(col_idx) {
+                        Some(TableAlignment::Left) => {
+                            out.push_str(" style=\"text-align: left;\"")
+                        }
+                        Some(TableAlignment::Center) => {
+                            out.push_str(" style=\"text-align: center;\"")
+                        }
+                        Some(TableAlignment::Right) => {
+                            out.push_str(" style=\"text-align: right;\"")
+                        }
+                        _ => {}
+                    }
+                    out.push('>');
+                    format_inline_into(out, cell);
+                    out.push_str("</th>\n");
                 }
 
-                push_indent(out, indent);
-                out.push_str("<div class=\"table-wrap\">\n");
+                push_indent(out, indent + 3);
+                out.push_str("</tr>\n");
 
-                push_indent(out, indent + 1);
-                out.push_str("<table class=\"table-default\">\n");
+                push_indent(out, indent + 2);
+                out.push_str("</thead>\n");
+            }
 
-                if let Some(header_row) = rows.first() {
-                    push_indent(out, indent + 2);
-                    out.push_str("<thead>\n");
+            if rows.len() > 1 {
+                push_indent(out, indent + 2);
+                out.push_str("<tbody>\n");
 
+                for row in &rows[1..] {
                     push_indent(out, indent + 3);
                     out.push_str("<tr>\n");
 
-                    for (col_idx, cell) in header_row.iter().enumerate() {
+                    for (col_idx, cell) in row.iter().enumerate() {
                         push_indent(out, indent + 4);
-                        out.push_str("<th");
+                        out.push_str("<td");
                         match alignments.get(col_idx) {
                             Some(TableAlignment::Left) => {
                                 out.push_str(" style=\"text-align: left;\"")
@@ -78,70 +118,35 @@ impl Feature for TableFeature {
                         }
                         out.push('>');
                         format_inline_into(out, cell);
-                        out.push_str("</th>\n");
+                        out.push_str("</td>\n");
                     }
 
                     push_indent(out, indent + 3);
                     out.push_str("</tr>\n");
-
-                    push_indent(out, indent + 2);
-                    out.push_str("</thead>\n");
                 }
 
-                if rows.len() > 1 {
-                    push_indent(out, indent + 2);
-                    out.push_str("<tbody>\n");
-
-                    for row in &rows[1..] {
-                        push_indent(out, indent + 3);
-                        out.push_str("<tr>\n");
-
-                        for (col_idx, cell) in row.iter().enumerate() {
-                            push_indent(out, indent + 4);
-                            out.push_str("<td");
-                            match alignments.get(col_idx) {
-                                Some(TableAlignment::Left) => {
-                                    out.push_str(" style=\"text-align: left;\"")
-                                }
-                                Some(TableAlignment::Center) => {
-                                    out.push_str(" style=\"text-align: center;\"")
-                                }
-                                Some(TableAlignment::Right) => {
-                                    out.push_str(" style=\"text-align: right;\"")
-                                }
-                                _ => {}
-                            }
-                            out.push('>');
-                            format_inline_into(out, cell);
-                            out.push_str("</td>\n");
-                        }
-
-                        push_indent(out, indent + 3);
-                        out.push_str("</tr>\n");
-                    }
-
-                    push_indent(out, indent + 2);
-                    out.push_str("</tbody>\n");
-                }
-
-                push_indent(out, indent + 1);
-                out.push_str("</table>\n");
-
-                push_indent(out, indent);
-                out.push_str("</div>\n");
-
-                true
+                push_indent(out, indent + 2);
+                out.push_str("</tbody>\n");
             }
-            _ => false,
+
+            push_indent(out, indent + 1);
+            out.push_str("</table>\n");
+
+            push_indent(out, indent);
+            out.push_str("</div>\n");
         }
     }
+}
 
-    /// Returns the embedded CSS stylesheet for the table feature.
+impl FeatureModule for TableFeature {
+    fn name(&self) -> &'static str {
+        "table"
+    }
+
     fn css(&self) -> Option<&'static str> {
         Some(CSS)
     }
 
-    /// Returns the embedded JavaScript client scripts for the table feature.
     fn javascript(&self) -> &[&'static str] {
         &[JS]
     }
@@ -186,14 +191,14 @@ mod tests {
         let text = DocumentElement::text("Regular text");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(!feature.try_render_body(
+        feature.render_element(
             &text,
             0,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         assert!(out.is_empty());
     }
 
@@ -203,14 +208,14 @@ mod tests {
         let element = DocumentElement::table(vec![], vec![]);
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render_body(
+        feature.render_element(
             &element,
             0,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         assert!(out.is_empty());
     }
 
@@ -223,14 +228,14 @@ mod tests {
         );
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render_body(
+        feature.render_element(
             &element,
             0,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         let expected = concat!(
             "<div class=\"table-wrap\">\n",
             "  <table class=\"table-default\">\n",
@@ -263,14 +268,14 @@ mod tests {
         );
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render_body(
+        feature.render_element(
             &element,
             1,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         let expected = concat!(
             "  <div class=\"table-wrap\">\n",
             "    <table class=\"table-default\">\n",
@@ -311,14 +316,14 @@ mod tests {
         );
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render_body(
+        feature.render_element(
             &element,
             0,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         let expected = concat!(
             "<div class=\"table-wrap\">\n",
             "  <table class=\"table-default\">\n",

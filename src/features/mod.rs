@@ -24,7 +24,6 @@ pub mod task;
 #[path = "unknown/module.rs"]
 pub mod unknown;
 
-use crate::core::feature::{DocumentFeature, Feature};
 pub use bullet::BulletFeature;
 pub use code::CodeFeature;
 pub use core::CoreFeature;
@@ -33,6 +32,8 @@ pub use ordered::OrderedFeature;
 pub use table::TableFeature;
 pub use task::TaskFeature;
 pub use unknown::UnknownFeature;
+
+use crate::core::feature::FeatureModule;
 
 /// Static instance of the bullet list feature to avoid runtime allocations.
 pub static BULLET_FEATURE: BulletFeature = BulletFeature;
@@ -58,8 +59,8 @@ pub static TASK_FEATURE: TaskFeature = TaskFeature;
 /// Static instance of the unknown feature to avoid runtime allocations.
 pub static UNKNOWN_FEATURE: UnknownFeature = UnknownFeature;
 
-/// Static collection of all standard features for default dispatch and inspection.
-pub static ALL_FEATURES: [&'static dyn Feature; 8] = [
+/// Static collection of all standard feature modules for default dispatch and inspection.
+pub static ALL_FEATURE_MODULES: [&'static dyn FeatureModule; 8] = [
     &CORE_FEATURE,
     &BULLET_FEATURE,
     &CODE_FEATURE,
@@ -70,36 +71,7 @@ pub static ALL_FEATURES: [&'static dyn Feature; 8] = [
     &UNKNOWN_FEATURE,
 ];
 
-/// Populates a fixed-size buffer with active feature references and returns the slice.
-pub fn get_active_features<'a>(
-    features: &DocumentFeature,
-    buffer: &'a mut [&'static dyn Feature; 8],
-) -> &'a [&'static dyn Feature] {
-    const MAPPED_FEATURES: [(DocumentFeature, &'static dyn Feature); 7] = [
-        (DocumentFeature::BULLET, &BULLET_FEATURE),
-        (DocumentFeature::CODE, &CODE_FEATURE),
-        (DocumentFeature::IMAGE, &IMAGE_FEATURE),
-        (DocumentFeature::ORDERED, &ORDERED_FEATURE),
-        (DocumentFeature::TABLE, &TABLE_FEATURE),
-        (DocumentFeature::TASK, &TASK_FEATURE),
-        (DocumentFeature::UNKNOWN, &UNKNOWN_FEATURE),
-    ];
-
-    let mut count = 0;
-    buffer[count] = &CORE_FEATURE;
-    count += 1;
-
-    for &(flag, feature_ref) in &MAPPED_FEATURES {
-        if features.contains(flag) {
-            buffer[count] = feature_ref;
-            count += 1;
-        }
-    }
-
-    &buffer[..count]
-}
-
-/// Returns a reference to the feature instance matching the given name with zero allocations.
+/// Returns a reference to the feature module instance matching the given name with zero allocations.
 ///
 /// # Examples
 ///
@@ -116,7 +88,8 @@ pub fn get_active_features<'a>(
 /// assert!(get_feature("unknown").is_some());
 /// assert!(get_feature("non_existent").is_none());
 /// ```
-pub fn get_feature(name: &str) -> Option<&'static dyn Feature> {
+#[must_use]
+pub fn get_feature(name: &str) -> Option<&'static dyn FeatureModule> {
     match name {
         "bullet" => Some(&BULLET_FEATURE),
         "code" => Some(&CODE_FEATURE),
@@ -142,14 +115,14 @@ mod tests {
         let element = DocumentElement::bullet_list_item("Bullet item");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(bullet_feature.try_render_body(
+        bullet_feature.render_element(
             &element,
             1,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         assert_eq!(
             out,
             "  <div class=\"item bullet-item\">\n    <span class=\"bullet-marker\">&bull;</span>\n    <span class=\"bullet-content\">\n      Bullet item\n    </span>\n  </div>\n"
@@ -162,14 +135,14 @@ mod tests {
         let unchecked = DocumentElement::check_box_item(false, "Pending task");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(task_feature.try_render_body(
+        task_feature.render_element(
             &unchecked,
             1,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         assert_eq!(
             out,
             "  <div class=\"item check-item\">\n    <span class=\"check-marker\">\n      <input type=\"checkbox\" class=\"check-box\" />\n    </span>\n    <span class=\"check-content\">\n      Pending task\n    </span>\n  </div>\n"
@@ -177,14 +150,14 @@ mod tests {
 
         let checked = DocumentElement::check_box_item(true, "Done task");
         let mut out_checked = String::new();
-        assert!(task_feature.try_render_body(
+        task_feature.render_element(
             &checked,
             1,
             0,
             &DocumentParameters::default(),
             &mut out_checked,
             &renderer,
-        ));
+        );
         assert_eq!(
             out_checked,
             "  <div class=\"item check-item checked\">\n    <span class=\"check-marker\">\n      <input type=\"checkbox\" class=\"check-box\" checked />\n    </span>\n    <span class=\"check-content\">\n      Done task\n    </span>\n  </div>\n"
@@ -197,14 +170,14 @@ mod tests {
         let element = DocumentElement::code_block(Some("rust"), "fn main() {}");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(code_feature.try_render_body(
+        code_feature.render_element(
             &element,
             1,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         assert_eq!(
             out,
             "  <pre class=\"code-default\"><code>fn main() {}</code></pre>\n"
@@ -217,14 +190,14 @@ mod tests {
         let element = DocumentElement::text("Hello");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(core_feature.try_render_body(
+        core_feature.render_element(
             &element,
             1,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         assert_eq!(
             out,
             "  <div class=\"item text-item\">\n    <span class=\"text-content\">\n      Hello\n    </span>\n  </div>\n"
@@ -237,14 +210,14 @@ mod tests {
         let element = DocumentElement::image("Alt", "pic.png");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(image_feature.try_render_body(
+        image_feature.render_element(
             &element,
             1,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         assert_eq!(
             out,
             "  <div class=\"image-item\">\n    <img src=\"pic.png\" alt=\"Alt\" />\n  </div>\n"
@@ -257,14 +230,14 @@ mod tests {
         let element = DocumentElement::ordered_list_item(1, "Ordered item");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(ordered_feature.try_render_body(
+        ordered_feature.render_element(
             &element,
             1,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         assert_eq!(
             out,
             "  <div class=\"item order-item\">\n    <span class=\"order-marker\">1.</span>\n    <span class=\"order-content\">\n      Ordered item\n    </span>\n  </div>\n"
@@ -280,14 +253,14 @@ mod tests {
         );
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(table_feature.try_render_body(
+        table_feature.render_element(
             &element,
             1,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         assert_eq!(
             out,
             "  <div class=\"table-wrap\">\n    <table class=\"table-default\">\n      <thead>\n        <tr>\n          <th>Col</th>\n        </tr>\n      </thead>\n    </table>\n  </div>\n"
@@ -300,14 +273,14 @@ mod tests {
         let element = DocumentElement::unknown("Raw line");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(unknown_feature.try_render_body(
+        unknown_feature.render_element(
             &element,
             1,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         assert_eq!(
             out,
             "  <p class=\"unknown-default\">\n    Raw line\n  </p>\n"

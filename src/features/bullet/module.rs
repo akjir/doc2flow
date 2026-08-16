@@ -2,13 +2,16 @@
 
 use std::fmt::Write as _;
 
-use crate::core::document::{DocumentElement, DocumentParameters};
-use crate::core::feature::Feature;
+use crate::core::document::{DocumentElement, DocumentElementId, DocumentParameters};
+use crate::core::feature::FeatureModule;
 use crate::core::format::{format_inline_into, push_indent};
-use crate::core::renderer::HtmlRenderer;
+use crate::core::renderer::{DocumentElementRenderer, HtmlRenderer};
 
 /// Embedded bullet list CSS stylesheet.
 pub const CSS: &str = include_str!("bullet.css");
+
+/// Supported document element identifiers for bullet list items.
+const BULLET_SUPPORTED: [DocumentElementId; 1] = [DocumentElementId::BulletListItem];
 
 /// Bullet list feature renderer handling bullet and unordered list items.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -30,9 +33,12 @@ impl BulletFeature {
     }
 }
 
-impl Feature for BulletFeature {
-    /// Intercepts the rendering of bullet list elements into the output buffer.
-    fn try_render_body(
+impl DocumentElementRenderer for BulletFeature {
+    fn supported(&self) -> &[DocumentElementId] {
+        &BULLET_SUPPORTED
+    }
+
+    fn render_element(
         &self,
         element: &DocumentElement,
         indent: usize,
@@ -40,42 +46,43 @@ impl Feature for BulletFeature {
         parameters: &DocumentParameters,
         out: &mut String,
         renderer: &HtmlRenderer,
-    ) -> bool {
-        match element {
-            DocumentElement::BulletListItem { content, children } => {
-                push_indent(out, indent);
-                out.push_str("<div class=\"item bullet-item\"");
-                if depth > 0 {
-                    let _ = write!(out, " style=\"--indent: {depth};\"");
-                }
-                out.push_str(">\n");
-
-                push_indent(out, indent + 1);
-                out.push_str("<span class=\"bullet-marker\">&bull;</span>\n");
-
-                push_indent(out, indent + 1);
-                out.push_str("<span class=\"bullet-content\">\n");
-
-                for line in content.lines() {
-                    push_indent(out, indent + 2);
-                    format_inline_into(out, line);
-                    out.push('\n');
-                }
-
-                push_indent(out, indent + 1);
-                out.push_str("</span>\n");
-
-                push_indent(out, indent);
-                out.push_str("</div>\n");
-
-                renderer.render_children(children, indent, depth + 1, parameters, out);
-                true
+    ) {
+        if let DocumentElement::BulletListItem { content, children } = element {
+            push_indent(out, indent);
+            out.push_str("<div class=\"item bullet-item\"");
+            if depth > 0 {
+                let _ = write!(out, " style=\"--indent: {depth};\"");
             }
-            _ => false,
+            out.push_str(">\n");
+
+            push_indent(out, indent + 1);
+            out.push_str("<span class=\"bullet-marker\">&bull;</span>\n");
+
+            push_indent(out, indent + 1);
+            out.push_str("<span class=\"bullet-content\">\n");
+
+            for line in content.lines() {
+                push_indent(out, indent + 2);
+                format_inline_into(out, line);
+                out.push('\n');
+            }
+
+            push_indent(out, indent + 1);
+            out.push_str("</span>\n");
+
+            push_indent(out, indent);
+            out.push_str("</div>\n");
+
+            renderer.render_children(children, indent, depth + 1, parameters, out);
         }
     }
+}
 
-    /// Returns the embedded CSS stylesheet for the bullet list feature.
+impl FeatureModule for BulletFeature {
+    fn name(&self) -> &'static str {
+        "bullet"
+    }
+
     fn css(&self) -> Option<&'static str> {
         Some(CSS)
     }
@@ -91,14 +98,14 @@ mod tests {
         let text = DocumentElement::text("Regular text");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(!feature.try_render_body(
+        feature.render_element(
             &text,
             0,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         assert!(out.is_empty());
     }
 
@@ -125,14 +132,14 @@ mod tests {
         );
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render_body(
+        feature.render_element(
             &element,
             0,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         let expected = concat!(
             "<div class=\"item bullet-item\">\n",
             "  <span class=\"bullet-marker\">&bull;</span>\n",
@@ -150,14 +157,14 @@ mod tests {
         let element = DocumentElement::bullet_list_item("Nested level 2 item");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render_body(
+        feature.render_element(
             &element,
             2,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         let expected = concat!(
             "    <div class=\"item bullet-item\">\n",
             "      <span class=\"bullet-marker\">&bull;</span>\n",
@@ -175,14 +182,14 @@ mod tests {
         let element = DocumentElement::bullet_list_item("Indented child item");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render_body(
+        feature.render_element(
             &element,
             2,
             1,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         let expected = concat!(
             "    <div class=\"item bullet-item\" style=\"--indent: 1;\">\n",
             "      <span class=\"bullet-marker\">&bull;</span>\n",
@@ -203,14 +210,14 @@ mod tests {
 
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render_body(
+        feature.render_element(
             &element,
             1,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         let expected = concat!(
             "  <div class=\"item bullet-item\">\n",
             "    <span class=\"bullet-marker\">&bull;</span>\n",

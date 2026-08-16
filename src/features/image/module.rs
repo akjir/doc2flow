@@ -1,15 +1,18 @@
 //! Image vertical slice feature module.
 
-use crate::core::document::{DocumentElement, DocumentParameters};
-use crate::core::feature::Feature;
+use crate::core::document::{DocumentElement, DocumentElementId, DocumentParameters};
+use crate::core::feature::FeatureModule;
 use crate::core::format::{escape_html_into, push_indent};
-use crate::core::renderer::HtmlRenderer;
+use crate::core::renderer::{DocumentElementRenderer, HtmlRenderer};
 
 /// Embedded image CSS stylesheet.
 pub const CSS: &str = include_str!("image.css");
 
 /// Embedded image JavaScript client script.
 pub const JS: &str = include_str!("image.js");
+
+/// Supported document element identifiers for image elements.
+const IMAGE_SUPPORTED: [DocumentElementId; 1] = [DocumentElementId::Image];
 
 /// Image feature renderer handling image embedding and lightbox preview.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -31,9 +34,12 @@ impl ImageFeature {
     }
 }
 
-impl Feature for ImageFeature {
-    /// Intercepts the rendering of image elements into the output buffer.
-    fn try_render_body(
+impl DocumentElementRenderer for ImageFeature {
+    fn supported(&self) -> &[DocumentElementId] {
+        &IMAGE_SUPPORTED
+    }
+
+    fn render_element(
         &self,
         element: &DocumentElement,
         indent: usize,
@@ -41,33 +47,33 @@ impl Feature for ImageFeature {
         _parameters: &DocumentParameters,
         out: &mut String,
         _renderer: &HtmlRenderer,
-    ) -> bool {
-        match element {
-            DocumentElement::Image { alt, url } => {
-                push_indent(out, indent);
-                out.push_str("<div class=\"image-item\">\n");
+    ) {
+        if let DocumentElement::Image { alt, url } = element {
+            push_indent(out, indent);
+            out.push_str("<div class=\"image-item\">\n");
 
-                push_indent(out, indent + 1);
-                out.push_str("<img src=\"");
-                escape_html_into(out, url);
-                out.push_str("\" alt=\"");
-                escape_html_into(out, alt);
-                out.push_str("\" />\n");
+            push_indent(out, indent + 1);
+            out.push_str("<img src=\"");
+            escape_html_into(out, url);
+            out.push_str("\" alt=\"");
+            escape_html_into(out, alt);
+            out.push_str("\" />\n");
 
-                push_indent(out, indent);
-                out.push_str("</div>\n");
-                true
-            }
-            _ => false,
+            push_indent(out, indent);
+            out.push_str("</div>\n");
         }
     }
+}
 
-    /// Returns the embedded CSS stylesheet for the image feature.
+impl FeatureModule for ImageFeature {
+    fn name(&self) -> &'static str {
+        "image"
+    }
+
     fn css(&self) -> Option<&'static str> {
         Some(CSS)
     }
 
-    /// Returns the embedded JavaScript client scripts for the image feature.
     fn javascript(&self) -> &[&'static str] {
         &[JS]
     }
@@ -115,14 +121,14 @@ mod tests {
         let element = DocumentElement::image("Architecture Diagram", "assets/arch.png");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render_body(
+        feature.render_element(
             &element,
             1,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         let expected = concat!(
             "  <div class=\"image-item\">\n",
             "    <img src=\"assets/arch.png\" alt=\"Architecture Diagram\" />\n",
@@ -140,14 +146,14 @@ mod tests {
         );
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render_body(
+        feature.render_element(
             &element,
             2,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         let expected = concat!(
             "    <div class=\"image-item\">\n",
             "      <img src=\"https://example.com/pic.png?a=1&amp;b=2\" alt=\"Picture &lt;with&gt; &quot;quotes&quot; &amp; symbols\" />\n",
@@ -162,14 +168,14 @@ mod tests {
         let text = DocumentElement::text("Regular text");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(!feature.try_render_body(
+        feature.render_element(
             &text,
             0,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         assert!(out.is_empty());
     }
 }

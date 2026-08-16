@@ -3,7 +3,6 @@
 use doc2flow::core::arguments::{help_message, parse_args};
 use doc2flow::core::builder;
 use doc2flow::core::error::{Error, Result};
-use doc2flow::core::feature::DocumentFeature;
 use doc2flow::core::markdown::parse_d2f_markdown;
 use doc2flow::core::utils::io;
 use std::env;
@@ -40,8 +39,7 @@ fn run() -> Result<()> {
     let md_content = io::read_file_to_string(&input_path)?;
 
     let document = parse_d2f_markdown(&md_content)?;
-    let features = DocumentFeature::from(&document);
-    let content = builder::build(&document, &features);
+    let content = builder::build(&document);
 
     io::write_file(&output_path, content)?;
 

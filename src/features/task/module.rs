@@ -2,13 +2,16 @@
 
 use std::fmt::Write as _;
 
-use crate::core::document::{DocumentElement, DocumentParameters};
-use crate::core::feature::Feature;
+use crate::core::document::{DocumentElement, DocumentElementId, DocumentParameters};
+use crate::core::feature::FeatureModule;
 use crate::core::format::{format_inline_into, push_indent};
-use crate::core::renderer::HtmlRenderer;
+use crate::core::renderer::{DocumentElementRenderer, HtmlRenderer};
 
 /// Embedded task CSS stylesheet.
 pub const CSS: &str = include_str!("task.css");
+
+/// Supported document element identifiers for checkbox task items.
+const TASK_SUPPORTED: [DocumentElementId; 1] = [DocumentElementId::CheckBoxItem];
 
 /// Task feature renderer handling task items and checkboxes.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -30,9 +33,12 @@ impl TaskFeature {
     }
 }
 
-impl Feature for TaskFeature {
-    /// Intercepts the rendering of checkbox task elements into the output buffer.
-    fn try_render_body(
+impl DocumentElementRenderer for TaskFeature {
+    fn supported(&self) -> &[DocumentElementId] {
+        &TASK_SUPPORTED
+    }
+
+    fn render_element(
         &self,
         element: &DocumentElement,
         indent: usize,
@@ -40,59 +46,61 @@ impl Feature for TaskFeature {
         parameters: &DocumentParameters,
         out: &mut String,
         renderer: &HtmlRenderer,
-    ) -> bool {
-        match element {
-            DocumentElement::CheckBoxItem {
-                checked,
-                content,
-                children,
-            } => {
-                push_indent(out, indent);
+    ) {
+        if let DocumentElement::CheckBoxItem {
+            checked,
+            content,
+            children,
+        } = element
+        {
+            push_indent(out, indent);
 
-                if *checked {
-                    out.push_str("<div class=\"item check-item checked\"");
-                } else {
-                    out.push_str("<div class=\"item check-item\"");
-                }
-                if depth > 0 {
-                    let _ = write!(out, " style=\"--indent: {depth};\"");
-                }
-                out.push_str(">\n");
-
-                push_indent(out, indent + 1);
-                out.push_str("<span class=\"check-marker\">\n");
-                push_indent(out, indent + 2);
-                if *checked {
-                    out.push_str("<input type=\"checkbox\" class=\"check-box\" checked />\n");
-                } else {
-                    out.push_str("<input type=\"checkbox\" class=\"check-box\" />\n");
-                }
-                push_indent(out, indent + 1);
-                out.push_str("</span>\n");
-
-                push_indent(out, indent + 1);
-                out.push_str("<span class=\"check-content\">\n");
-
-                for line in content.lines() {
-                    push_indent(out, indent + 2);
-                    format_inline_into(out, line);
-                    out.push('\n');
-                }
-
-                push_indent(out, indent + 1);
-                out.push_str("</span>\n");
-
-                push_indent(out, indent);
-                out.push_str("</div>\n");
-
-                renderer.render_children(children, indent, depth + 1, parameters, out);
-                true
+            if *checked {
+                out.push_str("<div class=\"item check-item checked\"");
+            } else {
+                out.push_str("<div class=\"item check-item\"");
             }
-            _ => false,
+            if depth > 0 {
+                let _ = write!(out, " style=\"--indent: {depth};\"");
+            }
+            out.push_str(">\n");
+
+            push_indent(out, indent + 1);
+            out.push_str("<span class=\"check-marker\">\n");
+            push_indent(out, indent + 2);
+            if *checked {
+                out.push_str("<input type=\"checkbox\" class=\"check-box\" checked />\n");
+            } else {
+                out.push_str("<input type=\"checkbox\" class=\"check-box\" />\n");
+            }
+            push_indent(out, indent + 1);
+            out.push_str("</span>\n");
+
+            push_indent(out, indent + 1);
+            out.push_str("<span class=\"check-content\">\n");
+
+            for line in content.lines() {
+                push_indent(out, indent + 2);
+                format_inline_into(out, line);
+                out.push('\n');
+            }
+
+            push_indent(out, indent + 1);
+            out.push_str("</span>\n");
+
+            push_indent(out, indent);
+            out.push_str("</div>\n");
+
+            renderer.render_children(children, indent, depth + 1, parameters, out);
         }
     }
+}
 
-    /// Returns the embedded CSS stylesheet for the task feature.
+impl FeatureModule for TaskFeature {
+    fn name(&self) -> &'static str {
+        "task"
+    }
+
     fn css(&self) -> Option<&'static str> {
         Some(CSS)
     }
@@ -126,14 +134,14 @@ mod tests {
         let element = DocumentElement::check_box_item(false, "Pending task");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render_body(
+        feature.render_element(
             &element,
             1,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         let expected = concat!(
             "  <div class=\"item check-item\">\n",
             "    <span class=\"check-marker\">\n",
@@ -153,14 +161,14 @@ mod tests {
         let element = DocumentElement::check_box_item(true, "Completed task");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render_body(
+        feature.render_element(
             &element,
             1,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         let expected = concat!(
             "  <div class=\"item check-item checked\">\n",
             "    <span class=\"check-marker\">\n",
@@ -183,14 +191,14 @@ mod tests {
         );
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render_body(
+        feature.render_element(
             &element,
             0,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         let expected = concat!(
             "<div class=\"item check-item checked\">\n",
             "  <span class=\"check-marker\">\n",
@@ -210,14 +218,14 @@ mod tests {
         let element = DocumentElement::check_box_item(false, "Sub task");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render_body(
+        feature.render_element(
             &element,
             2,
             1,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         let expected = concat!(
             "    <div class=\"item check-item\" style=\"--indent: 1;\">\n",
             "      <span class=\"check-marker\">\n",
@@ -232,14 +240,14 @@ mod tests {
 
         let checked = DocumentElement::check_box_item(true, "Checked sub task");
         let mut checked_out = String::new();
-        assert!(feature.try_render_body(
+        feature.render_element(
             &checked,
             2,
             2,
             &DocumentParameters::default(),
             &mut checked_out,
             &renderer,
-        ));
+        );
         let checked_expected = concat!(
             "    <div class=\"item check-item checked\" style=\"--indent: 2;\">\n",
             "      <span class=\"check-marker\">\n",
@@ -262,14 +270,14 @@ mod tests {
 
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render_body(
+        feature.render_element(
             &element,
             1,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         let expected = concat!(
             "  <div class=\"item check-item\">\n",
             "    <span class=\"check-marker\">\n",

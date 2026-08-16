@@ -2,12 +2,11 @@
 
 use crate::core::constants::{APP_VERSION, LICENSE_URL, REPOSITORY_URL};
 use crate::core::document::Document;
-use crate::core::feature::{DocumentFeature, Feature};
+use crate::core::feature::FeatureModule;
 use crate::core::format::append_indented;
 use crate::core::language::get_language_json;
 use crate::core::renderer::HtmlRenderer;
 use crate::core::utils::format_iso8601_utc;
-use crate::features::{CORE_FEATURE, get_active_features};
 
 /// Embedded base HTML template.
 pub const TEMPLATE_HTML: &str = include_str!("../../resources/templates/template.html");
@@ -20,25 +19,22 @@ pub const TEMPLATE_HTML: &str = include_str!("../../resources/templates/template
 ///
 /// ```
 /// use doc2flow::core::builder::assemble_assets;
-/// use doc2flow::core::feature::DocumentFeature;
+/// use doc2flow::features::CORE_FEATURE;
 ///
-/// let features = DocumentFeature::default();
-/// let (css, js) = assemble_assets(&features);
+/// let (css, js) = assemble_assets(&[&CORE_FEATURE]);
 /// assert!(css.contains("    --bg-body:"));
 /// assert!(js.contains("    window.d2f"));
 /// ```
-pub fn assemble_assets(features: &DocumentFeature) -> (String, String) {
+#[must_use]
+pub fn assemble_assets(active_modules: &[&'static dyn FeatureModule]) -> (String, String) {
     let mut css_out = String::with_capacity(12288);
     let mut js_out = String::with_capacity(4096);
 
-    let mut active_buffer = [&CORE_FEATURE as &'static dyn Feature; 8];
-    let active_features = get_active_features(features, &mut active_buffer);
-
-    for feature in active_features {
-        if let Some(css) = feature.css() {
+    for module in active_modules {
+        if let Some(css) = module.css() {
             append_indented(&mut css_out, css);
         }
-        for js in feature.javascript() {
+        for js in module.javascript() {
             append_indented(&mut js_out, js);
         }
     }
@@ -46,7 +42,19 @@ pub fn assemble_assets(features: &DocumentFeature) -> (String, String) {
     (css_out, js_out)
 }
 
-/// Builds output content from a structured [`Document`] and active [`DocumentFeature`] flags.
+/// Formats a comma-separated list of active feature names.
+fn format_features_str(active_modules: &[&'static dyn FeatureModule]) -> String {
+    let mut s = String::with_capacity(64);
+    for (i, module) in active_modules.iter().enumerate() {
+        if i > 0 {
+            s.push_str(", ");
+        }
+        s.push_str(module.name());
+    }
+    s
+}
+
+/// Builds output content from a structured [`Document`].
 ///
 /// Returns a formatted string implementing `AsRef<[u8]>`.
 ///
@@ -55,14 +63,13 @@ pub fn assemble_assets(features: &DocumentFeature) -> (String, String) {
 /// ```
 /// use doc2flow::core::builder::build;
 /// use doc2flow::core::document::Document;
-/// use doc2flow::core::feature::DocumentFeature;
 ///
 /// let doc = Document::new();
-/// let features = DocumentFeature::default();
-/// let content = build(&doc, &features);
+/// let content = build(&doc);
 /// assert!(!content.is_empty());
 /// ```
-pub fn build(document: &Document, features: &DocumentFeature) -> String {
+#[must_use]
+pub fn build(document: &Document) -> String {
     let app_version_raw = APP_VERSION.strip_prefix('v').unwrap_or(APP_VERSION);
     let created_at = format_iso8601_utc(std::time::SystemTime::now());
     let lang_code = if document.parameters.language.is_empty() {
@@ -71,14 +78,10 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
         &document.parameters.language
     };
     let title = &document.parameters.title;
-    let features_str = features.to_string();
-    let (css_content, js_content) = assemble_assets(features);
     let i18n_json = get_language_json(lang_code);
 
     let mut html_content = String::with_capacity(32768);
-    let mut active_buffer = [&CORE_FEATURE as &'static dyn Feature; 8];
-    let active_features = get_active_features(features, &mut active_buffer);
-    let renderer = HtmlRenderer::new(active_features);
+    let renderer = HtmlRenderer::default_renderer();
 
     if let Some(ref variables) = document.header.variables {
         renderer.render_element(variables, 2, 0, &document.parameters, &mut html_content);
@@ -86,6 +89,11 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
     for element in &document.body {
         renderer.render_element(element, 2, 0, &document.parameters, &mut html_content);
     }
+
+    let mut active_buffer = [&crate::features::CORE_FEATURE as &'static dyn FeatureModule; 8];
+    let active_modules = renderer.active_features(&mut active_buffer);
+    let features_str = format_features_str(active_modules);
+    let (css_content, js_content) = assemble_assets(active_modules);
 
     TEMPLATE_HTML
         .replace("{{APP_VERSION}}", APP_VERSION)
@@ -106,13 +114,13 @@ pub fn build(document: &Document, features: &DocumentFeature) -> String {
 mod tests {
     use super::*;
     use crate::core::document::DocumentElement;
+    use crate::features::{CODE_FEATURE, CORE_FEATURE, UNKNOWN_FEATURE};
 
     #[test]
     fn test_builder_build_as_ref_u8() {
         let mut doc = Document::new();
         doc.push_body(DocumentElement::text("Document body text"));
-        let features = DocumentFeature::default();
-        let content = build(&doc, &features);
+        let content = build(&doc);
         assert!(!content.is_empty());
         assert!(content.contains("<!DOCTYPE html>"));
         assert!(content.contains(APP_VERSION));
@@ -144,8 +152,7 @@ mod tests {
 
     #[test]
     fn test_assemble_assets_core_default() {
-        let features = DocumentFeature::default();
-        let (css, js) = assemble_assets(&features);
+        let (css, js) = assemble_assets(&[&CORE_FEATURE]);
         assert!(css.contains("    --bg-body:"));
         assert!(css.contains("    .txt-default"));
         assert!(js.contains("    window.d2f"));
@@ -153,8 +160,7 @@ mod tests {
 
     #[test]
     fn test_assemble_scripts_core_default() {
-        let features = DocumentFeature::default();
-        let (_, js) = assemble_assets(&features);
+        let (_, js) = assemble_assets(&[&CORE_FEATURE]);
         assert!(js.contains("    window.d2f"));
         assert!(js.contains("utils"));
         assert!(js.contains("storage"));
@@ -162,8 +168,7 @@ mod tests {
 
     #[test]
     fn test_assemble_styles_core_default() {
-        let features = DocumentFeature::default();
-        let (css, _) = assemble_assets(&features);
+        let (css, _) = assemble_assets(&[&CORE_FEATURE]);
         assert!(css.contains("    --bg-body:"));
         assert!(css.contains("    .txt-default"));
         assert!(!css.contains("--unknown-bg:"));
@@ -172,8 +177,7 @@ mod tests {
 
     #[test]
     fn test_assemble_styles_with_unknown_feature() {
-        let features = DocumentFeature::UNKNOWN;
-        let (css, _) = assemble_assets(&features);
+        let (css, _) = assemble_assets(&[&CORE_FEATURE, &UNKNOWN_FEATURE]);
         assert!(css.contains("    --bg-body:"));
         assert!(css.contains("    .txt-default"));
         assert!(css.contains("    --unknown-bg:"));
@@ -186,8 +190,7 @@ mod tests {
         doc.push_body(crate::core::document::DocumentElement::unknown(
             "unrecognized",
         ));
-        let features = DocumentFeature::from(&doc);
-        let content = build(&doc, &features);
+        let content = build(&doc);
         assert!(content.contains("<meta name=\"features\" content=\"core, unknown\">"));
         assert!(
             content.contains("    <p class=\"unknown-default\">\n      unrecognized\n    </p>")
@@ -203,8 +206,7 @@ mod tests {
     fn test_builder_build_custom_title() {
         let mut doc = Document::new();
         doc.parameters.title = "Custom Title".into();
-        let features = DocumentFeature::default();
-        let content = build(&doc, &features);
+        let content = build(&doc);
         assert!(content.contains("<title>Custom Title</title>"));
         assert!(!content.contains("{{TITLE}}"));
     }
@@ -212,8 +214,7 @@ mod tests {
     #[test]
     fn test_builder_build_empty_title() {
         let doc = Document::new();
-        let features = DocumentFeature::default();
-        let content = build(&doc, &features);
+        let content = build(&doc);
         assert!(content.contains("<title></title>"));
         assert!(!content.contains("{{TITLE}}"));
     }
@@ -222,8 +223,7 @@ mod tests {
     fn test_builder_build_custom_language() {
         let mut doc = Document::new();
         doc.parameters.language = "de".into();
-        let features = DocumentFeature::default();
-        let content = build(&doc, &features);
+        let content = build(&doc);
         assert!(content.contains("<html lang=\"de\">"));
         assert!(content.contains("window.d2f.lang.dictionary = {};"));
         assert!(!content.contains("{{LANG_CODE}}"));
@@ -234,8 +234,7 @@ mod tests {
     fn test_builder_build_empty_language_fallback() {
         let mut doc = Document::new();
         doc.parameters.language.clear();
-        let features = DocumentFeature::default();
-        let content = build(&doc, &features);
+        let content = build(&doc);
         assert!(content.contains("<html lang=\"en\">"));
         assert!(!content.contains("{{LANG_CODE}}"));
     }
@@ -247,16 +246,14 @@ mod tests {
             None::<String>,
             "test code",
         ));
-        let features = DocumentFeature::from(&doc);
-        let content = build(&doc, &features);
+        let content = build(&doc);
         assert!(content.contains("<meta name=\"features\" content=\"core, code\">"));
         assert!(!content.contains("{{FEATURES}}"));
     }
 
     #[test]
     fn test_assemble_styles_with_code_feature() {
-        let features = DocumentFeature::CODE;
-        let (css, _) = assemble_assets(&features);
+        let (css, _) = assemble_assets(&[&CORE_FEATURE, &CODE_FEATURE]);
         assert!(css.contains("    --bg-body:"));
         assert!(css.contains("    --code-bg:"));
         assert!(css.contains("    .code-default"));
@@ -276,13 +273,11 @@ mod tests {
             ],
         ));
         doc.push_body(DocumentElement::text("Body text"));
-        let features = DocumentFeature::from(&doc);
-        let content = build(&doc, &features);
+        let content = build(&doc);
         assert!(content.contains("<div class=\"table-wrap\">"));
         assert!(content.contains("<th>Variable</th>"));
         assert!(content.contains("<td>8080</td>"));
         assert!(content.contains("Body text"));
-        assert!(features.contains(DocumentFeature::CODE));
-        assert!(features.contains(DocumentFeature::TABLE));
+        assert!(content.contains("<meta name=\"features\" content=\"core, table\">"));
     }
 }

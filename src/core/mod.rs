@@ -18,12 +18,12 @@ pub use constants::{
     APP_NAME, APP_VERSION, CLI_ALIAS, CLI_BANNER, LICENSE_TERMS, LICENSE_URL, REPOSITORY_URL,
 };
 pub use document::{
-    Document, DocumentElement, DocumentHeader, DocumentParameters, ShoutoutElementKind,
-    TableAlignment,
+    Document, DocumentElement, DocumentElementId, DocumentHeader, DocumentParameters,
+    ShoutoutElementKind, TableAlignment,
 };
 pub use error::{DiagnosticError, Error, Result, build_caret_annotation};
-pub use feature::{DocumentFeature, Feature};
+pub use feature::FeatureModule;
 pub use format::{append_indented, escape_html_into, format_inline_into, push_indent};
 pub use language::get_language_json;
 pub use markdown::parse_d2f_markdown;
-pub use renderer::{HtmlRenderer, render_element, render_element_into};
+pub use renderer::{DocumentElementRenderer, HtmlRenderer, render_element, render_element_into};

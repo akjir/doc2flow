@@ -40,7 +40,7 @@ Doc2Flow is a high-performance, single-binary CLI tool that compiles Markdown do
 - **Language & Edition:** Rust (Edition 2024).
 - **Core Dependencies & Custom Engines:**
   - `image` (0.25): In-memory image processing and WebP conversion.
-  - **Zero-Dependency Parsers:** Markdown token parsing and AST construction are natively implemented in `src/core/markdown.rs`; JSON deserialization and locale mapping are natively implemented via custom zero-allocation parser (`json.rs` / `language.rs`) without external crates (`pulldown-cmark`, `serde`, `serde_json`).
+  - **Zero-Dependency Parsers:** Markdown token parsing and AST construction are natively implemented in `src/core/markdown.rs`; JSON deserialization and locale mapping are natively implemented via custom zero-allocation parser (`src/core/language.rs`) without external crates (`pulldown-cmark`, `serde`, `serde_json`).
 - **Client Runtime:** Vanilla JavaScript (ES6+), decoupled across the `window.d2f` namespace. Zero JS build step in the pipeline.
 - **Release Profile:** `opt-level = "z"`, `lto = true`, `codegen-units = 1`, `strip = true`, `panic = "abort"`.
 
@@ -207,15 +207,39 @@ pub struct DocumentParameters {
     pub variables: HashMap<String, String>,
 }
 
-pub struct DocumentFeature {
-    pub bullet: bool,
-    pub code: bool,
-    pub image: bool,
-    pub ordered: bool,
-    pub shoutout: bool,
-    pub table: bool,
-    pub task: bool,
-    pub unknown: bool,
+#[repr(u8)]
+pub enum DocumentElementId {
+    BlockDirective = 0,
+    BulletListItem = 1,
+    CheckBoxItem = 2,
+    CodeBlock = 3,
+    HorizontalRule = 4,
+    Image = 5,
+    OrderedListItem = 6,
+    Section = 7,
+    Shoutout = 8,
+    Table = 9,
+    Text = 10,
+    Unknown = 11,
+}
+
+pub trait DocumentElementRenderer: Send + Sync + fmt::Debug {
+    fn supported(&self) -> &[DocumentElementId];
+    fn render_element(
+        &self,
+        element: &DocumentElement,
+        indent: usize,
+        depth: usize,
+        parameters: &DocumentParameters,
+        out: &mut String,
+        renderer: &HtmlRenderer,
+    );
+}
+
+pub trait FeatureModule: DocumentElementRenderer + Send + Sync + fmt::Debug {
+    fn name(&self) -> &'static str;
+    fn css(&self) -> Option<&'static str>;
+    fn javascript(&self) -> &[&'static str];
 }
 ```
 
@@ -292,7 +316,7 @@ doc2flow/
 │   │   ├── constants.rs      # Global system metadata and defaults
 │   │   ├── document.rs       # Document AST and element definitions
 │   │   ├── error.rs          # Diagnostic compiler-style error types
-│   │   ├── feature.rs        # Document AST feature scanner and traits
+│   │   ├── feature.rs        # FeatureModule trait definition
 │   │   ├── format.rs         # Text formatting and escaping utilities
 │   │   ├── language.rs       # Embedded locale loader
 │   │   ├── markdown.rs       # Zero-alloc Markdown parser

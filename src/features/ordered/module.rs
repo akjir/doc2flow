@@ -2,13 +2,16 @@
 
 use std::fmt::Write as _;
 
-use crate::core::document::{DocumentElement, DocumentParameters};
-use crate::core::feature::Feature;
+use crate::core::document::{DocumentElement, DocumentElementId, DocumentParameters};
+use crate::core::feature::FeatureModule;
 use crate::core::format::{format_inline_into, push_indent};
-use crate::core::renderer::HtmlRenderer;
+use crate::core::renderer::{DocumentElementRenderer, HtmlRenderer};
 
 /// Embedded ordered list CSS stylesheet.
 pub const CSS: &str = include_str!("ordered.css");
+
+/// Supported document element identifiers for ordered list items.
+const ORDERED_SUPPORTED: [DocumentElementId; 1] = [DocumentElementId::OrderedListItem];
 
 /// Ordered list feature renderer handling numbered and ordered list items.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -30,9 +33,12 @@ impl OrderedFeature {
     }
 }
 
-impl Feature for OrderedFeature {
-    /// Intercepts the rendering of ordered list elements into the output buffer.
-    fn try_render_body(
+impl DocumentElementRenderer for OrderedFeature {
+    fn supported(&self) -> &[DocumentElementId] {
+        &ORDERED_SUPPORTED
+    }
+
+    fn render_element(
         &self,
         element: &DocumentElement,
         indent: usize,
@@ -40,48 +46,50 @@ impl Feature for OrderedFeature {
         parameters: &DocumentParameters,
         out: &mut String,
         renderer: &HtmlRenderer,
-    ) -> bool {
-        match element {
-            DocumentElement::OrderedListItem {
-                content,
-                position,
-                children,
-            } => {
-                push_indent(out, indent);
-                out.push_str("<div class=\"item order-item\"");
-                if depth > 0 {
-                    let _ = write!(out, " style=\"--indent: {depth};\"");
-                }
-                out.push_str(">\n");
-
-                push_indent(out, indent + 1);
-                out.push_str("<span class=\"order-marker\">");
-                let _ = write!(out, "{position}.");
-                out.push_str("</span>\n");
-
-                push_indent(out, indent + 1);
-                out.push_str("<span class=\"order-content\">\n");
-
-                for line in content.lines() {
-                    push_indent(out, indent + 2);
-                    format_inline_into(out, line);
-                    out.push('\n');
-                }
-
-                push_indent(out, indent + 1);
-                out.push_str("</span>\n");
-
-                push_indent(out, indent);
-                out.push_str("</div>\n");
-
-                renderer.render_children(children, indent, depth + 1, parameters, out);
-                true
+    ) {
+        if let DocumentElement::OrderedListItem {
+            content,
+            position,
+            children,
+        } = element
+        {
+            push_indent(out, indent);
+            out.push_str("<div class=\"item order-item\"");
+            if depth > 0 {
+                let _ = write!(out, " style=\"--indent: {depth};\"");
             }
-            _ => false,
+            out.push_str(">\n");
+
+            push_indent(out, indent + 1);
+            out.push_str("<span class=\"order-marker\">");
+            let _ = write!(out, "{position}.");
+            out.push_str("</span>\n");
+
+            push_indent(out, indent + 1);
+            out.push_str("<span class=\"order-content\">\n");
+
+            for line in content.lines() {
+                push_indent(out, indent + 2);
+                format_inline_into(out, line);
+                out.push('\n');
+            }
+
+            push_indent(out, indent + 1);
+            out.push_str("</span>\n");
+
+            push_indent(out, indent);
+            out.push_str("</div>\n");
+
+            renderer.render_children(children, indent, depth + 1, parameters, out);
         }
     }
+}
 
-    /// Returns the embedded CSS stylesheet for the ordered list feature.
+impl FeatureModule for OrderedFeature {
+    fn name(&self) -> &'static str {
+        "ordered"
+    }
+
     fn css(&self) -> Option<&'static str> {
         Some(CSS)
     }
@@ -97,14 +105,14 @@ mod tests {
         let text = DocumentElement::text("Regular text");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(!feature.try_render_body(
+        feature.render_element(
             &text,
             0,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         assert!(out.is_empty());
     }
 
@@ -129,14 +137,14 @@ mod tests {
         let element = DocumentElement::ordered_list_item(1, "First numbered item");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render_body(
+        feature.render_element(
             &element,
             1,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         let expected = concat!(
             "  <div class=\"item order-item\">\n",
             "    <span class=\"order-marker\">1.</span>\n",
@@ -157,14 +165,14 @@ mod tests {
         );
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render_body(
+        feature.render_element(
             &element,
             0,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         let expected = concat!(
             "<div class=\"item order-item\">\n",
             "  <span class=\"order-marker\">2.</span>\n",
@@ -182,14 +190,14 @@ mod tests {
         let element = DocumentElement::ordered_list_item(1, "Sub-step item");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render_body(
+        feature.render_element(
             &element,
             2,
             1,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         let expected = concat!(
             "    <div class=\"item order-item\" style=\"--indent: 1;\">\n",
             "      <span class=\"order-marker\">1.</span>\n",
@@ -210,14 +218,14 @@ mod tests {
 
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        assert!(feature.try_render_body(
+        feature.render_element(
             &element,
             1,
             0,
             &DocumentParameters::default(),
             &mut out,
             &renderer,
-        ));
+        );
         let expected = concat!(
             "  <div class=\"item order-item\">\n",
             "    <span class=\"order-marker\">1.</span>\n",

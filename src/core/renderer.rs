@@ -1,28 +1,88 @@
 //! HTML AST renderer and element formatting engine.
 
-use std::fmt::Write as _;
+use std::cell::Cell;
+use std::fmt::{self, Write as _};
 
-use crate::core::document::{DocumentElement, DocumentParameters};
-use crate::core::feature::Feature;
+use crate::core::document::{DocumentElement, DocumentElementId, DocumentParameters};
+use crate::core::feature::FeatureModule;
 use crate::core::format::{format_inline_into, push_indent};
 
+/// Trait for document element renderers declaring supported AST element types.
+pub trait DocumentElementRenderer: Send + Sync + fmt::Debug {
+    /// Returns a slice of supported AST element IDs handled by this renderer.
+    fn supported(&self) -> &[DocumentElementId] {
+        &[]
+    }
+
+    /// Renders a document element directly into an output buffer.
+    fn render_element(
+        &self,
+        element: &DocumentElement,
+        indent: usize,
+        depth: usize,
+        parameters: &DocumentParameters,
+        out: &mut String,
+        renderer: &HtmlRenderer,
+    );
+}
+
 /// Document AST HTML renderer managing active features and element interception.
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct HtmlRenderer<'a> {
-    features: &'a [&'static dyn Feature],
+    active_mask: Cell<u16>,
+    modules: &'a [&'static dyn FeatureModule],
+    slots: [Option<&'static dyn FeatureModule>; DocumentElementId::COUNT],
 }
 
 impl<'a> HtmlRenderer<'a> {
     /// Creates a new HTML renderer configured with the specified slice of active features.
     #[must_use]
-    pub const fn new(features: &'a [&'static dyn Feature]) -> Self {
-        Self { features }
+    pub fn new(modules: &'a [&'static dyn FeatureModule]) -> Self {
+        let mut slots = [None; DocumentElementId::COUNT];
+        for &module in modules {
+            for &id in module.supported() {
+                slots[id as usize] = Some(module);
+            }
+        }
+        Self {
+            active_mask: Cell::new(0),
+            modules,
+            slots,
+        }
     }
 
     /// Creates an HTML renderer with all default features enabled.
     #[must_use]
     pub fn default_renderer() -> HtmlRenderer<'static> {
-        HtmlRenderer::new(&crate::features::ALL_FEATURES)
+        HtmlRenderer::new(&crate::features::ALL_FEATURE_MODULES)
+    }
+
+    /// Populates a fixed-size buffer with active feature module references and returns the slice.
+    pub fn active_features<'b>(
+        &self,
+        buffer: &'b mut [&'static dyn FeatureModule; 8],
+    ) -> &'b [&'static dyn FeatureModule] {
+        let mask = self.active_mask.get();
+        let mut count = 0;
+        for (i, &module) in self.modules.iter().enumerate() {
+            if (mask & (1 << i)) != 0 || module.name() == "core" {
+                if count < buffer.len() {
+                    buffer[count] = module;
+                    count += 1;
+                }
+            }
+        }
+        &buffer[..count]
+    }
+
+    /// Marks the given feature module as active.
+    fn mark_module_active(&self, target: &'static dyn FeatureModule) {
+        for (i, &module) in self.modules.iter().enumerate() {
+            if std::ptr::eq(module, target) || module.name() == target.name() {
+                self.active_mask.set(self.active_mask.get() | (1 << i));
+                break;
+            }
+        }
     }
 
     /// Renders a single document element and its children into the output buffer.
@@ -34,13 +94,13 @@ impl<'a> HtmlRenderer<'a> {
         parameters: &DocumentParameters,
         out: &mut String,
     ) {
-        for feature in self.features {
-            if feature.try_render_body(element, indent, depth, parameters, out, self) {
-                return;
-            }
+        let id = element.element_id();
+        if let Some(module) = self.slots[id as usize] {
+            self.mark_module_active(module);
+            module.render_element(element, indent, depth, parameters, out, self);
+        } else {
+            self.render_fallback(element, indent, depth, parameters, out);
         }
-
-        self.render_fallback(element, indent, depth, parameters, out);
     }
 
     /// Renders a slice of document elements sequentially into the output buffer.
@@ -334,5 +394,25 @@ mod tests {
             render_element(&directive, 1, &DocumentParameters::default()),
             "    <div class=\"item text-item\">\n      <span class=\"text-content\">\n        Directive child\n      </span>\n    </div>\n"
         );
+    }
+
+    #[test]
+    fn test_active_features_tracking() {
+        let renderer = HtmlRenderer::default_renderer();
+        let mut buffer = [&crate::features::CORE_FEATURE as &'static dyn FeatureModule; 8];
+        let initial_active = renderer.active_features(&mut buffer);
+        assert_eq!(initial_active.len(), 1);
+        assert_eq!(initial_active[0].name(), "core");
+
+        let mut out = String::new();
+        let bullet = DocumentElement::bullet_list_item("item");
+        renderer.render_element(&bullet, 0, 0, &DocumentParameters::default(), &mut out);
+
+        let mut active_buffer = [&crate::features::CORE_FEATURE as &'static dyn FeatureModule; 8];
+        let active = renderer.active_features(&mut active_buffer);
+        assert_eq!(active.len(), 2);
+        let names: Vec<&str> = active.iter().map(|m| m.name()).collect();
+        assert!(names.contains(&"core"));
+        assert!(names.contains(&"bullet"));
     }
 }
