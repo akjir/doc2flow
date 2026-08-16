@@ -191,6 +191,7 @@ pub enum DocumentElement {
     Section { level: usize, title: String, children: Vec<DocumentElement> },
     Shoutout { kind: ShoutoutElementKind, content: String },
     Table { alignments: Vec<TableAlignment>, rows: Vec<Vec<String>> },
+    TableVariables { variables: HashMap<String, String> },
     Text(String),
     Unknown(String),
 }
@@ -219,8 +220,9 @@ pub enum DocumentElementId {
     Section = 7,
     Shoutout = 8,
     Table = 9,
-    Text = 10,
-    Unknown = 11,
+    TableVariables = 10,
+    Text = 11,
+    Unknown = 12,
 }
 
 pub trait DocumentElementRenderer: Send + Sync + fmt::Debug {

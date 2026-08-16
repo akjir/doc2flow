@@ -117,6 +117,11 @@ pub enum DocumentElement {
         /// Rows of the table (header row followed by data rows), where each row is a vector of cell strings.
         rows: Vec<Vec<String>>,
     },
+    /// Dynamic variables key-value mapping extracted from a table variables block directive.
+    TableVariables {
+        /// Key-value variable mapping.
+        variables: HashMap<String, String>,
+    },
     /// Standard plain text paragraph or line.
     Text(String),
     /// Unrecognized or fallback content.
@@ -220,6 +225,12 @@ impl DocumentElement {
         Self::Table { alignments, rows }
     }
 
+    /// Creates a new table variables document element with key-value pairs.
+    #[must_use]
+    pub fn table_variables(variables: HashMap<String, String>) -> Self {
+        Self::TableVariables { variables }
+    }
+
     /// Creates a new plain text document element.
     #[must_use]
     pub fn text(content: impl Into<String>) -> Self {
@@ -246,6 +257,7 @@ impl DocumentElement {
             Self::Section { .. } => DocumentElementId::Section,
             Self::Shoutout { .. } => DocumentElementId::Shoutout,
             Self::Table { .. } => DocumentElementId::Table,
+            Self::TableVariables { .. } => DocumentElementId::TableVariables,
             Self::Text(_) => DocumentElementId::Text,
             Self::Unknown(_) => DocumentElementId::Unknown,
         }
@@ -330,15 +342,17 @@ pub enum DocumentElementId {
     Shoutout = 8,
     /// Identifier for tables.
     Table = 9,
+    /// Identifier for table variables mapping.
+    TableVariables = 10,
     /// Identifier for plain text lines.
-    Text = 10,
+    Text = 11,
     /// Identifier for unrecognized fallback content.
-    Unknown = 11,
+    Unknown = 12,
 }
 
 impl DocumentElementId {
     /// Total number of distinct document element identifiers.
-    pub const COUNT: usize = 12;
+    pub const COUNT: usize = 13;
 }
 
 /// Represents document header elements and configuration.
@@ -952,8 +966,17 @@ mod tests {
     }
 
     #[test]
+    fn test_table_variables_element_creation() {
+        let mut map = HashMap::new();
+        map.insert("PORT".into(), "8080".into());
+        map.insert("ENV".into(), "prod".into());
+        let elem = DocumentElement::table_variables(map.clone());
+        assert_eq!(elem, DocumentElement::TableVariables { variables: map });
+    }
+
+    #[test]
     fn test_document_element_id_mapping() {
-        assert_eq!(DocumentElementId::COUNT, 12);
+        assert_eq!(DocumentElementId::COUNT, 13);
         assert_eq!(
             DocumentElement::block_directive("test", vec![]).element_id(),
             DocumentElementId::BlockDirective
@@ -993,6 +1016,10 @@ mod tests {
         assert_eq!(
             DocumentElement::table(vec![], vec![]).element_id(),
             DocumentElementId::Table
+        );
+        assert_eq!(
+            DocumentElement::table_variables(HashMap::new()).element_id(),
+            DocumentElementId::TableVariables
         );
         assert_eq!(
             DocumentElement::text("text").element_id(),

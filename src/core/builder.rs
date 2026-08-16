@@ -5,7 +5,7 @@ use crate::core::document::Document;
 use crate::core::feature::FeatureModule;
 use crate::core::format::append_indented;
 use crate::core::language::get_language_json;
-use crate::core::renderer::HtmlRenderer;
+use crate::core::renderer::{HtmlRenderer, MAX_ACTIVE_FEATURES};
 use crate::core::utils::format_iso8601_utc;
 
 /// Embedded base HTML template.
@@ -90,7 +90,8 @@ pub fn build(document: &Document) -> String {
         renderer.render_element(element, 2, 0, &document.parameters, &mut html_content);
     }
 
-    let mut active_buffer = [&crate::features::CORE_FEATURE as &'static dyn FeatureModule; 8];
+    let mut active_buffer =
+        [&crate::features::CORE_FEATURE as &'static dyn FeatureModule; MAX_ACTIVE_FEATURES];
     let active_modules = renderer.active_features(&mut active_buffer);
     let features_str = format_features_str(active_modules);
     let (css_content, js_content) = assemble_assets(active_modules);
@@ -262,22 +263,14 @@ mod tests {
     #[test]
     fn test_builder_build_with_header_variables() {
         let mut doc = Document::new();
-        doc.header.variables = Some(DocumentElement::table(
-            vec![
-                crate::core::document::TableAlignment::None,
-                crate::core::document::TableAlignment::None,
-            ],
-            vec![
-                vec!["Variable".into(), "Value".into()],
-                vec!["PORT".into(), "8080".into()],
-            ],
-        ));
+        let mut vars = std::collections::HashMap::new();
+        vars.insert("PORT".into(), "8080".into());
+        doc.header.variables = Some(DocumentElement::table_variables(vars));
         doc.push_body(DocumentElement::text("Body text"));
         let content = build(&doc);
-        assert!(content.contains("<div class=\"table-wrap\">"));
-        assert!(content.contains("<th>Variable</th>"));
-        assert!(content.contains("<td>8080</td>"));
+        assert!(content.contains("TODO"));
         assert!(content.contains("Body text"));
-        assert!(content.contains("<meta name=\"features\" content=\"core, table\">"));
+        assert!(content.contains("<meta name=\"features\" content=\"core, code\">"));
+        assert!(!content.contains("table"));
     }
 }

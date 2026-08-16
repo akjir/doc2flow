@@ -8,8 +8,11 @@ use crate::core::renderer::{DocumentElementRenderer, HtmlRenderer};
 /// Embedded code CSS styles for code blocks.
 pub const CSS: &str = include_str!("code.css");
 
-/// Supported document element identifiers for code blocks.
-const CODE_SUPPORTED: [DocumentElementId; 1] = [DocumentElementId::CodeBlock];
+/// Supported document element identifiers for code blocks and code block variables.
+const CODE_SUPPORTED: [DocumentElementId; 2] = [
+    DocumentElementId::CodeBlock,
+    DocumentElementId::TableVariables,
+];
 
 /// Code feature renderer handling syntax and fenced code block elements.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -37,11 +40,18 @@ impl DocumentElementRenderer for CodeFeature {
         out: &mut String,
         _renderer: &HtmlRenderer,
     ) {
-        if let DocumentElement::CodeBlock { content, .. } = element {
-            push_indent(out, indent);
-            out.push_str("<pre class=\"code-default\"><code>");
-            escape_html_into(out, content);
-            out.push_str("</code></pre>\n");
+        match element {
+            DocumentElement::CodeBlock { content, .. } => {
+                push_indent(out, indent);
+                out.push_str("<pre class=\"code-default\"><code>");
+                escape_html_into(out, content);
+                out.push_str("</code></pre>\n");
+            }
+            DocumentElement::TableVariables { .. } => {
+                push_indent(out, indent);
+                out.push_str("TODO\n");
+            }
+            _ => {}
         }
     }
 }
@@ -116,6 +126,25 @@ mod tests {
             out,
             "    <pre class=\"code-default\"><code>&lt;div class=&quot;foo&quot;&gt; &amp;&amp; &#39;bar&#39;&lt;/div&gt;</code></pre>\n"
         );
+    }
+
+    #[test]
+    fn test_code_feature_renders_table_variables() {
+        let feature = CodeFeature::new();
+        let mut vars = std::collections::HashMap::new();
+        vars.insert("PORT".into(), "8080".into());
+        let element = DocumentElement::table_variables(vars);
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        feature.render_element(
+            &element,
+            2,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        );
+        assert_eq!(out, "    TODO\n");
     }
 
     #[test]

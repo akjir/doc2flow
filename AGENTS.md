@@ -15,6 +15,9 @@
 - **Traits:** Rely on standard traits (`std::fmt::Display` -> `.to_string()`). NEVER create custom duplicate methods (e.g. `to_string_custom()`) or standalone functions.
 - **Constructors:** If struct derives `Default`, `new()` MUST delegate to `Self::default()` (no repeated field inits).
 - **State:** Multiple boolean flags -> evaluate `bitflags` or array-backed state (min memory footprint, avoid brittle `&&`/`||` chains).
+- **Dispatch:** O(1) routing ONLY (precompute array indices/masks at init). NO loops/strings/`ptr::eq` on hot-path AST handling (P-O1-DISPATCH).
+- **Bitmask:** Integer bitmasks (`u32`) MUST assert `len <= bit_width` at init (P-MASK-SAFE).
+- **Buffers:** NO magic capacities (`[T; 8]`). Define named `const MAX_CAPACITY: usize` with `debug_assert!` against truncations (P-NO-MAGIC-CAP).
 - **Core:** Idiomatic, newtypes, 1-path exports, NO `unsafe`
 - **Clean:** Zero legacy debt/compat shims. Remove dead/obsolete code when adding new code.
 - **Consts:** Feature constants local in `src/features/<name>/module.rs` (NO central dumpster). App metadata/limits ONLY in `src/core/constants.rs`.
@@ -33,7 +36,7 @@
 - **Comm:** English ONLY. 1-line concise AI responses.
 - **OS:** Linux dev, Win64 target. `std::path::Path/Buf` ONLY.
 - **Git:** Commit ONLY if requested AND tests pass (or user overrides).
-- **Test:** Priority 1. Negative/edge cases. Semantic token assertions (e.g. `.contains("bullet")`) over exact full strings on formatted output (`Display`). Regen `showcase_*.html` on UI changes.
+- **Test:** Priority 1. Negative/edge cases. Semantic token assertions (e.g. `.contains("bullet")`) over exact full strings on formatted output (`Display`). Explicit tests for fallback/default `_ => {}` arms (M-FALLBACK-TESTS). Regen `showcase_*.html` on UI changes.
 
 ## 4. Frontend (HTML/JS/CSS)
 - **HTML (Generic):**

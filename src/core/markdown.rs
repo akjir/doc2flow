@@ -684,7 +684,24 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
                                         block_start_snippet,
                                     ));
                                 }
-                                doc.header.variables = Some(children.remove(0));
+                                let DocumentElement::Table { rows, .. } = children.remove(0) else {
+                                    unreachable!();
+                                };
+                                let mut variables_map =
+                                    HashMap::with_capacity(rows.len().saturating_sub(1));
+                                for mut row in rows.into_iter().skip(1) {
+                                    if !row.is_empty() {
+                                        let key = row.remove(0);
+                                        let val = if row.is_empty() {
+                                            String::new()
+                                        } else {
+                                            row.remove(0)
+                                        };
+                                        variables_map.insert(key, val);
+                                    }
+                                }
+                                doc.header.variables =
+                                    Some(DocumentElement::table_variables(variables_map));
                             } else {
                                 push_element(
                                     &mut doc,
@@ -2480,16 +2497,13 @@ Body text
         let md = "---\ntitle: \"Block Directive Doc\"\n---\n:::variables\n| Variable | Value |\n| --- | --- |\n| TARGET_HOST | 192.168.1.100 |\n| SERVICE_PORT | 8080 |\n:::\n# Main Section\nContent under main";
         let doc = parse_d2f_markdown(md).unwrap();
 
+        let mut expected_vars = HashMap::new();
+        expected_vars.insert("TARGET_HOST".into(), "192.168.1.100".into());
+        expected_vars.insert("SERVICE_PORT".into(), "8080".into());
+
         assert_eq!(
             doc.header.variables,
-            Some(DocumentElement::table(
-                vec![TableAlignment::None, TableAlignment::None],
-                vec![
-                    vec!["Variable".into(), "Value".into()],
-                    vec!["TARGET_HOST".into(), "192.168.1.100".into()],
-                    vec!["SERVICE_PORT".into(), "8080".into()],
-                ]
-            ))
+            Some(DocumentElement::table_variables(expected_vars))
         );
         assert_eq!(doc.body.len(), 1);
         match &doc.body[0] {
@@ -2499,6 +2513,21 @@ Body text
             }
             other => panic!("Expected Section, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_block_directive_variables_ignores_alignments_and_extra_columns() {
+        let md = "---\ntitle: \"Vars Doc\"\n---\n:::variables\n| Ignored Col 1 | Ignored Col 2 | Ignored Col 3 |\n| :--- | :---: | ---: |\n| HOST | 10.0.0.1 | extra col info |\n| PORT | 3000 |\n:::\n# Heading\nBody";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        let mut expected = HashMap::new();
+        expected.insert("HOST".into(), "10.0.0.1".into());
+        expected.insert("PORT".into(), "3000".into());
+
+        assert_eq!(
+            doc.header.variables,
+            Some(DocumentElement::table_variables(expected))
+        );
     }
 
     #[test]
@@ -2607,15 +2636,12 @@ Body text
         let md = "---\ntitle: \"Multiple Directives\"\n---\n:::variables\n| Var | Val |\n| --- | --- |\n| A | 1 |\n:::\n# Main\n:::blockA\nText A\n:::\n\nMiddle text\n\n:::blockB\nText B\n:::";
         let doc = parse_d2f_markdown(md).unwrap();
 
+        let mut expected_vars = HashMap::new();
+        expected_vars.insert("A".into(), "1".into());
+
         assert_eq!(
             doc.header.variables,
-            Some(DocumentElement::table(
-                vec![TableAlignment::None, TableAlignment::None],
-                vec![
-                    vec!["Var".into(), "Val".into()],
-                    vec!["A".into(), "1".into()]
-                ]
-            ))
+            Some(DocumentElement::table_variables(expected_vars))
         );
         assert_eq!(doc.body.len(), 1);
         match &doc.body[0] {

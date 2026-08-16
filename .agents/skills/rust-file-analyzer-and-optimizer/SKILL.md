@@ -30,6 +30,8 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 - **Safe Slicing:** Use safe subslice manipulation (`.split_once()`, `.strip_prefix()`, cursor offsets). Prohibit raw pointer arithmetic (`as_ptr` diffs) for string bounds.
 - **Pre-allocate:** ALWAYS use `.with_capacity()` for dynamic collections in loops.
 - **State Condensation:** When tracking multiple boolean configuration flags, evaluate `bitflags` or array-backed state to minimize memory footprint and avoid brittle `&&`/`||` chains.
+- **Bitmask Safety:** When using integer bitmasks (`u32`, `u64`), assert `len <= bit_width` at initialization to prevent overflow (P-MASK-SAFE).
+- **No Magic Capacities:** Avoid hardcoding array capacities (`[T; 8]`). Define named `const MAX_CAPACITY: usize` with `debug_assert!` checks (P-NO-MAGIC-CAP).
 
 ### 2: Parsing & Loops
 - **No Chained Regex/Replace:** Replace `.replace().replace()` cascades with single-pass state machines/scanners.
@@ -44,6 +46,7 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 ### 4: Idioms & Architecture
 - **Standard Traits:** Rely on standard traits (`std::fmt::Display` -> `.to_string()`). NEVER create custom methods (e.g., `to_string_custom()`) or standalone functions duplicating std traits.
 - **Constructor Delegation:** If a struct derives `Default`, any implementation of `new()` must delegate to `Self::default()` rather than repeating field initialization.
+- **O(1) Hot-Path Routing:** Precompute array indices, state masks, and routing lookups during initialization. Never use for-loops, string matching, or pointer comparisons (`std::ptr::eq`) to resolve modules/AST handlers during active parsing/rendering loops (P-O1-DISPATCH).
 - **Layering:** `src/utils/` = generic project-agnostic library (NO domain logic). `src/core/` & `src/features/` consume it via `src/utils/mod.rs` API.
 - **Errors:** Stdlib + `Doc2FlowError` (`src/utils/error.rs`). Avoid complex custom `Enum`s for basic app errors.
 - **Panics:** `unwrap()`/`expect()` ONLY for true invariants with descriptive msgs. NEVER for runtime/user I/O.
@@ -56,6 +59,7 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 - **Boolean Parsing:** Account for multiple case-insensitive truthy variants (`true`, `yes`, `y`, `1`) when deserializing boolean parameters from maps/frontmatter/headers.
 - **Pipelines & Parity:** DRY template contexts (`build_template_vars`), render conditional components identically across entry points, and single-predicate feature dispatch (`is_feature_active`).
 - **Resilient Test Assertions:** Assert specific semantic tokens (e.g., `.contains("bullet")`) on formatted string outputs (like `Display`) rather than brittle exact full-string matches.
+- **Fallback Testing:** Always write explicit `#[test]` cases for fallback or default `_ => {}` match arms (M-FALLBACK-TESTS).
 
 ### 5: HTML, XML & Asset Processing
 - **Scanners:** Zero-alloc single-pass tokenizers (O(N) forward cursor). Avoid redundant scanning passes over attribute names/values.

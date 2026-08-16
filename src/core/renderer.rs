@@ -7,6 +7,9 @@ use crate::core::document::{DocumentElement, DocumentElementId, DocumentParamete
 use crate::core::feature::FeatureModule;
 use crate::core::format::{format_inline_into, push_indent};
 
+/// Maximum capacity of active feature modules tracked concurrently.
+pub const MAX_ACTIVE_FEATURES: usize = 32;
+
 /// Trait for document element renderers declaring supported AST element types.
 pub trait DocumentElementRenderer: Send + Sync + fmt::Debug {
     /// Returns a slice of supported AST element IDs handled by this renderer.
@@ -29,19 +32,28 @@ pub trait DocumentElementRenderer: Send + Sync + fmt::Debug {
 /// Document AST HTML renderer managing active features and element interception.
 #[derive(Debug)]
 pub struct HtmlRenderer<'a> {
-    active_mask: Cell<u16>,
+    active_mask: Cell<u32>,
     modules: &'a [&'static dyn FeatureModule],
-    slots: [Option<&'static dyn FeatureModule>; DocumentElementId::COUNT],
+    slots: [Option<(usize, &'static dyn FeatureModule)>; DocumentElementId::COUNT],
 }
 
 impl<'a> HtmlRenderer<'a> {
     /// Creates a new HTML renderer configured with the specified slice of active features.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the number of feature modules exceeds 32 (the bit width of the tracking bitmask).
     #[must_use]
     pub fn new(modules: &'a [&'static dyn FeatureModule]) -> Self {
+        assert!(
+            modules.len() <= 32,
+            "feature modules count ({}) exceeds bitmask capacity of 32",
+            modules.len()
+        );
         let mut slots = [None; DocumentElementId::COUNT];
-        for &module in modules {
+        for (i, &module) in modules.iter().enumerate() {
             for &id in module.supported() {
-                slots[id as usize] = Some(module);
+                slots[id as usize] = Some((i, module));
             }
         }
         Self {
@@ -60,12 +72,16 @@ impl<'a> HtmlRenderer<'a> {
     /// Populates a fixed-size buffer with active feature module references and returns the slice.
     pub fn active_features<'b>(
         &self,
-        buffer: &'b mut [&'static dyn FeatureModule; 8],
+        buffer: &'b mut [&'static dyn FeatureModule; MAX_ACTIVE_FEATURES],
     ) -> &'b [&'static dyn FeatureModule] {
         let mask = self.active_mask.get();
         let mut count = 0;
         for (i, &module) in self.modules.iter().enumerate() {
             if (mask & (1 << i)) != 0 || module.name() == "core" {
+                debug_assert!(
+                    count < buffer.len(),
+                    "active features count exceeds MAX_ACTIVE_FEATURES buffer capacity"
+                );
                 if count < buffer.len() {
                     buffer[count] = module;
                     count += 1;
@@ -75,14 +91,11 @@ impl<'a> HtmlRenderer<'a> {
         &buffer[..count]
     }
 
-    /// Marks the given feature module as active.
-    fn mark_module_active(&self, target: &'static dyn FeatureModule) {
-        for (i, &module) in self.modules.iter().enumerate() {
-            if std::ptr::eq(module, target) || module.name() == target.name() {
-                self.active_mask.set(self.active_mask.get() | (1 << i));
-                break;
-            }
-        }
+    /// Marks the feature module at the specified index as active in O(1) time.
+    #[inline]
+    fn mark_module_active(&self, index: usize) {
+        debug_assert!(index < 32, "module index exceeds bitmask width");
+        self.active_mask.set(self.active_mask.get() | (1 << index));
     }
 
     /// Renders a single document element and its children into the output buffer.
@@ -95,8 +108,8 @@ impl<'a> HtmlRenderer<'a> {
         out: &mut String,
     ) {
         let id = element.element_id();
-        if let Some(module) = self.slots[id as usize] {
-            self.mark_module_active(module);
+        if let Some((index, module)) = self.slots[id as usize] {
+            self.mark_module_active(index);
             module.render_element(element, indent, depth, parameters, out, self);
         } else {
             self.render_fallback(element, indent, depth, parameters, out);
@@ -399,7 +412,8 @@ mod tests {
     #[test]
     fn test_active_features_tracking() {
         let renderer = HtmlRenderer::default_renderer();
-        let mut buffer = [&crate::features::CORE_FEATURE as &'static dyn FeatureModule; 8];
+        let mut buffer =
+            [&crate::features::CORE_FEATURE as &'static dyn FeatureModule; MAX_ACTIVE_FEATURES];
         let initial_active = renderer.active_features(&mut buffer);
         assert_eq!(initial_active.len(), 1);
         assert_eq!(initial_active[0].name(), "core");
@@ -408,11 +422,44 @@ mod tests {
         let bullet = DocumentElement::bullet_list_item("item");
         renderer.render_element(&bullet, 0, 0, &DocumentParameters::default(), &mut out);
 
-        let mut active_buffer = [&crate::features::CORE_FEATURE as &'static dyn FeatureModule; 8];
+        let mut active_buffer =
+            [&crate::features::CORE_FEATURE as &'static dyn FeatureModule; MAX_ACTIVE_FEATURES];
         let active = renderer.active_features(&mut active_buffer);
         assert_eq!(active.len(), 2);
         let names: Vec<&str> = active.iter().map(|m| m.name()).collect();
         assert!(names.contains(&"core"));
         assert!(names.contains(&"bullet"));
+    }
+
+    #[test]
+    fn test_render_fallback_unhandled_element_branches() {
+        let mut out = String::new();
+        let renderer = HtmlRenderer::new(&[]);
+        let dummy_params = DocumentParameters::default();
+
+        // Shoutout in fallback
+        let shoutout = DocumentElement::shoutout(
+            crate::core::document::ShoutoutElementKind::Caution,
+            "caution message",
+        );
+        renderer.render_element(&shoutout, 0, 0, &dummy_params, &mut out);
+        assert!(out.is_empty());
+
+        // Table in fallback (_ => {})
+        let table = DocumentElement::table(vec![], vec![]);
+        renderer.render_element(&table, 0, 0, &dummy_params, &mut out);
+        assert!(out.is_empty());
+
+        // TableVariables in fallback (_ => {})
+        let vars = DocumentElement::table_variables(std::collections::HashMap::new());
+        renderer.render_element(&vars, 0, 0, &dummy_params, &mut out);
+        assert!(out.is_empty());
+    }
+
+    #[test]
+    #[should_panic(expected = "exceeds bitmask capacity of 32")]
+    fn test_renderer_new_panics_on_too_many_modules() {
+        let modules = [&crate::features::CORE_FEATURE as &'static dyn FeatureModule; 33];
+        let _ = HtmlRenderer::new(&modules);
     }
 }
