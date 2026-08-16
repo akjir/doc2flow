@@ -4,7 +4,8 @@ use std::collections::HashMap;
 use std::mem;
 
 use crate::core::document::{
-    Document, DocumentElement, DocumentParameters, ShoutoutElementKind, TableAlignment,
+    Document, DocumentElement, DocumentHeader, DocumentParameters, ShoutoutElementKind,
+    TableAlignment,
 };
 use crate::core::error::{DiagnosticError, build_caret_annotation};
 use crate::core::{Error, Result};
@@ -326,6 +327,7 @@ impl<'a> MarkdownParser<'a> {
     fn flush_code_block(&mut self) {
         if self.in_code_block {
             let content = trim_code_block_lines(&self.code_block_lines);
+            extract_code_block_variables(&content, &mut self.doc.header);
             push_element(
                 &mut self.doc,
                 &mut self.section_stack,
@@ -408,8 +410,6 @@ impl<'a> MarkdownParser<'a> {
                     let DocumentElement::Table { rows, .. } = children.remove(0) else {
                         unreachable!();
                     };
-                    let mut variables_map =
-                        HashMap::with_capacity(rows.len().saturating_sub(1));
                     for mut row in rows.into_iter().skip(1) {
                         if !row.is_empty() {
                             let key = row.remove(0);
@@ -418,11 +418,10 @@ impl<'a> MarkdownParser<'a> {
                             } else {
                                 row.remove(0)
                             };
-                            variables_map.insert(key, val);
+                            self.doc.header.insert_variable(key, val);
                         }
                     }
-                    self.doc.header.variables =
-                        Some(DocumentElement::table_variables(variables_map));
+                    let _ = self.doc.header.variables_mut();
                 } else {
                     push_element(
                         &mut self.doc,
@@ -1246,6 +1245,25 @@ fn push_section(
         }
     }
     section_stack.push(DocumentElement::section(level, title, Vec::new()));
+}
+
+/// Extracts dynamic `{{VAR_NAME}}` placeholders from a code block slice into the document header.
+fn extract_code_block_variables(content: &str, header: &mut DocumentHeader) {
+    let mut parts = content.split("{{");
+    let _ = parts.next();
+
+    for part in parts {
+        if let Some((raw_var, _remainder)) = part.split_once("}}") {
+            let var_name = raw_var.trim();
+            if !var_name.is_empty()
+                && var_name
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || c == '_')
+            {
+                header.ensure_variable(var_name, "");
+            }
+        }
+    }
 }
 
 /// Trims leading and trailing empty lines from a slice of code lines.
@@ -3131,5 +3149,83 @@ Body text
             panic!("expected section");
         };
         assert_eq!(children.len(), 4);
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_code_block_variable_extraction_without_variables_directive() {
+        let md = "---\ntitle: \"No Table Variables\"\n---\n# Setup\n```bash\ncurl https://{{TARGET_HOST}}:{{TARGET_PORT}}/health\n```\n";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        let mut expected = HashMap::new();
+        expected.insert("TARGET_HOST".into(), String::new());
+        expected.insert("TARGET_PORT".into(), String::new());
+
+        assert_eq!(
+            doc.header.variables,
+            Some(DocumentElement::table_variables(expected))
+        );
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_code_block_variable_extraction_with_variables_directive() {
+        let md = "---\ntitle: \"Combined Variables\"\n---\n:::variables\n| Variable | Value |\n| --- | --- |\n| SYSTEM | prod-server |\n| PORT | 8080 |\n:::\n# Deployment\n```bash\nping {{SYSTEM}}\ndocker run -p {{PORT}}:{{PORT}} -e KEY={{API_KEY}}\n```\n";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        let mut expected = HashMap::new();
+        expected.insert("SYSTEM".into(), "prod-server".into());
+        expected.insert("PORT".into(), "8080".into());
+        expected.insert("API_KEY".into(), String::new());
+
+        assert_eq!(
+            doc.header.variables,
+            Some(DocumentElement::table_variables(expected))
+        );
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_code_block_variables_edge_cases() {
+        let md = "---\ntitle: \"Edge Cases\"\n---\n# Edge Cases\n```text\n{{}} {{  }}\n{{A}}{{B}}\n{{foo{{bar}}\n{{  TRIMMED_KEY  }}\n{{VAR_123_OK}}\n{{INVALID-DASH}}\n{{INVALID SPACE}}\n{{UNCLOSED_AT_END\n```\n```text\n{{A}} and {{VAR_123_OK}}\n```\n";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        let mut expected = HashMap::new();
+        expected.insert("A".into(), String::new());
+        expected.insert("B".into(), String::new());
+        expected.insert("bar".into(), String::new());
+        expected.insert("TRIMMED_KEY".into(), String::new());
+        expected.insert("VAR_123_OK".into(), String::new());
+
+        assert_eq!(
+            doc.header.variables,
+            Some(DocumentElement::table_variables(expected))
+        );
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_code_block_variables_utf8_safety() {
+        let md = "---\ntitle: \"UTF-8 Safety\"\n---\n# Code Section\n```bash\necho \"你好{{TARGET_CN}}🚀\"\necho \"äöü{{PORT_DE}}ß\"\n```\n";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        let mut expected = HashMap::new();
+        expected.insert("TARGET_CN".into(), String::new());
+        expected.insert("PORT_DE".into(), String::new());
+
+        assert_eq!(
+            doc.header.variables,
+            Some(DocumentElement::table_variables(expected))
+        );
+    }
+
+    #[test]
+    fn test_extract_code_block_variables_utf8_safe() {
+        let mut header = DocumentHeader::new();
+        let code = "echo \"你好{{TARGET_CN}}🚀\"\necho \"äöü{{PORT_DE}}ß\"\n{{}} {{INVALID-CHAR}}\n{{   SPACED_KEY   }}";
+        extract_code_block_variables(code, &mut header);
+
+        let vars = header.variables_mut();
+        assert_eq!(vars.get("TARGET_CN").map(String::as_str), Some(""));
+        assert_eq!(vars.get("PORT_DE").map(String::as_str), Some(""));
+        assert_eq!(vars.get("SPACED_KEY").map(String::as_str), Some(""));
+        assert_eq!(vars.get("INVALID-CHAR"), None);
+        assert_eq!(vars.len(), 3);
     }
 }

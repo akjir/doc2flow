@@ -1161,3 +1161,31 @@ fn test_table_pipeline_integration() {
     assert!(content.contains("window.d2f.table"));
     assert!(content.contains("        <div class=\"table-wrap\">\n          <table class=\"table-default\">\n            <thead>\n              <tr>\n                <th style=\"text-align: left;\">Item</th>\n                <th style=\"text-align: center;\">Qty</th>\n                <th style=\"text-align: right;\">Status</th>\n              </tr>\n            </thead>\n            <tbody>\n              <tr>\n                <td style=\"text-align: left;\"><strong>Widget A</strong></td>\n                <td style=\"text-align: center;\">42</td>\n                <td style=\"text-align: right;\">In Stock</td>\n              </tr>\n              <tr>\n                <td style=\"text-align: left;\"><code>Widget B</code></td>\n                <td style=\"text-align: center;\">0</td>\n                <td style=\"text-align: right;\"><em>Out of Stock</em></td>\n              </tr>\n            </tbody>\n          </table>\n        </div>"));
 }
+
+#[test]
+fn test_code_variable_pipeline_without_variables_directive() {
+    let input = "---\ntitle: \"Code Vars Test\"\n---\n# Code Section\n\n```bash\ncurl -H \"Authorization: Bearer {{AUTH_TOKEN}}\" https://{{TARGET_HOST}}:{{PORT}}/api\n```";
+    let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
+    let content = doc2flow::core::builder::build(&document);
+    assert!(content.contains("<title>Code Vars Test</title>"));
+    assert!(content.contains("<meta name=\"features\" content=\"core, code\">"));
+    assert!(content.contains("class=\"code-table-wrap\""));
+    assert!(content.contains("class=\"code-table-default\""));
+    assert!(content.contains("<td>AUTH_TOKEN</td>"));
+    assert!(content.contains("<td>PORT</td>"));
+    assert!(content.contains("<td>TARGET_HOST</td>"));
+    assert!(content.contains("<input type=\"text\" class=\"code-table-input\" value=\"\">"));
+    assert!(content.contains("curl -H &quot;Authorization: Bearer {{AUTH_TOKEN}}&quot; https://{{TARGET_HOST}}:{{PORT}}/api"));
+}
+
+#[test]
+fn test_code_variable_pipeline_with_variables_directive() {
+    let input = "---\ntitle: \"Code Vars Combined Test\"\n---\n:::variables\n| Variable | Value |\n| --- | --- |\n| TARGET_HOST | 192.168.1.50 |\n| PORT | 8080 |\n:::\n# Code Section\n\n```bash\ncurl -H \"Authorization: Bearer {{AUTH_TOKEN}}\" https://{{TARGET_HOST}}:{{PORT}}/api\n```";
+    let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
+    let content = doc2flow::core::builder::build(&document);
+    assert!(content.contains("<title>Code Vars Combined Test</title>"));
+    assert!(content.contains("<meta name=\"features\" content=\"core, code\">"));
+    assert!(content.contains("<td>TARGET_HOST</td>\n            <td><input type=\"text\" class=\"code-table-input\" value=\"192.168.1.50\"></td>"));
+    assert!(content.contains("<td>PORT</td>\n            <td><input type=\"text\" class=\"code-table-input\" value=\"8080\"></td>"));
+    assert!(content.contains("<td>AUTH_TOKEN</td>\n            <td><input type=\"text\" class=\"code-table-input\" value=\"\"></td>"));
+}

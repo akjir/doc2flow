@@ -368,6 +368,35 @@ impl DocumentHeader {
     pub fn new() -> Self {
         Self { variables: None }
     }
+
+    /// Returns a mutable reference to the underlying variables map, initializing it lazily if empty.
+    pub fn variables_mut(&mut self) -> &mut HashMap<String, String> {
+        let element = self
+            .variables
+            .get_or_insert_with(|| DocumentElement::table_variables(HashMap::new()));
+
+        let DocumentElement::TableVariables { variables } = element else {
+            unreachable!("DocumentHeader variables slot contains invalid AST element");
+        };
+
+        variables
+    }
+
+    /// Inserts or updates a variable in the variables table.
+    pub fn insert_variable(&mut self, key: impl Into<String>, value: impl Into<String>) {
+        self.variables_mut().insert(key.into(), value.into());
+    }
+
+    /// Ensures a variable is present in the variables table, setting it to a fallback value if not already present.
+    pub fn ensure_variable(&mut self, key: &str, fallback_value: &str) {
+        let vars = self.variables_mut();
+
+        // P-MIN-ALLOC: Avoid Entry API (vars.entry(key.to_string()))
+        // to prevent unconditional heap allocations when key already exists.
+        if !vars.contains_key(key) {
+            vars.insert(key.to_string(), fallback_value.to_string());
+        }
+    }
 }
 
 /// Document metadata and configuration options extracted from frontmatter.
@@ -742,6 +771,78 @@ mod tests {
         let header = DocumentHeader::new();
         assert_eq!(header, DocumentHeader::default());
         assert_eq!(header.variables, None);
+    }
+
+    #[test]
+    fn test_document_header_lazy_init() {
+        let mut header = DocumentHeader::new();
+        assert_eq!(header.variables, None);
+
+        // Accessing variables_mut lazily initializes the TableVariables AST node
+        let vars = header.variables_mut();
+        assert!(vars.is_empty());
+        assert!(matches!(
+            header.variables,
+            Some(DocumentElement::TableVariables { .. })
+        ));
+    }
+
+    #[test]
+    fn test_ensure_variable_no_overwrite() {
+        let mut header = DocumentHeader::new();
+        header.insert_variable("PORT", "8080");
+
+        // ensure_variable must not overwrite existing value
+        header.ensure_variable("PORT", "9090");
+        assert_eq!(
+            header.variables_mut().get("PORT").map(String::as_str),
+            Some("8080")
+        );
+
+        // ensure_variable sets fallback when key is not present
+        header.ensure_variable("HOST", "127.0.0.1");
+        assert_eq!(
+            header.variables_mut().get("HOST").map(String::as_str),
+            Some("127.0.0.1")
+        );
+    }
+
+    #[test]
+    fn test_document_header_variable_operations() {
+        let mut header = DocumentHeader::new();
+        assert_eq!(header.variables, None);
+
+        // Ensure variable when None creates TableVariables with fallback
+        header.ensure_variable("PORT", "8080");
+        let mut expected = HashMap::new();
+        expected.insert("PORT".into(), "8080".into());
+        assert_eq!(
+            header.variables,
+            Some(DocumentElement::table_variables(expected.clone()))
+        );
+
+        // Ensure variable does not overwrite existing value
+        header.ensure_variable("PORT", "9090");
+        assert_eq!(
+            header.variables,
+            Some(DocumentElement::table_variables(expected.clone()))
+        );
+
+        // Insert variable overwrites existing value
+        header.insert_variable("PORT", "9090");
+        expected.insert("PORT".into(), "9090".into());
+        assert_eq!(
+            header.variables,
+            Some(DocumentElement::table_variables(expected.clone()))
+        );
+
+        // Ensure another variable appends to existing map
+        header.ensure_variable("HOST", "127.0.0.1");
+        expected.insert("HOST".into(), "127.0.0.1".into());
+        assert_eq!(
+            header.variables,
+            Some(DocumentElement::table_variables(expected))
+        );
     }
 
     #[test]

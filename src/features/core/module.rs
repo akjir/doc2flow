@@ -29,7 +29,7 @@ impl CoreFeature {
     /// Creates a new core feature instance.
     #[must_use]
     pub fn new() -> Self {
-        Self::default()
+        Self
     }
 }
 

@@ -19,7 +19,7 @@ impl UnknownFeature {
     /// Creates a new unknown feature instance.
     #[must_use]
     pub fn new() -> Self {
-        Self::default()
+        Self
     }
 }
 

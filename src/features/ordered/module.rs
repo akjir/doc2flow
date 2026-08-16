@@ -29,7 +29,7 @@ impl OrderedFeature {
     /// ```
     #[must_use]
     pub fn new() -> Self {
-        Self::default()
+        Self
     }
 }
 
