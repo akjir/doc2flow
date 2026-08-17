@@ -40,6 +40,9 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 - **Declarative Iterators:** Prefer `.filter()`, `.map()`, `.fold()` over imperative loops with mutable state.
 - **Unified Forward Parsers:** Never duplicate forward-scanning loops across token handlers. Encapsulate index advancement and token/code skipping into generic higher-order functions or reusable iterators (P-UNIFIED-PARSER).
 - **Linear Parsing & No O(N²):** Ensure token parsers and recursive descent routines parse strictly linearly (O(N)). Avoid repetitive scanning of identical byte slices on unclosed/nested tokens (P-NO-QUADRATIC).
+- **Zero-Dep JSON Compliance:** Custom JSON parsers MUST explicitly support UTF-16 surrogate pair decoding (`\uD800..\uDBFF` + `\uDC00..\uDFFF`). Relying solely on `char::from_u32` for 4-digit hex escapes is strictly prohibited (fails outside BMP/emojis) (P-JSON-SURROGATE).
+- **Strict Primitive Validation:** Unquoted JSON values MUST strictly validate against RFC 8259 (`true`, `false`, `null`, numbers). Permissive "read until delimiter" accepting arbitrary bare words or malformed floats is strictly prohibited; emit explicit error (P-JSON-STRICT-PRIMITIVES).
+- **Stdlib Only:** ZERO external dependencies (`serde_json`, `nom`) in zero-dependency core engine components. String manipulation and validation must utilize standard library functionality exclusively (`str::from_utf8`) (P-STDLIB-ONLY).
 
 ### 3: Formatting & Buffer Directives
 - **Static:** `out.write_str("...")` STRICTLY for static literals (no variables).

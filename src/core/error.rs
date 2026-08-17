@@ -30,6 +30,54 @@ impl Display for CliError {
 
 impl std::error::Error for CliError {}
 
+/// Errors that can occur during JSON parsing.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum JsonError {
+    /// The input ended unexpectedly before parsing completed.
+    UnexpectedEof,
+    /// Expected opening curly brace `{` for a JSON object.
+    ExpectedObject,
+    /// Expected a string literal as the object key.
+    ExpectedKey,
+    /// Expected a colon `:` separating key and value.
+    ExpectedColon,
+    /// Expected a comma `,` or closing brace `}` after an entry.
+    ExpectedCommaOrClosingBrace,
+    /// Expected a valid JSON value.
+    ExpectedValue,
+    /// Encountered an invalid or unsupported escape sequence.
+    InvalidEscapeSequence,
+    /// Encountered an invalid number literal or bare word.
+    InvalidNumber,
+    /// Encountered an invalid Unicode hexadecimal escape sequence.
+    InvalidUnicodeEscape,
+    /// Encountered an unexpected character.
+    UnexpectedCharacter(char),
+}
+
+impl Display for JsonError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::UnexpectedEof => write!(f, "unexpected end of JSON input"),
+            Self::ExpectedObject => write!(f, "expected '{{' to begin JSON object"),
+            Self::ExpectedKey => write!(f, "expected string literal for JSON object key"),
+            Self::ExpectedColon => write!(f, "expected ':' after JSON object key"),
+            Self::ExpectedCommaOrClosingBrace => {
+                write!(f, "expected ',' or '}}' after JSON object entry")
+            }
+            Self::ExpectedValue => write!(f, "expected value in JSON object entry"),
+            Self::InvalidEscapeSequence => write!(f, "invalid escape sequence in JSON string"),
+            Self::InvalidNumber => write!(f, "invalid number literal in JSON input"),
+            Self::InvalidUnicodeEscape => {
+                write!(f, "invalid Unicode hexadecimal escape in JSON string")
+            }
+            Self::UnexpectedCharacter(c) => write!(f, "unexpected character '{c}' in JSON input"),
+        }
+    }
+}
+
+impl std::error::Error for JsonError {}
+
 /// Compiler-style diagnostic error representation.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DiagnosticError<'a> {
@@ -131,6 +179,12 @@ impl From<CliError> for Error {
 impl<'a> From<DiagnosticError<'a>> for Error {
     fn from(err: DiagnosticError<'a>) -> Self {
         Self::Diagnostic(err.to_string())
+    }
+}
+
+impl From<JsonError> for Error {
+    fn from(err: JsonError) -> Self {
+        Self::Message(err.to_string())
     }
 }
 
@@ -371,6 +425,62 @@ mod tests {
         );
 
         let std_err: &dyn std::error::Error = &err_missing;
+        assert!(std_err.source().is_none());
+    }
+
+    #[test]
+    fn test_json_error_display_and_from_conversion() {
+        let err = JsonError::UnexpectedEof;
+        assert_eq!(err.to_string(), "unexpected end of JSON input");
+        let core_err: Error = err.clone().into();
+        assert_eq!(core_err.to_string(), "unexpected end of JSON input");
+
+        let err_obj = JsonError::ExpectedObject;
+        assert_eq!(err_obj.to_string(), "expected '{' to begin JSON object");
+
+        let err_key = JsonError::ExpectedKey;
+        assert_eq!(
+            err_key.to_string(),
+            "expected string literal for JSON object key"
+        );
+
+        let err_colon = JsonError::ExpectedColon;
+        assert_eq!(err_colon.to_string(), "expected ':' after JSON object key");
+
+        let err_comma = JsonError::ExpectedCommaOrClosingBrace;
+        assert_eq!(
+            err_comma.to_string(),
+            "expected ',' or '}' after JSON object entry"
+        );
+
+        let err_val = JsonError::ExpectedValue;
+        assert_eq!(err_val.to_string(), "expected value in JSON object entry");
+
+        let err_esc = JsonError::InvalidEscapeSequence;
+        assert_eq!(
+            err_esc.to_string(),
+            "invalid escape sequence in JSON string"
+        );
+
+        let err_num = JsonError::InvalidNumber;
+        assert_eq!(
+            err_num.to_string(),
+            "invalid number literal in JSON input"
+        );
+
+        let err_u = JsonError::InvalidUnicodeEscape;
+        assert_eq!(
+            err_u.to_string(),
+            "invalid Unicode hexadecimal escape in JSON string"
+        );
+
+        let err_char = JsonError::UnexpectedCharacter('?');
+        assert_eq!(
+            err_char.to_string(),
+            "unexpected character '?' in JSON input"
+        );
+
+        let std_err: &dyn std::error::Error = &err;
         assert!(std_err.source().is_none());
     }
 

@@ -8,6 +8,7 @@ pub mod error;
 pub mod feature;
 pub mod format;
 pub mod io;
+pub mod json;
 pub mod language;
 pub mod markdown;
 pub mod renderer;
@@ -21,9 +22,10 @@ pub use document::{
     Document, DocumentElement, DocumentElementId, DocumentHeader, DocumentParameters,
     ShoutoutElementKind, TableAlignment,
 };
-pub use error::{build_caret_annotation, CliError, DiagnosticError, Error, Result};
+pub use error::{build_caret_annotation, CliError, DiagnosticError, Error, JsonError, Result};
 pub use feature::FeatureModule;
 pub use format::{append_indented, escape_html_into, format_inline_into, push_indent};
-pub use language::translate;
+pub use json::parse_json_map;
+pub use language::{init, localize, t};
 pub use markdown::parse_d2f_markdown;
 pub use renderer::{DocumentElementRenderer, HtmlRenderer, render_element, render_element_into};

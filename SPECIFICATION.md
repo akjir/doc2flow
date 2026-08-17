@@ -323,6 +323,7 @@ doc2flow/
 │   │   ├── feature.rs        # FeatureModule trait definition
 │   │   ├── format.rs         # Text formatting and escaping utilities
 │   │   ├── io.rs             # File system and I/O abstraction
+│   │   ├── json.rs           # Zero-dependency JSON string map parser
 │   │   ├── language.rs       # Embedded locale loader
 │   │   ├── markdown.rs       # Zero-alloc Markdown parser
 │   │   └── renderer.rs       # HTML AST renderer and element formatter
@@ -334,6 +335,7 @@ doc2flow/
 │   │   ├── image/            # Image display and lightbox slice
 │   │   ├── input/            # Standalone input field vertical slice
 │   │   ├── ordered/          # Ordered list vertical slice
+│   │   ├── shoutout/         # Callout and notice box slice
 │   │   ├── table/            # Table rendering slice
 │   │   ├── task/             # Interactive task checkbox slice
 │   │   └── unknown/          # Unrecognized element fallback slice

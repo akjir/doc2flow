@@ -60,6 +60,9 @@ For type `MyType`:
 - **Flattened Dispatchers:** Keep token dispatch loops flat (<50 lines) by delegating parsing to discrete, strongly-typed helper functions (`try_parse_*`).
 - **Encapsulated Lookarounds:** Abstract UTF-8 boundary checks and char inspection into semantic helper functions rather than inline pointer/char math.
 - **Pure CLI & OS-Agnostic Paths:** Parser functions must accept pure argument iterators (caller strips binary via `args_os().skip(1)`), use `std::ffi::OsStr`/`OsString` for filesystem paths without assuming UTF-8, and avoid fragile flag peeking.
+- **Zero-Dep JSON Compliance:** Custom JSON parsers MUST decode UTF-16 surrogate pairs (`\uD800..\uDBFF` + `\uDC00..\uDFFF`) into scalar chars; never rely solely on `char::from_u32` for 4-digit hex escapes.
+- **Strict Primitive Validation:** Unquoted JSON values must strictly validate against RFC 8259 (`true`, `false`, `null`, numbers). Permissive "read until delimiter" logic is strictly prohibited.
+- **Stdlib Only:** Core engine modules must use standard library functionality exclusively without third-party crates (`serde_json`, `nom`).
 
 ### D. Tests & Assertions
 - **Resilient Assertions:** Assert specific semantic tokens (e.g., `.contains("bullet")`) on formatted string outputs (like `Display`) instead of brittle exact full-string matches.

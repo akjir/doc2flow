@@ -69,6 +69,7 @@ fn format_features_str(active_modules: &[&'static dyn FeatureModule]) -> String 
 /// ```
 #[must_use]
 pub fn build(document: &Document) -> String {
+    crate::core::language::init(&document.parameters.language);
     let app_version_raw = APP_VERSION.strip_prefix('v').unwrap_or(APP_VERSION);
     let created_at = format_iso8601_utc(std::time::SystemTime::now());
     let lang_code = if document.parameters.language.is_empty() {
@@ -117,6 +118,7 @@ mod tests {
 
     #[test]
     fn test_builder_build_as_ref_u8() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let mut doc = Document::new();
         doc.push_body(DocumentElement::text("Document body text"));
         let content = build(&doc);
@@ -185,6 +187,7 @@ mod tests {
 
     #[test]
     fn test_builder_build_includes_unknown_css_when_active() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let mut doc = Document::new();
         doc.push_body(crate::core::document::DocumentElement::unknown(
             "unrecognized",
@@ -203,6 +206,7 @@ mod tests {
 
     #[test]
     fn test_builder_build_custom_title() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let mut doc = Document::new();
         doc.parameters.title = "Custom Title".into();
         let content = build(&doc);
@@ -212,6 +216,7 @@ mod tests {
 
     #[test]
     fn test_builder_build_empty_title() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let doc = Document::new();
         let content = build(&doc);
         assert!(content.contains("<title></title>"));
@@ -220,26 +225,39 @@ mod tests {
 
     #[test]
     fn test_builder_build_custom_language() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let mut doc = Document::new();
         doc.parameters.language = "de".into();
+        doc.push_body(DocumentElement::shoutout(
+            crate::core::document::ShoutoutElementKind::Note,
+            "Hinweistext",
+        ));
         let content = build(&doc);
         assert!(content.contains("<html lang=\"de\">"));
         assert!(content.contains("window.d2f.document.language = 'de';"));
+        assert!(content.contains("data-label=\"Hinweis\""));
         assert!(!content.contains("{{LANG_CODE}}"));
         assert!(!content.contains("{{LANGUAGE_CODE}}"));
     }
 
     #[test]
     fn test_builder_build_unknown_language() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let mut doc = Document::new();
         doc.parameters.language = "fr".into();
+        doc.push_body(DocumentElement::shoutout(
+            crate::core::document::ShoutoutElementKind::Note,
+            "Texte",
+        ));
         let content = build(&doc);
         assert!(content.contains("<html lang=\"fr\">"));
         assert!(content.contains("window.d2f.document.language = 'fr';"));
+        assert!(content.contains("data-label=\"{{callout_note}}\""));
     }
 
     #[test]
     fn test_builder_build_empty_language_fallback() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let mut doc = Document::new();
         doc.parameters.language.clear();
         let content = build(&doc);
@@ -251,6 +269,7 @@ mod tests {
 
     #[test]
     fn test_builder_build_with_features() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let mut doc = Document::new();
         doc.push_body(DocumentElement::code_block(None::<String>, "test code"));
         let content = build(&doc);
@@ -268,6 +287,7 @@ mod tests {
 
     #[test]
     fn test_builder_build_with_header_variables() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let mut doc = Document::new();
         let mut vars = std::collections::HashMap::new();
         vars.insert("PORT".into(), "8080".into());

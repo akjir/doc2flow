@@ -139,6 +139,7 @@ pub fn render_element_into(
     parameters: &DocumentParameters,
     out: &mut String,
 ) {
+    crate::core::language::init(&parameters.language);
     let renderer = HtmlRenderer::default_renderer();
     renderer.render_element(element, indent, 0, parameters, out);
 }
@@ -344,6 +345,7 @@ mod tests {
 
     #[test]
     fn test_render_element_shoutout_and_block_directive() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let shoutout = DocumentElement::shoutout(
             crate::core::document::ShoutoutElementKind::Note,
             "Unregistered shoutout",

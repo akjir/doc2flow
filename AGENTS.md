@@ -38,13 +38,21 @@
 - **String/Buffer:** Exact `with_capacity` pre-alloc. Direct buffer streaming (`write_str`/`push_str`). NO intermediate `Vec`/strings on hot paths.
 - **HTML/XML/SVG:** Zero-alloc tokenizers (O(N) 1-pass forward cursor). Quote-aware (single `'`, double `"`, multiline, escaped `\"`/`\'`). Sub-parsers for declarations (`<?`), DOCTYPE, comments (`<!--`), CDATA (`<![CDATA[`), tags. NO redundant scanning passes over attribute names/values. NO `println!` in core processing routines.
 - **Flow:** `match`/tables > `if-else`. Iterators > loops. `write_str`(static)/`write!`(dynamic) > `format!` (hot-path buffers).
+- **Async State:** BANNED: `thread_local!` for app/session state in async/multi-thread runtimes (state loss on thread hop). Pass context or use thread-safe global sync (`RwLock`, `Mutex`, `arc-swap`) (P-ASYNC-STATE).
+- **Zero-Copy JSON:** NO zero-copy `&str` JSON deserialization on unvetted data/escapes (`\n`, `\uXXXX`). Default to owned `String` in map values to prevent silent parse errors (P-OWNED-JSON).
+- **Zero-Dep JSON:** Custom JSON parsers MUST explicitly support UTF-16 surrogate pair decoding (`\uD800..\uDBFF` + `\uDC00..\uDFFF`). Relying solely on `char::from_u32` for 4-digit hex escapes is strictly prohibited (fails outside BMP/emojis) (P-JSON-SURROGATE).
+- **Strict Primitives:** Unquoted JSON values MUST strictly validate against RFC 8259 (`true`, `false`, `null`, numbers). Permissive "read until delimiter" accepting arbitrary bare words or malformed floats is strictly prohibited; emit explicit error (P-JSON-STRICT-PRIMITIVES).
+- **Stdlib Only:** ZERO external dependencies (`serde_json`, `nom`) in zero-dependency core engine components. String manipulation and validation must utilize standard library functionality exclusively (`str::from_utf8`) (P-STDLIB-ONLY).
+- **Static Assets:** NEVER swallow deserialization errors (`.unwrap_or_default()`, `.ok()`) on embedded static assets. Use `.expect()` to fail fast at startup (P-FAILFAST-STATIC).
+- **Honest Returns:** NEVER return `Cow` when all code paths return `Cow::Owned` (e.g. data behind short-lived locks). Use explicit `String` or `Arc<str>` (P-HONEST-RETURNS).
+- **I18n Naming:** Standardize on `localize()` (alias `t()`) for static dictionary lookup. BANNED: `translate()` (P-I18N-NAMING).
 - **Build:** `lto=true`, `opt=z|s`, `codegen-units=1`, strip. Favor stdlib over deps.
 
 ## 3. Ops & Tests
 - **Comm:** English ONLY. 1-line concise AI responses.
 - **OS:** Linux dev, Win64 target. `std::path::Path/Buf` ONLY.
 - **Git:** Commit ONLY if requested AND tests pass (or user overrides).
-- **Test:** Priority 1. Negative/edge cases. Semantic token assertions (e.g. `.contains("bullet")`) over exact full strings on formatted output (`Display`). Explicit tests for fallback/default `_ => {}` arms (M-FALLBACK-TESTS). Mandate extreme edge-case unit tests (`usize::MAX`, `0`, bounds) for string length math & buffer sizing (M-EXTREME-BOUND-TESTS). Regen `showcase_*.html` on UI changes.
+- **Test:** Priority 1. Negative/edge cases. Semantic token assertions (e.g. `.contains("bullet")`) over exact full strings on formatted output (`Display`). Explicit tests for fallback/default `_ => {}` arms (M-FALLBACK-TESTS). Mandate extreme edge-case unit tests (`usize::MAX`, `0`, bounds) for string length math & buffer sizing (M-EXTREME-BOUND-TESTS). Shared global mutable state (`LazyLock`/`RwLock`) MUST synchronize in `#[cfg(test)]` via a dedicated test `Mutex<()>` (M-GLOBAL-TEST-LOCK). Regen `showcase_*.html` on UI changes.
 
 ## 4. Frontend (HTML/JS/CSS)
 - **HTML (Generic):**

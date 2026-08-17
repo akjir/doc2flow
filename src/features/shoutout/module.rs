@@ -5,7 +5,7 @@ use crate::core::document::{
 };
 use crate::core::feature::FeatureModule;
 use crate::core::format::{escape_html_into, format_inline_into, push_indent};
-use crate::core::language::translate;
+use crate::core::language::localize;
 use crate::core::renderer::{DocumentElementRenderer, HtmlRenderer};
 
 /// Embedded shoutout CSS stylesheet.
@@ -68,7 +68,7 @@ impl DocumentElementRenderer for ShoutoutFeature {
         element: &DocumentElement,
         indent: usize,
         _depth: usize,
-        parameters: &DocumentParameters,
+        _parameters: &DocumentParameters,
         out: &mut String,
         _renderer: &HtmlRenderer,
     ) {
@@ -76,11 +76,11 @@ impl DocumentElementRenderer for ShoutoutFeature {
             push_indent(out, indent);
             let cls = shoutout_class(*kind);
             let key = shoutout_translation_key(*kind);
-            let label = translate(key, &parameters.language);
+            let label = localize(key);
             out.push_str("<div class=\"");
             out.push_str(cls);
             out.push_str("\" data-label=\"");
-            escape_html_into(out, label);
+            escape_html_into(out, &label);
             out.push_str("\">\n");
 
             for line in content.lines() {
@@ -209,6 +209,8 @@ mod tests {
 
     #[test]
     fn test_shoutout_renders_note_english() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        crate::core::language::init("en");
         let feature = ShoutoutFeature::new();
         let element = DocumentElement::shoutout(ShoutoutElementKind::Note, "Standard note message");
         let mut out = String::new();
@@ -231,6 +233,8 @@ mod tests {
 
     #[test]
     fn test_shoutout_renders_tip_german() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        crate::core::language::init("de");
         let feature = ShoutoutFeature::new();
         let element = DocumentElement::shoutout(ShoutoutElementKind::Tip, "Ein nützlicher Tipp");
         let mut out = String::new();
@@ -248,6 +252,8 @@ mod tests {
 
     #[test]
     fn test_shoutout_renders_all_kinds_german() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        crate::core::language::init("de");
         let feature = ShoutoutFeature::new();
         let renderer = HtmlRenderer::default_renderer();
         let mut params = DocumentParameters::default();
@@ -273,7 +279,51 @@ mod tests {
     }
 
     #[test]
+    fn test_shoutout_renders_all_kinds_english_default() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        crate::core::language::init("en");
+        let feature = ShoutoutFeature::new();
+        let renderer = HtmlRenderer::default_renderer();
+        let params = DocumentParameters::default();
+
+        let kinds = [
+            (ShoutoutElementKind::Note, "shoutout-note", "Note"),
+            (ShoutoutElementKind::Tip, "shoutout-tip", "Tip"),
+            (ShoutoutElementKind::Important, "shoutout-important", "Important"),
+            (ShoutoutElementKind::Warning, "shoutout-warning", "Warning"),
+            (ShoutoutElementKind::Caution, "shoutout-caution", "Caution"),
+        ];
+
+        for (kind, expected_cls, expected_label) in kinds {
+            let element = DocumentElement::shoutout(kind, "Text");
+            let mut out = String::new();
+            feature.render_element(&element, 0, 0, &params, &mut out, &renderer);
+            let expected = format!(
+                "<div class=\"shoutout {expected_cls}\" data-label=\"{expected_label}\">\n  Text\n</div>\n"
+            );
+            assert_eq!(out, expected);
+        }
+    }
+
+    #[test]
+    fn test_shoutout_renders_unknown_language_placeholder() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        crate::core::language::init("fr");
+        let feature = ShoutoutFeature::new();
+        let renderer = HtmlRenderer::default_renderer();
+        let mut params = DocumentParameters::default();
+        params.language = "fr".to_string();
+        let element = DocumentElement::shoutout(ShoutoutElementKind::Note, "Texte");
+        let mut out = String::new();
+        feature.render_element(&element, 0, 0, &params, &mut out, &renderer);
+        let expected = "<div class=\"shoutout shoutout-note\" data-label=\"{{callout_note}}\">\n  Texte\n</div>\n";
+        assert_eq!(out, expected);
+    }
+
+    #[test]
     fn test_shoutout_renders_inline_formatting() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        crate::core::language::init("en");
         let feature = ShoutoutFeature::new();
         let element = DocumentElement::shoutout(
             ShoutoutElementKind::Important,
@@ -299,6 +349,8 @@ mod tests {
 
     #[test]
     fn test_shoutout_renders_multiline() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        crate::core::language::init("en");
         let feature = ShoutoutFeature::new();
         let element = DocumentElement::shoutout(
             ShoutoutElementKind::Warning,
