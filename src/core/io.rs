@@ -1,6 +1,7 @@
 //! Centralized filesystem and I/O abstraction module.
 
 use std::fs;
+#[cfg(not(test))]
 use std::io::{IsTerminal, Write};
 use std::path::{Path, PathBuf};
 
