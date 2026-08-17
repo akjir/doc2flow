@@ -77,7 +77,7 @@ Doc2Flow is a high-performance, single-binary CLI tool that compiles Markdown do
 ```
 - **Utility Subsystem (`src/utils/`):** Pure, domain-agnostic library modules.
 - **Core Engine (`src/core/`):** Houses the AST data model, zero-alloc Markdown token parser, builder assembler, compiler-style error diagnostics, and filesystem I/O (`src/core/io.rs`). Direct `std::fs` calls outside `io.rs` are PROHIBITED.
-- **Vertical Feature Slices (`src/features/<feature>/`):** Isolated modules (`block`, `bullet`, `code`, `core`, `image`, `input`, `ordered`, `shoutout`, `table`, `task`, `unknown`). Each slice encapsulates its HTML rendering, CSS (`<name>.css`), JS (`<name>.js`), and local constants.
+- **Vertical Feature Slices (`src/features/<feature>/`):** Isolated modules (`block`, `bullet`, `code`, `core`, `header`, `image`, `input`, `ordered`, `shoutout`, `table`, `task`, `unknown`). Each slice encapsulates its HTML rendering, CSS (`<name>.css`), JS (`<name>.js`), and local constants.
 - **Conditional Asset Assembly:** If a feature is absent from a document, zero CSS rules and zero JS code for that feature SHALL be emitted into the output HTML.
 
 ---
@@ -107,7 +107,7 @@ The CLI executable MUST support the following grammar: `d2f [OPTIONS] [INPUT]`
   - `version` (string): Document version string.
   - `language` (string): Locale code (`en`, `de`) for UI localization (default: `"en"`).
   - `logo` (string): Relative path or URI to header logo (overridden by CLI `-l`).
-  - `header` (string): Header layout mode (`"flex"`, `"none"`, default: `"none"`).
+  - `header` (bool): Top header banner card toggle (default: `true`, accepts case-insensitive `"true"`, `"yes"`, `"y"`, `"1"`).
   - `numbered_sections` (bool): Automatic heading numbering (`1.`, `1.1`) (default: `true`, accepts case-insensitive `"true"`, `"yes"`, `"y"`, `"1"`).
   - Custom keys: Preserved in `DocumentParameters.variables` map.
 - **Heading Hierarchy:**
@@ -174,11 +174,12 @@ The CLI executable MUST support the following grammar: `d2f [OPTIONS] [INPUT]`
 ```rust
 pub struct Document {
     pub body: Vec<DocumentElement>,
-    pub header: DocumentHeader,
+    pub head: DocumentHeader,
     pub parameters: DocumentParameters,
 }
 
 pub struct DocumentHeader {
+    pub header: Option<DocumentElement>,
     pub variables: Option<DocumentElement>,
 }
 
@@ -187,6 +188,7 @@ pub enum DocumentElement {
     BulletListItem { content: String, children: Vec<DocumentElement> },
     CheckBoxItem { checked: bool, content: String, children: Vec<DocumentElement> },
     CodeBlock { content: String, language: Option<String> },
+    Header { title: String, subtitle: Option<String>, logo: Option<String> },
     HorizontalRule,
     Image { alt: String, url: String },
     Input { text: String },
@@ -206,7 +208,7 @@ pub struct DocumentParameters {
     pub version: String,
     pub language: String,
     pub logo: String,
-    pub header: String,
+    pub header: bool,
     pub numbered_sections: bool,
     pub variables: HashMap<String, String>,
 }
@@ -217,16 +219,17 @@ pub enum DocumentElementId {
     BulletListItem = 1,
     CheckBoxItem = 2,
     CodeBlock = 3,
-    HorizontalRule = 4,
-    Image = 5,
-    Input = 6,
-    OrderedListItem = 7,
-    Section = 8,
-    Shoutout = 9,
-    Table = 10,
-    TableVariables = 11,
-    Text = 12,
-    Unknown = 13,
+    Header = 4,
+    HorizontalRule = 5,
+    Image = 6,
+    Input = 7,
+    OrderedListItem = 8,
+    Section = 9,
+    Shoutout = 10,
+    Table = 11,
+    TableVariables = 12,
+    Text = 13,
+    Unknown = 14,
 }
 
 pub trait DocumentElementRenderer: Send + Sync + fmt::Debug {
@@ -331,9 +334,11 @@ doc2flow/
 │   │   └── renderer.rs       # HTML AST renderer and element formatter
 │   ├── features/             # Vertical slice feature modules
 │   │   ├── mod.rs            # Feature registry and dispatcher
+│   │   ├── block/            # Block directive vertical slice
 │   │   ├── bullet/           # Bullet list vertical slice
 │   │   ├── code/             # Code block vertical slice
 │   │   ├── core/             # Core base styles and client scripts
+│   │   ├── header/           # Document header banner vertical slice
 │   │   ├── image/            # Image display and lightbox slice
 │   │   ├── input/            # Standalone input field vertical slice
 │   │   ├── ordered/          # Ordered list vertical slice

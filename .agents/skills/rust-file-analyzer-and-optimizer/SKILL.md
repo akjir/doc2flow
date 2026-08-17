@@ -78,12 +78,14 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 - **Fallback Testing:** Always write explicit `#[test]` cases for fallback or default `_ => {}` match arms (M-FALLBACK-TESTS).
 - **Extreme Boundary Testing:** Mandate extreme edge-case unit tests (`usize::MAX`, `0`, overflow bounds) for functions performing length/padding math (M-EXTREME-BOUND-TESTS).
 - **Path Edge-Case Testing:** All functions analyzing `std::path::Path`/`PathBuf` components (extensions, filenames) MUST include unit tests for filesystem edge cases: hidden files (`.env`), missing filenames/trailing slashes (`/`), empty extensions/trailing dots (`file.`), and compound extensions (`.tar.gz`) (M-PATH-EDGE-TESTS).
+- **Functional Combinators:** BANNED: imperative `if/else` inside `Option`/`Result` closures (`.or_else(|| ...)`). Mandate declarative chaining (`.filter()`, `.map()`, `.and_then()`). Standardize optional string emptiness filtering on `.as_deref().filter(|s| !s.trim().is_empty())` (P-FUNCTIONAL-COMBINATORS).
 - **I/O Test Obligation:** Mandatory temporary filesystem tests (`std::env::temp_dir()`) or memory cursors for I/O-bound functions, file resolvers, and image encoders (M-IO-TESTS).
 
 ### 5: HTML, XML & Asset Processing
 - **Scanners:** Zero-alloc single-pass tokenizers (O(N) forward cursor). Avoid redundant scanning passes over attribute names/values.
 - **Quote-Aware:** Robustly handle single quotes (`'`), double quotes (`"`), multiline values, and escaped quotes (`\"`/`\'`).
 - **Sub-parsers:** Decompose complex parsers into single-responsibility sub-parsers (processing instructions `<?`, DOCTYPE, comments `<!--`, CDATA `<![CDATA[`, tags).
+- **Robust XML/SVG Detection:** BANNED: naive `.starts_with("<svg")` prefix-only matching for raw XML/SVG payloads. Payload detection MUST account for `<?xml ... ?>`, `<!DOCTYPE ... >`, and comment headers (`<!--`) before `<svg` (P-ROBUST-XML-DETECT).
 - **Defensive HTML Parsing:** Manual string parsing of HTML MUST tolerate arbitrary whitespace, case-insensitivity, and single/double quote boundaries (`'`,`"`) (P-DEFENSIVE-HTML).
 - **Decoupled DOM Assumptions:** Structural HTML modifications (unwrapping tags) MUST NOT rely on exact byte-for-byte matches; use flexible attribute & tag parsing with whitespace trimming (P-DECOUPLED-DOM).
 - **Base64 Data URIs:** Standardize with unified `to_base64_data_uri`/`to_base64_data_uri_into` with exact pre-allocation.

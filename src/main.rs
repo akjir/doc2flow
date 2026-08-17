@@ -5,6 +5,7 @@ use std::process::ExitCode;
 
 use doc2flow::core::arguments::{help_message, parse_args};
 use doc2flow::core::builder;
+use doc2flow::core::document::DocumentElement;
 use doc2flow::core::error::Result;
 use doc2flow::core::io;
 use doc2flow::core::markdown::parse_d2f_markdown;
@@ -34,7 +35,14 @@ fn run() -> Result<()> {
 
     let md_content = io::read_file_to_string(&input_path)?;
 
-    let document = parse_d2f_markdown(&md_content)?;
+    let mut document = parse_d2f_markdown(&md_content)?;
+    if let Some(ref custom_logo) = args.logo {
+        let logo_str = custom_logo.display().to_string();
+        document.parameters.logo = logo_str.clone();
+        if let Some(DocumentElement::Header { ref mut logo, .. }) = document.head.header {
+            *logo = Some(logo_str);
+        }
+    }
     let rendered_html = builder::build(&document);
 
     let base_dir = input_path.parent();

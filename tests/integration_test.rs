@@ -57,10 +57,55 @@ fn test_parser_and_builder_pipeline_integration() {
         )
     );
     assert!(content.contains("<title>Pipeline Test</title>"));
-    assert!(content.contains("<meta name=\"features\" content=\"core, task\">"));
+    assert!(content.contains("<meta name=\"features\" content=\"core, header, task\">"));
     assert!(content.contains("window.d2f.sections"));
     assert!(!content.contains("{{FEATURES}}"));
     assert!(!content.contains("{{TITLE}}"));
+}
+
+#[test]
+fn test_header_pipeline_integration() {
+    let input = r#"---
+title: "Header Feature Integration"
+subtitle: "Verifying top banner card"
+---
+# First Section
+
+Section content
+"#;
+    let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
+    let content = doc2flow::core::builder::build(&document);
+
+    assert!(content.contains("<title>Header Feature Integration</title>"));
+    assert!(content.contains("<meta name=\"features\" content=\"core, header\">"));
+    assert!(content.contains("<section class=\"section header-container\" id=\"header\">"));
+    assert!(content.contains("<h1 class=\"header-title\">Header Feature Integration</h1>"));
+    assert!(content.contains("<div class=\"header-sub\">Verifying top banner card</div>"));
+    assert!(content.contains("--header-bg:"));
+
+    // Verify ordering: header precedes body section
+    let header_pos = content.find("header-container").unwrap();
+    let body_pos = content.find("First Section").unwrap();
+    assert!(header_pos < body_pos);
+}
+
+#[test]
+fn test_header_pipeline_integration_disabled() {
+    let input = r#"---
+title: "Header Disabled Integration"
+header: false
+---
+# Main Section
+
+Section content
+"#;
+    let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
+    let content = doc2flow::core::builder::build(&document);
+
+    assert!(content.contains("<title>Header Disabled Integration</title>"));
+    assert!(content.contains("<meta name=\"features\" content=\"core\">"));
+    assert!(!content.contains("header-container"));
+    assert!(!content.contains("header-title"));
 }
 
 #[test]
@@ -69,7 +114,7 @@ fn test_core_horizontal_rule_pipeline_integration() {
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
     let content = doc2flow::core::builder::build(&document);
     assert!(content.contains("<title>HR Pipeline Test</title>"));
-    assert!(content.contains("<meta name=\"features\" content=\"core\">"));
+    assert!(content.contains("<meta name=\"features\" content=\"core, header\">"));
     assert!(content.contains("<h1 class=\"section-header section-header-h1\" role=\"button\" tabindex=\"0\" aria-expanded=\"true\">"));
     assert!(content.contains("<span class=\"section-title\">Main Heading</span>"));
     assert!(
@@ -115,7 +160,7 @@ fn test_bullet_pipeline_integration() {
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
     let content = doc2flow::core::builder::build(&document);
     assert!(content.contains("<title>Bullet Pipeline Test</title>"));
-    assert!(content.contains("<meta name=\"features\" content=\"core, bullet\">"));
+    assert!(content.contains("<meta name=\"features\" content=\"core, header, bullet\">"));
     assert!(content.contains("--bullet-marker-color:"));
     assert!(content.contains(".bullet-marker"));
     assert!(content.contains("        <div class=\"item bullet-item item-selectable\">\n          <span class=\"bullet-marker\">&bull;</span>\n          <span class=\"bullet-content\">\n            Root bullet item\n          </span>\n        </div>"));
@@ -128,7 +173,7 @@ fn test_ordered_pipeline_integration() {
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
     let content = doc2flow::core::builder::build(&document);
     assert!(content.contains("<title>Ordered Pipeline Test</title>"));
-    assert!(content.contains("<meta name=\"features\" content=\"core, ordered\">"));
+    assert!(content.contains("<meta name=\"features\" content=\"core, header, ordered\">"));
     assert!(content.contains("--order-marker-color:"));
     assert!(content.contains(".order-marker"));
     assert!(content.contains(".order-content"));
@@ -144,7 +189,7 @@ fn test_task_pipeline_integration() {
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
     let content = doc2flow::core::builder::build(&document);
     assert!(content.contains("<title>Checkbox Pipeline Test</title>"));
-    assert!(content.contains("<meta name=\"features\" content=\"core, task\">"));
+    assert!(content.contains("<meta name=\"features\" content=\"core, header, task\">"));
     assert!(content.contains(".check-marker"));
     assert!(content.contains(".check-box"));
     assert!(content.contains(".check-content"));
@@ -160,7 +205,7 @@ fn test_table_pipeline_integration() {
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
     let content = doc2flow::core::builder::build(&document);
     assert!(content.contains("<title>Table Pipeline Test</title>"));
-    assert!(content.contains("<meta name=\"features\" content=\"core, table\">"));
+    assert!(content.contains("<meta name=\"features\" content=\"core, header, table\">"));
     assert!(content.contains("--table-border-color:"));
     assert!(content.contains("--table-header-bg:"));
     assert!(content.contains(".table-wrap"));
@@ -175,7 +220,7 @@ fn test_code_variable_pipeline_without_variables_directive() {
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
     let content = doc2flow::core::builder::build(&document);
     assert!(content.contains("<title>Code Vars Test</title>"));
-    assert!(content.contains("<meta name=\"features\" content=\"core, code\">"));
+    assert!(content.contains("<meta name=\"features\" content=\"core, header, code\">"));
     assert!(content.contains("class=\"code-table-wrap\""));
     assert!(content.contains("class=\"code-table-default\""));
     assert!(content.contains("<td>AUTH_TOKEN</td>"));
@@ -191,7 +236,7 @@ fn test_code_variable_pipeline_with_variables_directive() {
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
     let content = doc2flow::core::builder::build(&document);
     assert!(content.contains("<title>Code Vars Combined Test</title>"));
-    assert!(content.contains("<meta name=\"features\" content=\"core, code\">"));
+    assert!(content.contains("<meta name=\"features\" content=\"core, header, code\">"));
     assert!(content.contains("<td>TARGET_HOST</td>\n            <td><input type=\"text\" class=\"code-table-input\" value=\"192.168.1.50\"></td>"));
     assert!(content.contains("<td>PORT</td>\n            <td><input type=\"text\" class=\"code-table-input\" value=\"8080\"></td>"));
     assert!(content.contains("<td>AUTH_TOKEN</td>\n            <td><input type=\"text\" class=\"code-table-input\" value=\"\"></td>"));
@@ -203,7 +248,7 @@ fn test_image_and_link_pipeline_integration() {
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
     let content = doc2flow::core::builder::build(&document);
     assert!(content.contains("<title>Image and Link Test</title>"));
-    assert!(content.contains("<meta name=\"features\" content=\"core, image\">"));
+    assert!(content.contains("<meta name=\"features\" content=\"core, header, image\">"));
     assert!(content.contains("<div class=\"image-item\">\n          <img src=\"images/example1.jpg\" alt=\"Sample Image\" />\n        </div>"));
     assert!(content.contains("<a href=\"https://example.com/docs\">Documentation</a>"));
 }

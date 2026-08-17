@@ -41,6 +41,8 @@
 - **Zero-Cost Lookups:** NEVER unconditionally clone owned keys (`PathBuf`, `String`) querying `HashMap`/`BTreeMap` in loops; query `.get()` with borrowed keys, allocating ONLY on insertion (P-ZERO-COST-LOOKUP).
 - **String/Buffer:** Exact `with_capacity` pre-alloc. Direct buffer streaming (`write_str`/`push_str`). NO intermediate `Vec`/strings on hot paths.
 - **HTML/XML/SVG:** Zero-alloc tokenizers (O(N) 1-pass forward cursor). Quote-aware (single `'`, double `"`, multiline, escaped `\"`/`\'`). Sub-parsers for declarations (`<?`), DOCTYPE, comments (`<!--`), CDATA (`<![CDATA[`), tags. NO redundant scanning passes over attribute names/values. NO `println!` in core processing routines.
+- **Robust XML/SVG Detection:** BANNED: naive `.starts_with("<svg")` prefix-only matching for raw XML/SVG payloads. Payload detection MUST account for `<?xml ... ?>`, `<!DOCTYPE ... >`, and comment headers (`<!--`) before `<svg` (P-ROBUST-XML-DETECT).
+- **Functional Combinators:** BANNED: imperative `if/else` inside `Option`/`Result` closures (`.or_else(|| ...)`). Mandate declarative chaining (`.filter()`, `.map()`, `.and_then()`). Standardize optional string emptiness filtering on `.as_deref().filter(|s| !s.trim().is_empty())` (P-FUNCTIONAL-COMBINATORS).
 - **Defensive HTML Parsing:** Manual string parsing of HTML MUST tolerate arbitrary whitespace, case-insensitivity, and single/double quote boundaries (`'`,`"`) (P-DEFENSIVE-HTML).
 - **Decoupled DOM Assumptions:** Structural HTML modifications (unwrapping tags) MUST NOT rely on exact byte-for-byte matches; use flexible attribute & tag parsing with whitespace trimming (P-DECOUPLED-DOM).
 - **Flow:** `match`/tables > `if-else`. Iterators > loops. `write_str`(static)/`write!`(dynamic) > `format!` (hot-path buffers).

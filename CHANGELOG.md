@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added inline text formatting (bold, italic, strikethrough, inline code) for text paragraph elements in the core pipeline.
 - Added support for markdown horizontal rule dividers (`---`, `----`, etc.) in the core pipeline.
 - Added modular code feature slice for syntax and fenced code block rendering.
-- Added support for optional header layout (`header: "flex"`) rendering a structured banner card with logo, title, and subtitle before sections.
+- Added modular header feature slice rendering a top banner card with title, subtitle, and logo (enabled by default with boolean frontmatter `header: true`).
 - Added automatic SVG fallback placeholder display for broken or unreachable external image loads.
 - Added validation enforcing mandatory level-1 headings and restricting pre-heading content to whitelisted block directives (`:::variables`).
 - Added automatic variable table generation from `{{VAR}}` code block placeholders during document parsing.

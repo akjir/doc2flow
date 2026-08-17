@@ -12,6 +12,9 @@ pub mod code;
 #[path = "core/module.rs"]
 pub mod core;
 
+#[path = "header/module.rs"]
+pub mod header;
+
 #[path = "image/module.rs"]
 pub mod image;
 
@@ -37,6 +40,7 @@ pub use block::BlockFeature;
 pub use bullet::BulletFeature;
 pub use code::CodeFeature;
 pub use core::CoreFeature;
+pub use header::HeaderFeature;
 pub use image::{ImageFeature, embed_images_as_base64, embed_images_as_base64_with_source};
 pub use input::InputFeature;
 pub use ordered::OrderedFeature;
@@ -58,6 +62,9 @@ pub static CODE_FEATURE: CodeFeature = CodeFeature;
 
 /// Static instance of the core feature to avoid runtime allocations.
 pub static CORE_FEATURE: CoreFeature = CoreFeature;
+
+/// Static instance of the header feature to avoid runtime allocations.
+pub static HEADER_FEATURE: HeaderFeature = HeaderFeature;
 
 /// Static instance of the image feature to avoid runtime allocations.
 pub static IMAGE_FEATURE: ImageFeature = ImageFeature;
@@ -81,8 +88,9 @@ pub static TASK_FEATURE: TaskFeature = TaskFeature;
 pub static UNKNOWN_FEATURE: UnknownFeature = UnknownFeature;
 
 /// Static collection of all standard feature modules for default dispatch and inspection.
-pub static ALL_FEATURE_MODULES: [&'static dyn FeatureModule; 11] = [
+pub static ALL_FEATURE_MODULES: [&'static dyn FeatureModule; 12] = [
     &CORE_FEATURE,
+    &HEADER_FEATURE,
     &BLOCK_FEATURE,
     &BULLET_FEATURE,
     &CODE_FEATURE,
@@ -101,12 +109,12 @@ mod tests {
 
     #[test]
     fn test_all_feature_modules_count_and_registration() {
-        assert_eq!(ALL_FEATURE_MODULES.len(), 11);
+        assert_eq!(ALL_FEATURE_MODULES.len(), 12);
         let names: Vec<&str> = ALL_FEATURE_MODULES.iter().map(|m| m.name()).collect();
         assert_eq!(
             names,
             [
-                "core", "block", "bullet", "code", "image", "input", "ordered", "shoutout", "table", "task", "unknown"
+                "core", "header", "block", "bullet", "code", "image", "input", "ordered", "shoutout", "table", "task", "unknown"
             ]
         );
     }
@@ -117,6 +125,7 @@ mod tests {
         assert_eq!(BULLET_FEATURE, BulletFeature::default());
         assert_eq!(CODE_FEATURE, CodeFeature::default());
         assert_eq!(CORE_FEATURE, CoreFeature::default());
+        assert_eq!(HEADER_FEATURE, HeaderFeature::default());
         assert_eq!(IMAGE_FEATURE, ImageFeature::default());
         assert_eq!(INPUT_FEATURE, InputFeature::default());
         assert_eq!(ORDERED_FEATURE, OrderedFeature::default());

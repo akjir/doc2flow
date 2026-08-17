@@ -82,7 +82,10 @@ pub fn build(document: &Document) -> String {
     let mut html_content = String::with_capacity(32768);
     let renderer = HtmlRenderer::default_renderer();
 
-    if let Some(ref variables) = document.header.variables {
+    if let Some(ref header) = document.head.header {
+        renderer.render_element(header, 2, 0, &document.parameters, &mut html_content);
+    }
+    if let Some(ref variables) = document.head.variables {
         renderer.render_element(variables, 2, 0, &document.parameters, &mut html_content);
     }
     for element in &document.body {
@@ -118,7 +121,9 @@ mod tests {
 
     #[test]
     fn test_builder_build_as_ref_u8() {
-        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = crate::core::language::TEST_I18N_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
         let mut doc = Document::new();
         doc.push_body(DocumentElement::text("Document body text"));
         let content = build(&doc);
@@ -187,7 +192,9 @@ mod tests {
 
     #[test]
     fn test_builder_build_includes_unknown_css_when_active() {
-        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = crate::core::language::TEST_I18N_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
         let mut doc = Document::new();
         doc.push_body(crate::core::document::DocumentElement::unknown(
             "unrecognized",
@@ -206,7 +213,9 @@ mod tests {
 
     #[test]
     fn test_builder_build_custom_title() {
-        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = crate::core::language::TEST_I18N_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
         let mut doc = Document::new();
         doc.parameters.title = "Custom Title".into();
         let content = build(&doc);
@@ -216,7 +225,9 @@ mod tests {
 
     #[test]
     fn test_builder_build_empty_title() {
-        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = crate::core::language::TEST_I18N_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
         let doc = Document::new();
         let content = build(&doc);
         assert!(content.contains("<title></title>"));
@@ -225,7 +236,9 @@ mod tests {
 
     #[test]
     fn test_builder_build_custom_language() {
-        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = crate::core::language::TEST_I18N_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
         let mut doc = Document::new();
         doc.parameters.language = "de".into();
         doc.push_body(DocumentElement::shoutout(
@@ -242,7 +255,9 @@ mod tests {
 
     #[test]
     fn test_builder_build_unknown_language() {
-        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = crate::core::language::TEST_I18N_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
         let mut doc = Document::new();
         doc.parameters.language = "fr".into();
         doc.push_body(DocumentElement::shoutout(
@@ -257,7 +272,9 @@ mod tests {
 
     #[test]
     fn test_builder_build_empty_language_fallback() {
-        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = crate::core::language::TEST_I18N_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
         let mut doc = Document::new();
         doc.parameters.language.clear();
         let content = build(&doc);
@@ -269,7 +286,9 @@ mod tests {
 
     #[test]
     fn test_builder_build_with_features() {
-        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = crate::core::language::TEST_I18N_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
         let mut doc = Document::new();
         doc.push_body(DocumentElement::code_block(None::<String>, "test code"));
         let content = build(&doc);
@@ -287,16 +306,63 @@ mod tests {
 
     #[test]
     fn test_builder_build_with_header_variables() {
-        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = crate::core::language::TEST_I18N_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
         let mut doc = Document::new();
         let mut vars = std::collections::HashMap::new();
         vars.insert("PORT".into(), "8080".into());
-        doc.header.variables = Some(DocumentElement::table_variables(vars));
+        doc.head.variables = Some(DocumentElement::table_variables(vars));
         doc.push_body(DocumentElement::text("Body text"));
         let content = build(&doc);
         assert!(content.contains("code-table-wrap"));
         assert!(content.contains("value=\"8080\""));
         assert!(content.contains("Body text"));
         assert!(content.contains("<meta name=\"features\" content=\"core, code\">"));
+    }
+
+    #[test]
+    fn test_builder_build_with_header_element() {
+        let _guard = crate::core::language::TEST_I18N_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        let mut doc = Document::new();
+        doc.head.header = Some(DocumentElement::header(
+            "Document Header Title",
+            Some("Header Subtitle"),
+            None::<String>,
+        ));
+        doc.push_body(DocumentElement::text("Document body text"));
+        let content = build(&doc);
+        assert!(content.contains("<meta name=\"features\" content=\"core, header\">"));
+        assert!(content.contains("<section class=\"section header-container\" id=\"header\">"));
+        assert!(content.contains("<h1 class=\"header-title\">Document Header Title</h1>"));
+        assert!(content.contains("<div class=\"header-sub\">Header Subtitle</div>"));
+        assert!(content.contains("--header-bg:"));
+    }
+
+    #[test]
+    fn test_builder_build_header_before_variables_and_body() {
+        let _guard = crate::core::language::TEST_I18N_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        let mut doc = Document::new();
+        doc.head.header = Some(DocumentElement::header(
+            "Header First",
+            None::<String>,
+            None::<String>,
+        ));
+        let mut vars = std::collections::HashMap::new();
+        vars.insert("K".into(), "V".into());
+        doc.head.variables = Some(DocumentElement::table_variables(vars));
+        doc.push_body(DocumentElement::text("Body Last"));
+
+        let content = build(&doc);
+        let header_pos = content.find("header-container").unwrap();
+        let vars_pos = content.find("code-table-wrap").unwrap();
+        let body_pos = content.find("Body Last").unwrap();
+
+        assert!(header_pos < vars_pos, "header must precede variables table");
+        assert!(vars_pos < body_pos, "variables table must precede body");
     }
 }

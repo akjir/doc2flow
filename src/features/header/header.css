@@ -1,0 +1,113 @@
+/* ==========================================================================
+   Doc2Flow - Header Feature Styles
+   ========================================================================== */
+
+/* 1. Base Variables & Tokens */
+:root {
+  --header-bg: var(--section-bg-header-h1, #163a5c);
+  --header-color: #ffffff;
+  --header-sub-color: rgba(255, 255, 255, 0.85);
+  --header-radius: var(--section-radius, 10px);
+  --header-shadow: var(--section-shadow, 0 1px 4px rgba(0, 0, 0, 0.08));
+}
+
+/* 2. Components: Header Container */
+.header-container {
+  background: var(--header-bg);
+  color: var(--header-color);
+  border-radius: var(--header-radius);
+  margin-bottom: 14px;
+  box-shadow: var(--header-shadow);
+  overflow: hidden;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px;
+  gap: 16px;
+}
+
+.header-titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.header-title {
+  font-size: 22px;
+  font-weight: bold;
+  color: var(--header-color);
+  margin: 0;
+  line-height: 1.25;
+}
+
+.header-sub {
+  font-size: 13px;
+  color: var(--header-sub-color);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.header-logo {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  max-height: 56px;
+}
+
+.header-logo svg,
+.header-logo img {
+  max-height: 56px;
+  max-width: 180px;
+  width: auto;
+  height: auto;
+  display: block;
+}
+
+/* 3. Print Styles */
+@media print {
+  .header-container {
+    background: var(--header-bg) !important;
+    color: var(--header-color) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    box-shadow: none;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 16px;
+  }
+
+  .header-title {
+    color: var(--header-color) !important;
+  }
+
+  .header-sub {
+    color: var(--header-sub-color) !important;
+  }
+}
+
+/* 4. Responsive Styles */
+@media (max-width: 600px) {
+  .header-top {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .header-logo {
+    max-height: 40px;
+  }
+
+  .header-logo svg,
+  .header-logo img {
+    max-height: 40px;
+    max-width: 140px;
+  }
+
+  .header-title {
+    font-size: 18px;
+  }
+}

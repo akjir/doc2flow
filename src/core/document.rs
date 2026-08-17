@@ -11,7 +11,7 @@ pub struct Document {
     /// Main body document elements.
     pub body: Vec<DocumentElement>,
     /// Header document elements and configuration.
-    pub header: DocumentHeader,
+    pub head: DocumentHeader,
     /// Frontmatter and document configuration parameters.
     pub parameters: DocumentParameters,
 }
@@ -22,7 +22,7 @@ impl Document {
     pub fn new() -> Self {
         Self {
             body: Vec::new(),
-            header: DocumentHeader::new(),
+            head: DocumentHeader::new(),
             parameters: DocumentParameters::default(),
         }
     }
@@ -32,7 +32,7 @@ impl Document {
     pub fn with_capacity(body_capacity: usize) -> Self {
         Self {
             body: Vec::with_capacity(body_capacity),
-            header: DocumentHeader::new(),
+            head: DocumentHeader::new(),
             parameters: DocumentParameters::default(),
         }
     }
@@ -75,6 +75,15 @@ pub enum DocumentElement {
         content: String,
         /// Optional programming or markup language identifier (info string).
         language: Option<String>,
+    },
+    /// Top-level document header card containing title, subtitle, and logo.
+    Header {
+        /// Custom logo image path, Base64 URI, or inline SVG markup.
+        logo: Option<String>,
+        /// Optional subtitle or secondary description text.
+        subtitle: Option<String>,
+        /// Main document title.
+        title: String,
     },
     /// Horizontal divider or thematic break rule line.
     HorizontalRule,
@@ -171,6 +180,20 @@ impl DocumentElement {
         }
     }
 
+    /// Creates a new header document element with title, optional subtitle, and optional logo.
+    #[must_use]
+    pub fn header(
+        title: impl Into<String>,
+        subtitle: Option<impl Into<String>>,
+        logo: Option<impl Into<String>>,
+    ) -> Self {
+        Self::Header {
+            logo: logo.map(Into::into),
+            subtitle: subtitle.map(Into::into),
+            title: title.into(),
+        }
+    }
+
     /// Creates a new horizontal rule document element.
     #[must_use]
     pub const fn horizontal_rule() -> Self {
@@ -189,9 +212,7 @@ impl DocumentElement {
     /// Creates a new input document element.
     #[must_use]
     pub fn input(text: impl Into<String>) -> Self {
-        Self::Input {
-            text: text.into(),
-        }
+        Self::Input { text: text.into() }
     }
 
     /// Returns true if this element is a list item variant.
@@ -264,6 +285,7 @@ impl DocumentElement {
             Self::BulletListItem { .. } => DocumentElementId::BulletListItem,
             Self::CheckBoxItem { .. } => DocumentElementId::CheckBoxItem,
             Self::CodeBlock { .. } => DocumentElementId::CodeBlock,
+            Self::Header { .. } => DocumentElementId::Header,
             Self::HorizontalRule => DocumentElementId::HorizontalRule,
             Self::Image { .. } => DocumentElementId::Image,
             Self::Input { .. } => DocumentElementId::Input,
@@ -344,36 +366,40 @@ pub enum DocumentElementId {
     CheckBoxItem = 2,
     /// Identifier for code blocks.
     CodeBlock = 3,
+    /// Identifier for header card banner.
+    Header = 4,
     /// Identifier for horizontal rules.
-    HorizontalRule = 4,
+    HorizontalRule = 5,
     /// Identifier for images.
-    Image = 5,
+    Image = 6,
     /// Identifier for input elements.
-    Input = 6,
+    Input = 7,
     /// Identifier for ordered list items.
-    OrderedListItem = 7,
+    OrderedListItem = 8,
     /// Identifier for sections.
-    Section = 8,
+    Section = 9,
     /// Identifier for shoutouts.
-    Shoutout = 9,
+    Shoutout = 10,
     /// Identifier for tables.
-    Table = 10,
+    Table = 11,
     /// Identifier for table variables mapping.
-    TableVariables = 11,
+    TableVariables = 12,
     /// Identifier for plain text lines.
-    Text = 12,
+    Text = 13,
     /// Identifier for unrecognized fallback content.
-    Unknown = 13,
+    Unknown = 14,
 }
 
 impl DocumentElementId {
     /// Total number of distinct document element identifiers.
-    pub const COUNT: usize = 14;
+    pub const COUNT: usize = 15;
 }
 
 /// Represents document header elements and configuration.
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DocumentHeader {
+    /// Header banner document element.
+    pub header: Option<DocumentElement>,
     /// Dynamic variables table element.
     pub variables: Option<DocumentElement>,
 }
@@ -382,7 +408,10 @@ impl DocumentHeader {
     /// Creates a new empty document header.
     #[must_use]
     pub fn new() -> Self {
-        Self { variables: None }
+        Self {
+            header: None,
+            variables: None,
+        }
     }
 
     /// Returns a mutable reference to the underlying variables map, initializing it lazily if empty.
@@ -420,8 +449,8 @@ impl DocumentHeader {
 pub struct DocumentParameters {
     /// Protocol or document date string.
     pub date: String,
-    /// Header layout variant identifier (e.g. `flex`, `none`).
-    pub header: String,
+    /// Whether the top header banner is enabled.
+    pub header: bool,
     /// Language code for static UI translation (e.g. `en`, `de`).
     pub language: String,
     /// Path or URL to a custom logo image.
@@ -472,7 +501,7 @@ impl Default for DocumentParameters {
     fn default() -> Self {
         Self {
             date: String::new(),
-            header: String::new(),
+            header: true,
             language: "en".to_string(),
             logo: String::new(),
             numbered_sections: true,
@@ -492,7 +521,16 @@ impl From<HashMap<String, String>> for DocumentParameters {
         let version = map.remove("version").unwrap_or_default();
         let language = map.remove("language").unwrap_or_else(|| "en".to_string());
         let logo = map.remove("logo").unwrap_or_default();
-        let header = map.remove("header").unwrap_or_default();
+        let header = match map.remove("header") {
+            Some(val) => {
+                const TRUTHY_VALUES: &[&str] = &["true", "yes", "y", "1"];
+                let trimmed = val.trim();
+                TRUTHY_VALUES
+                    .iter()
+                    .any(|&truthy| truthy.eq_ignore_ascii_case(trimmed))
+            }
+            None => true,
+        };
         let numbered_sections = match map.remove("numbered_sections") {
             Some(val) => {
                 const TRUTHY_VALUES: &[&str] = &["true", "yes", "y", "1"];
@@ -731,7 +769,7 @@ mod tests {
         assert_eq!(params.version, "");
         assert_eq!(params.language, "en");
         assert_eq!(params.logo, "");
-        assert_eq!(params.header, "");
+        assert!(params.header);
         assert!(params.variables.is_empty());
 
         let mut map = HashMap::new();
@@ -741,7 +779,7 @@ mod tests {
         map.insert("version".into(), "1.2.3".into());
         map.insert("language".into(), "de".into());
         map.insert("logo".into(), "img/logo.svg".into());
-        map.insert("header".into(), "flex".into());
+        map.insert("header".into(), "false".into());
         map.insert("numbered_sections".into(), "false".into());
         map.insert("custom_key".into(), "custom_val".into());
         map.insert("env".into(), "production".into());
@@ -753,7 +791,7 @@ mod tests {
         assert_eq!(from_map.version, "1.2.3");
         assert_eq!(from_map.language, "de");
         assert_eq!(from_map.logo, "img/logo.svg");
-        assert_eq!(from_map.header, "flex");
+        assert!(!from_map.header);
         assert!(!from_map.numbered_sections);
 
         // Variables map contains unknown frontmatter parameters
@@ -786,6 +824,7 @@ mod tests {
     fn test_document_header_creation() {
         let header = DocumentHeader::new();
         assert_eq!(header, DocumentHeader::default());
+        assert_eq!(header.header, None);
         assert_eq!(header.variables, None);
     }
 
@@ -865,18 +904,18 @@ mod tests {
     fn test_document_push_body_and_header() {
         let mut doc = Document::with_capacity(4);
         assert_eq!(doc.parameters.title, "");
-        assert_eq!(doc.header.variables, None);
+        assert_eq!(doc.head.variables, None);
         assert!(doc.body.is_empty());
 
         doc.parameters.title = "My Doc".into();
         doc.push_body(DocumentElement::text("Line 1"));
-        doc.header.variables = Some(DocumentElement::table(
+        doc.head.variables = Some(DocumentElement::table(
             vec![TableAlignment::None],
             vec![vec!["Var".into()]],
         ));
         assert_eq!(doc.parameters.title, "My Doc");
         assert_eq!(doc.body.len(), 1);
-        assert!(doc.header.variables.is_some());
+        assert!(doc.head.variables.is_some());
         assert_eq!(doc.body[0], DocumentElement::Text("Line 1".into()));
     }
 
@@ -1103,8 +1142,31 @@ mod tests {
     }
 
     #[test]
+    fn test_header_element_creation() {
+        let elem = DocumentElement::header("My Title", Some("My Subtitle"), Some("logo.svg"));
+        assert_eq!(
+            elem,
+            DocumentElement::Header {
+                logo: Some("logo.svg".into()),
+                subtitle: Some("My Subtitle".into()),
+                title: "My Title".into(),
+            }
+        );
+
+        let elem_no_opt = DocumentElement::header("Title Only", None::<String>, None::<String>);
+        assert_eq!(
+            elem_no_opt,
+            DocumentElement::Header {
+                logo: None,
+                subtitle: None,
+                title: "Title Only".into(),
+            }
+        );
+    }
+
+    #[test]
     fn test_document_element_id_mapping() {
-        assert_eq!(DocumentElementId::COUNT, 14);
+        assert_eq!(DocumentElementId::COUNT, 15);
         assert_eq!(
             DocumentElement::block_directive("test", vec![]).element_id(),
             DocumentElementId::BlockDirective
@@ -1120,6 +1182,10 @@ mod tests {
         assert_eq!(
             DocumentElement::code_block(None::<String>, "code").element_id(),
             DocumentElementId::CodeBlock
+        );
+        assert_eq!(
+            DocumentElement::header("t", None::<String>, None::<String>).element_id(),
+            DocumentElementId::Header
         );
         assert_eq!(
             DocumentElement::horizontal_rule().element_id(),

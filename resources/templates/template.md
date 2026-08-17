@@ -12,6 +12,7 @@ License: GPL-3.0-or-later
    - version: Document version.
    - language: Language code for static UI translation ('en', 'de').
    - logo: Optional path to a custom logo image (SVG, PNG, JPG, WebP).
+   - header: Enable or disable the top header banner card (true / false, default: true).
    - numbered_sections: Enable automatic section numbering for H1 and H2 headings (true / false, default: true).
 
 2. DOCUMENT STRUCTURE:

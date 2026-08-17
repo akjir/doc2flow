@@ -298,6 +298,20 @@ impl<'a> MarkdownParser<'a> {
                     return Err(build_missing_h1_err(line_no, snippet));
                 }
                 flush_section_stack(&mut self.doc, &mut self.section_stack);
+                if self.doc.parameters.header {
+                    let title = self.doc.parameters.title.clone();
+                    let subtitle = if self.doc.parameters.subtitle.trim().is_empty() {
+                        None
+                    } else {
+                        Some(self.doc.parameters.subtitle.clone())
+                    };
+                    let logo = if self.doc.parameters.logo.trim().is_empty() {
+                        None
+                    } else {
+                        Some(self.doc.parameters.logo.clone())
+                    };
+                    self.doc.head.header = Some(DocumentElement::header(title, subtitle, logo));
+                }
                 Ok(self.doc)
             }
         }
@@ -327,7 +341,7 @@ impl<'a> MarkdownParser<'a> {
     fn flush_code_block(&mut self) {
         if self.in_code_block {
             let content = trim_code_block_lines(&self.code_block_lines);
-            extract_code_block_variables(&content, &mut self.doc.header);
+            extract_code_block_variables(&content, &mut self.doc.head);
             push_element(
                 &mut self.doc,
                 &mut self.section_stack,
@@ -418,10 +432,10 @@ impl<'a> MarkdownParser<'a> {
                             } else {
                                 row.remove(0)
                             };
-                            self.doc.header.insert_variable(key, val);
+                            self.doc.head.insert_variable(key, val);
                         }
                     }
-                    let _ = self.doc.header.variables_mut();
+                    let _ = self.doc.head.variables_mut();
                 } else {
                     push_element(
                         &mut self.doc,
@@ -1342,7 +1356,7 @@ date: "2026-08-15"
 version: "2.0.0"
 language: "de"
 logo: "images/logo.svg"
-header: "flex"
+header: "true"
 numbered_sections: false
 author: "Admin"
 ---
@@ -1356,13 +1370,36 @@ Body text
         assert_eq!(doc.parameters.version, "2.0.0");
         assert_eq!(doc.parameters.language, "de");
         assert_eq!(doc.parameters.logo, "images/logo.svg");
-        assert_eq!(doc.parameters.header, "flex");
+        assert!(doc.parameters.header);
+        assert_eq!(
+            doc.head.header,
+            Some(DocumentElement::header(
+                "Full Spec",
+                Some("Sub Spec"),
+                Some("images/logo.svg")
+            ))
+        );
         assert!(!doc.parameters.numbered_sections);
         assert_eq!(
             doc.parameters.variables.get("author").map(|s| s.as_str()),
             Some("Admin")
         );
         assert_eq!(doc.parameters.get_variable("author"), Some("Admin"));
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_header_disabled() {
+        let md = r#"---
+title: "No Header Spec"
+header: "false"
+---
+# Main Section
+Body text
+"#;
+        let doc = parse_d2f_markdown(md).unwrap();
+        assert_eq!(doc.parameters.title, "No Header Spec");
+        assert!(!doc.parameters.header);
+        assert_eq!(doc.head.header, None);
     }
 
     #[test]
@@ -2593,7 +2630,7 @@ Body text
         expected_vars.insert("SERVICE_PORT".into(), "8080".into());
 
         assert_eq!(
-            doc.header.variables,
+            doc.head.variables,
             Some(DocumentElement::table_variables(expected_vars))
         );
         assert_eq!(doc.body.len(), 1);
@@ -2616,7 +2653,7 @@ Body text
         expected.insert("PORT".into(), "3000".into());
 
         assert_eq!(
-            doc.header.variables,
+            doc.head.variables,
             Some(DocumentElement::table_variables(expected))
         );
     }
@@ -2731,7 +2768,7 @@ Body text
         expected_vars.insert("A".into(), "1".into());
 
         assert_eq!(
-            doc.header.variables,
+            doc.head.variables,
             Some(DocumentElement::table_variables(expected_vars))
         );
         assert_eq!(doc.body.len(), 1);
@@ -3161,7 +3198,7 @@ Body text
         expected.insert("TARGET_PORT".into(), String::new());
 
         assert_eq!(
-            doc.header.variables,
+            doc.head.variables,
             Some(DocumentElement::table_variables(expected))
         );
     }
@@ -3177,7 +3214,7 @@ Body text
         expected.insert("API_KEY".into(), String::new());
 
         assert_eq!(
-            doc.header.variables,
+            doc.head.variables,
             Some(DocumentElement::table_variables(expected))
         );
     }
@@ -3195,7 +3232,7 @@ Body text
         expected.insert("VAR_123_OK".into(), String::new());
 
         assert_eq!(
-            doc.header.variables,
+            doc.head.variables,
             Some(DocumentElement::table_variables(expected))
         );
     }
@@ -3210,7 +3247,7 @@ Body text
         expected.insert("PORT_DE".into(), String::new());
 
         assert_eq!(
-            doc.header.variables,
+            doc.head.variables,
             Some(DocumentElement::table_variables(expected))
         );
     }
