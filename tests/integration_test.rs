@@ -206,3 +206,136 @@ fn test_image_and_link_pipeline_integration() {
     assert!(content.contains("<div class=\"image-item\">\n          <img src=\"images/example1.jpg\" alt=\"Sample Image\" />\n        </div>"));
     assert!(content.contains("<a href=\"https://example.com/docs\">Documentation</a>"));
 }
+
+#[test]
+fn test_image_embedding_pipeline_local_and_remote() {
+    let temp_dir =
+        std::env::temp_dir().join(format!("d2f_integ_img_local_{}", std::process::id()));
+    let _ = doc2flow::core::io::create_dir_all(&temp_dir);
+
+    let pic_path = temp_dir.join("diagram.png");
+    doc2flow::core::io::write_file(&pic_path, b"png binary payload").unwrap();
+
+    let input = "---\ntitle: \"Image Embed Test\"\n---\n# Architecture\n\n![Diagram](diagram.png)\n\n![Remote](https://example.com/logo.png)";
+    let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
+    let rendered = doc2flow::core::builder::build(&document);
+
+    let final_html = doc2flow::features::image::embed_images_as_base64_with_source(
+        &rendered,
+        Some(input),
+        Some("doc.md"),
+        Some(&temp_dir),
+        false,
+    )
+    .expect("embedding should succeed");
+
+    assert!(final_html.contains("src=\"data:image/png;base64,"));
+    assert!(!final_html.contains("src=\"diagram.png\""));
+    assert!(final_html.contains("src=\"https://example.com/logo.png\""));
+
+    let _ = doc2flow::core::io::remove_dir_all(&temp_dir);
+}
+
+#[test]
+fn test_image_embedding_pipeline_large_image_auto_scale() {
+    let temp_dir =
+        std::env::temp_dir().join(format!("d2f_integ_img_scale_{}", std::process::id()));
+    let _ = doc2flow::core::io::create_dir_all(&temp_dir);
+
+    let pic_path = temp_dir.join("huge.png");
+    let img_buf = image::RgbImage::new(800, 800);
+    img_buf
+        .save_with_format(&pic_path, image::ImageFormat::Png)
+        .unwrap();
+
+    let file_size = doc2flow::core::io::get_file_size(&pic_path).unwrap();
+    if file_size <= doc2flow::core::image::MAX_IMAGE_SIZE_BYTES {
+        let mut existing = doc2flow::core::io::read_file_bytes(&pic_path).unwrap();
+        existing.resize(
+            (doc2flow::core::image::MAX_IMAGE_SIZE_BYTES + 40 * 1024) as usize,
+            0,
+        );
+        doc2flow::core::io::write_file(&pic_path, &existing).unwrap();
+    }
+
+    let input = "---\ntitle: \"Large Image Scale Test\"\n---\n# Overview\n\n![Huge](huge.png)";
+    let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
+    let rendered = doc2flow::core::builder::build(&document);
+
+    let final_html = doc2flow::features::image::embed_images_as_base64_with_source(
+        &rendered,
+        Some(input),
+        Some("overview.md"),
+        Some(&temp_dir),
+        true,
+    )
+    .expect("auto scaling should succeed");
+
+    assert!(final_html.contains("src=\"data:image/webp;base64,"));
+    assert!(temp_dir.join("huge.webp").exists());
+
+    let _ = doc2flow::core::io::remove_dir_all(&temp_dir);
+}
+
+#[test]
+fn test_image_embedding_pipeline_large_image_diagnostic_error() {
+    let temp_dir =
+        std::env::temp_dir().join(format!("d2f_integ_img_err_{}", std::process::id()));
+    let _ = doc2flow::core::io::create_dir_all(&temp_dir);
+
+    let pic_path = temp_dir.join("unscaled.png");
+    let img_buf = image::RgbImage::new(600, 600);
+    img_buf
+        .save_with_format(&pic_path, image::ImageFormat::Png)
+        .unwrap();
+
+    let mut existing = doc2flow::core::io::read_file_bytes(&pic_path).unwrap();
+    existing.resize(
+        (doc2flow::core::image::MAX_IMAGE_SIZE_BYTES + 20 * 1024) as usize,
+        0,
+    );
+    doc2flow::core::io::write_file(&pic_path, &existing).unwrap();
+
+    let input = "---\ntitle: \"Large Image Err Test\"\n---\n# Overview\n\n![Unscaled](unscaled.png)";
+    let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
+    let rendered = doc2flow::core::builder::build(&document);
+
+    let err = doc2flow::features::image::embed_images_as_base64_with_source(
+        &rendered,
+        Some(input),
+        Some("doc.md"),
+        Some(&temp_dir),
+        false,
+    )
+    .unwrap_err();
+
+    let err_msg = err.to_string();
+    assert!(err_msg.contains("error: image 'unscaled.png' exceeds maximum allowed size of 250 KB"));
+    assert!(err_msg.contains("--> doc.md:6:13"));
+    assert!(err_msg.contains("6 | ![Unscaled](unscaled.png)"));
+    assert!(err_msg.contains("^^^^^^^^^^^^ local image size"));
+    assert!(err_msg.contains("= help: reduce image resolution or compress 'unscaled.png' below 250 KB before embedding."));
+
+    let _ = doc2flow::core::io::remove_dir_all(&temp_dir);
+}
+
+#[test]
+fn test_image_embedding_pipeline_non_image_attachment_link() {
+    let input = "---\ntitle: \"PDF Test\"\n---\n# Downloads\n\n![Download PDF](https://example.com/guide.pdf)";
+    let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
+    let rendered = doc2flow::core::builder::build(&document);
+
+    let final_html = doc2flow::features::image::embed_images_as_base64_with_source(
+        &rendered,
+        Some(input),
+        Some("downloads.md"),
+        None,
+        false,
+    )
+    .expect("non image conversion should succeed");
+
+    assert!(final_html.contains("<div class=\"item text-item\">"));
+    assert!(final_html.contains("<span class=\"text-content\"><a href=\"https://example.com/guide.pdf\" target=\"_blank\" rel=\"noopener noreferrer\">Download PDF</a></span>"));
+    assert!(!final_html.contains("class=\"image-item\""));
+    assert!(!final_html.contains("<img src=\"https://example.com/guide.pdf\""));
+}

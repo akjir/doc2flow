@@ -35,9 +35,19 @@ fn run() -> Result<()> {
     let md_content = io::read_file_to_string(&input_path)?;
 
     let document = parse_d2f_markdown(&md_content)?;
-    let content = builder::build(&document);
+    let rendered_html = builder::build(&document);
 
-    io::write_file(&output_path, content)?;
+    let base_dir = input_path.parent();
+    let file_name = input_path.to_str();
+    let final_html = doc2flow::features::image::embed_images_as_base64_with_source(
+        &rendered_html,
+        Some(&md_content),
+        file_name,
+        base_dir,
+        args.auto_scale,
+    )?;
+
+    io::write_file(&output_path, final_html)?;
 
     println!("Successfully generated {}", output_path.display());
     Ok(())

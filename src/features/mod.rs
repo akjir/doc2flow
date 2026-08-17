@@ -37,7 +37,7 @@ pub use block::BlockFeature;
 pub use bullet::BulletFeature;
 pub use code::CodeFeature;
 pub use core::CoreFeature;
-pub use image::ImageFeature;
+pub use image::{ImageFeature, embed_images_as_base64, embed_images_as_base64_with_source};
 pub use input::InputFeature;
 pub use ordered::OrderedFeature;
 pub use shoutout::ShoutoutFeature;

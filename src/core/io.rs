@@ -60,21 +60,37 @@ pub fn path_exists(path: impl AsRef<Path>) -> bool {
 
 /// Interactively prompts the user via stderr/stdin with a yes/no question.
 ///
-/// Returns `false` automatically if standard input is not an interactive terminal context.
+/// Returns `false` automatically if standard input is not an interactive terminal context or in test mode.
 pub fn prompt_user_yes_no(prompt_msg: &str) -> bool {
-    if !std::io::stdin().is_terminal() {
+    #[cfg(test)]
+    {
+        let _ = prompt_msg;
         return false;
     }
 
-    eprint!("{prompt_msg}");
-    let _ = std::io::stderr().flush();
+    #[cfg(not(test))]
+    {
+        if std::env::var_os("DOC2FLOW_NO_PROMPT").is_some()
+            || std::env::var_os("CARGO_TARGET_TMPDIR").is_some()
+            || std::env::current_exe().is_ok_and(|p| p.to_string_lossy().contains("/deps/"))
+        {
+            return false;
+        }
 
-    let mut input = String::new();
-    if std::io::stdin().read_line(&mut input).is_ok() {
-        let trimmed = input.trim();
-        return trimmed.eq_ignore_ascii_case("y") || trimmed.eq_ignore_ascii_case("yes");
+        if !std::io::stdin().is_terminal() {
+            return false;
+        }
+
+        eprint!("{prompt_msg}");
+        let _ = std::io::stderr().flush();
+
+        let mut input = String::new();
+        if std::io::stdin().read_line(&mut input).is_ok() {
+            let trimmed = input.trim();
+            return trimmed.eq_ignore_ascii_case("y") || trimmed.eq_ignore_ascii_case("yes");
+        }
+        false
     }
-    false
 }
 
 /// Reads the raw binary bytes of a file from disk into a `Vec<u8>`.
