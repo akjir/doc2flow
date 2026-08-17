@@ -504,7 +504,7 @@ impl Default for DocumentParameters {
             header: true,
             language: "en".to_string(),
             logo: String::new(),
-            numbered_sections: true,
+            numbered_sections: false,
             subtitle: String::new(),
             title: String::new(),
             variables: HashMap::new(),
@@ -539,7 +539,7 @@ impl From<HashMap<String, String>> for DocumentParameters {
                     .iter()
                     .any(|&truthy| truthy.eq_ignore_ascii_case(trimmed))
             }
-            None => true,
+            None => false,
         };
 
         Self {
@@ -756,13 +756,13 @@ mod tests {
         }
 
         let empty_params = DocumentParameters::from(HashMap::new());
-        assert!(empty_params.numbered_sections);
+        assert!(!empty_params.numbered_sections);
     }
 
     #[test]
     fn test_document_parameters_operations() {
         let params = DocumentParameters::new();
-        assert!(params.numbered_sections);
+        assert!(!params.numbered_sections);
         assert_eq!(params.title, "");
         assert_eq!(params.subtitle, "");
         assert_eq!(params.date, "");

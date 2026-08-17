@@ -1,7 +1,7 @@
 //! HTML AST renderer and element formatting engine.
 
 use std::cell::Cell;
-use std::fmt::{self};
+use std::fmt::{self, Write as _};
 
 use crate::core::document::{DocumentElement, DocumentElementId, DocumentParameters};
 use crate::core::feature::FeatureModule;
@@ -32,6 +32,8 @@ pub trait DocumentElementRenderer: Send + Sync + fmt::Debug {
 #[derive(Debug)]
 pub struct HtmlRenderer<'a> {
     active_mask: Cell<u32>,
+    h1_counter: Cell<u32>,
+    h2_counter: Cell<u32>,
     modules: &'a [&'static dyn FeatureModule],
     slots: [Option<(usize, &'static dyn FeatureModule)>; DocumentElementId::COUNT],
 }
@@ -57,6 +59,8 @@ impl<'a> HtmlRenderer<'a> {
         }
         Self {
             active_mask: Cell::new(0),
+            h1_counter: Cell::new(0),
+            h2_counter: Cell::new(0),
             modules,
             slots,
         }
@@ -126,6 +130,21 @@ impl<'a> HtmlRenderer<'a> {
     ) {
         for child in children {
             self.render_element(child, indent, depth, parameters, out);
+        }
+    }
+
+    /// Advances section counters and writes section number prefix into output buffer.
+    pub fn write_section_prefix(&self, level: usize, out: &mut String) {
+        if level == 1 {
+            let next_h1 = self.h1_counter.get() + 1;
+            self.h1_counter.set(next_h1);
+            self.h2_counter.set(0);
+            let _ = write!(out, "{next_h1}. ");
+        } else if level == 2 {
+            let h1 = self.h1_counter.get();
+            let next_h2 = self.h2_counter.get() + 1;
+            self.h2_counter.set(next_h2);
+            let _ = write!(out, "{h1}.{next_h2} ");
         }
     }
 }
@@ -320,7 +339,9 @@ mod tests {
         assert!(html.contains(
             "<div class=\"item order-item item-selectable\">\n    <span class=\"order-marker\">1.</span>"
         ));
-        assert!(html.contains("<div class=\"item order-item item-selectable\" style=\"--indent: 1;\">"));
+        assert!(html.contains(
+            "<div class=\"item order-item item-selectable\" style=\"--indent: 1;\">\n    <span class=\"order-marker\">a.</span>"
+        ));
         assert!(html.contains("First step"));
         assert!(html.contains("Sub step"));
     }

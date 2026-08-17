@@ -155,6 +155,32 @@ fn test_collapsible_sections_pipeline_integration() {
 }
 
 #[test]
+fn test_numbered_sections_pipeline_integration_enabled() {
+    let input = "---\ntitle: \"Numbered Sections Test\"\nnumbered_sections: true\n---\n# Container H1\n\nText in H1\n\n## Container H2\n\nText in H2\n\n# Second H1\n\n## Second H2";
+    let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
+    let content = doc2flow::core::builder::build(&document);
+
+    assert!(content.contains("<span class=\"section-title\">1. Container H1</span>"));
+    assert!(content.contains("<span class=\"section-title\">1.1 Container H2</span>"));
+    assert!(content.contains("<span class=\"section-title\">2. Second H1</span>"));
+    assert!(content.contains("<span class=\"section-title\">2.1 Second H2</span>"));
+}
+
+#[test]
+fn test_numbered_sections_pipeline_integration_disabled() {
+    let input = "---\ntitle: \"Unnumbered Sections Test\"\nnumbered_sections: false\n---\n# Container H1\n\nText in H1\n\n## Container H2\n\nText in H2\n\n# Second H1\n\n## Second H2";
+    let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
+    let content = doc2flow::core::builder::build(&document);
+
+    assert!(content.contains("<span class=\"section-title\">Container H1</span>"));
+    assert!(content.contains("<span class=\"section-title\">Container H2</span>"));
+    assert!(content.contains("<span class=\"section-title\">Second H1</span>"));
+    assert!(content.contains("<span class=\"section-title\">Second H2</span>"));
+    assert!(!content.contains("<span class=\"section-title\">1. Container H1</span>"));
+    assert!(!content.contains("<span class=\"section-title\">1.1 Container H2</span>"));
+}
+
+#[test]
 fn test_bullet_pipeline_integration() {
     let input = "---\ntitle: \"Bullet Pipeline Test\"\n---\n# List Section\n\n- Root bullet item\n  - Nested bullet **item** with `code`";
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
@@ -179,8 +205,8 @@ fn test_ordered_pipeline_integration() {
     assert!(content.contains(".order-content"));
     assert!(content.contains("        <div class=\"item order-item item-selectable\">\n          <span class=\"order-marker\">1.</span>\n          <span class=\"order-content\">\n            First ordered step\n          </span>\n        </div>"));
     assert!(content.contains("        <div class=\"item order-item item-selectable\">\n          <span class=\"order-marker\">2.</span>\n          <span class=\"order-content\">\n            Second <strong>ordered</strong> step\n          </span>\n        </div>"));
-    assert!(content.contains("        <div class=\"item order-item item-selectable\" style=\"--indent: 1;\">\n          <span class=\"order-marker\">1.</span>\n          <span class=\"order-content\">\n            Sub-step alpha\n          </span>\n        </div>"));
-    assert!(content.contains("        <div class=\"item order-item item-selectable\" style=\"--indent: 2;\">\n          <span class=\"order-marker\">1.</span>\n          <span class=\"order-content\">\n            Sub-sub-step roman\n          </span>\n        </div>"));
+    assert!(content.contains("        <div class=\"item order-item item-selectable\" style=\"--indent: 1;\">\n          <span class=\"order-marker\">a.</span>\n          <span class=\"order-content\">\n            Sub-step alpha\n          </span>\n        </div>"));
+    assert!(content.contains("        <div class=\"item order-item item-selectable\" style=\"--indent: 2;\">\n          <span class=\"order-marker\">i.</span>\n          <span class=\"order-content\">\n            Sub-sub-step roman\n          </span>\n        </div>"));
 }
 
 #[test]

@@ -86,6 +86,9 @@ impl DocumentElementRenderer for CoreFeature {
                     );
                     push_indent(out, indent + 2);
                     out.push_str("<span class=\"section-title\">");
+                    if parameters.numbered_sections && (*level == 1 || *level == 2) {
+                        renderer.write_section_prefix(*level, out);
+                    }
                     format_inline_into(out, title);
                     out.push_str("</span>\n");
                     push_indent(out, indent + 2);
@@ -667,5 +670,58 @@ mod tests {
             out,
             "<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    Unclosed **bold and ~~strike and `code\n  </span>\n</div>\n"
         );
+    }
+
+    #[test]
+    fn test_core_feature_numbered_sections_enabled() {
+        let renderer = HtmlRenderer::default_renderer();
+        let mut params = DocumentParameters::default();
+        params.numbered_sections = true;
+
+        let elements = vec![
+            DocumentElement::section(1, "First Top", vec![]),
+            DocumentElement::section(2, "Sub One", vec![]),
+            DocumentElement::section(2, "Sub Two", vec![]),
+            DocumentElement::section(1, "Second Top", vec![]),
+            DocumentElement::section(2, "Sub One Again", vec![]),
+            DocumentElement::section(3, "Subhead Deep", vec![]),
+        ];
+
+        let mut out = String::new();
+        renderer.render_children(&elements, 0, 0, &params, &mut out);
+
+        assert!(out.contains("<span class=\"section-title\">1. First Top</span>"));
+        assert!(out.contains("<span class=\"section-title\">1.1 Sub One</span>"));
+        assert!(out.contains("<span class=\"section-title\">1.2 Sub Two</span>"));
+        assert!(out.contains("<span class=\"section-title\">2. Second Top</span>"));
+        assert!(out.contains("<span class=\"section-title\">2.1 Sub One Again</span>"));
+        assert!(out.contains("<h3 class=\"section-subheading\">Subhead Deep</h3>"));
+        assert!(!out.contains("2.1.1"));
+    }
+
+    #[test]
+    fn test_core_feature_numbered_sections_disabled() {
+        let renderer = HtmlRenderer::default_renderer();
+        let mut params = DocumentParameters::default();
+        params.numbered_sections = false;
+
+        let elements = vec![
+            DocumentElement::section(1, "First Top", vec![]),
+            DocumentElement::section(2, "Sub One", vec![]),
+            DocumentElement::section(2, "Sub Two", vec![]),
+            DocumentElement::section(1, "Second Top", vec![]),
+            DocumentElement::section(2, "Sub One Again", vec![]),
+        ];
+
+        let mut out = String::new();
+        renderer.render_children(&elements, 0, 0, &params, &mut out);
+
+        assert!(out.contains("<span class=\"section-title\">First Top</span>"));
+        assert!(out.contains("<span class=\"section-title\">Sub One</span>"));
+        assert!(out.contains("<span class=\"section-title\">Sub Two</span>"));
+        assert!(out.contains("<span class=\"section-title\">Second Top</span>"));
+        assert!(out.contains("<span class=\"section-title\">Sub One Again</span>"));
+        assert!(!out.contains("1. First Top"));
+        assert!(!out.contains("1.1 Sub One"));
     }
 }

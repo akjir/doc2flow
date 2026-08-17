@@ -61,7 +61,7 @@ Configure document metadata via YAML frontmatter at the top of the Markdown sour
 | `language` | `string` | UI locale (`en`, `de`) | `"en"` |
 | `logo` | `string` | Path or URI to custom header logo | `""` |
 | `header` | `string` | Header layout mode (`"none"`, `"flex"`) | `"none"` |
-| `numbered_sections` | `bool` | Auto-number section headings (`1.`, `1.1`) | `true` |
+| `numbered_sections` | `bool` | Auto-number section headings (`1.`, `1.1`) | `false` |
 
 ## License
 

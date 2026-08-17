@@ -281,7 +281,7 @@ impl Default for Frontmatter {
             language: None,
             logo: None,
             header: None,
-            numbered_sections: true,
+            numbered_sections: false,
             custom: std::collections::HashMap::new(),
         }
     }

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added automatic section numbering (`numbered_sections: true`) and zero-allocation hierarchical ordered list markers (`1.`, `a.`, `i.`).
 - Added interactive item selection for text, bullet, and ordered list items with green highlight and persistent localStorage state.
 - Added modular shoutout feature slice for informational, tip, important, warning, and caution callout box rendering.
 - Added collapsible section support in the core pipeline with accessible headers, keyboard navigation, fold indicator toggling, and state persistence.
@@ -28,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated starter template (`templates/template.md`) with GFM table support, variables table documentation, and sample code variable usage.
 
 ### Changed
+- Changed default value of `numbered_sections` frontmatter option to `false`.
 - Refactored `Document.header` into `DocumentHeader` struct with strict single-table validation for `:::variables` block directives and automatic code feature activation.
 - Updated image fallback placeholder SVG to remove the outer dashed border and optimize vector size.
 - Adjusted typography sizing to reduce inline code font size and increase code block font size.

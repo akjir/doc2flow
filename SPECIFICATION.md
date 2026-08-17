@@ -108,7 +108,7 @@ The CLI executable MUST support the following grammar: `d2f [OPTIONS] [INPUT]`
   - `language` (string): Locale code (`en`, `de`) for UI localization (default: `"en"`).
   - `logo` (string): Relative path or URI to header logo (overridden by CLI `-l`).
   - `header` (bool): Top header banner card toggle (default: `true`, accepts case-insensitive `"true"`, `"yes"`, `"y"`, `"1"`).
-  - `numbered_sections` (bool): Automatic heading numbering (`1.`, `1.1`) (default: `true`, accepts case-insensitive `"true"`, `"yes"`, `"y"`, `"1"`).
+  - `numbered_sections` (bool): Automatic heading numbering (`1.`, `1.1`) (default: `false`, accepts case-insensitive `"true"`, `"yes"`, `"y"`, `"1"`).
   - Custom keys: Preserved in `DocumentParameters.variables` map.
 - **Heading Hierarchy:**
   - `# Heading 1`: Primary section container (`.section`, `.sh.sh-h1`, `.sb`).

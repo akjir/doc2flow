@@ -1426,7 +1426,7 @@ Body text
 
         assert_eq!(doc.parameters.title, "");
         assert_eq!(doc.parameters.language, "en");
-        assert!(doc.parameters.numbered_sections);
+        assert!(!doc.parameters.numbered_sections);
         assert!(doc.parameters.variables.is_empty());
         assert_eq!(doc.body.len(), 1);
         assert_eq!(
