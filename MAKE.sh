@@ -19,14 +19,12 @@ Flags:
   --tests               Run cargo tests
   --examples            Build project and generate HTML examples
   --examples-only       Generate HTML examples only (skip builds)
-  --legacy              Run using legacy pipeline (e.g. for building examples)
 EOF
 }
 
 BUILD_EXAMPLES=false
 EXAMPLES_ONLY=false
 RUN_TESTS=false
-LEGACY=false
 CARGO_ARGS=()
 
 for arg in "$@"; do
@@ -34,9 +32,6 @@ for arg in "$@"; do
         -h|--help)
             show_help
             exit 0
-            ;;
-        --legacy)
-            LEGACY=true
             ;;
         --examples-only)
             BUILD_EXAMPLES=true
@@ -66,11 +61,6 @@ for arg in "$@"; do
 done
 
 if [ "$EXAMPLES_ONLY" = false ]; then
-    if [ "$LEGACY" = true ]; then
-        echo "==> Building Legacy TypeScript..."
-        (cd web && npm run build:legacy)
-    fi
-
     echo "==> Running Cargo build..."
     if [ ${#CARGO_ARGS[@]} -gt 0 ]; then
         cargo build "${CARGO_ARGS[@]}"
@@ -112,11 +102,7 @@ if [ "$BUILD_EXAMPLES" = true ]; then
     for file in examples/*.md; do
         if [ -f "$file" ]; then
             echo "Building $file..."
-            if [ "$LEGACY" = true ]; then
-                "$D2F_BIN" --legacy "$file"
-            else
-                "$D2F_BIN" "$file"
-            fi
+            "$D2F_BIN" "$file"
         fi
     done
 fi

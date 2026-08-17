@@ -20,8 +20,6 @@ pub struct Args {
     pub init: Option<PathBuf>,
     /// Path to the input Markdown file.
     pub input: Option<PathBuf>,
-    /// Whether to run using the legacy pipeline.
-    pub legacy: bool,
     /// Optional path to a custom logo image file (SVG, PNG, JPG, WebP).
     pub logo: Option<PathBuf>,
     /// Path to the output HTML file (optional).
@@ -54,7 +52,6 @@ pub fn help_message() -> &'static str {
         "    -l, --logo <PATH>           Path to a custom logo image (SVG, PNG, JPG, WebP)\n",
         "    -i, --init [PATH]           Generate a starter template Markdown file (default: template.md)\n",
         "    -s, --auto-scale            Automatically resize local images exceeding 250 KB to WebP\n",
-        "        --legacy                Run using the legacy processing pipeline\n",
         "    -h, --help                  Print help information\n",
         "    -V, --version               Print version information\n"
     )
@@ -96,7 +93,6 @@ where
                     "-h" | "--help" if inline_val.is_none() => parsed.show_help = true,
                     "-V" | "--version" if inline_val.is_none() => parsed.show_version = true,
                     "-s" | "--auto-scale" if inline_val.is_none() => parsed.auto_scale = true,
-                    "--legacy" if inline_val.is_none() => parsed.legacy = true,
                     "-o" | "--output" => {
                         parsed.output =
                             Some(resolve_required_path("--output", inline_val, &mut iter)?);
@@ -214,7 +210,6 @@ mod tests {
         assert!(msg.contains("--logo"));
         assert!(msg.contains("--init"));
         assert!(msg.contains("--auto-scale"));
-        assert!(msg.contains("--legacy"));
         assert!(msg.contains("--help"));
         assert!(msg.contains("--version"));
     }
@@ -227,7 +222,6 @@ mod tests {
         assert_eq!(args.init, None);
         assert_eq!(args.logo, None);
         assert!(!args.auto_scale);
-        assert!(!args.legacy);
         assert!(!args.show_help);
         assert!(!args.show_version);
     }
@@ -375,12 +369,6 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_args_legacy() {
-        let args = parse_args(["input.md", "--legacy"]).unwrap();
-        assert!(args.legacy);
-    }
-
-    #[test]
     fn test_parse_args_logo_options() {
         let args_l = parse_args(["input.md", "-l", "my_logo.png"]).unwrap();
         assert_eq!(args_l.logo, Some(PathBuf::from("my_logo.png")));
@@ -436,7 +424,6 @@ mod tests {
         assert_eq!(args.output, Some(PathBuf::from("output.html")));
         assert_eq!(args.init, Some(PathBuf::from("custom_tpl.md")));
         assert!(args.auto_scale);
-        assert!(!args.legacy);
     }
 
     #[test]

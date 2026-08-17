@@ -5,7 +5,7 @@ use std::process::ExitCode;
 
 use doc2flow::core::arguments::{help_message, parse_args};
 use doc2flow::core::builder;
-use doc2flow::core::error::{Error, Result};
+use doc2flow::core::error::Result;
 use doc2flow::core::io;
 use doc2flow::core::markdown::parse_d2f_markdown;
 
@@ -19,11 +19,6 @@ fn run() -> Result<()> {
 
     if args.show_version {
         println!("d2f {}", env!("D2F_FULL_VERSION"));
-        return Ok(());
-    }
-
-    if args.legacy {
-        doc2flow::legacy::run().map_err(|err| Error::Message(err.to_string()))?;
         return Ok(());
     }
 

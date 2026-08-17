@@ -4,7 +4,7 @@
 - **Spec:** `SPECIFICATION.md` (sync structure on central file changes)
 - **Layering:** `src/utils/` (generic library), `src/core/` (domain engine), `src/features/` (vertical slices). Core/features access `utils` through `src/utils/mod.rs` API.
 - **CLI:** `std::env::args_os().skip(1)` (pure parser: callers strip binary; `OsStr`/`OsString` paths)
-- **MD:** `pulldown-cmark`+GFM
+- **MD:** Custom zero-alloc parser + GFM
 - **Assets:** Custom Base64/MIME (`src/utils/`), WebP/compress (`src/core/image.rs`)
 - **i18n:** `HashMap` via embedded JSON (`build.rs`)
 - **UI/HTML:** Zero-alloc buffers (`src/core/components.rs`, `src/core/builder.rs`), compile-time embeds (`include_str!`)
@@ -61,8 +61,7 @@
   - Quotes (`>`,`>?`,`>!`) -> `.note` variants
   - Local Img -> Base64; Remote -> `<img>`; Non-img asset -> `<a>.check-item.text-item`
   - Vars replaced via frontmatter
-- **JS (Current):** Vanilla JS ONLY (`.js`). NO TS/build step. NO `export`/`import`; decouple via `window.d2f` namespace (`window.d2f.<module>`).
-- **TS (Legacy):** `strict`, NO `export`/`import` (`window.d2f`), `readonly`, discriminated unions. BANNED: `any`, `as`, `!`, `enum`, `{}`/`Object`, `?`.
+- **JS:** Vanilla JS ONLY (`.js`). ZERO TS/build steps. NO `export`/`import`; decouple via `window.d2f` namespace (`window.d2f.<module>`).
 - **CSS:**
   - `:root` vars, BEM classes, ZERO external deps (fonts)
   - Print: Hide UI/buttons, expand collapsed (`display:block!important`), natural page breaks (no forced), exact print colors, no strikethrough

@@ -19,4 +19,3 @@ Execute in project root: `./MAKE.sh [FLAGS]`
 - `--tests`: Run cargo tests.
 - `--examples`: Build project AND generate HTML examples.
 - `--examples-only`: Generate HTML examples ONLY (no build).
-- `--legacy`: Pass legacy execution flag to binary when generating HTML examples.

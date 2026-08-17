@@ -23,7 +23,7 @@ Every `.rs` file must strictly follow this top-to-bottom sequence:
 3. **Grouped & Sorted Imports (`use`):**
    - 3 blank-line-separated groups:
      1. `std::...` (Standard library)
-     2. Third-party crates (`serde`, `pulldown_cmark`)
+     2. Third-party crates (`image`)
      3. Internal crate items (`crate::...`, `super::...`)
    - Alphabetize lines within each group.
    - Alphabetize merged curly-brace imports (e.g., `use std::collections::{BTreeMap, HashMap};`).
