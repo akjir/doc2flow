@@ -15,7 +15,6 @@ use std::path::Path;
 /// assert_eq!(guess_mime_type(Path::new("image.png")), "image/png");
 /// assert_eq!(guess_mime_type(Path::new("file.unknown")), "application/octet-stream");
 /// ```
-#[inline]
 pub fn guess_mime_type(path: &Path) -> &'static str {
     let Some(ext) = path.extension().and_then(|e| e.to_str()) else {
         return "application/octet-stream";
@@ -78,6 +77,16 @@ mod tests {
         );
         assert_eq!(
             guess_mime_type(Path::new("no_extension")),
+            "application/octet-stream"
+        );
+    }
+
+    #[test]
+    fn test_guess_mime_type_edge_cases() {
+        assert_eq!(guess_mime_type(Path::new(".env")), "application/octet-stream");
+        assert_eq!(guess_mime_type(Path::new("test.")), "application/octet-stream");
+        assert_eq!(
+            guess_mime_type(Path::new("archive.tar.gz")),
             "application/octet-stream"
         );
     }

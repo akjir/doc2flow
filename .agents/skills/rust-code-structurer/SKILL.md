@@ -63,9 +63,12 @@ For type `MyType`:
 - **Zero-Dep JSON Compliance:** Custom JSON parsers MUST decode UTF-16 surrogate pairs (`\uD800..\uDBFF` + `\uDC00..\uDFFF`) into scalar chars; never rely solely on `char::from_u32` for 4-digit hex escapes.
 - **Strict Primitive Validation:** Unquoted JSON values must strictly validate against RFC 8259 (`true`, `false`, `null`, numbers). Permissive "read until delimiter" logic is strictly prohibited.
 - **Stdlib Only:** Core engine modules must use standard library functionality exclusively without third-party crates (`serde_json`, `nom`).
+- **Zero-Alloc Case Insensitivity:** Use `eq_ignore_ascii_case` inside match guards for case-insensitive string matching without allocations.
+- **Attribute Boundaries:** Reserve `#[inline]` strictly for trivial getters or hot-path trait implementations; never inline large match blocks, complex branching, or parser helpers without profiling.
 
 ### D. Tests & Assertions
 - **Resilient Assertions:** Assert specific semantic tokens (e.g., `.contains("bullet")`) on formatted string outputs (like `Display`) instead of brittle exact full-string matches.
+- **Path Edge-Case Testing:** Mandate filesystem edge-case tests (hidden files, trailing dots, compound extensions, missing filenames) for any `std::path::Path` inspection logic (M-PATH-EDGE-TESTS).
 
 ## 3. DOCUMENTATION & VISIBILITY STANDARDS
 - **Rustdoc Comments:** Retain `/// ...` comments directly above items/attributes with no blank lines.
