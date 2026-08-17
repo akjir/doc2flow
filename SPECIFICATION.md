@@ -327,6 +327,7 @@ doc2flow/
 │   │   ├── error.rs          # Diagnostic compiler-style error types
 │   │   ├── feature.rs        # FeatureModule trait definition
 │   │   ├── format.rs         # Text formatting and escaping utilities
+│   │   ├── id.rs             # Deterministic document identifier generation
 │   │   ├── io.rs             # File system and I/O abstraction
 │   │   ├── json.rs           # Zero-dependency JSON string map parser
 │   │   ├── language.rs       # Embedded locale loader

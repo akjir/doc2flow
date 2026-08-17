@@ -35,6 +35,7 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 - **Bitmask Safety:** When using integer bitmasks (`u32`, `u64`), assert `len <= bit_width` at initialization to prevent overflow (P-MASK-SAFE).
 - **No Magic Capacities:** Avoid hardcoding array capacities (`[T; 8]`). Define named `const MAX_CAPACITY: usize` with `debug_assert!` checks (P-NO-MAGIC-CAP).
 - **Zero-Cost Lookups:** NEVER unconditionally clone owned keys (`PathBuf`, `String`) querying `HashMap`/`BTreeMap` in loops; query `.get()` with borrowed keys, allocating ONLY on insertion (P-ZERO-COST-LOOKUP).
+- **Streaming Hashing:** Do NOT allocate intermediate `String` or `Vec<u8>` buffers solely to concatenate data for hashing. Stream sequentially via `Hasher::update` / `Sha256::update` (P-STREAM-HASH).
 
 ### 2: Parsing & Loops
 - **No Chained Regex/Replace:** Replace `.replace().replace()` cascades with single-pass state machines/scanners.
@@ -78,6 +79,8 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 - **Fallback Testing:** Always write explicit `#[test]` cases for fallback or default `_ => {}` match arms (M-FALLBACK-TESTS).
 - **Extreme Boundary Testing:** Mandate extreme edge-case unit tests (`usize::MAX`, `0`, overflow bounds) for functions performing length/padding math (M-EXTREME-BOUND-TESTS).
 - **Path Edge-Case Testing:** All functions analyzing `std::path::Path`/`PathBuf` components (extensions, filenames) MUST include unit tests for filesystem edge cases: hidden files (`.env`), missing filenames/trailing slashes (`/`), empty extensions/trailing dots (`file.`), and compound extensions (`.tar.gz`) (M-PATH-EDGE-TESTS).
+- **Cryptographic Key Separation:** When combining multiple strings or byte arrays to generate a hash or composite key, never rely on naive printable delimiters (`:`, `|`) without escaping. Standardize on length-prefixing or strict null-byte (`\x00`) delimiters + input sanitization (P-CRYPTO-KEY-SEP).
+- **Delimiter Injection Testing:** Mandate boundary bleeding and delimiter injection unit tests (e.g., `A:`+`B` vs `A`+`:B`) for all composite ID and hash generators (M-DELIM-INJECT-TESTS).
 - **Functional Combinators:** BANNED: imperative `if/else` inside `Option`/`Result` closures (`.or_else(|| ...)`). Mandate declarative chaining (`.filter()`, `.map()`, `.and_then()`). Standardize optional string emptiness filtering on `.as_deref().filter(|s| !s.trim().is_empty())` (P-FUNCTIONAL-COMBINATORS).
 - **I/O Test Obligation:** Mandatory temporary filesystem tests (`std::env::temp_dir()`) or memory cursors for I/O-bound functions, file resolvers, and image encoders (M-IO-TESTS).
 

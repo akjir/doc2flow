@@ -115,6 +115,12 @@ Die folgende Tabelle enthält die Spezifikationen der installierten Hardwarekomp
 2. Sequenzieller Hauptschritt 2: **Datenübertragung** starten
    1. Detaillierter Teilverlauf 2.a: Verbindung zu `{{SERVER_NAME}}` herstellen
    2. Detaillierter Teilverlauf 2.b: Datensynchronisation über Port `{{PORT}}` (*verschlüsselt*)
+      1. Protokoll-Handshake validieren (`TLS 1.3` Sitzungsschlüsselaustausch)
+      2. Blockweiser Datenstrom-Transfer mit Integritätsprüfung
+         1. Block-Prüfsummenverifikation via SHA-256 Pufferüberprüfung
+         2. Durchsatzüberwachung und adaptive Ratenbegrenzung
+            1. Bandbreitensättigungsanalyse (Ziel-Schwellenwert `> 100 MB/s`)
+            2. Paketverlust-Telemetrieprotokollierung (Toleranz `< 0,01%`)
 3. Sequenzieller Hauptschritt 3: **Abschluss & Verifikation** (Audit-Log `audit.log` archivieren)
 
 ---

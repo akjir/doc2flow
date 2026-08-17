@@ -72,6 +72,7 @@ pub fn build(document: &Document) -> String {
     crate::core::language::init(&document.parameters.language);
     let app_version_raw = APP_VERSION.strip_prefix('v').unwrap_or(APP_VERSION);
     let created_at = format_iso8601_utc(std::time::SystemTime::now());
+    let document_id = crate::core::id::generate_document_id(&document.parameters);
     let lang_code = if document.parameters.language.is_empty() {
         "en"
     } else {
@@ -107,6 +108,7 @@ pub fn build(document: &Document) -> String {
         .replace("{{LANG_CODE}}", lang_code)
         .replace("{{LANGUAGE_CODE}}", lang_code)
         .replace("{{TITLE}}", title)
+        .replace("{{DOCUMENT_ID}}", &document_id)
         .replace("{{FEATURES}}", &features_str)
         .replace("{{CSS}}", &css_content)
         .replace("{{JS}}", &js_content)
@@ -145,6 +147,7 @@ mod tests {
         assert!(!content.contains("{{CREATED_AT}}"));
         assert!(!content.contains("{{LANG_CODE}}"));
         assert!(!content.contains("{{LANGUAGE_CODE}}"));
+        assert!(!content.contains("{{DOCUMENT_ID}}"));
         assert!(!content.contains("{{FEATURES}}"));
         assert!(!content.contains("{{CSS}}"));
         assert!(!content.contains("{{JS}}"));
@@ -152,8 +155,24 @@ mod tests {
         assert!(content.contains("<title></title>"));
         assert!(content.contains("--bg-body:"));
         assert!(content.contains("window.d2f"));
+        assert!(content.contains("window.d2f.document.id = 'd2f_id_"));
         assert!(content.contains("window.d2f.document.language = 'en';"));
         assert!(!content.contains("--unknown-bg:"));
+    }
+
+    #[test]
+    fn test_builder_build_deterministic_document_id() {
+        let _guard = crate::core::language::TEST_I18N_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        let mut doc = Document::new();
+        doc.parameters.title = "Release Notes".into();
+        doc.parameters.version = "v1.0.0".into();
+        doc.parameters.date = "2026-08-17".into();
+        let expected_id = crate::core::id::generate_document_id(&doc.parameters);
+
+        let content = build(&doc);
+        assert!(content.contains(&format!("window.d2f.document.id = '{expected_id}';")));
     }
 
     #[test]

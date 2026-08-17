@@ -115,6 +115,12 @@ The table below outlines the hardware specifications of the installed system com
 2. Sequential main step 2: **Data transfer** execution
    1. Detailed sub-procedure 2.a: Establish connection to `{{SERVER_NAME}}`
    2. Detailed sub-procedure 2.b: Perform data synchronization via port `{{PORT}}` (*encrypted*)
+      1. Protocol handshake validation (`TLS 1.3` session key exchange)
+      2. Chunked stream encoding with integrity verification
+         1. Block checksum verification via SHA-256 buffer check
+         2. Throughput monitoring and adaptive rate limiting
+            1. Bandwidth saturation analysis (target threshold `> 100 MB/s`)
+            2. Packet loss telemetry logging (max tolerance `< 0.01%`)
 3. Sequential main step 3: **Finalization & verification** (archive audit log `audit.log`)
 
 ---

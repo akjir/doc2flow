@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+260.83fadb2.dev">
-  <meta name="version" content="0.9.4+260.83fadb2.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+261.7a2dbf9.dev">
+  <meta name="version" content="0.9.4+261.7a2dbf9.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-17T19:03:47Z">
+  <meta name="dcterms.created" content="2026-08-17T19:30:59Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, header, bullet, code, image, ordered, shoutout, table, task">
   <title>Doc2Flow Deutscher Showcase</title>
@@ -1853,6 +1853,42 @@
             Detaillierter Teilverlauf 2.b: Datensynchronisation über Port <code>{{PORT}}</code> (<em>verschlüsselt</em>)
           </span>
         </div>
+        <div class="item order-item item-selectable" style="--indent: 2;">
+          <span class="order-marker">i.</span>
+          <span class="order-content">
+            Protokoll-Handshake validieren (<code>TLS 1.3</code> Sitzungsschlüsselaustausch)
+          </span>
+        </div>
+        <div class="item order-item item-selectable" style="--indent: 2;">
+          <span class="order-marker">ii.</span>
+          <span class="order-content">
+            Blockweiser Datenstrom-Transfer mit Integritätsprüfung
+          </span>
+        </div>
+        <div class="item order-item item-selectable" style="--indent: 3;">
+          <span class="order-marker">1.</span>
+          <span class="order-content">
+            Block-Prüfsummenverifikation via SHA-256 Pufferüberprüfung
+          </span>
+        </div>
+        <div class="item order-item item-selectable" style="--indent: 3;">
+          <span class="order-marker">2.</span>
+          <span class="order-content">
+            Durchsatzüberwachung und adaptive Ratenbegrenzung
+          </span>
+        </div>
+        <div class="item order-item item-selectable" style="--indent: 4;">
+          <span class="order-marker">a.</span>
+          <span class="order-content">
+            Bandbreitensättigungsanalyse (Ziel-Schwellenwert <code>&gt; 100 MB/s</code>)
+          </span>
+        </div>
+        <div class="item order-item item-selectable" style="--indent: 4;">
+          <span class="order-marker">b.</span>
+          <span class="order-content">
+            Paketverlust-Telemetrieprotokollierung (Toleranz <code>&lt; 0,01%</code>)
+          </span>
+        </div>
         <div class="item order-item item-selectable">
           <span class="order-marker">3.</span>
           <span class="order-content">
@@ -1888,7 +1924,7 @@
   <script>
     window.d2f = window.d2f || {};
     window.d2f.document = window.d2f.document || {};
-    window.d2f.document.id = '{{DOCUMENT_ID}}';
+    window.d2f.document.id = 'd2f_id_95cdc99f3f102b1d';
     window.d2f.document.language = 'de';
     (() => {
       const debounce = (func, wait) => {

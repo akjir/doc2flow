@@ -54,13 +54,15 @@
 - **Static Assets:** NEVER swallow deserialization errors (`.unwrap_or_default()`, `.ok()`) on embedded static assets. Use `.expect()` to fail fast at startup (P-FAILFAST-STATIC).
 - **Honest Returns:** NEVER return `Cow` when all code paths return `Cow::Owned` (e.g. data behind short-lived locks). Use explicit `String` or `Arc<str>` (P-HONEST-RETURNS).
 - **I18n Naming:** Standardize on `localize()` (alias `t()`) for static dictionary lookup. BANNED: `translate()` (P-I18N-NAMING).
+- **Crypto Delimiters:** NEVER use raw printable delimiters (`:`, `|`, `,`) without escaping inputs for hashes/composite keys. Mandate length-prefixing or strict null-byte (`\x00`) delimiters + sanitization (P-CRYPTO-KEY-SEP).
+- **Streaming Hasher:** NO intermediate `String`/`Vec<u8>` heap allocs solely to concatenate data for hashing. Stream sequentially via `Hasher::update` / `Sha256::update`; alloc ONLY final output (P-STREAM-HASH).
 - **Build:** `lto=true`, `opt=z|s`, `codegen-units=1`, strip. Favor stdlib over deps.
 
 ## 3. Ops & Tests
 - **Comm:** English ONLY. 1-line concise AI responses.
 - **OS:** Linux dev, Win64 target. `std::path::Path/Buf` ONLY.
 - **Git:** Commit ONLY if requested AND tests pass (or user overrides).
-- **Test:** Priority 1. Negative/edge cases. Mandatory filesystem edge-case tests (hidden files `.env`, trailing dots `file.`, compound extensions `.tar.gz`, trailing slashes `/`) for all `std::path::Path`/`PathBuf` inspection logic (M-PATH-EDGE-TESTS). Mandatory temporary filesystem tests (`std::env::temp_dir()`) or memory cursors for I/O-bound functions, file resolvers, and image encoders (M-IO-TESTS). Semantic token assertions (e.g. `.contains("bullet")`) over exact full strings on formatted output (`Display`). Explicit tests for fallback/default `_ => {}` arms (M-FALLBACK-TESTS). Mandate extreme edge-case unit tests (`usize::MAX`, `0`, bounds) for string length math & buffer sizing (M-EXTREME-BOUND-TESTS). Shared global mutable state (`LazyLock`/`RwLock`) MUST synchronize in `#[cfg(test)]` via a dedicated test `Mutex<()>` (M-GLOBAL-TEST-LOCK). Regen `showcase_*.html` on UI changes.
+- **Test:** Priority 1. Negative/edge cases. Mandatory filesystem edge-case tests (hidden files `.env`, trailing dots `file.`, compound extensions `.tar.gz`, trailing slashes `/`) for all `std::path::Path`/`PathBuf` inspection logic (M-PATH-EDGE-TESTS). Mandatory temporary filesystem tests (`std::env::temp_dir()`) or memory cursors for I/O-bound functions, file resolvers, and image encoders (M-IO-TESTS). Semantic token assertions (e.g. `.contains("bullet")`) over exact full strings on formatted output (`Display`). Explicit tests for fallback/default `_ => {}` arms (M-FALLBACK-TESTS). Mandate extreme edge-case unit tests (`usize::MAX`, `0`, bounds) for string length math & buffer sizing (M-EXTREME-BOUND-TESTS). Mandate boundary bleeding / delimiter injection unit tests (e.g. `A:`+`B` vs `A`+`:B`) on all composite ID and hash generators (M-DELIM-INJECT-TESTS). Shared global mutable state (`LazyLock`/`RwLock`) MUST synchronize in `#[cfg(test)]` via a dedicated test `Mutex<()>` (M-GLOBAL-TEST-LOCK). Regen `showcase_*.html` on UI changes.
 
 ## 4. Frontend (HTML/JS/CSS)
 - **HTML (Generic):**

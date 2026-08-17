@@ -7,6 +7,7 @@ pub mod document;
 pub mod error;
 pub mod feature;
 pub mod format;
+pub mod id;
 pub mod image;
 pub mod io;
 pub mod json;
@@ -26,6 +27,7 @@ pub use document::{
 pub use error::{build_caret_annotation, CliError, DiagnosticError, Error, JsonError, Result};
 pub use feature::FeatureModule;
 pub use format::{append_indented, escape_html_into, format_inline_into, push_indent};
+pub use id::generate_document_id;
 pub use image::{
     MAX_IMAGE_SIZE_BYTES, clean_svg, extract_attribute, is_image_source, is_remote_or_data_uri,
     process_and_encode_image_as_webp, resolve_or_encode_image,

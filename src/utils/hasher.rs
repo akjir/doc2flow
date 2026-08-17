@@ -1,10 +1,10 @@
 //! Pure-Rust zero-dependency implementation of the SHA-256 cryptographic hash algorithm.
 
+use std::fmt::Write;
+
 const H0: [u32; 8] = [
     0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
 ];
-
-const HEX_CHARS: &[u8; 16] = b"0123456789abcdef";
 
 const K: [u32; 64] = [
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -17,48 +17,88 @@ const K: [u32; 64] = [
     0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
 ];
 
-/// Computes the SHA-256 hash of input bytes and returns a 64-character hexadecimal string.
-///
-/// Uses pre-allocated exact buffer capacity to eliminate re-allocations during padding.
-///
-/// # Examples
-///
-/// ```
-/// use doc2flow::utils::hasher::sha256;
-///
-/// let digest = sha256(b"abc");
-/// assert_eq!(digest, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
-/// ```
-pub fn sha256(data: &[u8]) -> String {
-    let digest = sha256_bytes(data);
-    let mut s = String::with_capacity(64);
-    for b in digest {
-        s.push(HEX_CHARS[(b >> 4) as usize] as char);
-        s.push(HEX_CHARS[(b & 0x0f) as usize] as char);
-    }
-    s
+/// Zero-allocation streaming SHA-256 state accumulator.
+#[derive(Clone, Debug)]
+pub struct Sha256 {
+    buffer: [u8; 64],
+    buffer_len: usize,
+    h: [u32; 8],
+    total_len: u64,
 }
 
-/// Computes the SHA-256 digest of `data` and returns the 32-byte hash array directly.
-pub fn sha256_bytes(data: &[u8]) -> [u8; 32] {
-    let mut h = H0;
+impl Default for Sha256 {
+    fn default() -> Self {
+        Self {
+            buffer: [0u8; 64],
+            buffer_len: 0,
+            h: H0,
+            total_len: 0,
+        }
+    }
+}
 
-    let data_len = data.len();
-    let bit_len = (data_len as u64) * 8;
-
-    let mut padded_len = data_len + 1 + 8;
-    let rem = padded_len % 64;
-    if rem != 0 {
-        padded_len += 64 - rem;
+impl Sha256 {
+    /// Creates a new SHA-256 streaming hasher.
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
     }
 
-    let mut bytes = Vec::with_capacity(padded_len);
-    bytes.extend_from_slice(data);
-    bytes.push(0x80);
-    bytes.resize(padded_len - 8, 0x00);
-    bytes.extend_from_slice(&bit_len.to_be_bytes());
+    /// Feeds input bytes into the streaming hasher.
+    pub fn update(&mut self, mut data: &[u8]) {
+        self.total_len += data.len() as u64;
 
-    for chunk in bytes.chunks_exact(64) {
+        if self.buffer_len > 0 {
+            let to_fill = 64 - self.buffer_len;
+            if data.len() >= to_fill {
+                self.buffer[self.buffer_len..64].copy_from_slice(&data[..to_fill]);
+                Self::process_block(&mut self.h, &self.buffer);
+                self.buffer_len = 0;
+                data = &data[to_fill..];
+            } else {
+                self.buffer[self.buffer_len..self.buffer_len + data.len()].copy_from_slice(data);
+                self.buffer_len += data.len();
+                return;
+            }
+        }
+
+        while data.len() >= 64 {
+            Self::process_block(&mut self.h, &data[..64]);
+            data = &data[64..];
+        }
+
+        if !data.is_empty() {
+            self.buffer[..data.len()].copy_from_slice(data);
+            self.buffer_len = data.len();
+        }
+    }
+
+    /// Finalizes the hash calculation and returns the 32-byte digest array.
+    #[must_use]
+    pub fn finish(mut self) -> [u8; 32] {
+        let bit_len = self.total_len * 8;
+        self.buffer[self.buffer_len] = 0x80;
+        self.buffer_len += 1;
+
+        if self.buffer_len > 56 {
+            self.buffer[self.buffer_len..64].fill(0);
+            Self::process_block(&mut self.h, &self.buffer);
+            self.buffer[..56].fill(0);
+        } else {
+            self.buffer[self.buffer_len..56].fill(0);
+        }
+
+        self.buffer[56..64].copy_from_slice(&bit_len.to_be_bytes());
+        Self::process_block(&mut self.h, &self.buffer);
+
+        let mut out = [0u8; 32];
+        for (i, val) in self.h.iter().enumerate() {
+            out[i * 4..i * 4 + 4].copy_from_slice(&val.to_be_bytes());
+        }
+        out
+    }
+
+    fn process_block(h: &mut [u32; 8], chunk: &[u8]) {
         let mut w = [0u32; 64];
         for i in 0..16 {
             w[i] = u32::from_be_bytes([
@@ -117,12 +157,45 @@ pub fn sha256_bytes(data: &[u8]) -> [u8; 32] {
         h[6] = h[6].wrapping_add(g);
         h[7] = h[7].wrapping_add(h_var);
     }
+}
 
-    let mut out = [0u8; 32];
-    for (i, val) in h.iter().enumerate() {
-        out[i * 4..i * 4 + 4].copy_from_slice(&val.to_be_bytes());
+/// Computes the SHA-256 hash of input bytes and returns a 64-character hexadecimal string.
+///
+/// Uses streaming computation with zero intermediate heap allocations.
+///
+/// # Examples
+///
+/// ```
+/// use doc2flow::utils::hasher::sha256;
+///
+/// let digest = sha256(b"abc");
+/// assert_eq!(digest, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+/// ```
+#[must_use]
+pub fn sha256(data: &[u8]) -> String {
+    let digest = sha256_bytes(data);
+    let mut s = String::with_capacity(64);
+    for b in digest {
+        let _ = write!(s, "{b:02x}");
     }
-    out
+    s
+}
+
+/// Computes the SHA-256 digest of `data` and returns the 32-byte hash array directly.
+///
+/// # Examples
+///
+/// ```
+/// use doc2flow::utils::hasher::sha256_bytes;
+///
+/// let digest = sha256_bytes(b"abc");
+/// assert_eq!(digest.len(), 32);
+/// ```
+#[must_use]
+pub fn sha256_bytes(data: &[u8]) -> [u8; 32] {
+    let mut hasher = Sha256::new();
+    hasher.update(data);
+    hasher.finish()
 }
 
 #[cfg(test)]
@@ -145,6 +218,16 @@ mod tests {
             digest,
             "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
         );
+    }
+
+    #[test]
+    fn test_sha256_streaming_chunks() {
+        let mut hasher = Sha256::new();
+        hasher.update(b"a");
+        hasher.update(b"b");
+        hasher.update(b"c");
+        let digest = hasher.finish();
+        assert_eq!(digest, sha256_bytes(b"abc"));
     }
 
     #[test]
