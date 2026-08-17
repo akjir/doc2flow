@@ -177,7 +177,8 @@ mod tests {
         assert_eq!(js.len(), 3);
         assert!(js[0].contains("window.d2f"));
         assert!(js[0].contains("utils"));
-        assert!(js[0].contains("translate,"));
+        assert!(js[0].contains("debounce"));
+        assert!(js[0].contains("isRecord"));
         assert!(!js[0].contains("\nt,") && !js[0].contains(" t,"));
         assert!(js[1].contains("window.d2f"));
         assert!(js[1].contains("storage"));

@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+248.f3d4aa1.dev">
-  <meta name="version" content="0.9.4+248.f3d4aa1.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+250.3d03dc5.dev">
+  <meta name="version" content="0.9.4+250.3d03dc5.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-17T06:59:14Z">
+  <meta name="dcterms.created" content="2026-08-17T07:37:01Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, bullet, code, image, ordered, shoutout, table, task">
   <title>Doc2Flow Deutscher Showcase</title>
@@ -1009,6 +1009,132 @@
       }
     }
     /* ==========================================================================
+       Doc2Flow - Shoutout Feature Styles
+       ========================================================================== */
+
+    /* 1. Base Variables & Tokens */
+    :root {
+      /* Shoutout Base & Radius Tokens */
+      --shoutout-radius: 6px;
+      --shoutout-font-size: 12px;
+      --shoutout-label-size: 10px;
+
+      /* Note Callout Tokens */
+      --shoutout-note-bg: #ebf3fb;
+      --shoutout-note-border: #2e75b6;
+      --shoutout-note-text: #163a5c;
+
+      /* Tip Callout Tokens */
+      --shoutout-tip-bg: #e2efda;
+      --shoutout-tip-border: #70ad47;
+      --shoutout-tip-text: #375623;
+
+      /* Important Callout Tokens */
+      --shoutout-important-bg: #f3e8fa;
+      --shoutout-important-border: #8e44ad;
+      --shoutout-important-text: #512e5f;
+
+      /* Warning Callout Tokens */
+      --shoutout-warning-bg: #fff2cc;
+      --shoutout-warning-border: #f4c430;
+      --shoutout-warning-accent: #d4a017;
+      --shoutout-warning-text: #7f6000;
+
+      /* Caution Callout Tokens */
+      --shoutout-caution-bg: #fce4d6;
+      --shoutout-caution-border: #c00000;
+      --shoutout-caution-text: #800000;
+    }
+
+    /* 2. Shoutout Component (.shoutout, .shoutout-*) */
+    .shoutout {
+      position: relative;
+      background-color: var(--shoutout-note-bg);
+      border-left: 3px solid var(--shoutout-note-border);
+      border-radius: 0 var(--shoutout-radius) var(--shoutout-radius) 0;
+      padding: 7px 75px 7px 11px;
+      margin: 5px 0 9px;
+      font-size: var(--shoutout-font-size);
+      line-height: var(--txt-line-height, 1.5);
+      color: var(--shoutout-note-text);
+      font-style: italic;
+      --shoutout-accent: var(--shoutout-note-border);
+    }
+
+    .shoutout::after {
+      content: attr(data-label);
+      position: absolute;
+      top: 7px;
+      right: 11px;
+      font-size: var(--shoutout-label-size);
+      font-weight: bold;
+      font-style: normal;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--shoutout-accent);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease-in-out;
+    }
+
+    .shoutout:hover::after {
+      opacity: 1;
+    }
+
+    .shoutout.shoutout-note,
+    .shoutout-note {
+      background-color: var(--shoutout-note-bg);
+      border-left-color: var(--shoutout-note-border);
+      color: var(--shoutout-note-text);
+      --shoutout-accent: var(--shoutout-note-border);
+    }
+
+    .shoutout.shoutout-tip,
+    .shoutout-tip {
+      background-color: var(--shoutout-tip-bg);
+      border-left-color: var(--shoutout-tip-border);
+      color: var(--shoutout-tip-text);
+      --shoutout-accent: var(--shoutout-tip-border);
+    }
+
+    .shoutout.shoutout-important,
+    .shoutout-important {
+      background-color: var(--shoutout-important-bg);
+      border-left-color: var(--shoutout-important-border);
+      color: var(--shoutout-important-text);
+      --shoutout-accent: var(--shoutout-important-border);
+    }
+
+    .shoutout.shoutout-warning,
+    .shoutout-warning {
+      background-color: var(--shoutout-warning-bg);
+      border-left-color: var(--shoutout-warning-border);
+      color: var(--shoutout-warning-text);
+      --shoutout-accent: var(--shoutout-warning-accent);
+    }
+
+    .shoutout.shoutout-caution,
+    .shoutout-caution {
+      background-color: var(--shoutout-caution-bg);
+      border-left-color: var(--shoutout-caution-border);
+      color: var(--shoutout-caution-text);
+      --shoutout-accent: var(--shoutout-caution-border);
+    }
+
+    /* 3. Print Styles */
+    @media print {
+      .shoutout {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      .shoutout::after {
+        opacity: 1 !important;
+      }
+    }
+    /* ==========================================================================
        Doc2Flow - Table Feature Styles (Tabular Layouts)
        ========================================================================== */
 
@@ -1287,6 +1413,24 @@
         </div>
         <div class="image-item">
           <img src="https://invalid-host-doc2flow.test/broken-image.jpg" alt="Fehlerhaftes externes Bild" />
+        </div>
+        <div class="shoutout shoutout-note" data-label="Hinweis">
+          Dies ist eine neutrale Hinweis-Box mit Standard-Kontext sowie <strong>fettem Text</strong>, <code>inline code</code> und <em>kursiven Hinweisen</em>.
+        </div>
+        <div class="shoutout shoutout-tip" data-label="Tipp">
+          Dies ist eine grüne Tipp-Box mit <strong>Best Practices</strong>: Nutzen Sie <code>curl -I</code> statt <s>telnet</s> für die <em>schnelle Diagnose</em>.
+        </div>
+        <div class="shoutout shoutout-important" data-label="Wichtig">
+          Dies ist eine violette Wichtig-Box, die auf <strong>kritische Anforderungen</strong> (<code>TLS v1.3</code> Pflicht, <s>SSL v3</s> deaktiviert) hinweist.
+        </div>
+        <div class="shoutout shoutout-warning" data-label="Warnung">
+          Dies ist eine gelbe Warnung-Box, die zur <strong>Vorsicht</strong> bei ungesicherten Ports (<code>{{PORT}}</code>) und <em>unverschlüsselter Übertragung</em> rät.
+        </div>
+        <div class="shoutout shoutout-caution" data-label="Achtung">
+          Dies ist eine rote Achtung-Box, die vor <strong>gefährlichen Aktionen</strong> wie <code>rm -rf /</code> oder <s>ungesicherten Schreibzugriffen</s> warnt.
+        </div>
+        <div class="shoutout shoutout-note" data-label="Hinweis">
+          Dies ist eine mehrzeilige Hinweis-Box mit detaillierten <strong>Hintergrundinformationen</strong> und umfassenden Anweisungen für den Endbenutzer. Sie demonstriert flüssigen Textumbruch mit <code>Inline-Code-Elementen</code>, <em>kursiven Ergänzungen</em>, <strong>hervorgehobenen Schlüsselbegriffen</strong> sowie <s>durchgestrichenen Altlasten</s> in visuellen Hinweisfeldern.
         </div>
       </div>
     </section>
@@ -1612,9 +1756,8 @@
   <script>
     window.d2f = window.d2f || {};
     window.d2f.document = window.d2f.document || {};
-    window.d2f.document.id = '{{DOC_ID}}';
-    window.d2f.lang = window.d2f.lang || {};
-    window.d2f.lang.dictionary = {};
+    window.d2f.document.id = '{{DOCUMENT_ID}}';
+    window.d2f.document.language = 'de';
     (() => {
       const debounce = (func, wait) => {
         let timeout;

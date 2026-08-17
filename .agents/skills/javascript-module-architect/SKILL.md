@@ -17,7 +17,6 @@ description: Generates, refactors, and validates isolated Vanilla JavaScript mod
 - **Zero Pollution:** NEVER declare variables or functions in the global scope.
 - **Public API Export:** Assign public methods strictly to `window.d2f.[module_name]`. Ensure namespace guard (`window.d2f = window.d2f || {};`).
 - **Module Interop:** Access external functions ONLY via `window.d2f.[other_module].[method]()`.
-- **i18n / Localization:** Language-specific text MUST use `window.d2f.utils.translate(key)` (returns dictionary value or `{{KEY}}`; zero fallbacks).
 - **Zero Dependencies:** 100% Vanilla JS. No external libraries (e.g., jQuery). BANNED: `export`/`import` (no bundler).
 - **DOM Events:** Attach listeners inside an initialization function (`init()`) called on `DOMContentLoaded` or guarded by `document.readyState`.
 
@@ -36,8 +35,7 @@ description: Generates, refactors, and validates isolated Vanilla JavaScript mod
   const internalState = {};
   const privateHelper = () => {};
 
-  // 2. Cross-Module Access & i18n
-  // const label = window.d2f.utils?.translate('key');
+  // 2. Cross-Module Access
   // window.d2f.otherModule.doSomething();
 
   // 3. Public API Export

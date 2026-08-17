@@ -122,11 +122,11 @@ The CLI executable MUST support the following grammar: `d2f [OPTIONS] [INPUT]`
 - **Block Directives:**
   - `:::<name>` container blocks (e.g. `:::variables`) containing arbitrary child elements.
 - **Callout & Shoutout Panels:**
-  - `>` / `> Note`: Informational callout (`.note`, neutral styling).
-  - `>?` / `>? Tip`: Proactive tip callout (`.note-tip`, green accent).
-  - `>!` / `>! Important`: High-priority callout (`.note-important`, purple accent).
-  - `>!!` / `>!! Warning`: Warning callout (`.note-warning`, yellow accent).
-  - `>!!!` / `>!!! Caution`: Critical caution callout (`.note-caution`, red accent).
+  - `>` / `> Note`: Informational callout (`.shoutout.shoutout-note`, neutral styling).
+  - `>?` / `>? Tip`: Proactive tip callout (`.shoutout.shoutout-tip`, green accent).
+  - `>!` / `>! Important`: High-priority callout (`.shoutout.shoutout-important`, purple accent).
+  - `>!!` / `>!! Warning`: Warning callout (`.shoutout.shoutout-warning`, yellow accent).
+  - `>!!!` / `>!!! Caution`: Critical caution callout (`.shoutout.shoutout-caution`, red accent).
 - **Code Blocks & Variables:**
   - ` ```lang ` fenced code blocks with language tags, 1-click **Copy Code** button, and variable interpolation (`{{VAR_NAME}}`).
   - `[Variables]` markdown table: Extracts key-value pairs into editable persistent text fields (`.persistent-field`) that dynamically substitute code block placeholders upon copy.

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added modular shoutout feature slice for informational, tip, important, warning, and caution callout box rendering.
 - Added collapsible section support in the core pipeline with accessible headers, keyboard navigation, fold indicator toggling, and state persistence.
 - Added permissive boolean parsing support for document frontmatter configuration parameters.
 - Added modular table feature slice for responsive table rendering, column alignments, and row hover states.

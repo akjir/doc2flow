@@ -350,7 +350,7 @@ mod tests {
         );
         assert_eq!(
             render_element(&shoutout, 1, &DocumentParameters::default()),
-            ""
+            "  <div class=\"shoutout shoutout-note\" data-label=\"Note\">\n    Unregistered shoutout\n  </div>\n"
         );
 
         let directive = DocumentElement::block_directive(

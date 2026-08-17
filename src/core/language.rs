@@ -1,34 +1,49 @@
 //! Language dictionary and internationalization module.
 
+use std::collections::HashMap;
+use std::sync::LazyLock;
+
 /// German locale JSON dictionary embedded at compile time.
 pub const DE_JSON: &str = include_str!("../../resources/locales/de.json");
 
 /// English locale JSON dictionary embedded at compile time.
 pub const EN_JSON: &str = include_str!("../../resources/locales/en.json");
 
-/// Fallback empty JSON dictionary for unknown language codes.
-pub const EMPTY_JSON: &str = "{}";
+static DE_DICT: LazyLock<HashMap<&'static str, &'static str>> =
+    LazyLock::new(|| serde_json::from_str(DE_JSON).unwrap_or_default());
 
-/// Returns the serialized JSON dictionary string for the specified language code.
+static EN_DICT: LazyLock<HashMap<&'static str, &'static str>> =
+    LazyLock::new(|| serde_json::from_str(EN_JSON).unwrap_or_default());
+
+/// Translates a localization key for the specified language code.
 ///
-/// Returns an empty JSON object (`"{}"`) if the language code is unrecognized.
+/// Falls back to English if the key is not present in the requested language,
+/// or returns an empty string if the key does not exist in any dictionary.
 ///
 /// # Examples
 ///
 /// ```
-/// use doc2flow::core::language::get_language_json;
+/// use doc2flow::core::language::translate;
 ///
-/// assert!(get_language_json("en").contains("\"lang_code\": \"en\""));
-/// assert!(get_language_json("de").contains("\"lang_code\": \"de\""));
-/// assert_eq!(get_language_json("fr"), "{}");
-/// assert_eq!(get_language_json(""), "{}");
+/// assert_eq!(translate("export_pdf", "en"), "Export as PDF");
+/// assert_eq!(translate("export_pdf", "de"), "Als PDF exportieren");
+/// assert_eq!(translate("callout_note", "de"), "Hinweis");
+/// assert_eq!(translate("callout_note", "en"), "Note");
+/// assert_eq!(translate("nonexistent_key", "en"), "");
 /// ```
-pub fn get_language_json(code: &str) -> &'static str {
-    match code.trim() {
-        c if c.eq_ignore_ascii_case("de") => DE_JSON,
-        c if c.eq_ignore_ascii_case("en") => EN_JSON,
-        _ => EMPTY_JSON,
+#[must_use]
+pub fn translate(key: &str, lang: &str) -> &'static str {
+    let dict = match lang.trim() {
+        c if c.eq_ignore_ascii_case("de") => &*DE_DICT,
+        _ => &*EN_DICT,
+    };
+    if let Some(&val) = dict.get(key) {
+        return val;
     }
+    if let Some(&val) = EN_DICT.get(key) {
+        return val;
+    }
+    ""
 }
 
 #[cfg(test)]
@@ -36,30 +51,30 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_get_language_json_returns_embedded_dictionaries() {
-        let en = get_language_json("en");
-        assert!(en.contains("\"lang_code\": \"en\""));
-        assert!(en.contains("\"export_pdf\": \"Export as PDF\""));
-
-        let de = get_language_json("de");
-        assert!(de.contains("\"lang_code\": \"de\""));
-        assert!(de.contains("\"export_pdf\": \"Als PDF exportieren\""));
+    fn test_translate_english_and_german() {
+        assert_eq!(translate("export_pdf", "en"), "Export as PDF");
+        assert_eq!(translate("export_pdf", "de"), "Als PDF exportieren");
+        assert_eq!(translate("callout_note", "en"), "Note");
+        assert_eq!(translate("callout_note", "de"), "Hinweis");
+        assert_eq!(translate("callout_caution", "de"), "Achtung");
     }
 
     #[test]
-    fn test_get_language_json_case_insensitive_and_whitespace() {
-        assert_eq!(get_language_json("EN"), EN_JSON);
-        assert_eq!(get_language_json("DE"), DE_JSON);
-        assert_eq!(get_language_json("  en  "), EN_JSON);
-        assert_eq!(get_language_json("  de  "), DE_JSON);
+    fn test_translate_case_insensitive_and_whitespace() {
+        assert_eq!(translate("export_pdf", "DE"), "Als PDF exportieren");
+        assert_eq!(translate("export_pdf", "  de  "), "Als PDF exportieren");
+        assert_eq!(translate("export_pdf", "EN"), "Export as PDF");
+        assert_eq!(translate("export_pdf", "  en  "), "Export as PDF");
     }
 
     #[test]
-    fn test_get_language_json_returns_empty_map_for_unknown() {
-        assert_eq!(get_language_json("fr"), "{}");
-        assert_eq!(get_language_json("es"), "{}");
-        assert_eq!(get_language_json("xyz"), "{}");
-        assert_eq!(get_language_json(""), "{}");
-        assert_eq!(get_language_json("   "), "{}");
+    fn test_translate_fallback_for_unknown_language_or_key() {
+        assert_eq!(translate("export_pdf", "fr"), "Export as PDF");
+        assert_eq!(translate("export_pdf", ""), "Export as PDF");
+        assert_eq!(translate("export_pdf", "   "), "Export as PDF");
+
+        assert_eq!(translate("nonexistent_key", "de"), "");
+        assert_eq!(translate("nonexistent_key", "en"), "");
+        assert_eq!(translate("nonexistent_key", "fr"), "");
     }
 }

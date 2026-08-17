@@ -24,6 +24,6 @@ pub use document::{
 pub use error::{build_caret_annotation, CliError, DiagnosticError, Error, Result};
 pub use feature::FeatureModule;
 pub use format::{append_indented, escape_html_into, format_inline_into, push_indent};
-pub use language::get_language_json;
+pub use language::translate;
 pub use markdown::parse_d2f_markdown;
 pub use renderer::{DocumentElementRenderer, HtmlRenderer, render_element, render_element_into};
