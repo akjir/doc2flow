@@ -145,6 +145,8 @@ impl std::error::Error for DiagnosticError<'_> {}
 pub enum Error {
     /// Rendered compiler-style diagnostic error string.
     Diagnostic(String),
+    /// Image processing error wrapping [`image::ImageError`].
+    Image(image::ImageError),
     /// General message error.
     Message(String),
 }
@@ -153,6 +155,7 @@ impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             Self::Diagnostic(msg) => write!(f, "{msg}"),
+            Self::Image(err) => write!(f, "{err}"),
             Self::Message(msg) => write!(f, "{msg}"),
         }
     }
@@ -182,6 +185,12 @@ impl<'a> From<DiagnosticError<'a>> for Error {
     }
 }
 
+impl From<image::ImageError> for Error {
+    fn from(err: image::ImageError) -> Self {
+        Self::Image(err)
+    }
+}
+
 impl From<JsonError> for Error {
     fn from(err: JsonError) -> Self {
         Self::Message(err.to_string())
@@ -194,7 +203,14 @@ impl From<String> for Error {
     }
 }
 
-impl std::error::Error for Error {}
+impl std::error::Error for Error {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Image(err) => Some(err),
+            _ => None,
+        }
+    }
+}
 
 /// Result type alias for core operations.
 pub type Result<T, E = Error> = std::result::Result<T, E>;
@@ -528,5 +544,17 @@ mod tests {
         assert_eq!(err.to_string(), "test from String");
         let std_err: &dyn std::error::Error = &err;
         assert!(std_err.source().is_none());
+    }
+
+    #[test]
+    fn test_error_from_image_error() {
+        let img_err = image::ImageError::Decoding(image::error::DecodingError::new(
+            image::error::ImageFormatHint::Unknown,
+            "corrupt image stream",
+        ));
+        let err: Error = img_err.into();
+        assert!(err.to_string().contains("corrupt image stream"));
+        let std_err: &dyn std::error::Error = &err;
+        assert!(std_err.source().is_some());
     }
 }

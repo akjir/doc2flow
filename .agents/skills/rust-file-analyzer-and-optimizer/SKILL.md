@@ -40,6 +40,7 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 - **Declarative Iterators:** Prefer `.filter()`, `.map()`, `.fold()` over imperative loops with mutable state.
 - **Unified Forward Parsers:** Never duplicate forward-scanning loops across token handlers. Encapsulate index advancement and token/code skipping into generic higher-order functions or reusable iterators (P-UNIFIED-PARSER).
 - **Linear Parsing & No O(N²):** Ensure token parsers and recursive descent routines parse strictly linearly (O(N)). Avoid repetitive scanning of identical byte slices on unclosed/nested tokens (P-NO-QUADRATIC).
+- **Efficient Compression Loops:** Never use iterative scaling loops for compression targets (e.g. shrinking image by 10% repeatedly). Calculate target dimensions mathematically (area-to-byte ratio) to limit heavy encoding operations to 1-2 passes maximum (P-EFFICIENT-IO-LOOPS).
 - **Zero-Dep JSON Compliance:** Custom JSON parsers MUST explicitly support UTF-16 surrogate pair decoding (`\uD800..\uDBFF` + `\uDC00..\uDFFF`). Relying solely on `char::from_u32` for 4-digit hex escapes is strictly prohibited (fails outside BMP/emojis) (P-JSON-SURROGATE).
 - **Strict Primitive Validation:** Unquoted JSON values MUST strictly validate against RFC 8259 (`true`, `false`, `null`, numbers). Permissive "read until delimiter" accepting arbitrary bare words or malformed floats is strictly prohibited; emit explicit error (P-JSON-STRICT-PRIMITIVES).
 - **Stdlib Only:** ZERO external dependencies (`serde_json`, `nom`) in zero-dependency core engine components. String manipulation and validation must utilize standard library functionality exclusively (`str::from_utf8`) (P-STDLIB-ONLY).
@@ -61,13 +62,13 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 - **Flatten Monolithic Dispatchers:** Avoid massive `if/else` or loop dispatchers (>50 lines). Dispatch token parsing to discrete, strongly-typed functions (e.g., `try_parse_* -> Option<usize>`) (P-FLATTEN-DISPATCH).
 - **Encapsulate UTF-8 Lookarounds:** Abstract UTF-8 boundary checks and char lookahead/lookbehind (`slice[idx..].chars().next()`) into semantic helper functions (`is_alphanumeric_at`, `is_alphanumeric_before`, `is_alphanumeric_after`) (P-UTF8-LOOKAROUND).
 - **Layering:** `src/utils/` = generic project-agnostic library (NO domain logic). `src/core/` & `src/features/` consume it via `src/utils/mod.rs` API.
-- **Errors:** Stdlib + `Doc2FlowError` (`src/utils/error.rs`). Strongly typed error enums for modules/parsing (NO `Result<T, String>`).
+- **Errors:** Stdlib + `Doc2FlowError` (`src/utils/error.rs`). Strongly typed error enums for modules/parsing (NO `Result<T, String>`). Retain error context via `#[source]` chaining; wrap external library errors in enum variants, never flatten into `Error::Message(format!(...))` (P-ERR-PRESERVE).
 - **Panics:** `unwrap()`/`expect()` ONLY for true invariants with descriptive msgs. NEVER for runtime/user I/O.
 - **Safety:** ZERO `unsafe` blocks.
 - **Consts:** Feature constants local in `src/features/<name>/module.rs` (NO central dumpster). App metadata/limits ONLY in `src/core/constants.rs`.
 - **Logic:** Prefer `match` or lookup tables over `if-else` chains.
 - **CLI Parsing:** Pure parser inputs (callers strip binary with `args_os().skip(1)`). OS-agnostic paths via `std::ffi::OsStr`/`OsString` (no UTF-8 assumption). Identical validation for space (`-o ""`) vs equals (`-o=`) syntax; reject empty values uniformly (`val.as_ref().is_empty()`). Avoid fragile flag peeking: require explicit `=` or strict bounds for optional values/hyphenated args (P-CLI-PURE).
-- **Attributes:** Enforce `#[must_use]` on all constructors, factories, and pure builder methods (`new`, `with_capacity`). Reserve `#[inline]` strictly for trivial getters/wrappers and hot-path trait implementations/loops. BANNED: `#[inline]` on large/branching functions, large `match` blocks, complex string operations, heap allocs (`String::with_capacity`), I/O, multi-branch logic, setup, init, parser helpers, or CLI parsing without profiling. Rely on LTO and compiler heuristics (P-ATTR-USAGE).
+- **Attributes:** Enforce `#[must_use]` on all constructors, factories, and pure builder methods (`new`, `with_capacity`). Reserve `#[inline]` strictly for trivial getters/wrappers and hot-path trait implementations/loops. BANNED: `#[inline]` on internal utilities, large/branching functions, large `match` blocks, complex string operations, heap allocs (`String::with_capacity`), I/O, multi-branch logic, setup, init, parser helpers, or CLI parsing without cross-crate profiling (P-ATTR-USAGE). Rely on LTO and compiler heuristics.
 - **Domain Quirks:** Explicitly document intentional domain deviations inline (e.g. strict H1/H2->H3 AST nesting for UI layout) to protect against accidental refactoring.
 - **Boolean Parsing:** Account for multiple case-insensitive truthy variants (`true`, `yes`, `y`, `1`) when deserializing boolean parameters from maps/frontmatter/headers.
 - **Pipelines & Parity:** DRY template contexts (`build_template_vars`), render conditional components identically across entry points, and single-predicate feature dispatch (`is_feature_active`).
@@ -75,6 +76,7 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 - **Fallback Testing:** Always write explicit `#[test]` cases for fallback or default `_ => {}` match arms (M-FALLBACK-TESTS).
 - **Extreme Boundary Testing:** Mandate extreme edge-case unit tests (`usize::MAX`, `0`, overflow bounds) for functions performing length/padding math (M-EXTREME-BOUND-TESTS).
 - **Path Edge-Case Testing:** All functions analyzing `std::path::Path`/`PathBuf` components (extensions, filenames) MUST include unit tests for filesystem edge cases: hidden files (`.env`), missing filenames/trailing slashes (`/`), empty extensions/trailing dots (`file.`), and compound extensions (`.tar.gz`) (M-PATH-EDGE-TESTS).
+- **I/O Test Obligation:** Mandatory temporary filesystem tests (`std::env::temp_dir()`) or memory cursors for I/O-bound functions, file resolvers, and image encoders (M-IO-TESTS).
 
 ### 5: HTML, XML & Asset Processing
 - **Scanners:** Zero-alloc single-pass tokenizers (O(N) forward cursor). Avoid redundant scanning passes over attribute names/values.

@@ -11,6 +11,11 @@ use crate::core::error::{DiagnosticError, Error, Result, build_caret_annotation}
 use crate::core::io;
 use crate::utils::{guess_mime_type, to_base64_data_uri};
 
+/// Allowed image file extensions for image resource checking.
+const ALLOWED_IMAGE_EXTENSIONS: [&str; 11] = [
+    "avif", "bmp", "gif", "ico", "jpeg", "jpg", "png", "svg", "tif", "tiff", "webp",
+];
+
 /// Maximum allowed size in bytes for a local image embedded into HTML (250 KB).
 pub const MAX_IMAGE_SIZE_BYTES: u64 = 250 * 1024;
 
@@ -61,11 +66,12 @@ pub fn clean_svg(input: &str) -> String {
             }
 
             let tag_rest = &rest[tag_start..];
-            if tag_rest.starts_with("<!--")
-                || tag_rest.starts_with("<?")
-                || tag_rest.starts_with("<!DOCTYPE")
-                || tag_rest.starts_with("<!doctype")
-                || tag_rest.starts_with("<![CDATA[")
+            if tag_start > 0
+                && (tag_rest.starts_with("<!--")
+                    || tag_rest.starts_with("<?")
+                    || tag_rest.starts_with("<!DOCTYPE")
+                    || tag_rest.starts_with("<!doctype")
+                    || tag_rest.starts_with("<![CDATA["))
             {
                 rest = tag_rest;
                 continue;
@@ -106,7 +112,7 @@ pub fn clean_svg(input: &str) -> String {
 ///
 /// Supports double quotes, single quotes, whitespace around `=`, unquoted values, boolean
 /// attributes, multiline attributes, and escaped quotes. Loop bounds advance systematically
-/// without redundant scanning passes.
+/// using standard string slice operations without redundant scanning passes.
 ///
 /// # Examples
 ///
@@ -120,101 +126,113 @@ pub fn clean_svg(input: &str) -> String {
 /// ```
 #[must_use]
 pub fn extract_attribute<'a>(tag: &'a str, attr_name: &str) -> Option<(usize, usize, &'a str)> {
-    let bytes = tag.as_bytes();
-    let mut cursor = 0;
-
-    if cursor < bytes.len() && bytes[cursor] == b'<' {
-        cursor += 1;
-        if cursor < bytes.len() && bytes[cursor] == b'/' {
-            cursor += 1;
-        }
-        while cursor < bytes.len()
-            && !bytes[cursor].is_ascii_whitespace()
-            && bytes[cursor] != b'/'
-            && bytes[cursor] != b'>'
-        {
-            cursor += 1;
-        }
+    let tag_trimmed = tag.trim_start();
+    if !tag_trimmed.starts_with('<') {
+        return None;
     }
 
-    while cursor < bytes.len() {
-        while cursor < bytes.len() && bytes[cursor].is_ascii_whitespace() {
-            cursor += 1;
-        }
-        if cursor >= bytes.len() || bytes[cursor] == b'/' || bytes[cursor] == b'>' {
+    let tag_content = tag_trimmed.strip_prefix('<')?;
+    let tag_content = tag_content.strip_prefix('/').unwrap_or(tag_content);
+
+    let tag_name_len = tag_content
+        .find(|c: char| c.is_whitespace() || c == '/' || c == '>')
+        .unwrap_or(tag_content.len());
+
+    let mut current_offset = tag.len() - tag_content.len() + tag_name_len;
+
+    while current_offset < tag.len() {
+        let remainder = &tag[current_offset..];
+        let trimmed_remainder = remainder.trim_start();
+        let ws_len = remainder.len() - trimmed_remainder.len();
+        current_offset += ws_len;
+
+        if current_offset >= tag.len() {
             break;
         }
 
-        let attr_start = cursor;
-        while cursor < bytes.len()
-            && !bytes[cursor].is_ascii_whitespace()
-            && bytes[cursor] != b'='
-            && bytes[cursor] != b'/'
-            && bytes[cursor] != b'>'
-        {
-            cursor += 1;
+        let slice = &tag[current_offset..];
+        if slice.starts_with('>') || slice.starts_with("/>") {
+            break;
         }
 
-        let name = &tag[attr_start..cursor];
-        if name.is_empty() {
-            cursor += 1;
+        let attr_start = current_offset;
+
+        let name_len = slice
+            .find(|c: char| c.is_whitespace() || c == '=' || c == '/' || c == '>')
+            .unwrap_or(slice.len());
+
+        if name_len == 0 {
+            let next_char_len = slice.chars().next().map_or(1, |c| c.len_utf8());
+            current_offset += next_char_len;
             continue;
         }
 
-        while cursor < bytes.len() && bytes[cursor].is_ascii_whitespace() {
-            cursor += 1;
-        }
+        let name = &slice[..name_len];
+        current_offset += name_len;
+
+        let after_name = &tag[current_offset..];
+        let after_name_trimmed = after_name.trim_start();
+        current_offset += after_name.len() - after_name_trimmed.len();
 
         let is_target = name.eq_ignore_ascii_case(attr_name);
 
-        if cursor < bytes.len() && bytes[cursor] == b'=' {
-            cursor += 1;
-            while cursor < bytes.len() && bytes[cursor].is_ascii_whitespace() {
-                cursor += 1;
-            }
+        if current_offset < tag.len() && tag[current_offset..].starts_with('=') {
+            current_offset += 1;
+            let after_eq = &tag[current_offset..];
+            let after_eq_trimmed = after_eq.trim_start();
+            current_offset += after_eq.len() - after_eq_trimmed.len();
 
-            if cursor < bytes.len() {
-                let quote = bytes[cursor];
-                if quote == b'"' || quote == b'\'' {
-                    cursor += 1;
-                    let val_start = cursor;
-                    while cursor < bytes.len() {
-                        if bytes[cursor] == b'\\' && cursor + 1 < bytes.len() {
-                            cursor += 2;
-                        } else if bytes[cursor] == quote {
+            if current_offset < tag.len() {
+                let val_slice = &tag[current_offset..];
+                if let Some(quote) = val_slice.chars().next().filter(|&c| c == '"' || c == '\'') {
+                    let quote_len = quote.len_utf8();
+                    let val_start_offset = current_offset + quote_len;
+                    let inner_slice = &tag[val_start_offset..];
+
+                    let mut escaped = false;
+                    let mut found_end = None;
+                    for (idx, ch) in inner_slice.char_indices() {
+                        if escaped {
+                            escaped = false;
+                        } else if ch == '\\' {
+                            escaped = true;
+                        } else if ch == quote {
+                            found_end = Some(idx);
                             break;
-                        } else {
-                            cursor += 1;
                         }
                     }
-                    let val_end = cursor;
-                    if cursor < bytes.len() && bytes[cursor] == quote {
-                        cursor += 1;
-                    }
-                    let attr_end = cursor;
-                    if is_target {
-                        return Some((attr_start, attr_end, &tag[val_start..val_end]));
+
+                    if let Some(end_idx) = found_end {
+                        let val = &inner_slice[..end_idx];
+                        let attr_end = val_start_offset + end_idx + quote_len;
+                        if is_target {
+                            return Some((attr_start, attr_end, val));
+                        }
+                        current_offset = attr_end;
+                    } else {
+                        let val = inner_slice;
+                        let attr_end = tag.len();
+                        if is_target {
+                            return Some((attr_start, attr_end, val));
+                        }
+                        current_offset = attr_end;
                     }
                 } else {
-                    let val_start = cursor;
-                    while cursor < bytes.len()
-                        && !bytes[cursor].is_ascii_whitespace()
-                        && bytes[cursor] != b'/'
-                        && bytes[cursor] != b'>'
-                    {
-                        cursor += 1;
-                    }
-                    let val_end = cursor;
-                    let attr_end = cursor;
+                    let val_len = val_slice
+                        .find(|c: char| c.is_whitespace() || c == '/' || c == '>')
+                        .unwrap_or(val_slice.len());
+                    let val = &val_slice[..val_len];
+                    let attr_end = current_offset + val_len;
                     if is_target {
-                        return Some((attr_start, attr_end, &tag[val_start..val_end]));
+                        return Some((attr_start, attr_end, val));
                     }
+                    current_offset = attr_end;
                 }
             } else if is_target {
-                return Some((attr_start, cursor, ""));
+                return Some((attr_start, current_offset, ""));
             }
         } else if is_target {
-            return Some((attr_start, cursor, ""));
+            return Some((attr_start, current_offset, ""));
         }
     }
 
@@ -248,66 +266,42 @@ pub fn find_markdown_location<'a>(
 #[must_use]
 pub fn is_image_source(src: &str, base_dir: Option<&Path>) -> bool {
     if let Some(ext) = Path::new(src).extension().and_then(|e| e.to_str()) {
-        match ext {
-            e if e.eq_ignore_ascii_case("png")
-                || e.eq_ignore_ascii_case("jpg")
-                || e.eq_ignore_ascii_case("jpeg")
-                || e.eq_ignore_ascii_case("gif")
-                || e.eq_ignore_ascii_case("svg")
-                || e.eq_ignore_ascii_case("webp")
-                || e.eq_ignore_ascii_case("bmp")
-                || e.eq_ignore_ascii_case("ico")
-                || e.eq_ignore_ascii_case("avif")
-                || e.eq_ignore_ascii_case("tiff") =>
-            {
-                return true;
-            }
-            e if e.eq_ignore_ascii_case("pdf")
-                || e.eq_ignore_ascii_case("doc")
-                || e.eq_ignore_ascii_case("docx")
-                || e.eq_ignore_ascii_case("xls")
-                || e.eq_ignore_ascii_case("xlsx")
-                || e.eq_ignore_ascii_case("ppt")
-                || e.eq_ignore_ascii_case("pptx")
-                || e.eq_ignore_ascii_case("zip")
-                || e.eq_ignore_ascii_case("tar")
-                || e.eq_ignore_ascii_case("gz")
-                || e.eq_ignore_ascii_case("7z")
-                || e.eq_ignore_ascii_case("txt")
-                || e.eq_ignore_ascii_case("csv")
-                || e.eq_ignore_ascii_case("json")
-                || e.eq_ignore_ascii_case("xml")
-                || e.eq_ignore_ascii_case("html")
-                || e.eq_ignore_ascii_case("htm")
-                || e.eq_ignore_ascii_case("mp4")
-                || e.eq_ignore_ascii_case("mp3")
-                || e.eq_ignore_ascii_case("avi")
-                || e.eq_ignore_ascii_case("mov")
-                || e.eq_ignore_ascii_case("wav") =>
-            {
-                return false;
-            }
-            _ => {}
+        if ALLOWED_IMAGE_EXTENSIONS
+            .iter()
+            .any(|&allowed| allowed.eq_ignore_ascii_case(ext))
+        {
+            return true;
         }
-    }
-
-    if !src.starts_with("http://") && !src.starts_with("https://") && !src.starts_with("data:") {
+        if is_remote_or_data_uri(src) {
+            return false;
+        }
         let path = Path::new(src);
         let resolved = io::resolve_path(path, base_dir);
-        let is_img = resolved
+        return resolved
             .as_deref()
             .map(guess_mime_type)
             .is_some_and(|mime| mime.starts_with("image/"));
-        if is_img {
-            return true;
-        }
     }
 
-    true
+    if src.starts_with("data:image/") {
+        return true;
+    }
+    if src.starts_with("data:") {
+        return false;
+    }
+    if src.starts_with("http://") || src.starts_with("https://") {
+        return true;
+    }
+
+    let path = Path::new(src);
+    let resolved = io::resolve_path(path, base_dir);
+    resolved
+        .as_deref()
+        .map(guess_mime_type)
+        .is_some_and(|mime| mime.starts_with("image/"))
 }
 
 /// Checks if an image source is a remote URL or existing Base64 Data URI.
-#[inline]
 #[must_use]
 pub fn is_remote_or_data_uri(src: &str) -> bool {
     src.starts_with("data:") || src.starts_with("http://") || src.starts_with("https://")
@@ -356,22 +350,16 @@ fn parse_cdata(input: &str) -> Option<(&str, &str)> {
     }
 }
 
-/// Resizes a local image file and converts it to WebP format until its size is within 250 KB.
+/// Resizes a local image file and converts it to WebP format to stay within the 250 KB target.
 ///
-/// Dynamically scales target dimensions based on ratio to 250 KB, iteratively compresses using
-/// triangle filtering into a WebP buffer, and saves a `.webp` copy alongside the original image.
+/// Calculates target dimensions mathematically based on area ratio, encodes to WebP in a maximum
+/// of two passes using triangle filtering, and saves a `.webp` copy alongside the original image.
 ///
 /// # Errors
 ///
 /// Returns an [`Error`] if opening or encoding the image fails.
 pub fn process_and_encode_image_as_webp(image_path: &Path) -> Result<String> {
-    let img = image::open(image_path).map_err(|e| {
-        Error::Message(format!(
-            "Failed to open image '{}': {e}",
-            image_path.display()
-        ))
-    })?;
-
+    let img = image::open(image_path)?;
     let (orig_w, orig_h) = img.dimensions();
     let file_size = io::get_file_size(image_path).unwrap_or(MAX_IMAGE_SIZE_BYTES + 1);
 
@@ -383,28 +371,34 @@ pub fn process_and_encode_image_as_webp(image_path: &Path) -> Result<String> {
 
     let mut buffer = Vec::with_capacity(MAX_IMAGE_SIZE_BYTES as usize);
 
-    let (final_w, final_h) = loop {
-        let resized_img = if target_w < orig_w || target_h < orig_h {
-            img.resize(target_w, target_h, FilterType::Triangle)
-        } else {
-            img.clone()
-        };
+    // Pass 1: Initial scaling based on file size estimation
+    let resized_img = if target_w < orig_w || target_h < orig_h {
+        img.resize(target_w, target_h, FilterType::Triangle)
+    } else {
+        img.clone()
+    };
 
-        let dims = resized_img.dimensions();
+    let mut final_w = resized_img.width();
+    let mut final_h = resized_img.height();
+
+    let mut cursor = Cursor::new(&mut buffer);
+    resized_img.write_to(&mut cursor, ImageFormat::WebP)?;
+
+    // Pass 2: Direct area-to-bytes ratio recalculation if Pass 1 exceeds target size (max 2 passes)
+    if (buffer.len() as u64) > MAX_IMAGE_SIZE_BYTES && (target_w > 100 || target_h > 100) {
+        let pass2_scale =
+            ((MAX_IMAGE_SIZE_BYTES as f64 / buffer.len() as f64).sqrt() * 0.92).min(0.95);
+        target_w = ((target_w as f64 * pass2_scale) as u32).max(100);
+        target_h = ((target_h as f64 * pass2_scale) as u32).max(100);
+
+        let pass2_img = img.resize(target_w, target_h, FilterType::Triangle);
+        final_w = pass2_img.width();
+        final_h = pass2_img.height();
 
         buffer.clear();
         let mut cursor = Cursor::new(&mut buffer);
-        resized_img
-            .write_to(&mut cursor, ImageFormat::WebP)
-            .map_err(|e| Error::Message(format!("Failed to encode image to WebP format: {e}")))?;
-
-        if (buffer.len() as u64) <= MAX_IMAGE_SIZE_BYTES || (target_w <= 100 && target_h <= 100) {
-            break dims;
-        }
-
-        target_w = ((target_w as f64 * 0.85) as u32).max(100);
-        target_h = ((target_h as f64 * 0.85) as u32).max(100);
-    };
+        pass2_img.write_to(&mut cursor, ImageFormat::WebP)?;
+    }
 
     let webp_path = image_path.with_extension("webp");
     let _ = io::write_file(&webp_path, &buffer);
@@ -596,73 +590,83 @@ fn write_cleaned_tag_attributes(out: &mut String, tag_name: &str, tag_inner: &st
         ""
     };
 
-    let bytes = attr_str.as_bytes();
-    let mut cursor = 0;
+    let mut current_offset = 0;
 
-    while cursor < bytes.len() {
-        while cursor < bytes.len() && bytes[cursor].is_ascii_whitespace() {
-            cursor += 1;
-        }
-        if cursor >= bytes.len() || bytes[cursor] == b'/' || bytes[cursor] == b'>' {
+    while current_offset < attr_str.len() {
+        let remainder = &attr_str[current_offset..];
+        let trimmed = remainder.trim_start();
+        let ws_len = remainder.len() - trimmed.len();
+        current_offset += ws_len;
+
+        if current_offset >= attr_str.len() {
             break;
         }
 
-        let name_start = cursor;
-        while cursor < bytes.len()
-            && !bytes[cursor].is_ascii_whitespace()
-            && bytes[cursor] != b'='
-            && bytes[cursor] != b'/'
-            && bytes[cursor] != b'>'
-        {
-            cursor += 1;
+        let slice = &attr_str[current_offset..];
+        if slice.starts_with('>') || slice.starts_with('/') {
+            break;
         }
-        let name = &attr_str[name_start..cursor];
-        if name.is_empty() {
-            cursor += 1;
+
+        let name_len = slice
+            .find(|c: char| c.is_whitespace() || c == '=' || c == '/' || c == '>')
+            .unwrap_or(slice.len());
+
+        if name_len == 0 {
+            let next_char_len = slice.chars().next().map_or(1, |c| c.len_utf8());
+            current_offset += next_char_len;
             continue;
         }
 
-        while cursor < bytes.len() && bytes[cursor].is_ascii_whitespace() {
-            cursor += 1;
-        }
+        let name = &slice[..name_len];
+        current_offset += name_len;
+
+        let after_name = &attr_str[current_offset..];
+        let after_name_trimmed = after_name.trim_start();
+        current_offset += after_name.len() - after_name_trimmed.len();
 
         let mut val = "";
         let mut has_equals = false;
 
-        if cursor < bytes.len() && bytes[cursor] == b'=' {
+        if current_offset < attr_str.len() && attr_str[current_offset..].starts_with('=') {
             has_equals = true;
-            cursor += 1;
-            while cursor < bytes.len() && bytes[cursor].is_ascii_whitespace() {
-                cursor += 1;
-            }
-            if cursor < bytes.len() {
-                let quote = bytes[cursor];
-                if quote == b'"' || quote == b'\'' {
-                    cursor += 1;
-                    let val_start = cursor;
-                    while cursor < bytes.len() {
-                        if bytes[cursor] == b'\\' && cursor + 1 < bytes.len() {
-                            cursor += 2;
-                        } else if bytes[cursor] == quote {
+            current_offset += 1;
+            let after_eq = &attr_str[current_offset..];
+            let after_eq_trimmed = after_eq.trim_start();
+            current_offset += after_eq.len() - after_eq_trimmed.len();
+
+            if current_offset < attr_str.len() {
+                let val_slice = &attr_str[current_offset..];
+                if let Some(quote) = val_slice.chars().next().filter(|&c| c == '"' || c == '\'') {
+                    let quote_len = quote.len_utf8();
+                    let val_start_offset = current_offset + quote_len;
+                    let inner_slice = &attr_str[val_start_offset..];
+
+                    let mut escaped = false;
+                    let mut found_end = None;
+                    for (idx, ch) in inner_slice.char_indices() {
+                        if escaped {
+                            escaped = false;
+                        } else if ch == '\\' {
+                            escaped = true;
+                        } else if ch == quote {
+                            found_end = Some(idx);
                             break;
-                        } else {
-                            cursor += 1;
                         }
                     }
-                    val = &attr_str[val_start..cursor];
-                    if cursor < bytes.len() && bytes[cursor] == quote {
-                        cursor += 1;
+
+                    if let Some(end_idx) = found_end {
+                        val = &inner_slice[..end_idx];
+                        current_offset = val_start_offset + end_idx + quote_len;
+                    } else {
+                        val = inner_slice;
+                        current_offset = attr_str.len();
                     }
                 } else {
-                    let val_start = cursor;
-                    while cursor < bytes.len()
-                        && !bytes[cursor].is_ascii_whitespace()
-                        && bytes[cursor] != b'/'
-                        && bytes[cursor] != b'>'
-                    {
-                        cursor += 1;
-                    }
-                    val = &attr_str[val_start..cursor];
+                    let val_len = val_slice
+                        .find(|c: char| c.is_whitespace() || c == '/' || c == '>')
+                        .unwrap_or(val_slice.len());
+                    val = &val_slice[..val_len];
+                    current_offset += val_len;
                 }
             }
         }
@@ -758,6 +762,23 @@ mod tests {
     }
 
     #[test]
+    fn test_extract_attribute_malformed_tags() {
+        let unclosed_quote = "<img src=\"images/unclosed.png";
+        let (_, _, val) = extract_attribute(unclosed_quote, "src").unwrap();
+        assert_eq!(val, "images/unclosed.png");
+
+        let unquoted_val = "<img src=image.png alt=sample>";
+        let (_, _, val) = extract_attribute(unquoted_val, "src").unwrap();
+        assert_eq!(val, "image.png");
+        let (_, _, alt) = extract_attribute(unquoted_val, "alt").unwrap();
+        assert_eq!(alt, "sample");
+
+        let tag_trailing_equals = "<img src=>";
+        let (_, _, val) = extract_attribute(tag_trailing_equals, "src").unwrap();
+        assert_eq!(val, "");
+    }
+
+    #[test]
     fn test_is_image_source_extensions() {
         assert!(is_image_source("image.png", None));
         assert!(is_image_source("photo.JPG", None));
@@ -766,6 +787,9 @@ mod tests {
         assert!(!is_image_source("archive.ZIP", None));
         assert!(!is_image_source("doc.docx", None));
         assert!(!is_image_source("music.mp3", None));
+        assert!(is_image_source("data:image/png;base64,123", None));
+        assert!(!is_image_source("data:application/pdf;base64,123", None));
+        assert!(is_image_source("https://example.com/avatar", None));
     }
 
     #[test]
@@ -858,6 +882,29 @@ mod tests {
     }
 
     #[test]
+    fn test_clean_svg_malformed_inputs() {
+        let unclosed_comment = "<!-- unclosed comment without closing delimiter <svg></svg>";
+        let cleaned1 = clean_svg(unclosed_comment);
+        assert!(!cleaned1.is_empty());
+
+        let unclosed_doctype = "<!DOCTYPE svg PUBLIC without closing";
+        let cleaned2 = clean_svg(unclosed_doctype);
+        assert_eq!(cleaned2, "<!DOCTYPE svg PUBLIC without closing");
+
+        let unclosed_pi = "<?xml version='1.0' without question mark";
+        let cleaned3 = clean_svg(unclosed_pi);
+        assert_eq!(cleaned3, "<?xml version='1.0' without question mark");
+
+        let unclosed_cdata = "<![CDATA[ some unclosed text";
+        let cleaned4 = clean_svg(unclosed_cdata);
+        assert_eq!(cleaned4, "<![CDATA[ some unclosed text");
+
+        let unclosed_tag = "<svg width='100'";
+        let cleaned5 = clean_svg(unclosed_tag);
+        assert_eq!(cleaned5, "<svg width='100'");
+    }
+
+    #[test]
     fn test_make_image_too_large_error() {
         let err = make_image_too_large_error(
             "doc.md",
@@ -876,5 +923,69 @@ mod tests {
                 .contains("^^^^^^^^^^^^^^^^^^^ local image size (300.0 KB) exceeds 250 KB limit")
         );
         assert!(err_str.contains("= help: reduce image resolution or compress 'images/large_photo.png' below 250 KB before embedding."));
+    }
+
+    #[test]
+    fn test_process_and_encode_image_as_webp_under_target_size() {
+        let temp_dir = std::env::temp_dir().join(format!("d2f_webp_test_{}", std::process::id()));
+        let _ = io::create_dir_all(&temp_dir);
+        let img_path = temp_dir.join("sample.png");
+
+        let img_buf = image::RgbImage::new(100, 100);
+        img_buf
+            .save_with_format(&img_path, ImageFormat::Png)
+            .expect("should save test png");
+
+        let uri = process_and_encode_image_as_webp(&img_path).expect("encoding should succeed");
+        assert!(uri.starts_with("data:image/webp;base64,"));
+
+        let webp_path = temp_dir.join("sample.webp");
+        assert!(io::path_exists(&webp_path));
+        let webp_size = io::get_file_size(&webp_path).unwrap_or(0);
+        assert!(webp_size > 0 && webp_size <= MAX_IMAGE_SIZE_BYTES);
+
+        let _ = io::remove_dir_all(&temp_dir);
+    }
+
+    #[test]
+    fn test_process_and_encode_image_as_webp_large_image_scaling() {
+        let temp_dir =
+            std::env::temp_dir().join(format!("d2f_webp_large_test_{}", std::process::id()));
+        let _ = io::create_dir_all(&temp_dir);
+        let img_path = temp_dir.join("large.png");
+
+        let mut img_buf = image::RgbImage::new(800, 800);
+        for (x, y, pixel) in img_buf.enumerate_pixels_mut() {
+            *pixel = image::Rgb([(x % 255) as u8, (y % 255) as u8, ((x + y) % 255) as u8]);
+        }
+        img_buf
+            .save_with_format(&img_path, ImageFormat::Png)
+            .expect("should save large test png");
+
+        let uri =
+            process_and_encode_image_as_webp(&img_path).expect("large image encoding should work");
+        assert!(uri.starts_with("data:image/webp;base64,"));
+
+        let webp_path = temp_dir.join("large.webp");
+        assert!(io::path_exists(&webp_path));
+        let webp_size = io::get_file_size(&webp_path).unwrap_or(0);
+        assert!(webp_size > 0 && webp_size <= MAX_IMAGE_SIZE_BYTES);
+
+        let _ = io::remove_dir_all(&temp_dir);
+    }
+
+    #[test]
+    fn test_process_and_encode_image_as_webp_non_existent_file() {
+        let non_existent = Path::new("/path/that/definitely/does/not/exist_12345.png");
+        let result = process_and_encode_image_as_webp(non_existent);
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(matches!(err, Error::Image(_)));
+    }
+
+    #[test]
+    fn test_prompt_user_for_resizing_text() {
+        let prompt_res = prompt_user_for_resizing("dummy.png", 300 * 1024);
+        assert!(!prompt_res);
     }
 }

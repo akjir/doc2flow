@@ -1,6 +1,5 @@
 use doc2flow::core::arguments::parse_args;
 use doc2flow::core::builder::build;
-use doc2flow::core::document::{DocumentElement, ShoutoutElementKind};
 use doc2flow::core::markdown::parse_d2f_markdown;
 
 #[test]
@@ -97,7 +96,9 @@ fn test_collapsible_sections_pipeline_integration() {
     assert!(content.contains("<span class=\"section-title\">Container H1</span>"));
 
     assert!(content.contains("<section class=\"section\" data-level=\"2\">"));
-    assert!(content.contains("<h2 class=\"section-header\" role=\"button\" tabindex=\"0\" aria-expanded=\"true\">"));
+    assert!(content.contains(
+        "<h2 class=\"section-header\" role=\"button\" tabindex=\"0\" aria-expanded=\"true\">"
+    ));
     assert!(content.contains("<span class=\"section-title\">Container H2</span>"));
 
     assert!(content.contains("<section class=\"section\" data-level=\"3\">"));
@@ -209,8 +210,7 @@ fn test_image_and_link_pipeline_integration() {
 
 #[test]
 fn test_image_embedding_pipeline_local_and_remote() {
-    let temp_dir =
-        std::env::temp_dir().join(format!("d2f_integ_img_local_{}", std::process::id()));
+    let temp_dir = std::env::temp_dir().join(format!("d2f_integ_img_local_{}", std::process::id()));
     let _ = doc2flow::core::io::create_dir_all(&temp_dir);
 
     let pic_path = temp_dir.join("diagram.png");
@@ -238,8 +238,7 @@ fn test_image_embedding_pipeline_local_and_remote() {
 
 #[test]
 fn test_image_embedding_pipeline_large_image_auto_scale() {
-    let temp_dir =
-        std::env::temp_dir().join(format!("d2f_integ_img_scale_{}", std::process::id()));
+    let temp_dir = std::env::temp_dir().join(format!("d2f_integ_img_scale_{}", std::process::id()));
     let _ = doc2flow::core::io::create_dir_all(&temp_dir);
 
     let pic_path = temp_dir.join("huge.png");
@@ -279,8 +278,7 @@ fn test_image_embedding_pipeline_large_image_auto_scale() {
 
 #[test]
 fn test_image_embedding_pipeline_large_image_diagnostic_error() {
-    let temp_dir =
-        std::env::temp_dir().join(format!("d2f_integ_img_err_{}", std::process::id()));
+    let temp_dir = std::env::temp_dir().join(format!("d2f_integ_img_err_{}", std::process::id()));
     let _ = doc2flow::core::io::create_dir_all(&temp_dir);
 
     let pic_path = temp_dir.join("unscaled.png");
@@ -296,7 +294,8 @@ fn test_image_embedding_pipeline_large_image_diagnostic_error() {
     );
     doc2flow::core::io::write_file(&pic_path, &existing).unwrap();
 
-    let input = "---\ntitle: \"Large Image Err Test\"\n---\n# Overview\n\n![Unscaled](unscaled.png)";
+    let input =
+        "---\ntitle: \"Large Image Err Test\"\n---\n# Overview\n\n![Unscaled](unscaled.png)";
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
     let rendered = doc2flow::core::builder::build(&document);
 
@@ -314,7 +313,9 @@ fn test_image_embedding_pipeline_large_image_diagnostic_error() {
     assert!(err_msg.contains("--> doc.md:6:13"));
     assert!(err_msg.contains("6 | ![Unscaled](unscaled.png)"));
     assert!(err_msg.contains("^^^^^^^^^^^^ local image size"));
-    assert!(err_msg.contains("= help: reduce image resolution or compress 'unscaled.png' below 250 KB before embedding."));
+    assert!(err_msg.contains(
+        "= help: reduce image resolution or compress 'unscaled.png' below 250 KB before embedding."
+    ));
 
     let _ = doc2flow::core::io::remove_dir_all(&temp_dir);
 }

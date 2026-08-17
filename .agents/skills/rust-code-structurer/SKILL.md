@@ -64,11 +64,13 @@ For type `MyType`:
 - **Strict Primitive Validation:** Unquoted JSON values must strictly validate against RFC 8259 (`true`, `false`, `null`, numbers). Permissive "read until delimiter" logic is strictly prohibited.
 - **Stdlib Only:** Core engine modules must use standard library functionality exclusively without third-party crates (`serde_json`, `nom`).
 - **Zero-Alloc Case Insensitivity:** Use `eq_ignore_ascii_case` inside match guards for case-insensitive string matching without allocations.
-- **Attribute Boundaries:** Reserve `#[inline]` strictly for trivial getters or hot-path trait implementations; never inline large match blocks, complex branching, or parser helpers without profiling.
+- **Attribute Boundaries:** Reserve `#[inline]` strictly for trivial getters or hot-path trait implementations; never inline internal utilities, large match blocks, complex branching, or parser helpers without cross-crate profiling (P-ATTR-USAGE).
+- **Error Preservation:** Retain error context via `#[source]` chaining; wrap external library errors in enum variants, never flatten into string messages (P-ERR-PRESERVE).
 
 ### D. Tests & Assertions
 - **Resilient Assertions:** Assert specific semantic tokens (e.g., `.contains("bullet")`) on formatted string outputs (like `Display`) instead of brittle exact full-string matches.
 - **Path Edge-Case Testing:** Mandate filesystem edge-case tests (hidden files, trailing dots, compound extensions, missing filenames) for any `std::path::Path` inspection logic (M-PATH-EDGE-TESTS).
+- **I/O Test Obligation:** Mandatory temporary filesystem tests (`std::env::temp_dir()`) or memory cursors for I/O-bound functions, file resolvers, and image encoders (M-IO-TESTS).
 
 ## 3. DOCUMENTATION & VISIBILITY STANDARDS
 - **Rustdoc Comments:** Retain `/// ...` comments directly above items/attributes with no blank lines.
