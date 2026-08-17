@@ -103,10 +103,12 @@ pub fn build(document: &Document) -> String {
         .replace("{{LICENSE_URL}}", LICENSE_URL)
         .replace("{{CREATED_AT}}", &created_at)
         .replace("{{LANG_CODE}}", lang_code)
+        .replace("{{LANGUAGE_CODE}}", lang_code)
         .replace("{{TITLE}}", title)
         .replace("{{FEATURES}}", &features_str)
         .replace("{{CSS}}", &css_content)
         .replace("{{JS}}", &js_content)
+        .replace("{{LANGUAGE_DICTIONARY_JSON}}", i18n_json)
         .replace("{{I18N_JSON}}", i18n_json)
         .replace("{{CONTENT}}", &html_content)
 }
@@ -139,15 +141,19 @@ mod tests {
         assert!(!content.contains("{{LICENSE_URL}}"));
         assert!(!content.contains("{{CREATED_AT}}"));
         assert!(!content.contains("{{LANG_CODE}}"));
+        assert!(!content.contains("{{LANGUAGE_CODE}}"));
         assert!(!content.contains("{{FEATURES}}"));
         assert!(!content.contains("{{CSS}}"));
         assert!(!content.contains("{{JS}}"));
+        assert!(!content.contains("{{LANGUAGE_DICTIONARY_JSON}}"));
         assert!(!content.contains("{{I18N_JSON}}"));
         assert!(!content.contains("{{TITLE}}"));
         assert!(content.contains("<title></title>"));
         assert!(content.contains("--bg-body:"));
         assert!(content.contains("window.d2f"));
-        assert!(content.contains("window.d2f.lang.dictionary = {};"));
+        assert!(content.contains("window.d2f.language.code = 'en';"));
+        assert!(content.contains("window.d2f.language.dictionary = {"));
+        assert!(content.contains("\"lang_code\": \"en\""));
         assert!(!content.contains("--unknown-bg:"));
     }
 
@@ -226,9 +232,24 @@ mod tests {
         doc.parameters.language = "de".into();
         let content = build(&doc);
         assert!(content.contains("<html lang=\"de\">"));
-        assert!(content.contains("window.d2f.lang.dictionary = {};"));
+        assert!(content.contains("window.d2f.language.code = 'de';"));
+        assert!(content.contains("window.d2f.language.dictionary = {"));
+        assert!(content.contains("\"lang_code\": \"de\""));
         assert!(!content.contains("{{LANG_CODE}}"));
+        assert!(!content.contains("{{LANGUAGE_CODE}}"));
+        assert!(!content.contains("{{LANGUAGE_DICTIONARY_JSON}}"));
         assert!(!content.contains("{{I18N_JSON}}"));
+    }
+
+    #[test]
+    fn test_builder_build_unknown_language_fallback_to_empty_map() {
+        let mut doc = Document::new();
+        doc.parameters.language = "fr".into();
+        let content = build(&doc);
+        assert!(content.contains("<html lang=\"fr\">"));
+        assert!(content.contains("window.d2f.language.code = 'fr';"));
+        assert!(content.contains("window.d2f.language.dictionary = {};"));
+        assert!(!content.contains("{{LANGUAGE_DICTIONARY_JSON}}"));
     }
 
     #[test]
@@ -237,7 +258,10 @@ mod tests {
         doc.parameters.language.clear();
         let content = build(&doc);
         assert!(content.contains("<html lang=\"en\">"));
+        assert!(content.contains("window.d2f.language.code = 'en';"));
+        assert!(content.contains("\"lang_code\": \"en\""));
         assert!(!content.contains("{{LANG_CODE}}"));
+        assert!(!content.contains("{{LANGUAGE_CODE}}"));
     }
 
     #[test]
