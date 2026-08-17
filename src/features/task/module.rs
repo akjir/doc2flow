@@ -56,9 +56,9 @@ impl DocumentElementRenderer for TaskFeature {
             push_indent(out, indent);
 
             if *checked {
-                out.push_str("<div class=\"item check-item checked\"");
+                out.push_str("<div class=\"item check-item item-selectable checked\"");
             } else {
-                out.push_str("<div class=\"item check-item\"");
+                out.push_str("<div class=\"item check-item item-selectable\"");
             }
             if depth > 0 {
                 let _ = write!(out, " style=\"--indent: {depth};\"");
@@ -143,7 +143,7 @@ mod tests {
             &renderer,
         );
         let expected = concat!(
-            "  <div class=\"item check-item\">\n",
+            "  <div class=\"item check-item item-selectable\">\n",
             "    <span class=\"check-marker\">\n",
             "      <input type=\"checkbox\" class=\"check-box\" />\n",
             "    </span>\n",
@@ -170,7 +170,7 @@ mod tests {
             &renderer,
         );
         let expected = concat!(
-            "  <div class=\"item check-item checked\">\n",
+            "  <div class=\"item check-item item-selectable checked\">\n",
             "    <span class=\"check-marker\">\n",
             "      <input type=\"checkbox\" class=\"check-box\" checked />\n",
             "    </span>\n",
@@ -200,7 +200,7 @@ mod tests {
             &renderer,
         );
         let expected = concat!(
-            "<div class=\"item check-item checked\">\n",
+            "<div class=\"item check-item item-selectable checked\">\n",
             "  <span class=\"check-marker\">\n",
             "    <input type=\"checkbox\" class=\"check-box\" checked />\n",
             "  </span>\n",
@@ -227,7 +227,7 @@ mod tests {
             &renderer,
         );
         let expected = concat!(
-            "    <div class=\"item check-item\" style=\"--indent: 1;\">\n",
+            "    <div class=\"item check-item item-selectable\" style=\"--indent: 1;\">\n",
             "      <span class=\"check-marker\">\n",
             "        <input type=\"checkbox\" class=\"check-box\" />\n",
             "      </span>\n",
@@ -249,7 +249,7 @@ mod tests {
             &renderer,
         );
         let checked_expected = concat!(
-            "    <div class=\"item check-item checked\" style=\"--indent: 2;\">\n",
+            "    <div class=\"item check-item item-selectable checked\" style=\"--indent: 2;\">\n",
             "      <span class=\"check-marker\">\n",
             "        <input type=\"checkbox\" class=\"check-box\" checked />\n",
             "      </span>\n",
@@ -279,7 +279,7 @@ mod tests {
             &renderer,
         );
         let expected = concat!(
-            "  <div class=\"item check-item\">\n",
+            "  <div class=\"item check-item item-selectable\">\n",
             "    <span class=\"check-marker\">\n",
             "      <input type=\"checkbox\" class=\"check-box\" />\n",
             "    </span>\n",
@@ -287,7 +287,7 @@ mod tests {
             "      Parent task\n",
             "    </span>\n",
             "  </div>\n",
-            "  <div class=\"item check-item\" style=\"--indent: 1;\">\n",
+            "  <div class=\"item check-item item-selectable\" style=\"--indent: 1;\">\n",
             "    <span class=\"check-marker\">\n",
             "      <input type=\"checkbox\" class=\"check-box\" />\n",
             "    </span>\n",

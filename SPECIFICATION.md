@@ -115,10 +115,12 @@ The CLI executable MUST support the following grammar: `d2f [OPTIONS] [INPUT]`
   - `## Heading 2`: Collapsible section container (`.section`, `.sh`, `.sb`) with completion badges (`.sbadge`) and fold indicators (`.stog`).
   - `###` to `######`: Subheadings inside section bodies (`.subh`).
 - **Interactive Checklists & Tasks:**
-  - `- [ ]` / `- [x]`: Rendered as interactive checkboxes (`.check-item`) with dynamic section progress tracking.
+  - `- [ ]` / `- [x]`: Rendered as interactive checkboxes (`.check-item.item-selectable`) with bi-directional click synchronization (row or checkbox click toggles state and green highlight).
+- **Selectable Items & Highlight State:**
+  - Plain text paragraphs (`.text-item.item-selectable`), bullet list items (`.bullet-item.item-selectable`), numbered list items (`.order-item.item-selectable`), and checkbox tasks (`.check-item.item-selectable`): Click-to-toggle completion highlight (`.checked`, background `--item-done-bg`) with `localStorage` state persistence under key `items`.
 - **Hierarchical Lists:**
-  - `- `, `* `: Unordered bullet lists (`.bullet-item`) with recursive `--indent` levels.
-  - `1. `: Ordered numerical lists (`.order-item`) with automatic sequential position numbering.
+  - `- `, `* `: Unordered bullet lists (`.bullet-item.item-selectable`) with recursive `--indent` levels.
+  - `1. `: Ordered numerical lists (`.order-item.item-selectable`) with automatic sequential position numbering.
 - **Block Directives:**
   - `:::<name>` container blocks (e.g. `:::variables`) containing arbitrary child elements.
 - **Callout & Shoutout Panels:**

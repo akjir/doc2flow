@@ -157,7 +157,7 @@ pub fn render_element_into(
 /// let element = DocumentElement::text("Hello world");
 /// let params = DocumentParameters::default();
 /// let html = render_element(&element, 1, &params);
-/// assert_eq!(html, "  <div class=\"item text-item\">\n    <span class=\"text-content\">\n      Hello world\n    </span>\n  </div>\n");
+/// assert_eq!(html, "  <div class=\"item text-item item-selectable\">\n    <span class=\"text-content\">\n      Hello world\n    </span>\n  </div>\n");
 /// ```
 pub fn render_element(
     element: &DocumentElement,
@@ -178,7 +178,7 @@ mod tests {
         let text = DocumentElement::text("Sample paragraph text");
         assert_eq!(
             render_element(&text, 1, &DocumentParameters::default()),
-            "  <div class=\"item text-item\">\n    <span class=\"text-content\">\n      Sample paragraph text\n    </span>\n  </div>\n"
+            "  <div class=\"item text-item item-selectable\">\n    <span class=\"text-content\">\n      Sample paragraph text\n    </span>\n  </div>\n"
         );
     }
 
@@ -208,12 +208,12 @@ mod tests {
             "      <span class=\"section-toggler\">&#9660;</span>\n",
             "    </h2>\n",
             "    <div class=\"section-body\">\n",
-            "      <div class=\"item text-item\">\n",
+            "      <div class=\"item text-item item-selectable\">\n",
             "        <span class=\"text-content\">\n",
             "          First paragraph\n",
             "        </span>\n",
             "      </div>\n",
-            "      <div class=\"item text-item\">\n",
+            "      <div class=\"item text-item item-selectable\">\n",
             "        <span class=\"text-content\">\n",
             "          Second paragraph\n",
             "        </span>\n",
@@ -242,7 +242,7 @@ mod tests {
             "      <section class=\"section\" data-level=\"3\">\n",
             "        <h3 class=\"section-subheading\">Inner</h3>\n",
             "        <div class=\"section-body\">\n",
-            "          <div class=\"item text-item\">\n",
+            "          <div class=\"item text-item item-selectable\">\n",
             "            <span class=\"text-content\">\n",
             "              Inner content\n",
             "            </span>\n",
@@ -288,9 +288,9 @@ mod tests {
 
         let html = render_element(&bullet, 1, &DocumentParameters::default());
         assert!(html.contains(
-            "<div class=\"item bullet-item\">\n    <span class=\"bullet-marker\">&bull;</span>"
+            "<div class=\"item bullet-item item-selectable\">\n    <span class=\"bullet-marker\">&bull;</span>"
         ));
-        assert!(html.contains("<div class=\"item bullet-item\" style=\"--indent: 1;\">"));
+        assert!(html.contains("<div class=\"item bullet-item item-selectable\" style=\"--indent: 1;\">"));
         assert!(html.contains("Parent bullet"));
         assert!(html.contains("Child bullet"));
     }
@@ -302,8 +302,8 @@ mod tests {
         check.push_child(child).unwrap();
 
         let html = render_element(&check, 1, &DocumentParameters::default());
-        assert!(html.contains("<div class=\"item check-item checked\">"));
-        assert!(html.contains("<div class=\"item check-item\" style=\"--indent: 1;\">"));
+        assert!(html.contains("<div class=\"item check-item item-selectable checked\">"));
+        assert!(html.contains("<div class=\"item check-item item-selectable\" style=\"--indent: 1;\">"));
         assert!(html.contains("<input type=\"checkbox\" class=\"check-box\" checked />"));
         assert!(html.contains("<input type=\"checkbox\" class=\"check-box\" />"));
         assert!(html.contains("Done task"));
@@ -318,9 +318,9 @@ mod tests {
 
         let html = render_element(&order, 1, &DocumentParameters::default());
         assert!(html.contains(
-            "<div class=\"item order-item\">\n    <span class=\"order-marker\">1.</span>"
+            "<div class=\"item order-item item-selectable\">\n    <span class=\"order-marker\">1.</span>"
         ));
-        assert!(html.contains("<div class=\"item order-item\" style=\"--indent: 1;\">"));
+        assert!(html.contains("<div class=\"item order-item item-selectable\" style=\"--indent: 1;\">"));
         assert!(html.contains("First step"));
         assert!(html.contains("Sub step"));
     }

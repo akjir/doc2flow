@@ -53,7 +53,7 @@ fn test_parser_and_builder_pipeline_integration() {
     assert!(content.contains("<span class=\"section-toggler\">&#9660;</span>"));
     assert!(
         content.contains(
-            "        <div class=\"item text-item\">\n          <span class=\"text-content\">\n            Content paragraph\n          </span>\n        </div>"
+            "        <div class=\"item text-item item-selectable\">\n          <span class=\"text-content\">\n            Content paragraph\n          </span>\n        </div>"
         )
     );
     assert!(content.contains("<title>Pipeline Test</title>"));
@@ -74,13 +74,13 @@ fn test_core_horizontal_rule_pipeline_integration() {
     assert!(content.contains("<span class=\"section-title\">Main Heading</span>"));
     assert!(
         content.contains(
-            "        <div class=\"item text-item\">\n          <span class=\"text-content\">\n            Paragraph before\n          </span>\n        </div>"
+            "        <div class=\"item text-item item-selectable\">\n          <span class=\"text-content\">\n            Paragraph before\n          </span>\n        </div>"
         )
     );
     assert!(content.contains("        <hr />"));
     assert!(
         content
-            .contains("        <div class=\"item text-item\">\n          <span class=\"text-content\">\n            Paragraph after\n          </span>\n        </div>")
+            .contains("        <div class=\"item text-item item-selectable\">\n          <span class=\"text-content\">\n            Paragraph after\n          </span>\n        </div>")
     );
     assert!(content.contains("hr {\n      border: none;"));
 }
@@ -118,8 +118,8 @@ fn test_bullet_pipeline_integration() {
     assert!(content.contains("<meta name=\"features\" content=\"core, bullet\">"));
     assert!(content.contains("--bullet-marker-color:"));
     assert!(content.contains(".bullet-marker"));
-    assert!(content.contains("        <div class=\"item bullet-item\">\n          <span class=\"bullet-marker\">&bull;</span>\n          <span class=\"bullet-content\">\n            Root bullet item\n          </span>\n        </div>"));
-    assert!(content.contains("        <div class=\"item bullet-item\" style=\"--indent: 1;\">\n          <span class=\"bullet-marker\">&bull;</span>\n          <span class=\"bullet-content\">\n            Nested bullet <strong>item</strong> with <code>code</code>\n          </span>\n        </div>"));
+    assert!(content.contains("        <div class=\"item bullet-item item-selectable\">\n          <span class=\"bullet-marker\">&bull;</span>\n          <span class=\"bullet-content\">\n            Root bullet item\n          </span>\n        </div>"));
+    assert!(content.contains("        <div class=\"item bullet-item item-selectable\" style=\"--indent: 1;\">\n          <span class=\"bullet-marker\">&bull;</span>\n          <span class=\"bullet-content\">\n            Nested bullet <strong>item</strong> with <code>code</code>\n          </span>\n        </div>"));
 }
 
 #[test]
@@ -132,10 +132,10 @@ fn test_ordered_pipeline_integration() {
     assert!(content.contains("--order-marker-color:"));
     assert!(content.contains(".order-marker"));
     assert!(content.contains(".order-content"));
-    assert!(content.contains("        <div class=\"item order-item\">\n          <span class=\"order-marker\">1.</span>\n          <span class=\"order-content\">\n            First ordered step\n          </span>\n        </div>"));
-    assert!(content.contains("        <div class=\"item order-item\">\n          <span class=\"order-marker\">2.</span>\n          <span class=\"order-content\">\n            Second <strong>ordered</strong> step\n          </span>\n        </div>"));
-    assert!(content.contains("        <div class=\"item order-item\" style=\"--indent: 1;\">\n          <span class=\"order-marker\">1.</span>\n          <span class=\"order-content\">\n            Sub-step alpha\n          </span>\n        </div>"));
-    assert!(content.contains("        <div class=\"item order-item\" style=\"--indent: 2;\">\n          <span class=\"order-marker\">1.</span>\n          <span class=\"order-content\">\n            Sub-sub-step roman\n          </span>\n        </div>"));
+    assert!(content.contains("        <div class=\"item order-item item-selectable\">\n          <span class=\"order-marker\">1.</span>\n          <span class=\"order-content\">\n            First ordered step\n          </span>\n        </div>"));
+    assert!(content.contains("        <div class=\"item order-item item-selectable\">\n          <span class=\"order-marker\">2.</span>\n          <span class=\"order-content\">\n            Second <strong>ordered</strong> step\n          </span>\n        </div>"));
+    assert!(content.contains("        <div class=\"item order-item item-selectable\" style=\"--indent: 1;\">\n          <span class=\"order-marker\">1.</span>\n          <span class=\"order-content\">\n            Sub-step alpha\n          </span>\n        </div>"));
+    assert!(content.contains("        <div class=\"item order-item item-selectable\" style=\"--indent: 2;\">\n          <span class=\"order-marker\">1.</span>\n          <span class=\"order-content\">\n            Sub-sub-step roman\n          </span>\n        </div>"));
 }
 
 #[test]
@@ -149,9 +149,9 @@ fn test_task_pipeline_integration() {
     assert!(content.contains(".check-box"));
     assert!(content.contains(".check-content"));
     assert!(content.contains(".check-item.checked"));
-    assert!(content.contains("        <div class=\"item check-item\">\n          <span class=\"check-marker\">\n            <input type=\"checkbox\" class=\"check-box\" />\n          </span>\n          <span class=\"check-content\">\n            Pending task\n          </span>\n        </div>"));
-    assert!(content.contains("        <div class=\"item check-item checked\">\n          <span class=\"check-marker\">\n            <input type=\"checkbox\" class=\"check-box\" checked />\n          </span>\n          <span class=\"check-content\">\n            Done <strong>task</strong> with <code>code</code>\n          </span>\n        </div>"));
-    assert!(content.contains("        <div class=\"item check-item\" style=\"--indent: 1;\">\n          <span class=\"check-marker\">\n            <input type=\"checkbox\" class=\"check-box\" />\n          </span>\n          <span class=\"check-content\">\n            Sub-task\n          </span>\n        </div>"));
+    assert!(content.contains("        <div class=\"item check-item item-selectable\">\n          <span class=\"check-marker\">\n            <input type=\"checkbox\" class=\"check-box\" />\n          </span>\n          <span class=\"check-content\">\n            Pending task\n          </span>\n        </div>"));
+    assert!(content.contains("        <div class=\"item check-item item-selectable checked\">\n          <span class=\"check-marker\">\n            <input type=\"checkbox\" class=\"check-box\" checked />\n          </span>\n          <span class=\"check-content\">\n            Done <strong>task</strong> with <code>code</code>\n          </span>\n        </div>"));
+    assert!(content.contains("        <div class=\"item check-item item-selectable\" style=\"--indent: 1;\">\n          <span class=\"check-marker\">\n            <input type=\"checkbox\" class=\"check-box\" />\n          </span>\n          <span class=\"check-content\">\n            Sub-task\n          </span>\n        </div>"));
 }
 
 #[test]
@@ -335,7 +335,7 @@ fn test_image_embedding_pipeline_non_image_attachment_link() {
     )
     .expect("non image conversion should succeed");
 
-    assert!(final_html.contains("<div class=\"item text-item\">"));
+    assert!(final_html.contains("<div class=\"item text-item item-selectable\">"));
     assert!(final_html.contains("<span class=\"text-content\"><a href=\"https://example.com/guide.pdf\" target=\"_blank\" rel=\"noopener noreferrer\">Download PDF</a></span>"));
     assert!(!final_html.contains("class=\"image-item\""));
     assert!(!final_html.contains("<img src=\"https://example.com/guide.pdf\""));

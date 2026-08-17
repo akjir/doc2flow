@@ -49,7 +49,7 @@ impl DocumentElementRenderer for BulletFeature {
     ) {
         if let DocumentElement::BulletListItem { content, children } = element {
             push_indent(out, indent);
-            out.push_str("<div class=\"item bullet-item\"");
+            out.push_str("<div class=\"item bullet-item item-selectable\"");
             if depth > 0 {
                 let _ = write!(out, " style=\"--indent: {depth};\"");
             }
@@ -141,7 +141,7 @@ mod tests {
             &renderer,
         );
         let expected = concat!(
-            "<div class=\"item bullet-item\">\n",
+            "<div class=\"item bullet-item item-selectable\">\n",
             "  <span class=\"bullet-marker\">&bull;</span>\n",
             "  <span class=\"bullet-content\">\n",
             "    Item with <strong>bold</strong>, <em>italic</em>, <s>strike</s>, <code>code</code>, and <a href=\"https://example.com\">link</a> span\n",
@@ -166,7 +166,7 @@ mod tests {
             &renderer,
         );
         let expected = concat!(
-            "    <div class=\"item bullet-item\">\n",
+            "    <div class=\"item bullet-item item-selectable\">\n",
             "      <span class=\"bullet-marker\">&bull;</span>\n",
             "      <span class=\"bullet-content\">\n",
             "        Nested level 2 item\n",
@@ -191,7 +191,7 @@ mod tests {
             &renderer,
         );
         let expected = concat!(
-            "    <div class=\"item bullet-item\" style=\"--indent: 1;\">\n",
+            "    <div class=\"item bullet-item item-selectable\" style=\"--indent: 1;\">\n",
             "      <span class=\"bullet-marker\">&bull;</span>\n",
             "      <span class=\"bullet-content\">\n",
             "        Indented child item\n",
@@ -219,13 +219,13 @@ mod tests {
             &renderer,
         );
         let expected = concat!(
-            "  <div class=\"item bullet-item\">\n",
+            "  <div class=\"item bullet-item item-selectable\">\n",
             "    <span class=\"bullet-marker\">&bull;</span>\n",
             "    <span class=\"bullet-content\">\n",
             "      Parent item\n",
             "    </span>\n",
             "  </div>\n",
-            "  <div class=\"item bullet-item\" style=\"--indent: 1;\">\n",
+            "  <div class=\"item bullet-item item-selectable\" style=\"--indent: 1;\">\n",
             "    <span class=\"bullet-marker\">&bull;</span>\n",
             "    <span class=\"bullet-content\">\n",
             "      Child item\n",

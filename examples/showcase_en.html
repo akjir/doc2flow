@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+255.f44c46f.dev">
-  <meta name="version" content="0.9.4+255.f44c46f.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+257.56de6ee.dev">
+  <meta name="version" content="0.9.4+257.56de6ee.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-17T16:44:54Z">
+  <meta name="dcterms.created" content="2026-08-17T17:43:02Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, bullet, code, image, ordered, shoutout, table, task">
   <title>Doc2Flow English Showcase</title>
@@ -254,8 +254,14 @@
 
     .item.checked,
     .item.item-done,
-    .item.done {
+    .item.done,
+    .item-selectable.checked {
       background-color: var(--item-done-bg);
+    }
+
+    .item-selectable {
+      cursor: pointer;
+      user-select: text;
     }
 
     .item[style*="--indent"]::before {
@@ -1379,12 +1385,12 @@
         <span class="section-toggler">&#9660;</span>
       </h1>
       <div class="section-body">
-        <div class="item text-item">
+        <div class="item text-item item-selectable">
           <span class="text-content">
             This top-level section describes the basic system configuration with <strong>rich text formatting</strong> such as <code>inline code</code>, <em>italic hints</em>, and <s>deprecated options</s>. Tasks within H1 sections do not display an individual badge indicator, but contribute fully to the overall progress tracking.
           </span>
         </div>
-        <div class="item check-item checked">
+        <div class="item check-item item-selectable checked">
           <span class="check-marker">
             <input type="checkbox" class="check-box" checked />
           </span>
@@ -1400,7 +1406,7 @@
         <span class="section-toggler">&#9660;</span>
       </h2>
       <div class="section-body">
-        <div class="item text-item">
+        <div class="item text-item item-selectable">
           <span class="text-content">
             This is an arbitrary text paragraph in the section body demonstrating a comprehensive set of <strong>text formatting styles</strong>: <strong>Bold text</strong> for emphasis, <em>italic text</em> for subtle notes, <strong><em>bold and italic combinations</em></strong> for critical callouts, <code>inline code</code> like <code>systemctl restart service</code> for commands/variables, and <s>strikethrough text</s> for outdated specifications (e.g. <s>default port 80</s> replaced by <code>8080</code>).
           </span>
@@ -1443,12 +1449,12 @@
         <section class="section" data-level="3">
           <h3 class="section-subheading">Setup &amp; Preparation</h3>
           <div class="section-body">
-            <div class="item text-item">
+            <div class="item text-item item-selectable">
               <span class="text-content">
                 This arbitrary text paragraph describes the preliminary setup steps with <strong>priority tiers</strong>, <code>file paths</code>, and <s>obsolete requirements</s> that must be fulfilled before marking individual items as completed.
               </span>
             </div>
-            <div class="item check-item">
+            <div class="item check-item item-selectable">
               <span class="check-marker">
                 <input type="checkbox" class="check-box" />
               </span>
@@ -1456,7 +1462,7 @@
                 <strong>Unpack hardware</strong> and verify components against serial <code>SN-2026-X</code>
               </span>
             </div>
-            <div class="item check-item" style="--indent: 1;">
+            <div class="item check-item item-selectable" style="--indent: 1;">
               <span class="check-marker">
                 <input type="checkbox" class="check-box" />
               </span>
@@ -1464,7 +1470,7 @@
                 Inspect accessory completeness (<em>manual</em>, <code>power cable</code>, <s>adapter v1</s>)
               </span>
             </div>
-            <div class="item check-item checked" style="--indent: 1;">
+            <div class="item check-item item-selectable checked" style="--indent: 1;">
               <span class="check-marker">
                 <input type="checkbox" class="check-box" checked />
               </span>
@@ -1472,7 +1478,7 @@
                 Check casing for transport damage (incl. <strong>visual inspection</strong> of ports)
               </span>
             </div>
-            <div class="item check-item">
+            <div class="item check-item item-selectable">
               <span class="check-marker">
                 <input type="checkbox" class="check-box" />
               </span>
@@ -1480,19 +1486,19 @@
                 <strong>Connect network and power supply</strong> (ensure <code>VLAN 10</code> assignment)
               </span>
             </div>
-            <div class="item order-item" style="--indent: 1;">
+            <div class="item order-item item-selectable" style="--indent: 1;">
               <span class="order-marker">1.</span>
               <span class="order-content">
                 Plug primary network cable into <strong>Port 1</strong> (<code>eth0</code>, <code>10 Gbps</code>)
               </span>
             </div>
-            <div class="item order-item" style="--indent: 1;">
+            <div class="item order-item item-selectable" style="--indent: 1;">
               <span class="order-marker">2.</span>
               <span class="order-content">
                 Plug redundant network cable into <strong>Port 2</strong> (<code>eth1</code>, <s>1 Gbps fallback</s> <code>10 Gbps</code>)
               </span>
             </div>
-            <div class="item check-item checked">
+            <div class="item check-item item-selectable checked">
               <span class="check-marker">
                 <input type="checkbox" class="check-box" checked />
               </span>
@@ -1500,12 +1506,12 @@
                 Initial power-on check completed (<strong>status LED</strong> shows <code>GREEN</code>)
               </span>
             </div>
-            <div class="item text-item">
+            <div class="item text-item item-selectable">
               <span class="text-content">
                 <a href="https://example.com/docs">External System Documentation</a>
               </span>
             </div>
-            <div class="item text-item">
+            <div class="item text-item item-selectable">
   <span class="text-content"><a href="https://example.com/files/specification.pdf" target="_blank" rel="noopener noreferrer">Download System Specification PDF</a></span>
 </div>
 
@@ -1514,7 +1520,7 @@
         <section class="section" data-level="3">
           <h3 class="section-subheading">Software Configuration</h3>
           <div class="section-body">
-            <div class="item check-item">
+            <div class="item check-item item-selectable">
               <span class="check-marker">
                 <input type="checkbox" class="check-box" />
               </span>
@@ -1522,7 +1528,7 @@
                 Install latest system updates via <code>apt update &amp;&amp; apt upgrade -y</code> (verify <strong>kernel</strong> <code>6.x</code>)
               </span>
             </div>
-            <div class="item check-item">
+            <div class="item check-item item-selectable">
               <span class="check-marker">
                 <input type="checkbox" class="check-box" />
               </span>
@@ -1530,7 +1536,7 @@
                 Configure firewall rules according to company policy (open port <code>{{PORT}}</code>, close <s>port 21 FTP</s>)
               </span>
             </div>
-            <div class="item check-item checked">
+            <div class="item check-item item-selectable checked">
               <span class="check-marker">
                 <input type="checkbox" class="check-box" checked />
               </span>
@@ -1562,7 +1568,7 @@
         <section class="section" data-level="3">
           <h3 class="section-subheading">System Registry Settings</h3>
           <div class="section-body">
-            <div class="item text-item">
+            <div class="item text-item item-selectable">
               <span class="text-content">
                 The following configuration snippet must be applied to disable automatic updates (set <code>DisableWindowsUpdateAccess=1</code>, remove <s>legacy key</s>):
               </span>
@@ -1581,7 +1587,7 @@
         <section class="section" data-level="3">
           <h3 class="section-subheading">System Components &amp; Specifications</h3>
           <div class="section-body">
-            <div class="item text-item">
+            <div class="item text-item item-selectable">
               <span class="text-content">
                 The table below outlines the hardware specifications of the installed system components with <strong>model details</strong>, <code>interfaces</code>, and status indicators:
               </span>
@@ -1634,31 +1640,31 @@
         <span class="section-toggler">&#9660;</span>
       </h2>
       <div class="section-body">
-        <div class="item bullet-item">
+        <div class="item bullet-item item-selectable">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
             <strong>Main task &amp; system monitoring</strong> (standard operation <code>system-daemon</code>)
           </span>
         </div>
-        <div class="item order-item" style="--indent: 1;">
+        <div class="item order-item item-selectable" style="--indent: 1;">
           <span class="order-marker">1.</span>
           <span class="order-content">
             Sub-item A 1: Query service status with <code>systemctl is-active</code> (<strong>status:</strong> <em>active</em>)
           </span>
         </div>
-        <div class="item order-item" style="--indent: 1;">
+        <div class="item order-item item-selectable" style="--indent: 1;">
           <span class="order-marker">2.</span>
           <span class="order-content">
             Sub-item A 2: Analyze error log <code>/var/log/syslog</code> (ignore <s>legacy logfile</s>)
           </span>
         </div>
-        <div class="item bullet-item">
+        <div class="item bullet-item item-selectable">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
             <strong>Procedure for maintenance tasks</strong> (security classification <code>Level 2</code>)
           </span>
         </div>
-        <div class="item check-item" style="--indent: 1;">
+        <div class="item check-item item-selectable" style="--indent: 1;">
           <span class="check-marker">
             <input type="checkbox" class="check-box" />
           </span>
@@ -1666,19 +1672,19 @@
             Prepare test run with parameters <code>--dry-run</code> and <code>--verbose</code>
           </span>
         </div>
-        <div class="item bullet-item" style="--indent: 2;">
+        <div class="item bullet-item item-selectable" style="--indent: 2;">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
             Detailed parameter check <code>X</code> (<em>threshold</em> <code>&gt; 95%</code>)
           </span>
         </div>
-        <div class="item bullet-item" style="--indent: 2;">
+        <div class="item bullet-item item-selectable" style="--indent: 2;">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
             Detailed parameter check <code>Y</code> (<s>standard timeout 30s</s> now <code>60s</code>)
           </span>
         </div>
-        <div class="item check-item checked" style="--indent: 1;">
+        <div class="item check-item item-selectable checked" style="--indent: 1;">
           <span class="check-marker">
             <input type="checkbox" class="check-box" checked />
           </span>
@@ -1686,43 +1692,43 @@
             Approval by <strong>system administrator</strong> (authorized via <code>signature token</code>)
           </span>
         </div>
-        <div class="item order-item">
+        <div class="item order-item item-selectable">
           <span class="order-marker">1.</span>
           <span class="order-content">
             Sequential main step 1: <strong>Initialization</strong> using <code>init --force</code>
           </span>
         </div>
-        <div class="item bullet-item" style="--indent: 1;">
+        <div class="item bullet-item item-selectable" style="--indent: 1;">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
             Subordinate verification step 1.1: Validate <code>config.json</code> (<em>schema v2</em>, <s>v1 deprecated</s>)
           </span>
         </div>
-        <div class="item bullet-item" style="--indent: 1;">
+        <div class="item bullet-item item-selectable" style="--indent: 1;">
           <span class="bullet-marker">&bull;</span>
           <span class="bullet-content">
             Subordinate verification step 1.2: Verify certificate chain (<code>cert.pem</code>)
           </span>
         </div>
-        <div class="item order-item">
+        <div class="item order-item item-selectable">
           <span class="order-marker">2.</span>
           <span class="order-content">
             Sequential main step 2: <strong>Data transfer</strong> execution
           </span>
         </div>
-        <div class="item order-item" style="--indent: 1;">
+        <div class="item order-item item-selectable" style="--indent: 1;">
           <span class="order-marker">1.</span>
           <span class="order-content">
             Detailed sub-procedure 2.a: Establish connection to <code>{{SERVER_NAME}}</code>
           </span>
         </div>
-        <div class="item order-item" style="--indent: 1;">
+        <div class="item order-item item-selectable" style="--indent: 1;">
           <span class="order-marker">2.</span>
           <span class="order-content">
             Detailed sub-procedure 2.b: Perform data synchronization via port <code>{{PORT}}</code> (<em>encrypted</em>)
           </span>
         </div>
-        <div class="item order-item">
+        <div class="item order-item item-selectable">
           <span class="order-marker">3.</span>
           <span class="order-content">
             Sequential main step 3: <strong>Finalization &amp; verification</strong> (archive audit log <code>audit.log</code>)
@@ -2012,6 +2018,109 @@
             toggleSection(header, () => window.d2f.storage?.saveState?.());
           }
         });
+      }
+    })();
+    (() => {
+      // Serializes current selection and checkbox state to persistent storage.
+      const saveItems = () => {
+        const items = {};
+        document.querySelectorAll('.item-selectable').forEach((item, index) => {
+          // Prioritize explicit Rust-rendered IDs; fallback to index-based generation.
+          const key = item.id || `item_${index}`;
+          items[key] = item.classList.contains('checked');
+        });
+        return { items };
+      };
+
+      // Restores DOM selection and checkbox checked state from storage.
+      const loadItems = (state) => {
+        const itemsData = state?.items;
+        const isRecord = window.d2f?.utils?.isRecord;
+
+        // Validate schema integrity before DOM manipulation.
+        const isValid = typeof isRecord === 'function'
+          ? isRecord(itemsData)
+          : (typeof itemsData === 'object' && itemsData !== null && !Array.isArray(itemsData));
+
+        if (!isValid) return;
+
+        document.querySelectorAll('.item-selectable').forEach((item, index) => {
+          const key = item.id || `item_${index}`;
+          const isChecked = itemsData[key];
+          if (typeof isChecked === 'boolean') {
+            item.classList.toggle('checked', isChecked);
+            const checkbox = item.querySelector('input[type="checkbox"], .check-box');
+            if (checkbox instanceof HTMLInputElement) {
+              checkbox.checked = isChecked;
+            }
+          }
+        });
+      };
+
+      // Resets all interactive items and checkboxes to default state.
+      const resetItems = () => {
+        document.querySelectorAll('.item-selectable').forEach((item) => {
+          item.classList.remove('checked');
+          const checkbox = item.querySelector('input[type="checkbox"], .check-box');
+          if (checkbox instanceof HTMLInputElement) {
+            checkbox.checked = false;
+          }
+        });
+      };
+
+      // Handles delegated click events for selectable items and checkboxes.
+      // Exactly one saveState invocation is performed per user interaction.
+      const handleClick = (e) => {
+        const { target } = e;
+        if (!(target instanceof Element)) return;
+
+        // Ignore interactive elements, but permit checkboxes.
+        if (
+          target.closest('a') ||
+          target.closest('button') ||
+          (target.closest('input') && !(target instanceof HTMLInputElement && target.type === 'checkbox')) ||
+          target.closest('textarea') ||
+          target.closest('select') ||
+          target.closest('summary')
+        ) {
+          return;
+        }
+
+        const item = target.closest('.item-selectable');
+        if (!item) return;
+
+        const checkbox = item.querySelector('input[type="checkbox"], .check-box');
+        if (checkbox instanceof HTMLInputElement) {
+          if (target === checkbox) {
+            // Direct checkbox click: match item class to input state.
+            item.classList.toggle('checked', checkbox.checked);
+          } else {
+            // Row/text click: toggle checkbox and match item class.
+            checkbox.checked = !checkbox.checked;
+            item.classList.toggle('checked', checkbox.checked);
+          }
+        } else {
+          // Plain item (text, bullet, ordered list item).
+          item.classList.toggle('checked');
+        }
+
+        // Exactly one save call per interaction.
+        window.d2f?.storage?.saveState?.();
+      };
+
+      // Expose module methods to the global Doc2Flow namespace.
+      window.d2f = window.d2f || {};
+      window.d2f.items = {
+        saveItems,
+        loadItems,
+        resetItems,
+      };
+
+      // Initialize event bindings and storage hooks.
+      if (typeof window !== 'undefined') {
+        window.d2f.storage?.registerSaveHandler?.(saveItems);
+        window.d2f.storage?.registerLoadHandler?.(loadItems);
+        document.addEventListener('click', handleClick);
       }
     })();
     (() => {

@@ -130,7 +130,7 @@ mod tests {
         assert!(content.contains("<html lang=\"en\">"));
         assert!(content.contains("<meta name=\"features\" content=\"core\">"));
         assert!(
-            content.contains("    <div class=\"item text-item\">\n      <span class=\"text-content\">\n        Document body text\n      </span>\n    </div>")
+            content.contains("    <div class=\"item text-item item-selectable\">\n      <span class=\"text-content\">\n        Document body text\n      </span>\n    </div>")
         );
         assert!(!content.contains("{{CONTENT}}"));
         assert!(!content.contains("{{APP_VERSION}}"));

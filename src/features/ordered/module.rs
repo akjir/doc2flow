@@ -54,7 +54,7 @@ impl DocumentElementRenderer for OrderedFeature {
         } = element
         {
             push_indent(out, indent);
-            out.push_str("<div class=\"item order-item\"");
+            out.push_str("<div class=\"item order-item item-selectable\"");
             if depth > 0 {
                 let _ = write!(out, " style=\"--indent: {depth};\"");
             }
@@ -146,7 +146,7 @@ mod tests {
             &renderer,
         );
         let expected = concat!(
-            "  <div class=\"item order-item\">\n",
+            "  <div class=\"item order-item item-selectable\">\n",
             "    <span class=\"order-marker\">1.</span>\n",
             "    <span class=\"order-content\">\n",
             "      First numbered item\n",
@@ -174,7 +174,7 @@ mod tests {
             &renderer,
         );
         let expected = concat!(
-            "<div class=\"item order-item\">\n",
+            "<div class=\"item order-item item-selectable\">\n",
             "  <span class=\"order-marker\">2.</span>\n",
             "  <span class=\"order-content\">\n",
             "    Step with <strong>bold</strong>, <em>italic</em>, <s>strike</s>, <code>code</code>, <a href=\"https://example.com\">link</a>, and &lt;special&gt; &amp; characters\n",
@@ -199,7 +199,7 @@ mod tests {
             &renderer,
         );
         let expected = concat!(
-            "    <div class=\"item order-item\" style=\"--indent: 1;\">\n",
+            "    <div class=\"item order-item item-selectable\" style=\"--indent: 1;\">\n",
             "      <span class=\"order-marker\">1.</span>\n",
             "      <span class=\"order-content\">\n",
             "        Sub-step item\n",
@@ -227,13 +227,13 @@ mod tests {
             &renderer,
         );
         let expected = concat!(
-            "  <div class=\"item order-item\">\n",
+            "  <div class=\"item order-item item-selectable\">\n",
             "    <span class=\"order-marker\">1.</span>\n",
             "    <span class=\"order-content\">\n",
             "      Parent order\n",
             "    </span>\n",
             "  </div>\n",
-            "  <div class=\"item order-item\" style=\"--indent: 1;\">\n",
+            "  <div class=\"item order-item item-selectable\" style=\"--indent: 1;\">\n",
             "    <span class=\"order-marker\">1.</span>\n",
             "    <span class=\"order-content\">\n",
             "      Child item\n",

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added interactive item selection for text, bullet, and ordered list items with green highlight and persistent localStorage state.
 - Added modular shoutout feature slice for informational, tip, important, warning, and caution callout box rendering.
 - Added collapsible section support in the core pipeline with accessible headers, keyboard navigation, fold indicator toggling, and state persistence.
 - Added permissive boolean parsing support for document frontmatter configuration parameters.

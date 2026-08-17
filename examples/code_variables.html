@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+255.f44c46f.dev">
-  <meta name="version" content="0.9.4+255.f44c46f.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+257.56de6ee.dev">
+  <meta name="version" content="0.9.4+257.56de6ee.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-17T16:44:54Z">
+  <meta name="dcterms.created" content="2026-08-17T17:43:02Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, code">
   <title>Microservice Deployment & Infrastructure Setup</title>
@@ -254,8 +254,14 @@
 
     .item.checked,
     .item.item-done,
-    .item.done {
+    .item.done,
+    .item-selectable.checked {
       background-color: var(--item-done-bg);
+    }
+
+    .item-selectable {
+      cursor: pointer;
+      user-select: text;
     }
 
     .item[style*="--indent"]::before {
@@ -854,7 +860,7 @@
         <span class="section-toggler">&#9660;</span>
       </h1>
       <div class="section-body">
-        <div class="item text-item">
+        <div class="item text-item item-selectable">
           <span class="text-content">
             This document outlines the automated deployment workflow for our cloud microservice stack. Dynamic variable substitution replaces placeholders matching <code>{{VARIABLE_NAME}}</code> when copying code snippets to your clipboard.
           </span>
@@ -862,7 +868,7 @@
         <section class="section" data-level="3">
           <h3 class="section-subheading">Initial Environment Verification</h3>
           <div class="section-body">
-            <div class="item text-item">
+            <div class="item text-item item-selectable">
               <span class="text-content">
                 Verify connectivity to the primary application server before beginning deployment:
               </span>
@@ -878,13 +884,13 @@
         <span class="section-toggler">&#9660;</span>
       </h2>
       <div class="section-body">
-        <div class="item text-item">
+        <div class="item text-item item-selectable">
           <span class="text-content">
             Check the readiness of the primary database host:
           </span>
         </div>
         <pre class="code-default"><code>pg_isready -h {{DB_HOST}} -p 5432 -U postgres</code></pre>
-        <div class="item text-item">
+        <div class="item text-item item-selectable">
           <span class="text-content">
             Configure the application database instance environment settings:
           </span>
@@ -898,13 +904,13 @@
         <span class="section-toggler">&#9660;</span>
       </h2>
       <div class="section-body">
-        <div class="item text-item">
+        <div class="item text-item item-selectable">
           <span class="text-content">
             Spin up the API microservice container on the designated port:
           </span>
         </div>
         <pre class="code-default"><code>docker run -d --name api-service -e ENV={{APP_ENV}} -p {{PORT}}:8080 acme/api-service:latest</code></pre>
-        <div class="item text-item">
+        <div class="item text-item item-selectable">
           <span class="text-content">
             Perform an automated health check against the newly deployed service:
           </span>
@@ -1171,6 +1177,109 @@
             toggleSection(header, () => window.d2f.storage?.saveState?.());
           }
         });
+      }
+    })();
+    (() => {
+      // Serializes current selection and checkbox state to persistent storage.
+      const saveItems = () => {
+        const items = {};
+        document.querySelectorAll('.item-selectable').forEach((item, index) => {
+          // Prioritize explicit Rust-rendered IDs; fallback to index-based generation.
+          const key = item.id || `item_${index}`;
+          items[key] = item.classList.contains('checked');
+        });
+        return { items };
+      };
+
+      // Restores DOM selection and checkbox checked state from storage.
+      const loadItems = (state) => {
+        const itemsData = state?.items;
+        const isRecord = window.d2f?.utils?.isRecord;
+
+        // Validate schema integrity before DOM manipulation.
+        const isValid = typeof isRecord === 'function'
+          ? isRecord(itemsData)
+          : (typeof itemsData === 'object' && itemsData !== null && !Array.isArray(itemsData));
+
+        if (!isValid) return;
+
+        document.querySelectorAll('.item-selectable').forEach((item, index) => {
+          const key = item.id || `item_${index}`;
+          const isChecked = itemsData[key];
+          if (typeof isChecked === 'boolean') {
+            item.classList.toggle('checked', isChecked);
+            const checkbox = item.querySelector('input[type="checkbox"], .check-box');
+            if (checkbox instanceof HTMLInputElement) {
+              checkbox.checked = isChecked;
+            }
+          }
+        });
+      };
+
+      // Resets all interactive items and checkboxes to default state.
+      const resetItems = () => {
+        document.querySelectorAll('.item-selectable').forEach((item) => {
+          item.classList.remove('checked');
+          const checkbox = item.querySelector('input[type="checkbox"], .check-box');
+          if (checkbox instanceof HTMLInputElement) {
+            checkbox.checked = false;
+          }
+        });
+      };
+
+      // Handles delegated click events for selectable items and checkboxes.
+      // Exactly one saveState invocation is performed per user interaction.
+      const handleClick = (e) => {
+        const { target } = e;
+        if (!(target instanceof Element)) return;
+
+        // Ignore interactive elements, but permit checkboxes.
+        if (
+          target.closest('a') ||
+          target.closest('button') ||
+          (target.closest('input') && !(target instanceof HTMLInputElement && target.type === 'checkbox')) ||
+          target.closest('textarea') ||
+          target.closest('select') ||
+          target.closest('summary')
+        ) {
+          return;
+        }
+
+        const item = target.closest('.item-selectable');
+        if (!item) return;
+
+        const checkbox = item.querySelector('input[type="checkbox"], .check-box');
+        if (checkbox instanceof HTMLInputElement) {
+          if (target === checkbox) {
+            // Direct checkbox click: match item class to input state.
+            item.classList.toggle('checked', checkbox.checked);
+          } else {
+            // Row/text click: toggle checkbox and match item class.
+            checkbox.checked = !checkbox.checked;
+            item.classList.toggle('checked', checkbox.checked);
+          }
+        } else {
+          // Plain item (text, bullet, ordered list item).
+          item.classList.toggle('checked');
+        }
+
+        // Exactly one save call per interaction.
+        window.d2f?.storage?.saveState?.();
+      };
+
+      // Expose module methods to the global Doc2Flow namespace.
+      window.d2f = window.d2f || {};
+      window.d2f.items = {
+        saveItems,
+        loadItems,
+        resetItems,
+      };
+
+      // Initialize event bindings and storage hooks.
+      if (typeof window !== 'undefined') {
+        window.d2f.storage?.registerSaveHandler?.(saveItems);
+        window.d2f.storage?.registerLoadHandler?.(loadItems);
+        document.addEventListener('click', handleClick);
       }
     })();
   </script>

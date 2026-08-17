@@ -209,7 +209,7 @@ fn render_non_image_link(
 ) -> usize {
     if let Some(next_cursor) = strip_img_item_wrapper(out, html, img_end) {
         out.push_str(
-            "<div class=\"item text-item\">\n  <span class=\"text-content\"><a href=\"",
+            "<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\"><a href=\"",
         );
         out.push_str(src_val);
         out.push_str("\" target=\"_blank\" rel=\"noopener noreferrer\">");
@@ -379,7 +379,7 @@ mod tests {
     fn test_non_image_source_in_image_item_wrapper_converted_to_text_item() {
         let html = "<div class=\"image-item\">\n  <img src=\"https://example.com/dateien/spezifikation.pdf\" alt=\"Systemspezifikation PDF herunterladen\" />\n</div>";
         let processed = embed_images_as_base64(html, None).unwrap();
-        assert!(processed.contains("<div class=\"item text-item\">"));
+        assert!(processed.contains("<div class=\"item text-item item-selectable\">"));
         assert!(processed.contains("<span class=\"text-content\"><a href=\"https://example.com/dateien/spezifikation.pdf\" target=\"_blank\" rel=\"noopener noreferrer\">Systemspezifikation PDF herunterladen</a></span>"));
         assert!(!processed.contains("class=\"image-item\""));
         assert!(!processed.contains("<img"));
@@ -389,7 +389,7 @@ mod tests {
     fn test_non_image_source_in_legacy_img_item_wrapper_converted_to_text_item() {
         let html = "<div class=\"img-item\">\n  <img src=\"https://example.com/dateien/spezifikation.pdf\" alt=\"Systemspezifikation PDF herunterladen\">\n</div>";
         let processed = embed_images_as_base64(html, None).unwrap();
-        assert!(processed.contains("<div class=\"item text-item\">"));
+        assert!(processed.contains("<div class=\"item text-item item-selectable\">"));
         assert!(processed.contains("<span class=\"text-content\"><a href=\"https://example.com/dateien/spezifikation.pdf\" target=\"_blank\" rel=\"noopener noreferrer\">Systemspezifikation PDF herunterladen</a></span>"));
         assert!(!processed.contains("class=\"img-item\""));
         assert!(!processed.contains("<img"));

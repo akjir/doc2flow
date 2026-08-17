@@ -240,8 +240,14 @@ hr {
 
 .item.checked,
 .item.item-done,
-.item.done {
+.item.done,
+.item-selectable.checked {
   background-color: var(--item-done-bg);
+}
+
+.item-selectable {
+  cursor: pointer;
+  user-select: text;
 }
 
 .item[style*="--indent"]::before {
