@@ -37,8 +37,12 @@
 - **Dispatchers:** Flatten monolithic dispatchers (max 50 lines). Dispatch to discrete, strongly-typed `try_parse_* -> Option<usize>` functions (P-FLATTEN-DISPATCH).
 - **UTF-8 Lookaround:** Abstract UTF-8 lookahead/lookbehind into semantically named helper functions (e.g. `is_alphanumeric_at`). NO inline char-boundary math in core logic loops (P-UTF8-LOOKAROUND).
 - **Linear Parsing:** O(N) linear parsing ONLY. Validate deeply nested/unclosed tokens prevent quadratic O(N²) scanning (cache boundaries or linear scan) (P-NO-QUADRATIC).
+- **Loop Modularity:** String-processing loops (>40 lines) MUST extract core logic into stateless, isolated processor functions; orchestrators remain purely structural (P-LOOP-MODULARITY).
+- **Zero-Cost Lookups:** NEVER unconditionally clone owned keys (`PathBuf`, `String`) querying `HashMap`/`BTreeMap` in loops; query `.get()` with borrowed keys, allocating ONLY on insertion (P-ZERO-COST-LOOKUP).
 - **String/Buffer:** Exact `with_capacity` pre-alloc. Direct buffer streaming (`write_str`/`push_str`). NO intermediate `Vec`/strings on hot paths.
 - **HTML/XML/SVG:** Zero-alloc tokenizers (O(N) 1-pass forward cursor). Quote-aware (single `'`, double `"`, multiline, escaped `\"`/`\'`). Sub-parsers for declarations (`<?`), DOCTYPE, comments (`<!--`), CDATA (`<![CDATA[`), tags. NO redundant scanning passes over attribute names/values. NO `println!` in core processing routines.
+- **Defensive HTML Parsing:** Manual string parsing of HTML MUST tolerate arbitrary whitespace, case-insensitivity, and single/double quote boundaries (`'`,`"`) (P-DEFENSIVE-HTML).
+- **Decoupled DOM Assumptions:** Structural HTML modifications (unwrapping tags) MUST NOT rely on exact byte-for-byte matches; use flexible attribute & tag parsing with whitespace trimming (P-DECOUPLED-DOM).
 - **Flow:** `match`/tables > `if-else`. Iterators > loops. `write_str`(static)/`write!`(dynamic) > `format!` (hot-path buffers).
 - **Async State:** BANNED: `thread_local!` for app/session state in async/multi-thread runtimes (state loss on thread hop). Pass context or use thread-safe global sync (`RwLock`, `Mutex`, `arc-swap`) (P-ASYNC-STATE).
 - **Zero-Copy JSON:** NO zero-copy `&str` JSON deserialization on unvetted data/escapes (`\n`, `\uXXXX`). Default to owned `String` in map values to prevent silent parse errors (P-OWNED-JSON).

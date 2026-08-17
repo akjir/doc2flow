@@ -18,8 +18,18 @@
       lightbox = document.createElement('div');
       lightbox.id = 'image-lightbox';
       lightbox.className = 'image-lightbox';
-      lightbox.innerHTML =
-        '<span class="image-lightbox-close">&times;</span><img id="image-lightbox-img" class="image-lightbox-img" src="" alt="" />';
+
+      const closeBtn = document.createElement('span');
+      closeBtn.className = 'image-lightbox-close';
+      closeBtn.innerHTML = '&times;';
+
+      const img = document.createElement('img');
+      img.id = 'image-lightbox-img';
+      img.className = 'image-lightbox-img';
+      img.alt = '';
+
+      lightbox.appendChild(closeBtn);
+      lightbox.appendChild(img);
       document.body.appendChild(lightbox);
     }
     return lightbox;

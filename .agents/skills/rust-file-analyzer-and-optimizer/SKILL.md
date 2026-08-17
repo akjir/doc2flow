@@ -34,12 +34,14 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 - **State Condensation:** When tracking multiple boolean configuration flags, evaluate `bitflags` or array-backed state to minimize memory footprint and avoid brittle `&&`/`||` chains.
 - **Bitmask Safety:** When using integer bitmasks (`u32`, `u64`), assert `len <= bit_width` at initialization to prevent overflow (P-MASK-SAFE).
 - **No Magic Capacities:** Avoid hardcoding array capacities (`[T; 8]`). Define named `const MAX_CAPACITY: usize` with `debug_assert!` checks (P-NO-MAGIC-CAP).
+- **Zero-Cost Lookups:** NEVER unconditionally clone owned keys (`PathBuf`, `String`) querying `HashMap`/`BTreeMap` in loops; query `.get()` with borrowed keys, allocating ONLY on insertion (P-ZERO-COST-LOOKUP).
 
 ### 2: Parsing & Loops
 - **No Chained Regex/Replace:** Replace `.replace().replace()` cascades with single-pass state machines/scanners.
 - **Declarative Iterators:** Prefer `.filter()`, `.map()`, `.fold()` over imperative loops with mutable state.
 - **Unified Forward Parsers:** Never duplicate forward-scanning loops across token handlers. Encapsulate index advancement and token/code skipping into generic higher-order functions or reusable iterators (P-UNIFIED-PARSER).
 - **Linear Parsing & No O(N²):** Ensure token parsers and recursive descent routines parse strictly linearly (O(N)). Avoid repetitive scanning of identical byte slices on unclosed/nested tokens (P-NO-QUADRATIC).
+- **Loop Modularity:** String-processing loops (>40 lines) MUST extract core logic into stateless, isolated processor functions; orchestrators remain purely structural (P-LOOP-MODULARITY).
 - **Efficient Compression Loops:** Never use iterative scaling loops for compression targets (e.g. shrinking image by 10% repeatedly). Calculate target dimensions mathematically (area-to-byte ratio) to limit heavy encoding operations to 1-2 passes maximum (P-EFFICIENT-IO-LOOPS).
 - **Zero-Dep JSON Compliance:** Custom JSON parsers MUST explicitly support UTF-16 surrogate pair decoding (`\uD800..\uDBFF` + `\uDC00..\uDFFF`). Relying solely on `char::from_u32` for 4-digit hex escapes is strictly prohibited (fails outside BMP/emojis) (P-JSON-SURROGATE).
 - **Strict Primitive Validation:** Unquoted JSON values MUST strictly validate against RFC 8259 (`true`, `false`, `null`, numbers). Permissive "read until delimiter" accepting arbitrary bare words or malformed floats is strictly prohibited; emit explicit error (P-JSON-STRICT-PRIMITIVES).
@@ -82,6 +84,8 @@ Follow these 4 steps sequentially, applying the 5 Pillars below:
 - **Scanners:** Zero-alloc single-pass tokenizers (O(N) forward cursor). Avoid redundant scanning passes over attribute names/values.
 - **Quote-Aware:** Robustly handle single quotes (`'`), double quotes (`"`), multiline values, and escaped quotes (`\"`/`\'`).
 - **Sub-parsers:** Decompose complex parsers into single-responsibility sub-parsers (processing instructions `<?`, DOCTYPE, comments `<!--`, CDATA `<![CDATA[`, tags).
+- **Defensive HTML Parsing:** Manual string parsing of HTML MUST tolerate arbitrary whitespace, case-insensitivity, and single/double quote boundaries (`'`,`"`) (P-DEFENSIVE-HTML).
+- **Decoupled DOM Assumptions:** Structural HTML modifications (unwrapping tags) MUST NOT rely on exact byte-for-byte matches; use flexible attribute & tag parsing with whitespace trimming (P-DECOUPLED-DOM).
 - **Base64 Data URIs:** Standardize with unified `to_base64_data_uri`/`to_base64_data_uri_into` with exact pre-allocation.
 - **No println!:** Never use `println!` in core processing routines; reserve `stdout` for CLI output and route progress/warnings to `stderr`/`eprintln!`.
 

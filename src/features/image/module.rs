@@ -1,6 +1,5 @@
 //! Image vertical slice feature module.
 
-use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -19,15 +18,6 @@ pub const CSS: &str = include_str!("image.css");
 
 /// Supported document element identifiers for image elements.
 const IMAGE_SUPPORTED: [DocumentElementId; 1] = [DocumentElementId::Image];
-
-/// Closing tag for image item container.
-const IMG_ITEM_CLOSE: &str = "</div>";
-
-/// Opening tag for image item container.
-const IMG_ITEM_OPEN: &str = "<div class=\"image-item\">";
-
-/// Opening tag for legacy image item container.
-const IMG_ITEM_OPEN_LEGACY: &str = "<div class=\"img-item\">";
 
 /// Embedded image JavaScript client script.
 pub const JS: &str = include_str!("image.js");
@@ -134,69 +124,175 @@ pub fn embed_images_as_base64_with_source(
 
     while let Some((img_start, img_end)) = find_next_img_tag(html, cursor) {
         out.push_str(&html[cursor..img_start]);
-        let tag_slice = &html[img_start..img_end];
-
-        let Some((attr_start, attr_end, src_val)) = extract_attribute(tag_slice, "src") else {
-            out.push_str(tag_slice);
-            cursor = img_end;
-            continue;
-        };
-
-        if !is_image_source(src_val, base_dir) {
-            let alt_text = extract_attribute(tag_slice, "alt")
-                .map(|(_, _, val)| val)
-                .unwrap_or(src_val);
-            cursor = render_non_image_link(&mut out, html, img_end, src_val, alt_text);
-            continue;
-        }
-
-        if is_remote_or_data_uri(src_val) {
-            out.push_str(tag_slice);
-            cursor = img_end;
-            continue;
-        }
-
-        let path = Path::new(src_val);
-        let Some(resolved_path) = io::resolve_path(path, base_dir) else {
-            out.push_str(tag_slice);
-            cursor = img_end;
-            continue;
-        };
-
-        let data_uri = match cache.entry(resolved_path.clone()) {
-            Entry::Occupied(entry) => entry.get().clone(),
-            Entry::Vacant(entry) => {
-                let uri = resolve_or_encode_image(
-                    &resolved_path,
-                    src_val,
-                    auto_scale,
-                    md_content,
-                    file_name,
-                )?;
-                entry.insert(uri).clone()
-            }
-        };
-
-        if data_uri != src_val {
-            replace_img_src(&mut out, tag_slice, attr_start, attr_end, &data_uri);
-        } else {
-            out.push_str(tag_slice);
-        }
-
-        cursor = img_end;
+        cursor = process_single_image_tag(
+            &mut out,
+            html,
+            img_start,
+            img_end,
+            &mut cache,
+            md_content,
+            file_name,
+            base_dir,
+            auto_scale,
+        )?;
     }
 
     out.push_str(&html[cursor..]);
     Ok(out)
 }
 
+/// Processes a single `<img>` tag slice in the HTML stream and advances the cursor.
+fn process_single_image_tag(
+    out: &mut String,
+    html: &str,
+    img_start: usize,
+    img_end: usize,
+    cache: &mut HashMap<PathBuf, String>,
+    md_content: Option<&str>,
+    file_name: Option<&str>,
+    base_dir: Option<&Path>,
+    auto_scale: bool,
+) -> Result<usize> {
+    let tag_slice = &html[img_start..img_end];
+    let Some((attr_start, attr_end, src_val)) = extract_attribute(tag_slice, "src") else {
+        out.push_str(tag_slice);
+        return Ok(img_end);
+    };
+
+    if !is_image_source(src_val, base_dir) {
+        let alt_text = extract_attribute(tag_slice, "alt")
+            .map(|(_, _, val)| val)
+            .unwrap_or(src_val);
+        return Ok(render_non_image_link(out, html, img_end, src_val, alt_text));
+    }
+
+    if is_remote_or_data_uri(src_val) {
+        out.push_str(tag_slice);
+        return Ok(img_end);
+    }
+
+    let path = Path::new(src_val);
+    let Some(resolved_path) = io::resolve_path(path, base_dir) else {
+        out.push_str(tag_slice);
+        return Ok(img_end);
+    };
+
+    let data_uri = if let Some(cached) = cache.get(&resolved_path) {
+        cached.clone()
+    } else {
+        let uri = resolve_or_encode_image(
+            &resolved_path,
+            src_val,
+            auto_scale,
+            md_content,
+            file_name,
+        )?;
+        cache.insert(resolved_path, uri.clone());
+        uri
+    };
+
+    if data_uri != src_val {
+        replace_img_src(out, tag_slice, attr_start, attr_end, &data_uri);
+    } else {
+        out.push_str(tag_slice);
+    }
+
+    Ok(img_end)
+}
+
+/// Checks if `s` starts with `<tag_name` case-insensitively followed by a delimiter or end of string.
+fn starts_with_tag_ignore_ascii_case(s: &str, tag_prefix: &str) -> bool {
+    let Some(prefix_slice) = s.get(..tag_prefix.len()) else {
+        return false;
+    };
+    if !prefix_slice.eq_ignore_ascii_case(tag_prefix) {
+        return false;
+    }
+    let Some(after) = s.get(tag_prefix.len()..) else {
+        return true;
+    };
+    after.is_empty() || after.starts_with(|c: char| c.is_whitespace() || c == '/' || c == '>')
+}
+
 /// Finds start and end byte offsets of the next `<img` tag in `html` from `cursor`.
-fn find_next_img_tag(html: &str, cursor: usize) -> Option<(usize, usize)> {
-    let img_start_rel = html[cursor..].find("<img")?;
-    let img_start = cursor + img_start_rel;
-    let rel_end = html[img_start..].find('>')?;
-    let img_end = img_start + rel_end + 1;
-    Some((img_start, img_end))
+///
+/// Skips `<script>`, `<style>`, and HTML comments to avoid parsing markup inside scripts or styles.
+fn find_next_img_tag(html: &str, mut cursor: usize) -> Option<(usize, usize)> {
+    while cursor < html.len() {
+        let tag_start_rel = html[cursor..].find('<')?;
+        let tag_start = cursor + tag_start_rel;
+        let rest = &html[tag_start..];
+
+        if rest.starts_with("<!--") {
+            if let Some(comment_end) = rest.find("-->") {
+                cursor = tag_start + comment_end + 3;
+            } else {
+                return None;
+            }
+            continue;
+        }
+
+        if starts_with_tag_ignore_ascii_case(rest, "<script") {
+            if let Some(script_end) = find_closing_tag(rest, "script") {
+                cursor = tag_start + script_end;
+                continue;
+            }
+            return None;
+        }
+
+        if starts_with_tag_ignore_ascii_case(rest, "<style") {
+            if let Some(style_end) = find_closing_tag(rest, "style") {
+                cursor = tag_start + style_end;
+                continue;
+            }
+            return None;
+        }
+
+        if starts_with_tag_ignore_ascii_case(rest, "<img") {
+            let rel_end = rest.find('>')?;
+            let img_end = tag_start + rel_end + 1;
+            return Some((tag_start, img_end));
+        }
+
+        cursor = tag_start + 1;
+    }
+
+    None
+}
+
+/// Finds the byte offset immediately following `</tag_name>` in `html`, tolerating arbitrary whitespace.
+fn find_closing_tag(html: &str, tag_name: &str) -> Option<usize> {
+    let mut i = 0;
+    while i < html.len() {
+        if let Some(pos) = html[i..].find("</") {
+            let after_slash_idx = i + pos + 2;
+            let Some(after_slash) = html.get(after_slash_idx..) else {
+                break;
+            };
+            let trimmed = after_slash.trim_start();
+            let ws_before = after_slash.len() - trimmed.len();
+
+            if let Some(name_slice) = trimmed.get(..tag_name.len()) {
+                if name_slice.eq_ignore_ascii_case(tag_name) {
+                    if let Some(after_name) = trimmed.get(tag_name.len()..) {
+                        let after_trimmed = after_name.trim_start();
+                        if after_trimmed.starts_with('>') {
+                            let end_pos = after_slash_idx
+                                + ws_before
+                                + tag_name.len()
+                                + (after_name.len() - after_trimmed.len())
+                                + 1;
+                            return Some(end_pos);
+                        }
+                    }
+                }
+            }
+            i = after_slash_idx;
+        } else {
+            break;
+        }
+    }
+    None
 }
 
 /// Renders a non-image attachment link into the buffer.
@@ -226,7 +322,7 @@ fn render_non_image_link(
     }
 }
 
-/// Replaces the `src="..."` attribute within a tag slice and writes the result to `out`.
+/// Replaces the `src="..."` attribute within a tag slice preserving quote style and writes to `out`.
 fn replace_img_src(
     out: &mut String,
     tag_slice: &str,
@@ -234,36 +330,64 @@ fn replace_img_src(
     attr_end: usize,
     data_uri: &str,
 ) {
+    let attr_slice = &tag_slice[attr_start..attr_end];
+    let quote = if attr_slice.contains('\'') { '\'' } else { '"' };
+
     out.push_str(&tag_slice[..attr_start]);
-    out.push_str("src=\"");
+    out.push_str("src=");
+    out.push(quote);
     out.push_str(data_uri);
-    out.push('"');
+    out.push(quote);
     out.push_str(&tag_slice[attr_end..]);
 }
 
 /// Helper to unwrap `<div class="image-item">` or `<div class="img-item">` container if present around a non-image tag.
 fn strip_img_item_wrapper(out: &mut String, html: &str, img_end: usize) -> Option<usize> {
     let trimmed_out = out.trim_end();
-    let (pos, open_len) = if let Some(p) = trimmed_out.rfind(IMG_ITEM_OPEN) {
-        (p, IMG_ITEM_OPEN.len())
-    } else if let Some(p) = trimmed_out.rfind(IMG_ITEM_OPEN_LEGACY) {
-        (p, IMG_ITEM_OPEN_LEGACY.len())
-    } else {
-        return None;
-    };
+    let div_start = trimmed_out.rfind("<div")?;
+    let div_slice = &trimmed_out[div_start..];
+    let div_tag_end_rel = div_slice.find('>')?;
+    let div_tag = &div_slice[..=div_tag_end_rel];
 
-    if !trimmed_out[pos + open_len..].trim().is_empty() {
+    if !div_slice[div_tag_end_rel + 1..].trim().is_empty() {
         return None;
     }
+
+    let (_, _, class_val) = extract_attribute(div_tag, "class")?;
+    let is_image_item = class_val
+        .split_whitespace()
+        .any(|c| c.eq_ignore_ascii_case("image-item") || c.eq_ignore_ascii_case("img-item"));
+    if !is_image_item {
+        return None;
+    }
+
     let rest = &html[img_end..];
     let rest_trimmed = rest.trim_start();
-    if !rest_trimmed.starts_with(IMG_ITEM_CLOSE) {
-        return None;
-    }
+    let close_tag_len = parse_closing_div(rest_trimmed)?;
+
     let leading_ws = rest.len() - rest_trimmed.len();
-    let suffix_len = leading_ws + IMG_ITEM_CLOSE.len();
-    out.truncate(pos);
+    let suffix_len = leading_ws + close_tag_len;
+    out.truncate(div_start);
     Some(img_end + suffix_len)
+}
+
+/// Parses a closing `</div>` tag allowing flexible whitespace (e.g. `</div >`, `</ div>`), returning its byte length.
+fn parse_closing_div(s: &str) -> Option<usize> {
+    let stripped = s.strip_prefix("</")?;
+    let trimmed = stripped.trim_start();
+    if trimmed.len() >= 3 && trimmed[..3].eq_ignore_ascii_case("div") {
+        let after_div = &trimmed[3..];
+        let after_trimmed = after_div.trim_start();
+        if after_trimmed.starts_with('>') {
+            let total_len = (s.len() - stripped.len())
+                + (stripped.len() - trimmed.len())
+                + 3
+                + (after_div.len() - after_trimmed.len())
+                + 1;
+            return Some(total_len);
+        }
+    }
+    None
 }
 
 #[cfg(test)]
@@ -396,6 +520,16 @@ mod tests {
     }
 
     #[test]
+    fn test_non_image_source_in_wrapper_with_flexible_whitespace_and_attributes() {
+        let html = "<div   class=\"extra-class image-item\"  id=\"wrapper-1\" >\n  <img src='https://example.com/archive.zip' alt='Archive'  />\n</div  >";
+        let processed = embed_images_as_base64(html, None).unwrap();
+        assert!(processed.contains("<div class=\"item text-item item-selectable\">"));
+        assert!(processed.contains("<span class=\"text-content\"><a href=\"https://example.com/archive.zip\" target=\"_blank\" rel=\"noopener noreferrer\">Archive</a></span>"));
+        assert!(!processed.contains("image-item"));
+        assert!(!processed.contains("<img"));
+    }
+
+    #[test]
     fn test_embed_images_as_base64_local_file() {
         let dir = std::env::temp_dir().join(format!("d2f_test_img_1_{}", std::process::id()));
         let _ = io::create_dir_all(&dir);
@@ -409,6 +543,22 @@ mod tests {
 
         assert!(embedded.contains("src=\"data:image/png;base64,"));
         assert!(!embedded.contains("src=\"test.png\""));
+    }
+
+    #[test]
+    fn test_embed_images_preserves_single_quotes() {
+        let dir = std::env::temp_dir().join(format!("d2f_test_img_sq_{}", std::process::id()));
+        let _ = io::create_dir_all(&dir);
+        let img_path = dir.join("single.png");
+        io::write_file(&img_path, b"single quote image data").unwrap();
+
+        let html = "<p><img src='single.png' alt='Single Demo'></p>";
+        let embedded = embed_images_as_base64(html, Some(&dir)).unwrap();
+
+        let _ = io::remove_dir_all(&dir);
+
+        assert!(embedded.contains("src='data:image/png;base64,"));
+        assert!(!embedded.contains("src='single.png'"));
     }
 
     #[test]
@@ -467,5 +617,31 @@ mod tests {
         let result = embed_images_as_base64(html, None).unwrap();
         assert!(result.contains("src=\"https://example.com/logo.png\""));
         assert!(result.contains("src=\"http://example.com/banner.jpg\""));
+    }
+
+    #[test]
+    fn test_embed_images_skips_script_and_style_tags() {
+        let html = "<script>const x = '<img src=\"\" alt=\"\" />';</script><style>/* <img src=\"test.png\"> */</style><img src=\"https://example.com/pic.png\">";
+        let result = embed_images_as_base64(html, None).unwrap();
+        assert!(result.contains("<script>const x = '<img src=\"\" alt=\"\" />';</script>"));
+        assert!(result.contains("<style>/* <img src=\"test.png\"> */</style>"));
+        assert!(result.contains("<img src=\"https://example.com/pic.png\">"));
+    }
+
+    #[test]
+    fn test_embed_images_skips_script_and_style_whitespace_variations() {
+        let html = "<script type=\"text/javascript\" >var s = '<img src=\"bad.pdf\">';</ script  ><style  >/* <img src='fail.pdf'> */</  style ><img src=\"https://example.com/pic.png\">";
+        let result = embed_images_as_base64(html, None).unwrap();
+        assert!(result.contains("<script type=\"text/javascript\" >var s = '<img src=\"bad.pdf\">';</ script  >"));
+        assert!(result.contains("<style  >/* <img src='fail.pdf'> */</  style >"));
+        assert!(result.contains("<img src=\"https://example.com/pic.png\">"));
+    }
+
+    #[test]
+    fn test_embed_images_skips_html_comments() {
+        let html = "<!-- <img src=\"manual.pdf\" alt=\"manual\"> --><img src=\"https://example.com/pic.png\">";
+        let result = embed_images_as_base64(html, None).unwrap();
+        assert!(result.contains("<!-- <img src=\"manual.pdf\" alt=\"manual\"> -->"));
+        assert!(result.contains("<img src=\"https://example.com/pic.png\">"));
     }
 }

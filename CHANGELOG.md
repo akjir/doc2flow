@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed Table of Contents (TOC) feature and table_of_contents frontmatter option.
 
 ### Fixed
+- Fixed image lightbox modal failing to open by constructing elements via DOM APIs and skipping script tags during HTML image post-processing.
 - Fixed inline code box vertical alignment and asymmetric padding to ensure proper centering with surrounding text.
 - Fixed potential panic during diagnostic error caret rendering for long source lines and zero-column offsets.
 - Fixed print styles to preserve table background colors and alternating row colors.
