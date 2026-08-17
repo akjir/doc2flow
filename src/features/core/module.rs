@@ -14,6 +14,9 @@ pub const JS_UTILS: &str = include_str!("utils.js");
 /// Embedded core JavaScript state storage handlers.
 pub const JS_STORAGE: &str = include_str!("storage.js");
 
+/// Embedded core JavaScript section collapse handlers.
+pub const JS_SECTIONS: &str = include_str!("sections.js");
+
 /// Supported document element identifiers for core elements.
 const CORE_SUPPORTED: [DocumentElementId; 3] = [
     DocumentElementId::HorizontalRule,
@@ -57,13 +60,40 @@ impl DocumentElementRenderer for CoreFeature {
                 title,
                 children,
             } => {
+                let is_container = *level <= 2;
+                let is_empty = children.is_empty();
+
                 push_indent(out, indent);
                 out.push_str("<section class=\"section\" data-level=\"");
                 let _ = write!(out, "{level}");
                 out.push_str("\">\n");
 
                 push_indent(out, indent + 1);
-                let _ = writeln!(out, "<h{level}>{title}</h{level}>");
+                if is_container {
+                    let h1_class = if *level == 1 { " section-header-h1" } else { "" };
+                    let (empty_class, a11y_attrs) = if is_empty {
+                        (" section-no-toggle", "")
+                    } else {
+                        ("", " role=\"button\" tabindex=\"0\" aria-expanded=\"true\"")
+                    };
+
+                    let _ = write!(
+                        out,
+                        "<h{level} class=\"section-header{h1_class}{empty_class}\"{a11y_attrs}>\n"
+                    );
+                    push_indent(out, indent + 2);
+                    out.push_str("<span class=\"section-title\">");
+                    format_inline_into(out, title);
+                    out.push_str("</span>\n");
+                    push_indent(out, indent + 2);
+                    out.push_str("<span class=\"section-toggler\">&#9660;</span>\n");
+                    push_indent(out, indent + 1);
+                    let _ = writeln!(out, "</h{level}>");
+                } else {
+                    let _ = write!(out, "<h{level} class=\"section-subheading\">");
+                    format_inline_into(out, title);
+                    let _ = writeln!(out, "</h{level}>");
+                }
 
                 push_indent(out, indent + 1);
                 out.push_str("<div class=\"section-body\">\n");
@@ -106,7 +136,7 @@ impl FeatureModule for CoreFeature {
     }
 
     fn javascript(&self) -> &[&'static str] {
-        &[JS_UTILS, JS_STORAGE]
+        &[JS_UTILS, JS_STORAGE, JS_SECTIONS]
     }
 }
 
@@ -144,11 +174,13 @@ mod tests {
     fn test_core_feature_javascript() {
         let feature = CoreFeature::new();
         let js = feature.javascript();
-        assert_eq!(js.len(), 2);
+        assert_eq!(js.len(), 3);
         assert!(js[0].contains("window.d2f"));
         assert!(js[0].contains("utils"));
         assert!(js[1].contains("window.d2f"));
         assert!(js[1].contains("storage"));
+        assert!(js[2].contains("window.d2f"));
+        assert!(js[2].contains("sections"));
     }
 
     #[test]
@@ -454,7 +486,10 @@ mod tests {
         );
         let expected = concat!(
             "    <section class=\"section\" data-level=\"1\">\n",
-            "      <h1>Overview</h1>\n",
+            "      <h1 class=\"section-header section-header-h1\" role=\"button\" tabindex=\"0\" aria-expanded=\"true\">\n",
+            "        <span class=\"section-title\">Overview</span>\n",
+            "        <span class=\"section-toggler\">&#9660;</span>\n",
+            "      </h1>\n",
             "      <div class=\"section-body\">\n",
             "        <div class=\"item text-item\">\n",
             "          <span class=\"text-content\">\n",
@@ -463,6 +498,102 @@ mod tests {
             "        </div>\n",
             "      </div>\n",
             "    </section>\n"
+        );
+        assert_eq!(out, expected);
+    }
+
+    #[test]
+    fn test_core_feature_renders_level_2_collapsible_section() {
+        let feature = CoreFeature::new();
+        let section = DocumentElement::section(
+            2,
+            "Sub Section",
+            vec![DocumentElement::text("Sub content")],
+        );
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        feature.render_element(
+            &section,
+            1,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        );
+        let expected = concat!(
+            "  <section class=\"section\" data-level=\"2\">\n",
+            "    <h2 class=\"section-header\" role=\"button\" tabindex=\"0\" aria-expanded=\"true\">\n",
+            "      <span class=\"section-title\">Sub Section</span>\n",
+            "      <span class=\"section-toggler\">&#9660;</span>\n",
+            "    </h2>\n",
+            "    <div class=\"section-body\">\n",
+            "      <div class=\"item text-item\">\n",
+            "        <span class=\"text-content\">\n",
+            "          Sub content\n",
+            "        </span>\n",
+            "      </div>\n",
+            "    </div>\n",
+            "  </section>\n"
+        );
+        assert_eq!(out, expected);
+    }
+
+    #[test]
+    fn test_core_feature_renders_empty_section_no_toggle() {
+        let feature = CoreFeature::new();
+        let section = DocumentElement::section(1, "Empty", Vec::new());
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        feature.render_element(
+            &section,
+            1,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        );
+        let expected = concat!(
+            "  <section class=\"section\" data-level=\"1\">\n",
+            "    <h1 class=\"section-header section-header-h1 section-no-toggle\">\n",
+            "      <span class=\"section-title\">Empty</span>\n",
+            "      <span class=\"section-toggler\">&#9660;</span>\n",
+            "    </h1>\n",
+            "    <div class=\"section-body\">\n",
+            "    </div>\n",
+            "  </section>\n"
+        );
+        assert_eq!(out, expected);
+    }
+
+    #[test]
+    fn test_core_feature_renders_subheading_level_3() {
+        let feature = CoreFeature::new();
+        let section = DocumentElement::section(
+            3,
+            "Deep Header",
+            vec![DocumentElement::text("Deep content")],
+        );
+        let mut out = String::new();
+        let renderer = HtmlRenderer::default_renderer();
+        feature.render_element(
+            &section,
+            1,
+            0,
+            &DocumentParameters::default(),
+            &mut out,
+            &renderer,
+        );
+        let expected = concat!(
+            "  <section class=\"section\" data-level=\"3\">\n",
+            "    <h3 class=\"section-subheading\">Deep Header</h3>\n",
+            "    <div class=\"section-body\">\n",
+            "      <div class=\"item text-item\">\n",
+            "        <span class=\"text-content\">\n",
+            "          Deep content\n",
+            "        </span>\n",
+            "      </div>\n",
+            "    </div>\n",
+            "  </section>\n"
         );
         assert_eq!(out, expected);
     }

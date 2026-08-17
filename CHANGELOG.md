@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added collapsible section support in the core pipeline with accessible headers, keyboard navigation, fold indicator toggling, and state persistence.
 - Added permissive boolean parsing support for document frontmatter configuration parameters.
 - Added modular table feature slice for responsive table rendering, column alignments, and row hover states.
 - Added modular image feature slice for image rendering, lightbox modal viewing, and broken image fallback handling.
@@ -36,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed Table of Contents (TOC) feature and table_of_contents frontmatter option.
 
 ### Fixed
+- Fixed inline code box vertical alignment and asymmetric padding to ensure proper centering with surrounding text.
 - Fixed potential panic during diagnostic error caret rendering for long source lines and zero-column offsets.
 - Fixed print styles to preserve table background colors and alternating row colors.
 - Fixed header margin in print mode to match spacing between sections.

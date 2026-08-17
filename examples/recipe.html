@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+247.3a1584a.dev">
-  <meta name="version" content="0.9.4+247.3a1584a.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+248.f3d4aa1.dev">
+  <meta name="version" content="0.9.4+248.f3d4aa1.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-16T22:22:51Z">
+  <meta name="dcterms.created" content="2026-08-17T06:59:14Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, shoutout, table">
   <title>Classic Chocolate Fudge Cake Recipe</title>
@@ -157,7 +157,8 @@
       line-height: inherit;
       color: var(--code-color);
       background-color: var(--code-bg);
-      padding: 0 4px;
+      padding: 2px 4px 1px;
+      vertical-align: 1.5px;
       border-radius: 3px;
       border: 1px solid var(--code-border);
     }
@@ -205,7 +206,8 @@
       line-height: inherit;
       color: var(--code-color);
       background-color: var(--code-bg);
-      padding: 0 4px;
+      padding: 2px 4px 1px;
+      vertical-align: 1.5px;
       border-radius: 3px;
       border: 1px solid var(--code-border);
     }
@@ -269,7 +271,7 @@
     }
 
     .item:first-child,
-    *:not(.item) + .item {
+    *:not(.item)+.item {
       margin-top: 3px;
     }
 
@@ -318,7 +320,8 @@
       line-height: inherit;
       color: var(--code-color);
       background-color: var(--code-bg);
-      padding: 0 4px;
+      padding: 2px 4px 1px;
+      vertical-align: 1.5px;
       border-radius: 3px;
       border: 1px solid var(--code-border);
     }
@@ -373,8 +376,8 @@
     }
 
     .section-header,
-    .section > h1,
-    .section > h2 {
+    .section>h1,
+    .section>h2 {
       background-color: var(--section-bg-header);
       color: var(--section-color-header);
       padding: 11px 18px;
@@ -389,51 +392,51 @@
     }
 
     .section-header:hover,
-    .section > h1:hover,
-    .section > h2:hover {
+    .section>h1:hover,
+    .section>h2:hover {
       background-color: var(--section-bg-header-hover);
     }
 
     .section-header[role="button"]:focus-visible,
-    .section > h1[role="button"]:focus-visible,
-    .section > h2[role="button"]:focus-visible {
+    .section>h1[role="button"]:focus-visible,
+    .section>h2[role="button"]:focus-visible {
       outline: 2px solid #ffffff;
       outline-offset: -3px;
     }
 
     .section-header-h1,
-    .section > h1,
-    .section[data-level="1"] > h1 {
+    .section>h1,
+    .section[data-level="1"]>h1 {
       background-color: var(--section-bg-header-h1);
       font-size: 16px;
       cursor: pointer;
     }
 
     .section-header-h1:hover,
-    .section > h1:hover,
-    .section[data-level="1"] > h1:hover {
+    .section>h1:hover,
+    .section[data-level="1"]>h1:hover {
       background-color: var(--section-bg-header-h1-hover);
     }
 
     .section-no-toggle,
     .section-header.no-toggle,
     .section-header.section-no-toggle,
-    .section > h1.no-toggle,
-    .section > h2.no-toggle {
+    .section>h1.no-toggle,
+    .section>h2.no-toggle {
       cursor: default;
     }
 
     .section-no-toggle:hover,
     .section-header.no-toggle:hover,
     .section-header.section-no-toggle:hover,
-    .section > h2.no-toggle:hover {
+    .section>h2.no-toggle:hover {
       background-color: var(--section-bg-header);
     }
 
     .section-header-h1.no-toggle:hover,
     .section-header-h1.section-no-toggle:hover,
-    .section > h1.no-toggle:hover,
-    .section[data-level="1"] > h1.no-toggle:hover {
+    .section>h1.no-toggle:hover,
+    .section[data-level="1"]>h1.no-toggle:hover {
       background-color: var(--section-bg-header-h1);
     }
 
@@ -444,10 +447,17 @@
       display: none !important;
     }
 
+    .section-title {
+      flex: 1;
+      min-width: 0;
+    }
+
     .section-toggler {
       font-size: 16px;
       margin-left: 10px;
       transition: transform 0.2s ease;
+      user-select: none;
+      flex-shrink: 0;
     }
 
     .section-body {
@@ -470,10 +480,10 @@
     .section-body h4,
     .section-body h5,
     .section-body h6,
-    .section[data-level="3"] > h3,
-    .section[data-level="4"] > h4,
-    .section[data-level="5"] > h5,
-    .section[data-level="6"] > h6 {
+    .section[data-level="3"]>h3,
+    .section[data-level="4"]>h4,
+    .section[data-level="5"]>h5,
+    .section[data-level="6"]>h6 {
       background-color: transparent;
       color: var(--section-color-subheading);
       font-size: 12.5px;
@@ -490,14 +500,14 @@
     .section-body h4:hover,
     .section-body h5:hover,
     .section-body h6:hover,
-    .section[data-level="3"] > h3:hover,
-    .section[data-level="4"] > h4:hover,
-    .section[data-level="5"] > h5:hover,
-    .section[data-level="6"] > h6:hover {
+    .section[data-level="3"]>h3:hover,
+    .section[data-level="4"]>h4:hover,
+    .section[data-level="5"]>h5:hover,
+    .section[data-level="6"]>h6:hover {
       background-color: transparent;
     }
 
-    .section-body > .section,
+    .section-body>.section,
     .section[data-level="3"],
     .section[data-level="4"],
     .section[data-level="5"],
@@ -509,11 +519,11 @@
       overflow: visible;
     }
 
-    .section-body > .section > .section-body,
-    .section[data-level="3"] > .section-body,
-    .section[data-level="4"] > .section-body,
-    .section[data-level="5"] > .section-body,
-    .section[data-level="6"] > .section-body {
+    .section-body>.section>.section-body,
+    .section[data-level="3"]>.section-body,
+    .section[data-level="4"]>.section-body,
+    .section[data-level="5"]>.section-body,
+    .section[data-level="6"]>.section-body {
       padding: 0;
     }
 
@@ -630,7 +640,7 @@
         page-break-inside: auto;
       }
 
-      .section-body > .section,
+      .section-body>.section,
       .section[data-level="3"],
       .section[data-level="4"],
       .section[data-level="5"],
@@ -639,8 +649,8 @@
       }
 
       .section-header,
-      .section > h1,
-      .section > h2 {
+      .section>h1,
+      .section>h2 {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
         cursor: default;
@@ -813,7 +823,10 @@
   </header>
   <main class="doc-body">
     <section class="section" data-level="1">
-      <h1>Recipe Overview</h1>
+      <h1 class="section-header section-header-h1" role="button" tabindex="0" aria-expanded="true">
+        <span class="section-title">Recipe Overview</span>
+        <span class="section-toggler">&#9660;</span>
+      </h1>
       <div class="section-body">
         <div class="item text-item">
           <span class="text-content">
@@ -823,7 +836,10 @@
       </div>
     </section>
     <section class="section" data-level="2">
-      <h2>Ingredients & Quantities</h2>
+      <h2 class="section-header" role="button" tabindex="0" aria-expanded="true">
+        <span class="section-title">Ingredients &amp; Quantities</span>
+        <span class="section-toggler">&#9660;</span>
+      </h2>
       <div class="section-body">
         <div class="item text-item">
           <span class="text-content">
@@ -913,7 +929,10 @@
       </div>
     </section>
     <section class="section" data-level="2">
-      <h2>Baking & Preparation Timings</h2>
+      <h2 class="section-header" role="button" tabindex="0" aria-expanded="true">
+        <span class="section-title">Baking &amp; Preparation Timings</span>
+        <span class="section-toggler">&#9660;</span>
+      </h2>
       <div class="section-body">
         <div class="item text-item">
           <span class="text-content">
@@ -973,7 +992,10 @@
       </div>
     </section>
     <section class="section" data-level="2">
-      <h2>Nutritional Summary</h2>
+      <h2 class="section-header" role="button" tabindex="0" aria-expanded="true">
+        <span class="section-title">Nutritional Summary</span>
+        <span class="section-toggler">&#9660;</span>
+      </h2>
       <div class="section-body">
         <div class="item text-item">
           <span class="text-content">
@@ -1146,6 +1168,155 @@
         } else {
           loadState();
         }
+      }
+    })();
+    (() => {
+      const setSectionCollapseState = (secEl, isCollapsed) => {
+        const body = secEl.querySelector('.section-body');
+        const header = secEl.querySelector('.section-header');
+        if (!body) return;
+
+        body.classList.toggle('collapsed', isCollapsed);
+        if (header) {
+          header.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+          const toggler = header.querySelector('.section-toggler');
+          if (toggler) {
+            toggler.innerHTML = isCollapsed ? '&#9650;' : '&#9660;';
+          }
+        }
+      };
+
+      const updateEmptySections = () => {
+        document.querySelectorAll('.section').forEach((sec) => {
+          const header = sec.querySelector('.section-header');
+          const body = sec.querySelector('.section-body');
+          if (header && body && body.children.length === 0 && body.innerHTML.trim() === '') {
+            header.classList.add('section-no-toggle');
+            header.removeAttribute('role');
+            header.removeAttribute('tabindex');
+            header.removeAttribute('aria-expanded');
+          }
+        });
+      };
+
+      const toggleSection = (target, onSave) => {
+        let header = null;
+
+        if (typeof target === 'string') {
+          const sec = document.getElementById(target);
+          if (sec) {
+            header = sec.querySelector('.section-header');
+          }
+        } else if (target instanceof HTMLElement) {
+          header = target.closest('.section-header');
+        }
+
+        if (!header || header.classList.contains('section-no-toggle') || header.classList.contains('no-toggle')) {
+          return;
+        }
+
+        const section = header.closest('.section');
+        const body = section ? section.querySelector('.section-body') : null;
+
+        if (body && (body.children.length > 0 || body.innerHTML.trim() !== '')) {
+          const isCollapsed = !body.classList.contains('collapsed');
+          if (section) {
+            setSectionCollapseState(section, isCollapsed);
+          } else {
+            body.classList.toggle('collapsed', isCollapsed);
+            header.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+            const toggler = header.querySelector('.section-toggler');
+            if (toggler) {
+              toggler.innerHTML = isCollapsed ? '&#9650;' : '&#9660;';
+            }
+          }
+          if (typeof onSave === 'function') {
+            onSave();
+          }
+        }
+      };
+
+      const saveSections = () => {
+        const sections = {};
+        document.querySelectorAll('.section').forEach((sec, index) => {
+          const body = sec.querySelector('.section-body');
+          if (body) {
+            const key = sec.id || `sec_${index}`;
+            sections[key] = body.classList.contains('collapsed');
+          }
+        });
+        return { sections };
+      };
+
+      const loadSections = (state) => {
+        const sectionsData = state?.sections;
+        const isRecord = window.d2f?.utils?.isRecord;
+        const isValid = typeof isRecord === 'function'
+          ? isRecord(sectionsData)
+          : (typeof sectionsData === 'object' && sectionsData !== null && !Array.isArray(sectionsData));
+        if (isValid) {
+          document.querySelectorAll('.section').forEach((sec, index) => {
+            const key = sec.id || `sec_${index}`;
+            const shouldCollapse = sectionsData[key];
+            if (typeof shouldCollapse === 'boolean') {
+              setSectionCollapseState(sec, shouldCollapse);
+            }
+          });
+        }
+      };
+
+      const resetSections = () => {
+        document.querySelectorAll('.section').forEach((sec) => {
+          setSectionCollapseState(sec, false);
+        });
+      };
+
+      window.d2f = window.d2f || {};
+      window.d2f.sections = {
+        toggleSection,
+        setSectionCollapseState,
+        updateEmptySections,
+        resetSections,
+      };
+
+      if (typeof window !== 'undefined') {
+        if (window.d2f.storage?.registerSaveHandler) {
+          window.d2f.storage.registerSaveHandler(saveSections);
+        }
+        if (window.d2f.storage?.registerLoadHandler) {
+          window.d2f.storage.registerLoadHandler(loadSections);
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => {
+            updateEmptySections();
+          });
+        } else {
+          updateEmptySections();
+        }
+
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            const target = e.target;
+            if (target instanceof Element) {
+              const header = target.closest('.section-header');
+              if (header && !header.classList.contains('section-no-toggle') && !header.classList.contains('no-toggle')) {
+                e.preventDefault();
+                toggleSection(header, () => window.d2f.storage?.saveState?.());
+              }
+            }
+          }
+        });
+
+        document.addEventListener('click', (e) => {
+          const target = e.target;
+          if (!(target instanceof Element)) return;
+
+          const header = target.closest('.section-header');
+          if (header && !header.classList.contains('section-no-toggle') && !header.classList.contains('no-toggle')) {
+            toggleSection(header, () => window.d2f.storage?.saveState?.());
+          }
+        });
       }
     })();
     (() => {

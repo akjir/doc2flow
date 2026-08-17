@@ -202,7 +202,10 @@ mod tests {
         );
         let expected = concat!(
             "  <section class=\"section\" data-level=\"2\">\n",
-            "    <h2>Details</h2>\n",
+            "    <h2 class=\"section-header\" role=\"button\" tabindex=\"0\" aria-expanded=\"true\">\n",
+            "      <span class=\"section-title\">Details</span>\n",
+            "      <span class=\"section-toggler\">&#9660;</span>\n",
+            "    </h2>\n",
             "    <div class=\"section-body\">\n",
             "      <div class=\"item text-item\">\n",
             "        <span class=\"text-content\">\n",
@@ -230,10 +233,13 @@ mod tests {
         let outer_section = DocumentElement::section(1, "Outer", vec![inner_section]);
         let expected = concat!(
             "  <section class=\"section\" data-level=\"1\">\n",
-            "    <h1>Outer</h1>\n",
+            "    <h1 class=\"section-header section-header-h1\" role=\"button\" tabindex=\"0\" aria-expanded=\"true\">\n",
+            "      <span class=\"section-title\">Outer</span>\n",
+            "      <span class=\"section-toggler\">&#9660;</span>\n",
+            "    </h1>\n",
             "    <div class=\"section-body\">\n",
             "      <section class=\"section\" data-level=\"3\">\n",
-            "        <h3>Inner</h3>\n",
+            "        <h3 class=\"section-subheading\">Inner</h3>\n",
             "        <div class=\"section-body\">\n",
             "          <div class=\"item text-item\">\n",
             "            <span class=\"text-content\">\n",

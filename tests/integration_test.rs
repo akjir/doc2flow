@@ -1069,7 +1069,9 @@ fn test_parser_and_builder_pipeline_integration() {
     let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
     let content = doc2flow::core::builder::build(&document);
     assert!(!content.is_empty());
-    assert!(content.contains("      <h1>Pipeline Heading</h1>"));
+    assert!(content.contains("<h1 class=\"section-header section-header-h1\" role=\"button\" tabindex=\"0\" aria-expanded=\"true\">"));
+    assert!(content.contains("<span class=\"section-title\">Pipeline Heading</span>"));
+    assert!(content.contains("<span class=\"section-toggler\">&#9660;</span>"));
     assert!(
         content.contains(
             "        <div class=\"item text-item\">\n          <span class=\"text-content\">\n            Content paragraph\n          </span>\n        </div>"
@@ -1077,6 +1079,7 @@ fn test_parser_and_builder_pipeline_integration() {
     );
     assert!(content.contains("<title>Pipeline Test</title>"));
     assert!(content.contains("<meta name=\"features\" content=\"core, task\">"));
+    assert!(content.contains("window.d2f.sections"));
     assert!(!content.contains("{{FEATURES}}"));
     assert!(!content.contains("{{TITLE}}"));
 }
@@ -1088,7 +1091,8 @@ fn test_core_horizontal_rule_pipeline_integration() {
     let content = doc2flow::core::builder::build(&document);
     assert!(content.contains("<title>HR Pipeline Test</title>"));
     assert!(content.contains("<meta name=\"features\" content=\"core\">"));
-    assert!(content.contains("      <h1>Main Heading</h1>"));
+    assert!(content.contains("<h1 class=\"section-header section-header-h1\" role=\"button\" tabindex=\"0\" aria-expanded=\"true\">"));
+    assert!(content.contains("<span class=\"section-title\">Main Heading</span>"));
     assert!(
         content.contains(
             "        <div class=\"item text-item\">\n          <span class=\"text-content\">\n            Paragraph before\n          </span>\n        </div>"
@@ -1100,6 +1104,28 @@ fn test_core_horizontal_rule_pipeline_integration() {
             .contains("        <div class=\"item text-item\">\n          <span class=\"text-content\">\n            Paragraph after\n          </span>\n        </div>")
     );
     assert!(content.contains("hr {\n      border: none;"));
+}
+
+#[test]
+fn test_collapsible_sections_pipeline_integration() {
+    let input = "---\ntitle: \"Sections Test\"\n---\n# Container H1\n\nText in H1\n\n## Container H2\n\nText in H2\n\n### Subheading H3\n\nText in H3";
+    let document = doc2flow::core::parse_d2f_markdown(input).expect("parse failed");
+    let content = doc2flow::core::builder::build(&document);
+
+    assert!(content.contains("<section class=\"section\" data-level=\"1\">"));
+    assert!(content.contains("<h1 class=\"section-header section-header-h1\" role=\"button\" tabindex=\"0\" aria-expanded=\"true\">"));
+    assert!(content.contains("<span class=\"section-title\">Container H1</span>"));
+
+    assert!(content.contains("<section class=\"section\" data-level=\"2\">"));
+    assert!(content.contains("<h2 class=\"section-header\" role=\"button\" tabindex=\"0\" aria-expanded=\"true\">"));
+    assert!(content.contains("<span class=\"section-title\">Container H2</span>"));
+
+    assert!(content.contains("<section class=\"section\" data-level=\"3\">"));
+    assert!(content.contains("<h3 class=\"section-subheading\">Subheading H3</h3>"));
+
+    assert!(content.contains("window.d2f.sections"));
+    assert!(content.contains("toggleSection"));
+    assert!(content.contains("setSectionCollapseState"));
 }
 
 #[test]
