@@ -365,7 +365,7 @@ mod tests {
     }
 
     #[test]
-    fn test_render_element_shoutout_and_block_directive() {
+    fn test_render_element_shoutout() {
         let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let shoutout = DocumentElement::shoutout(
             crate::core::document::ShoutoutElementKind::Note,
@@ -374,15 +374,6 @@ mod tests {
         assert_eq!(
             render_element(&shoutout, 1, &DocumentParameters::default()),
             "  <div class=\"shoutout shoutout-note\" data-label=\"Note\">\n    Unregistered shoutout\n  </div>\n"
-        );
-
-        let directive = DocumentElement::block_directive(
-            "unregistered_directive",
-            vec![DocumentElement::text("Directive child")],
-        );
-        assert_eq!(
-            render_element(&directive, 1, &DocumentParameters::default()),
-            ""
         );
     }
 

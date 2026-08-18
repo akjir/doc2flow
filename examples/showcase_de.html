@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+261.7a2dbf9.dev">
-  <meta name="version" content="0.9.4+261.7a2dbf9.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+262.6df8daf.dev">
+  <meta name="version" content="0.9.4+262.6df8daf.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-17T19:30:59Z">
+  <meta name="dcterms.created" content="2026-08-18T08:46:05Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
-  <meta name="features" content="core, header, bullet, code, image, ordered, shoutout, table, task">
+  <meta name="features" content="core, header, bullet, code, image, ordered, shoutout, table, task, unknown">
   <title>Doc2Flow Deutscher Showcase</title>
   <style>
     /* ==========================================================================
@@ -1462,6 +1462,41 @@
         color: #000000 !important;
       }
     }
+    /* ==========================================================================
+       Doc2Flow - Unknown Feature Styles (Fallback Element)
+       ========================================================================== */
+
+    /* 1. Base Variables & Tokens */
+    :root {
+      /* Unknown Element Colors */
+      --unknown-bg: #fee2e2;
+      --unknown-border: #ef4444;
+      --unknown-color: #991b1b;
+    }
+
+    /* 2. Unknown Fallback Component (unknown-*) */
+    .unknown-default {
+      font-family: var(--font-sans, Arial, sans-serif);
+      font-size: var(--txt-size-base, 14px);
+      line-height: var(--txt-line-height, 1.5);
+      color: var(--unknown-color);
+      background-color: var(--unknown-bg);
+      border: 1px solid var(--unknown-border);
+      border-radius: 4px;
+      padding: 8px 12px;
+      margin: 8px 0;
+    }
+
+    /* 3. Print Styles */
+    @media print {
+      .unknown-default {
+        border: 1px solid #000000 !important;
+        background-color: #fee2e2 !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1893,6 +1928,34 @@
           <span class="order-marker">3.</span>
           <span class="order-content">
             Sequenzieller Hauptschritt 3: <strong>Abschluss &amp; Verifikation</strong> (Audit-Log <code>audit.log</code> archivieren)
+          </span>
+        </div>
+      </div>
+    </section>
+    <section class="section" data-level="2">
+      <h2 class="section-header" role="button" tabindex="0" aria-expanded="true">
+        <span class="section-title">2.3 Unbekanntes</span>
+        <span class="section-toggler">&#9660;</span>
+      </h2>
+      <div class="section-body">
+        <p class="unknown-default">
+          :::unknown-directive
+          Dies ist ein unbekanntes Directive.
+          - Liste 1
+          - Liste 2
+          :::
+        </p>
+        <p class="unknown-default">
+          ::unnamed-directive[Label]{Attribute}
+        </p>
+        <div class="item text-item item-selectable">
+          <span class="text-content">
+            Ein weiteres unbekanntes Directive mit Label und Attribut.
+          </span>
+        </div>
+        <div class="item text-item item-selectable">
+          <span class="text-content">
+            Auch hier gibt eine unbekannte UNKNOWN DIRECTIVE (directive) in der Zeile.
           </span>
         </div>
         <hr />

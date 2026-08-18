@@ -77,7 +77,7 @@ Doc2Flow is a high-performance, single-binary CLI tool that compiles Markdown do
 ```
 - **Utility Subsystem (`src/utils/`):** Pure, domain-agnostic library modules.
 - **Core Engine (`src/core/`):** Houses the AST data model, zero-alloc Markdown token parser, builder assembler, compiler-style error diagnostics, and filesystem I/O (`src/core/io.rs`). Direct `std::fs` calls outside `io.rs` are PROHIBITED.
-- **Vertical Feature Slices (`src/features/<feature>/`):** Isolated modules (`block`, `bullet`, `code`, `core`, `header`, `image`, `input`, `ordered`, `shoutout`, `table`, `task`, `unknown`). Each slice encapsulates its HTML rendering, CSS (`<name>.css`), JS (`<name>.js`), and local constants.
+- **Vertical Feature Slices (`src/features/<feature>/`):** Isolated modules (`bullet`, `code`, `core`, `header`, `image`, `input`, `ordered`, `shoutout`, `table`, `task`, `unknown`). Each slice encapsulates its HTML rendering, CSS (`<name>.css`), JS (`<name>.js`), and local constants.
 - **Conditional Asset Assembly:** If a feature is absent from a document, zero CSS rules and zero JS code for that feature SHALL be emitted into the output HTML.
 
 ---
@@ -121,8 +121,13 @@ The CLI executable MUST support the following grammar: `d2f [OPTIONS] [INPUT]`
 - **Hierarchical Lists:**
   - `- `, `* `: Unordered bullet lists (`.bullet-item.item-selectable`) with recursive `--indent` levels.
   - `1. `: Ordered numerical lists (`.order-item.item-selectable`) with automatic sequential position numbering.
-- **Block Directives:**
-  - `:::<name>` container blocks (e.g. `:::variables`) containing arbitrary child elements.
+- **Directives (Text, Leaf, Block):**
+  - Three directive kinds with identifier names composed of alphanumeric characters, hyphens, and underscores (`[a-zA-Z0-9_-]`):
+    - `TextDirective`: `:name[label]{attributes}` inline within text (e.g. `:link[here]{url}`, `:unknown-directive`, `:unknown_directive`). Unrecognized inline directives are replaced with `UNKNOWN DIRECTIVE (<name>)`.
+    - `LeafDirective`: `::name[label]{attributes}` on a standalone paragraph.
+    - `BlockDirective`: `:::name[label]{attributes}\n<content>\n:::` (with closing `:::` having at least 3 colons). E.g. `:::variables` containing a markdown table.
+  - Optionality: `[label]` and `{attributes}` are optional across all three forms (e.g. `:name`, `:name[label]`, `:name{attr}`, `:name[label]{attr}`).
+  - Unrecognized leaf and block directives fall back to `DocumentElement::Unknown`.
 - **Callout & Shoutout Panels:**
   - `>` / `> Note`: Informational callout (`.shoutout.shoutout-note`, neutral styling).
   - `>?` / `>? Tip`: Proactive tip callout (`.shoutout.shoutout-tip`, green accent).
@@ -183,11 +188,18 @@ pub struct DocumentHeader {
     pub variables: Option<DocumentElement>,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum DirectiveKind {
+    Text,
+    Leaf,
+    Block,
+}
+
 pub enum DocumentElement {
-    BlockDirective { name: String, children: Vec<DocumentElement> },
     BulletListItem { content: String, children: Vec<DocumentElement> },
     CheckBoxItem { checked: bool, content: String, children: Vec<DocumentElement> },
     CodeBlock { content: String, language: Option<String> },
+    Directive { kind: DirectiveKind, name: String, content: String, label: String, attributes: String },
     Header { title: String, subtitle: Option<String>, logo: Option<String> },
     HorizontalRule,
     Image { alt: String, url: String },
@@ -215,7 +227,7 @@ pub struct DocumentParameters {
 
 #[repr(u8)]
 pub enum DocumentElementId {
-    BlockDirective = 0,
+    Directive = 0,
     BulletListItem = 1,
     CheckBoxItem = 2,
     CodeBlock = 3,
@@ -335,7 +347,6 @@ doc2flow/
 │   │   └── renderer.rs       # HTML AST renderer and element formatter
 │   ├── features/             # Vertical slice feature modules
 │   │   ├── mod.rs            # Feature registry and dispatcher
-│   │   ├── block/            # Block directive vertical slice
 │   │   ├── bullet/           # Bullet list vertical slice
 │   │   ├── code/             # Code block vertical slice
 │   │   ├── core/             # Core base styles and client scripts

@@ -43,13 +43,30 @@ impl Document {
     }
 }
 
+/// Category or syntactic kind of a markdown directive.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum DirectiveKind {
+    /// Inline text directive within prose (e.g. `:name[label]{attributes}`).
+    Text,
+    /// Standalone leaf block directive (e.g. `::name[label]{attributes}`).
+    Leaf,
+    /// Container block directive enclosed by colons (e.g. `:::name[label]{attributes}\n...\n:::`).
+    Block,
+}
+
 /// Hierarchical document element representation.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DocumentElement {
-    /// Block directive container with a specified name and nested child elements.
-    BlockDirective {
-        /// Nested child elements within this block directive.
-        children: Vec<DocumentElement>,
+    /// Generic directive representation across inline, leaf, and block forms.
+    Directive {
+        /// Directive attributes string (e.g. `{url=...}`).
+        attributes: String,
+        /// Inner text content (only present for block directives).
+        content: String,
+        /// Category or syntactic kind of the directive.
+        kind: DirectiveKind,
+        /// Directive label string (e.g. `[label]`).
+        label: String,
         /// Directive name identifier (e.g. `variables`).
         name: String,
     },
@@ -143,11 +160,20 @@ pub enum DocumentElement {
 }
 
 impl DocumentElement {
-    /// Creates a new block directive document element with name and children.
+    /// Creates a new directive document element.
     #[must_use]
-    pub fn block_directive(name: impl Into<String>, children: Vec<DocumentElement>) -> Self {
-        Self::BlockDirective {
-            children,
+    pub fn directive(
+        kind: DirectiveKind,
+        name: impl Into<String>,
+        label: impl Into<String>,
+        attributes: impl Into<String>,
+        content: impl Into<String>,
+    ) -> Self {
+        Self::Directive {
+            attributes: attributes.into(),
+            content: content.into(),
+            kind,
+            label: label.into(),
             name: name.into(),
         }
     }
@@ -281,7 +307,7 @@ impl DocumentElement {
     #[must_use]
     pub const fn element_id(&self) -> DocumentElementId {
         match self {
-            Self::BlockDirective { .. } => DocumentElementId::BlockDirective,
+            Self::Directive { .. } => DocumentElementId::Directive,
             Self::BulletListItem { .. } => DocumentElementId::BulletListItem,
             Self::CheckBoxItem { .. } => DocumentElementId::CheckBoxItem,
             Self::CodeBlock { .. } => DocumentElementId::CodeBlock,
@@ -331,10 +357,6 @@ impl DocumentElement {
                     Ok(())
                 }
             }
-            Self::BlockDirective { children, .. } => {
-                children.push(child);
-                Ok(())
-            }
             Self::BulletListItem { children, .. }
             | Self::CheckBoxItem { children, .. }
             | Self::OrderedListItem { children, .. } => {
@@ -358,8 +380,8 @@ impl DocumentElement {
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[repr(u8)]
 pub enum DocumentElementId {
-    /// Identifier for block directive containers.
-    BlockDirective = 0,
+    /// Identifier for generic directives.
+    Directive = 0,
     /// Identifier for bullet list items.
     BulletListItem = 1,
     /// Identifier for checkbox list items.
@@ -629,28 +651,28 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_block_directive_element_creation_and_push_child() {
-        let child1 = DocumentElement::text("Inside block");
-        let mut directive = DocumentElement::block_directive("variables", vec![child1.clone()]);
+    fn test_directive_element_creation_and_push_child() {
+        let mut directive = DocumentElement::directive(
+            DirectiveKind::Block,
+            "variables",
+            "My Label",
+            "attr=1",
+            "Body content",
+        );
 
         assert_eq!(
             directive,
-            DocumentElement::BlockDirective {
-                children: vec![child1.clone()],
+            DocumentElement::Directive {
+                attributes: "attr=1".into(),
+                content: "Body content".into(),
+                kind: DirectiveKind::Block,
+                label: "My Label".into(),
                 name: "variables".into(),
             }
         );
 
-        let child2 = DocumentElement::bullet_list_item("List item");
-        assert!(directive.push_child(child2.clone()).is_ok());
-
-        assert_eq!(
-            directive,
-            DocumentElement::BlockDirective {
-                children: vec![child1, child2],
-                name: "variables".into(),
-            }
-        );
+        let child = DocumentElement::bullet_list_item("List item");
+        assert!(directive.push_child(child).is_err());
     }
 
     #[test]
@@ -1168,8 +1190,8 @@ mod tests {
     fn test_document_element_id_mapping() {
         assert_eq!(DocumentElementId::COUNT, 15);
         assert_eq!(
-            DocumentElement::block_directive("test", vec![]).element_id(),
-            DocumentElementId::BlockDirective
+            DocumentElement::directive(DirectiveKind::Block, "test", "", "", "").element_id(),
+            DocumentElementId::Directive
         );
         assert_eq!(
             DocumentElement::bullet_list_item("item").element_id(),

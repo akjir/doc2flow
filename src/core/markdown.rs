@@ -4,8 +4,8 @@ use std::collections::HashMap;
 use std::mem;
 
 use crate::core::document::{
-    Document, DocumentElement, DocumentHeader, DocumentParameters, ShoutoutElementKind,
-    TableAlignment,
+    DirectiveKind, Document, DocumentElement, DocumentHeader, DocumentParameters,
+    ShoutoutElementKind, TableAlignment,
 };
 use crate::core::error::{DiagnosticError, build_caret_annotation};
 use crate::core::{Error, Result};
@@ -93,13 +93,13 @@ enum FrontmatterPhase {
 
 /// Intermediate list item classification before AST node construction.
 #[derive(Debug)]
-enum ListItemKind<'a> {
+enum ListItemKind {
     /// Bullet list item with raw inner text/image slice.
-    Bullet(&'a str),
+    Bullet(String),
     /// Checkbox task item with checked state and raw inner slice.
-    CheckBox(bool, &'a str),
+    CheckBox(bool, String),
     /// Ordered list item with raw inner text/image slice.
-    Ordered(&'a str),
+    Ordered(String),
 }
 
 /// Hierarchical list parsing state tracking active parent list items and sequential numbering.
@@ -114,11 +114,8 @@ struct ListState {
 impl ListState {
     /// Creates a new empty list parsing state.
     #[must_use]
-    const fn new() -> Self {
-        Self {
-            root_ordered_position: None,
-            stack: Vec::new(),
-        }
+    fn new() -> Self {
+        Self::default()
     }
 
     /// Flushes all active list items on the stack into their parent elements or target container.
@@ -126,14 +123,12 @@ impl ListState {
         &mut self,
         doc: &mut Document,
         section_stack: &mut [DocumentElement],
-        in_block: bool,
-        block_children: &mut Vec<DocumentElement>,
     ) {
         while let Some(popped) = self.stack.pop() {
             if let Some(parent) = self.stack.last_mut() {
                 let _ = parent.element.push_child(popped.element);
             } else {
-                push_element(doc, section_stack, in_block, block_children, popped.element);
+                push_element(doc, section_stack, popped.element);
             }
         }
     }
@@ -143,8 +138,6 @@ impl ListState {
         &mut self,
         doc: &mut Document,
         section_stack: &mut [DocumentElement],
-        in_block: bool,
-        block_children: &mut Vec<DocumentElement>,
         indent_spaces: usize,
         kind: ListItemKind,
     ) {
@@ -154,7 +147,7 @@ impl ListState {
                 if let Some(parent) = self.stack.last_mut() {
                     let _ = parent.element.push_child(popped.element);
                 } else {
-                    push_element(doc, section_stack, in_block, block_children, popped.element);
+                    push_element(doc, section_stack, popped.element);
                 }
             } else {
                 break;
@@ -211,10 +204,14 @@ impl ListState {
 struct MarkdownParser<'a> {
     /// Active table alignment and accumulated rows.
     active_table: Option<(Vec<TableAlignment>, Vec<Vec<String>>)>,
-    /// Child elements collected inside the active block directive.
-    block_children: Vec<DocumentElement>,
+    /// Attributes of the active block directive.
+    block_attributes: String,
+    /// Label of the active block directive.
+    block_label: String,
     /// Name of the active block directive.
     block_name: String,
+    /// Accumulated raw lines for the active block directive.
+    block_raw_lines: Vec<&'a str>,
     /// Line number where the active block directive began.
     block_start_line: usize,
     /// Snippet of the opening block directive line.
@@ -330,8 +327,6 @@ impl<'a> MarkdownParser<'a> {
             push_element(
                 &mut self.doc,
                 &mut self.section_stack,
-                self.in_block_directive,
-                &mut self.block_children,
                 DocumentElement::table(alignments, rows),
             );
         }
@@ -345,8 +340,6 @@ impl<'a> MarkdownParser<'a> {
             push_element(
                 &mut self.doc,
                 &mut self.section_stack,
-                self.in_block_directive,
-                &mut self.block_children,
                 DocumentElement::code_block(self.code_block_lang.take(), content),
             );
             self.code_block_lines.clear();
@@ -359,8 +352,6 @@ impl<'a> MarkdownParser<'a> {
         self.list_state.flush(
             &mut self.doc,
             &mut self.section_stack,
-            self.in_block_directive,
-            &mut self.block_children,
         );
         self.list_state.root_ordered_position = None;
     }
@@ -371,8 +362,6 @@ impl<'a> MarkdownParser<'a> {
             classify_and_push_line(
                 &mut self.doc,
                 &mut self.section_stack,
-                self.in_block_directive,
-                &mut self.block_children,
                 &pending,
                 &mut self.list_state,
             );
@@ -387,7 +376,7 @@ impl<'a> MarkdownParser<'a> {
                 && trimmed.contains('|')
                 && !trimmed.starts_with(['#', '>'])
                 && !trimmed.starts_with("```")
-                && !trimmed.starts_with(":::")
+                && !trimmed.starts_with("::")
             {
                 rows.push(parse_table_row(effective_line));
                 return true;
@@ -406,62 +395,72 @@ impl<'a> MarkdownParser<'a> {
     ) -> Result<(), Error> {
         self.flush_active_buffers();
         let colon_count = trimmed_start.chars().take_while(|&c| c == ':').count();
-        let rest = trimmed_start[colon_count..].trim();
 
         if self.in_block_directive {
-            if rest.is_empty() {
-                let mut children = mem::take(&mut self.block_children);
+            if colon_count >= 3 && trimmed_start[colon_count..].trim().is_empty() {
+                let lines = mem::take(&mut self.block_raw_lines);
                 let name = mem::take(&mut self.block_name);
+                let label = mem::take(&mut self.block_label);
+                let attributes = mem::take(&mut self.block_attributes);
+                let content = lines.join("\n");
+
+                let _directive = DocumentElement::directive(
+                    DirectiveKind::Block,
+                    &name,
+                    &label,
+                    &attributes,
+                    &content,
+                );
+
                 if name == "variables" {
-                    if children.len() != 1
-                        || !matches!(&children[0], DocumentElement::Table { .. })
-                    {
-                        return Err(build_invalid_variables_block_directive_err(
-                            self.block_start_line,
-                            self.block_start_snippet,
-                        ));
-                    }
-                    let DocumentElement::Table { rows, .. } = children.remove(0) else {
-                        unreachable!();
-                    };
-                    for mut row in rows.into_iter().skip(1) {
-                        if !row.is_empty() {
-                            let key = row.remove(0);
-                            let val = if row.is_empty() {
-                                String::new()
-                            } else {
-                                row.remove(0)
-                            };
-                            self.doc.head.insert_variable(key, val);
-                        }
-                    }
-                    let _ = self.doc.head.variables_mut();
+                    process_variables_block(
+                        &lines,
+                        &mut self.doc,
+                        self.block_start_line,
+                        self.block_start_snippet,
+                    )?;
                 } else {
+                    let full_block = if lines.is_empty() {
+                        format!("{}\n{}", self.block_start_snippet, line)
+                    } else {
+                        format!("{}\n{}\n{}", self.block_start_snippet, content, line)
+                    };
                     push_element(
                         &mut self.doc,
                         &mut self.section_stack,
-                        false,
-                        &mut self.block_children,
-                        DocumentElement::block_directive(name, children),
+                        DocumentElement::unknown(full_block),
                     );
                 }
                 self.in_block_directive = false;
                 Ok(())
-            } else {
+            } else if trimmed_start.starts_with(":::") {
                 Err(build_nested_block_directive_err(line_no, line))
+            } else {
+                self.block_raw_lines.push(line);
+                Ok(())
             }
-        } else if rest.is_empty() {
-            Err(build_missing_block_directive_name_err(line_no, line))
-        } else if !rest.chars().all(|c| c.is_ascii_alphanumeric()) {
-            Err(build_invalid_block_directive_name_err(line_no, line))
-        } else if !self.has_seen_first_h1 && !is_allowed_pre_h1_directive(rest) {
-            Err(build_disallowed_pre_h1_block_directive_err(line_no, line, rest))
         } else {
+            let rest = trimmed_start[colon_count..].trim();
+            if rest.is_empty() {
+                return Err(build_missing_block_directive_name_err(line_no, line));
+            }
+            let Some((_kind, name, label, attributes)) = parse_directive_header(trimmed_start) else {
+                return Err(build_invalid_block_directive_name_err(line_no, line));
+            };
+
+            if !self.has_seen_first_h1 && !is_allowed_pre_h1_directive(name) {
+                return Err(build_disallowed_pre_h1_block_directive_err(
+                    line_no, line, name,
+                ));
+            }
+
             self.in_block_directive = true;
-            self.block_name = rest.to_string();
+            self.block_name = name.to_string();
+            self.block_label = label.to_string();
+            self.block_attributes = attributes.to_string();
             self.block_start_line = line_no;
             self.block_start_snippet = line;
-            self.block_children.clear();
+            self.block_raw_lines.clear();
             Ok(())
         }
     }
@@ -474,11 +473,19 @@ impl<'a> MarkdownParser<'a> {
         line: &'a str,
     ) -> Result<(), Error> {
         let trimmed_start = effective_line.trim_start();
+        if self.in_block_directive {
+            return self.handle_block_directive(trimmed_start, line_no, line);
+        }
+
         if trimmed_start.starts_with(":::") {
             return self.handle_block_directive(trimmed_start, line_no, line);
         }
 
-        if !self.in_block_directive && !self.has_seen_first_h1 {
+        if trimmed_start.starts_with("::") {
+            return self.handle_leaf_directive(trimmed_start, line_no, line);
+        }
+
+        if !self.has_seen_first_h1 {
             let trimmed = effective_line.trim();
             if trimmed.is_empty() {
                 return Ok(());
@@ -513,7 +520,7 @@ impl<'a> MarkdownParser<'a> {
         if trimmed.contains('|')
             && !trimmed.starts_with(['#', '>'])
             && !trimmed.starts_with("```")
-            && !trimmed.starts_with(":::")
+            && !trimmed.starts_with("::")
             && !trimmed.starts_with("- ")
             && !trimmed.starts_with("- [")
         {
@@ -525,8 +532,6 @@ impl<'a> MarkdownParser<'a> {
         classify_and_push_line(
             &mut self.doc,
             &mut self.section_stack,
-            self.in_block_directive,
-            &mut self.block_children,
             effective_line,
             &mut self.list_state,
         );
@@ -570,6 +575,44 @@ impl<'a> MarkdownParser<'a> {
         }
     }
 
+    /// Processes a leaf directive line starting with `::`.
+    fn handle_leaf_directive(
+        &mut self,
+        trimmed_start: &str,
+        line_no: usize,
+        line: &'a str,
+    ) -> Result<(), Error> {
+        self.flush_active_buffers();
+        let colon_count = trimmed_start.chars().take_while(|&c| c == ':').count();
+        let rest = trimmed_start[colon_count..].trim();
+        if rest.is_empty() {
+            return Err(build_missing_block_directive_name_err(line_no, line));
+        }
+
+        let Some((_kind, name, label, attributes)) = parse_directive_header(trimmed_start) else {
+            return Err(build_invalid_block_directive_name_err(line_no, line));
+        };
+
+        if !self.has_seen_first_h1 {
+            return Err(build_content_before_h1_err(line_no, line));
+        }
+
+        let _directive = DocumentElement::directive(
+            DirectiveKind::Leaf,
+            name,
+            label,
+            attributes,
+            "",
+        );
+
+        push_element(
+            &mut self.doc,
+            &mut self.section_stack,
+            DocumentElement::unknown(trimmed_start),
+        );
+        Ok(())
+    }
+
     /// Validates whether a pending table header followed by current delimiter row initiates a new table.
     fn handle_pending_table_header(&mut self, effective_line: &str) -> bool {
         if let Some(pending_line) = self.pending_table_header.take() {
@@ -581,8 +624,6 @@ impl<'a> MarkdownParser<'a> {
             classify_and_push_line(
                 &mut self.doc,
                 &mut self.section_stack,
-                self.in_block_directive,
-                &mut self.block_children,
                 &pending_line,
                 &mut self.list_state,
             );
@@ -648,8 +689,10 @@ impl<'a> Default for MarkdownParser<'a> {
     fn default() -> Self {
         Self {
             active_table: None,
-            block_children: Vec::new(),
+            block_attributes: String::new(),
+            block_label: String::new(),
             block_name: String::new(),
+            block_raw_lines: Vec::new(),
             block_start_line: 0,
             block_start_snippet: "",
             code_block_lang: None,
@@ -721,9 +764,9 @@ fn build_invalid_block_directive_name_err(line_number: usize, line_snippet: &str
         col_number: 1,
         line_snippet: line_snippet.into(),
         annotation_carets: carets,
-        annotation_text: "directive name must contain only alphanumeric characters (a-z, 0-9)"
+        annotation_text: "directive name must contain only alphanumeric characters, hyphens, or underscores (a-z, 0-9, -, _)"
             .into(),
-        help_text: "use only alphanumeric characters for directive names, e.g. ':::variables'."
+        help_text: "use only alphanumeric characters, hyphens, or underscores for directive names, e.g. ':::unknown-directive'."
             .into(),
     }
     .into()
@@ -831,104 +874,100 @@ fn build_unclosed_block_directive_err(line_number: usize, line_snippet: &str) ->
 fn classify_and_push_line(
     doc: &mut Document,
     section_stack: &mut Vec<DocumentElement>,
-    in_block: bool,
-    block_children: &mut Vec<DocumentElement>,
     effective_line: &str,
     list_state: &mut ListState,
 ) {
     let trimmed = effective_line.trim();
     if trimmed.is_empty() {
-        list_state.flush(doc, section_stack, in_block, block_children);
+        list_state.flush(doc, section_stack);
         list_state.root_ordered_position = None;
         return;
     }
 
     if let Some((spaces, checked, content)) = parse_check_box_item(effective_line) {
+        let processed = replace_text_directives(content);
         list_state.process_item(
             doc,
             section_stack,
-            in_block,
-            block_children,
             spaces,
-            ListItemKind::CheckBox(checked, content),
+            ListItemKind::CheckBox(checked, processed),
         );
     } else if let Some((spaces, content)) = parse_bullet_list_item(effective_line) {
+        let processed = replace_text_directives(content);
         list_state.process_item(
             doc,
             section_stack,
-            in_block,
-            block_children,
             spaces,
-            ListItemKind::Bullet(content),
+            ListItemKind::Bullet(processed),
         );
     } else if let Some((spaces, _parsed_num, content)) =
         parse_ordered_list_candidate(effective_line)
     {
+        let processed = replace_text_directives(content);
         list_state.process_item(
             doc,
             section_stack,
-            in_block,
-            block_children,
             spaces,
-            ListItemKind::Ordered(content),
+            ListItemKind::Ordered(processed),
         );
     } else {
-        list_state.flush(doc, section_stack, in_block, block_children);
+        list_state.flush(doc, section_stack);
         list_state.root_ordered_position = None;
 
         if is_horizontal_rule(trimmed) {
             push_element(
                 doc,
                 section_stack,
-                in_block,
-                block_children,
                 DocumentElement::horizontal_rule(),
             );
         } else if let Some((level, title)) = parse_heading_line(effective_line) {
-            if in_block {
-                push_element(
-                    doc,
-                    section_stack,
-                    in_block,
-                    block_children,
-                    DocumentElement::section(level, title, Vec::new()),
-                );
-            } else {
-                push_section(doc, section_stack, level, title);
-            }
+            push_section(doc, section_stack, level, title);
         } else if let Some((alt, url)) = parse_image(trimmed) {
             push_element(
                 doc,
                 section_stack,
-                in_block,
-                block_children,
                 DocumentElement::image(alt, url),
             );
         } else if trimmed.starts_with('>') {
             let (shoutout_kind, content) = parse_shoutout_line(trimmed);
+            let processed = replace_text_directives(&content);
             push_element(
                 doc,
                 section_stack,
-                in_block,
-                block_children,
-                DocumentElement::shoutout(shoutout_kind, content),
+                DocumentElement::shoutout(shoutout_kind, processed),
             );
         } else if is_plain_text(trimmed) {
+            let processed = replace_text_directives(trimmed);
             push_element(
                 doc,
                 section_stack,
-                in_block,
-                block_children,
-                DocumentElement::text(trimmed),
+                DocumentElement::text(processed),
             );
         } else {
             push_element(
                 doc,
                 section_stack,
-                in_block,
-                block_children,
                 DocumentElement::unknown(trimmed),
             );
+        }
+    }
+}
+
+/// Extracts dynamic `{{VAR_NAME}}` placeholders from a code block slice into the document header.
+fn extract_code_block_variables(content: &str, header: &mut DocumentHeader) {
+    let mut parts = content.split("{{");
+    let _ = parts.next();
+
+    for part in parts {
+        if let Some((raw_var, _remainder)) = part.split_once("}}") {
+            let var_name = raw_var.trim();
+            if !var_name.is_empty()
+                && var_name
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || c == '_')
+            {
+                header.ensure_variable(var_name, "");
+            }
         }
     }
 }
@@ -957,6 +996,12 @@ fn get_section_level(elem: &DocumentElement) -> usize {
 #[must_use]
 fn is_allowed_pre_h1_directive(name: &str) -> bool {
     ALLOWED_PRE_H1_DIRECTIVES.contains(&name)
+}
+
+/// Checks whether a character is permitted in a directive name identifier (alphanumeric, `-`, `_`).
+#[must_use]
+fn is_directive_name_char(c: char) -> bool {
+    c.is_ascii_alphanumeric() || c == '-' || c == '_'
 }
 
 /// Checks whether a line represents a markdown horizontal rule (`---`, `----`, etc.).
@@ -1029,6 +1074,54 @@ pub fn parse_d2f_markdown(md_content: &str) -> Result<Document, Error> {
         parser.process_line(idx + 1, line, &mut line_buf)?;
     }
     parser.finish()
+}
+
+/// Parses a directive header line into its category kind, name, label, and attributes.
+#[must_use]
+fn parse_directive_header(line: &str) -> Option<(DirectiveKind, &str, &str, &str)> {
+    let trimmed = line.trim();
+    let colon_count = trimmed.chars().take_while(|&c| c == ':').count();
+    if colon_count == 0 {
+        return None;
+    }
+    let kind = match colon_count {
+        1 => DirectiveKind::Text,
+        2 => DirectiveKind::Leaf,
+        _ => DirectiveKind::Block,
+    };
+    let rest = &trimmed[colon_count..];
+    let first_char = rest.chars().next()?;
+    if !first_char.is_ascii_alphanumeric() {
+        return None;
+    }
+    let name_len = rest.chars().take_while(|&c| is_directive_name_char(c)).count();
+    if name_len == 0 {
+        return None;
+    }
+    let name = &rest[..name_len];
+    let mut remainder = &rest[name_len..];
+
+    let mut label = "";
+    if remainder.starts_with('[') {
+        if let Some(close_idx) = remainder.find(']') {
+            label = &remainder[1..close_idx];
+            remainder = &remainder[close_idx + 1..];
+        }
+    }
+
+    let mut attributes = "";
+    if remainder.starts_with('{') {
+        if let Some(close_idx) = remainder.find('}') {
+            attributes = &remainder[1..close_idx];
+            remainder = &remainder[close_idx + 1..];
+        }
+    }
+
+    if (kind == DirectiveKind::Leaf || kind == DirectiveKind::Block) && !remainder.trim().is_empty() {
+        return None;
+    }
+
+    Some((kind, name, label, attributes))
 }
 
 /// Parses a markdown heading line into its normalized section level (1, 2, or 3) and title.
@@ -1221,17 +1314,82 @@ fn parse_table_row(line: &str) -> Vec<String> {
     cells
 }
 
-/// Appends an element either to the active block children buffer, the topmost active section, or document body.
+/// Processes a variables block directive by extracting key-value pairs from a markdown table.
+fn process_variables_block(
+    raw_lines: &[&str],
+    doc: &mut Document,
+    line_no: usize,
+    line_snippet: &str,
+) -> Result<(), Error> {
+    let non_empty_lines: Vec<&str> = raw_lines
+        .iter()
+        .map(|l| l.trim())
+        .filter(|l| !l.is_empty())
+        .collect();
+
+    if non_empty_lines.is_empty() || non_empty_lines.len() < 2 {
+        return Err(build_invalid_variables_block_directive_err(
+            line_no,
+            line_snippet,
+        ));
+    }
+
+    let header_line = non_empty_lines[0];
+    let delimiter_line = non_empty_lines[1];
+
+    if !header_line.contains('|') {
+        return Err(build_invalid_variables_block_directive_err(
+            line_no,
+            line_snippet,
+        ));
+    }
+
+    if parse_table_delimiter_row(delimiter_line).is_none() {
+        return Err(build_invalid_variables_block_directive_err(
+            line_no,
+            line_snippet,
+        ));
+    }
+
+    let first_idx = raw_lines.iter().position(|l| !l.trim().is_empty()).unwrap();
+    let last_idx = raw_lines.iter().rposition(|l| !l.trim().is_empty()).unwrap();
+    for line in &raw_lines[first_idx..=last_idx] {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || !trimmed.contains('|') {
+            return Err(build_invalid_variables_block_directive_err(
+                line_no,
+                line_snippet,
+            ));
+        }
+    }
+
+    let mut variables_map = HashMap::new();
+    for line in &non_empty_lines[2..] {
+        let mut row = parse_table_row(line);
+        if !row.is_empty() {
+            let key = row.remove(0);
+            let val = if row.is_empty() {
+                String::new()
+            } else {
+                row.remove(0)
+            };
+            doc.head.insert_variable(key.clone(), val.clone());
+            variables_map.insert(key, val);
+        }
+    }
+
+    doc.head.variables = Some(DocumentElement::table_variables(variables_map));
+    let _ = doc.head.variables_mut();
+    Ok(())
+}
+
+/// Appends an element either to the topmost active section or document body.
 fn push_element(
     doc: &mut Document,
     section_stack: &mut [DocumentElement],
-    in_block: bool,
-    block_children: &mut Vec<DocumentElement>,
     elem: DocumentElement,
 ) {
-    if in_block {
-        block_children.push(elem);
-    } else if let Some(active_section) = section_stack.last_mut() {
+    if let Some(active_section) = section_stack.last_mut() {
         let _ = active_section.push_child(elem);
     } else {
         doc.push_body(elem);
@@ -1261,23 +1419,43 @@ fn push_section(
     section_stack.push(DocumentElement::section(level, title, Vec::new()));
 }
 
-/// Extracts dynamic `{{VAR_NAME}}` placeholders from a code block slice into the document header.
-fn extract_code_block_variables(content: &str, header: &mut DocumentHeader) {
-    let mut parts = content.split("{{");
-    let _ = parts.next();
+/// Replaces all inline text directives (`:name[label]{attr}`) with `UNKNOWN DIRECTIVE (<name>)`.
+#[must_use]
+fn replace_text_directives(text: &str) -> String {
+    if !text.contains(':') {
+        return text.to_string();
+    }
+    let mut result = String::with_capacity(text.len());
+    let bytes = text.as_bytes();
+    let mut cursor = 0;
 
-    for part in parts {
-        if let Some((raw_var, _remainder)) = part.split_once("}}") {
-            let var_name = raw_var.trim();
-            if !var_name.is_empty()
-                && var_name
-                    .chars()
-                    .all(|c| c.is_ascii_alphanumeric() || c == '_')
-            {
-                header.ensure_variable(var_name, "");
+    while cursor < bytes.len() {
+        if bytes[cursor] == b':' {
+            let is_valid_start = if cursor > 0 {
+                let prev = bytes[cursor - 1];
+                !prev.is_ascii_alphanumeric() && prev != b':'
+            } else {
+                true
+            };
+
+            if is_valid_start {
+                let rest = &text[cursor..];
+                if let Some((consumed_len, name)) = try_scan_text_directive(rest) {
+                    result.push_str("UNKNOWN DIRECTIVE (");
+                    result.push_str(name);
+                    result.push(')');
+                    cursor += consumed_len;
+                    continue;
+                }
             }
         }
+
+        let ch = text[cursor..].chars().next().unwrap();
+        result.push(ch);
+        cursor += ch.len_utf8();
     }
+
+    result
 }
 
 /// Trims leading and trailing empty lines from a slice of code lines.
@@ -1315,6 +1493,42 @@ fn trim_matching_quotes(input: &str) -> &str {
     } else {
         s
     }
+}
+
+/// Scans a text directive candidate starting with `:` and returns consumed byte length and directive name.
+#[must_use]
+fn try_scan_text_directive(rest: &str) -> Option<(usize, &str)> {
+    if !rest.starts_with(':') || rest.starts_with("::") {
+        return None;
+    }
+    let after_colon = &rest[1..];
+    let first_char = after_colon.chars().next()?;
+    if !first_char.is_ascii_alphanumeric() {
+        return None;
+    }
+    let name_len = after_colon
+        .chars()
+        .take_while(|&c| is_directive_name_char(c))
+        .count();
+    if name_len == 0 {
+        return None;
+    }
+    let name = &after_colon[..name_len];
+    let mut pos = 1 + name_len;
+
+    if rest[pos..].starts_with('[') {
+        if let Some(close_idx) = rest[pos + 1..].find(']') {
+            pos = pos + 1 + close_idx + 1;
+        }
+    }
+
+    if rest[pos..].starts_with('{') {
+        if let Some(close_idx) = rest[pos + 1..].find('}') {
+            pos = pos + 1 + close_idx + 1;
+        }
+    }
+
+    Some((pos, name))
 }
 
 #[cfg(test)]
@@ -2707,32 +2921,10 @@ Body text
         match &doc.body[0] {
             DocumentElement::Section { children, .. } => {
                 assert_eq!(children.len(), 1);
-                if let DocumentElement::BlockDirective { name, children } = &children[0] {
-                    assert_eq!(name, "custom123");
-                    assert_eq!(children.len(), 5);
-                    assert_eq!(children[0], DocumentElement::bullet_list_item("Bullet 1"));
-                    assert_eq!(
-                        children[1],
-                        DocumentElement::check_box_item(true, "Checkbox")
-                    );
-                    assert_eq!(
-                        children[2],
-                        DocumentElement::ordered_list_item(1, "Numbered 1")
-                    );
-                    assert_eq!(
-                        children[3],
-                        DocumentElement::shoutout(
-                            ShoutoutElementKind::Important,
-                            "Important shoutout"
-                        )
-                    );
-                    assert_eq!(
-                        children[4],
-                        DocumentElement::code_block(Some("bash"), "echo test")
-                    );
-                } else {
-                    panic!("Expected BlockDirective child");
-                }
+                assert_eq!(
+                    children[0],
+                    DocumentElement::unknown(":::custom123\n- Bullet 1\n- [x] Checkbox\n1. Numbered 1\n>! Important shoutout\n```bash\necho test\n```\n:::")
+                );
             }
             other => panic!("expected section, got {other:?}"),
         }
@@ -2749,10 +2941,7 @@ Body text
                 assert_eq!(children.len(), 1);
                 assert_eq!(
                     children[0],
-                    DocumentElement::block_directive(
-                        "config",
-                        vec![DocumentElement::text("Config text.")]
-                    )
+                    DocumentElement::unknown(":::::::::config\nConfig text.\n:::::")
                 );
             }
             other => panic!("expected section, got {other:?}"),
@@ -2777,18 +2966,12 @@ Body text
                 assert_eq!(children.len(), 3);
                 assert_eq!(
                     children[0],
-                    DocumentElement::block_directive(
-                        "blockA",
-                        vec![DocumentElement::text("Text A")]
-                    )
+                    DocumentElement::unknown(":::blockA\nText A\n:::")
                 );
                 assert_eq!(children[1], DocumentElement::text("Middle text"));
                 assert_eq!(
                     children[2],
-                    DocumentElement::block_directive(
-                        "blockB",
-                        vec![DocumentElement::text("Text B")]
-                    )
+                    DocumentElement::unknown(":::blockB\nText B\n:::")
                 );
             }
             other => panic!("expected section, got {other:?}"),
@@ -2816,11 +2999,12 @@ Body text
     #[test]
     fn test_parse_d2f_markdown_block_directive_invalid_name_error() {
         let invalid_names = [
-            ":::var-name\ntext\n:::",
-            ":::var_name\ntext\n:::",
             ":::var.name\ntext\n:::",
             ":::var!name\ntext\n:::",
             ":::var name\ntext\n:::",
+            ":::var@name\ntext\n:::",
+            ":::-starts-with-dash\ntext\n:::",
+            ":::_starts-with-underscore\ntext\n:::",
         ];
 
         for md in invalid_names {
@@ -2911,18 +3095,10 @@ Body text
         match &doc.body[0] {
             DocumentElement::Section { children, .. } => {
                 assert_eq!(children.len(), 1);
-                if let DocumentElement::BlockDirective { name, children } = &children[0] {
-                    assert_eq!(name, "gallery");
-                    assert_eq!(children.len(), 3);
-                    assert_eq!(children[0], DocumentElement::image("Pic 1", "pic1.jpg"));
-                    assert_eq!(
-                        children[1],
-                        DocumentElement::bullet_list_item("![Nested Pic](pic2.jpg)")
-                    );
-                    assert_eq!(children[2], DocumentElement::text("Text"));
-                } else {
-                    panic!("expected BlockDirective");
-                }
+                assert_eq!(
+                    children[0],
+                    DocumentElement::unknown(":::gallery\n![Pic 1](pic1.jpg)\n- ![Nested Pic](pic2.jpg)\nText\n:::")
+                );
             }
             other => panic!("expected section, got {other:?}"),
         }
@@ -3149,16 +3325,7 @@ Body text
             );
             assert_eq!(
                 children[6],
-                DocumentElement::block_directive(
-                    "customblock",
-                    vec![DocumentElement::table(
-                        vec![TableAlignment::None, TableAlignment::None],
-                        vec![
-                            vec!["KEY".into(), "VAL".into()],
-                            vec!["PORT".into(), "8080".into()]
-                        ]
-                    )]
-                )
+                DocumentElement::unknown(":::customblock\n| KEY | VAL |\n| --- | --- |\n| PORT | 8080 |\n:::")
             );
             assert_eq!(children[7], DocumentElement::image("Diagram", "arch.png"));
         } else {
@@ -3264,5 +3431,159 @@ Body text
         assert_eq!(vars.get("SPACED_KEY").map(String::as_str), Some(""));
         assert_eq!(vars.get("INVALID-CHAR"), None);
         assert_eq!(vars.len(), 3);
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_text_directives_inline() {
+        let md = "---\ntitle: \"Text Directives\"\n---\n# Directives\nIch habe einen Link. Den findest du :link[hier]{www.cool.mega}. Viel Spaß.\n\n- Plain bullet with :badge and :unknown-directive and :unknown_directive\n- [x] Task with :flag[DE]\n1. Numbered with :highlight{color=red}\n>! Shoutout with :alert[warn]{level=3}\n\nValid URL: https://example.com/test and time 12:30 and smiley :) and :-D should remain untouched.";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 1);
+        let DocumentElement::Section { children, .. } = &doc.body[0] else {
+            panic!("expected section");
+        };
+
+        assert_eq!(children.len(), 6);
+        assert_eq!(
+            children[0],
+            DocumentElement::text("Ich habe einen Link. Den findest du UNKNOWN DIRECTIVE (link). Viel Spaß.")
+        );
+        assert_eq!(
+            children[1],
+            DocumentElement::bullet_list_item("Plain bullet with UNKNOWN DIRECTIVE (badge) and UNKNOWN DIRECTIVE (unknown-directive) and UNKNOWN DIRECTIVE (unknown_directive)")
+        );
+        assert_eq!(
+            children[2],
+            DocumentElement::check_box_item(true, "Task with UNKNOWN DIRECTIVE (flag)")
+        );
+        assert_eq!(
+            children[3],
+            DocumentElement::ordered_list_item(1, "Numbered with UNKNOWN DIRECTIVE (highlight)")
+        );
+        assert_eq!(
+            children[4],
+            DocumentElement::shoutout(
+                ShoutoutElementKind::Important,
+                "Shoutout with UNKNOWN DIRECTIVE (alert)"
+            )
+        );
+        assert_eq!(
+            children[5],
+            DocumentElement::text("Valid URL: https://example.com/test and time 12:30 and smiley :) and :-D should remain untouched.")
+        );
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_leaf_directives() {
+        let md = "---\ntitle: \"Leaf Directives\"\n---\n# Leaf Section\n::note[Important Notice]{type=warning}\n\n::simple\n\n::custom-leaf[Label Only]\n\n::attr_only{color=blue}\n";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 1);
+        let DocumentElement::Section { children, .. } = &doc.body[0] else {
+            panic!("expected section");
+        };
+
+        assert_eq!(children.len(), 4);
+        assert_eq!(
+            children[0],
+            DocumentElement::unknown("::note[Important Notice]{type=warning}")
+        );
+        assert_eq!(
+            children[1],
+            DocumentElement::unknown("::simple")
+        );
+        assert_eq!(
+            children[2],
+            DocumentElement::unknown("::custom-leaf[Label Only]")
+        );
+        assert_eq!(
+            children[3],
+            DocumentElement::unknown("::attr_only{color=blue}")
+        );
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_leaf_directive_before_h1_error() {
+        let md = "---\ntitle: \"Leaf Pre-H1\"\n---\n::note[Bad]{pos=pre}\n# Heading";
+        let err = parse_d2f_markdown(md).unwrap_err();
+        let err_str = err.to_string();
+        assert!(err_str.contains("content defined before first level-1 heading"));
+    }
+
+    #[test]
+    fn test_parse_d2f_markdown_block_directive_with_label_and_attributes() {
+        let md = "---\ntitle: \"Block Labels\"\n---\n# Main\n:::custom[My Label]{theme=dark}\nLine 1\nLine 2\n:::\n\n:::unknown-directive\nBlock with hyphen\n:::\n\n:::unknown_directive\nBlock with underscore\n:::\n";
+        let doc = parse_d2f_markdown(md).unwrap();
+
+        assert_eq!(doc.body.len(), 1);
+        let DocumentElement::Section { children, .. } = &doc.body[0] else {
+            panic!("expected section");
+        };
+
+        assert_eq!(children.len(), 3);
+        assert_eq!(
+            children[0],
+            DocumentElement::unknown(":::custom[My Label]{theme=dark}\nLine 1\nLine 2\n:::")
+        );
+        assert_eq!(
+            children[1],
+            DocumentElement::unknown(":::unknown-directive\nBlock with hyphen\n:::")
+        );
+        assert_eq!(
+            children[2],
+            DocumentElement::unknown(":::unknown_directive\nBlock with underscore\n:::")
+        );
+    }
+
+    #[test]
+    fn test_directive_header_parsing() {
+        assert_eq!(
+            parse_directive_header(":link[hier]{url}"),
+            Some((DirectiveKind::Text, "link", "hier", "url"))
+        );
+        assert_eq!(
+            parse_directive_header("::note[Important]{type=warn}"),
+            Some((DirectiveKind::Leaf, "note", "Important", "type=warn"))
+        );
+        assert_eq!(
+            parse_directive_header(":::block[Title]{attr=1}"),
+            Some((DirectiveKind::Block, "block", "Title", "attr=1"))
+        );
+        assert_eq!(
+            parse_directive_header(":::unknown-directive"),
+            Some((DirectiveKind::Block, "unknown-directive", "", ""))
+        );
+        assert_eq!(
+            parse_directive_header(":::unknown_directive"),
+            Some((DirectiveKind::Block, "unknown_directive", "", ""))
+        );
+        assert_eq!(
+            parse_directive_header("::unknown-directive[Label]{attr=1}"),
+            Some((DirectiveKind::Leaf, "unknown-directive", "Label", "attr=1"))
+        );
+        assert_eq!(
+            parse_directive_header("::unknown_directive[Label]{attr=1}"),
+            Some((DirectiveKind::Leaf, "unknown_directive", "Label", "attr=1"))
+        );
+        assert_eq!(
+            parse_directive_header(":unknown-directive[hier]{url}"),
+            Some((DirectiveKind::Text, "unknown-directive", "hier", "url"))
+        );
+        assert_eq!(
+            parse_directive_header(":unknown_directive[hier]{url}"),
+            Some((DirectiveKind::Text, "unknown_directive", "hier", "url"))
+        );
+        assert_eq!(
+            parse_directive_header(":::variables"),
+            Some((DirectiveKind::Block, "variables", "", ""))
+        );
+        assert_eq!(
+            parse_directive_header("::simple"),
+            Some((DirectiveKind::Leaf, "simple", "", ""))
+        );
+        assert_eq!(parse_directive_header(":::"), None);
+        assert_eq!(parse_directive_header("::invalid.name"), None);
+        assert_eq!(parse_directive_header("::-starts-with-dash"), None);
+        assert_eq!(parse_directive_header("::_starts-with-underscore"), None);
     }
 }

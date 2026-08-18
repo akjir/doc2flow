@@ -123,6 +123,18 @@ Die folgende Tabelle enthält die Spezifikationen der installierten Hardwarekomp
             2. Paketverlust-Telemetrieprotokollierung (Toleranz `< 0,01%`)
 3. Sequenzieller Hauptschritt 3: **Abschluss & Verifikation** (Audit-Log `audit.log` archivieren)
 
+## Unbekanntes
+
+:::unknown-directive
+Dies ist ein unbekanntes Directive.
+- Liste 1
+- Liste 2
+:::
+
+::unnamed-directive[Label]{Attribute}
+Ein weiteres unbekanntes Directive mit Label und Attribut.
+Auch hier gibt eine unbekannte :directive[unbekannt] in der Zeile.
+
 ---
 
 ![System-Informationsübersicht](../resources/images/example3.jpg)

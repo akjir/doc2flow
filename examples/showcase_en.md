@@ -123,6 +123,18 @@ The table below outlines the hardware specifications of the installed system com
             2. Packet loss telemetry logging (max tolerance `< 0.01%`)
 3. Sequential main step 3: **Finalization & verification** (archive audit log `audit.log`)
 
+## Unknown Elements
+
+:::unknown-directive
+This is an unknown directive.
+- List 1
+- List 2
+:::
+
+::unnamed-directive[Label]{Attribute}
+Another unknown directive with label and attribute.
+Here is also an unknown inline :directive[unknown] in this line.
+
 ---
 
 ![System Information Overview](../resources/images/example3.jpg)

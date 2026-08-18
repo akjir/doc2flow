@@ -27,9 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added automatic SVG fallback placeholder display for broken or unreachable external image loads.
 - Added validation enforcing mandatory level-1 headings and restricting pre-heading content to whitelisted block directives (`:::variables`).
 - Added automatic variable table generation from `{{VAR}}` code block placeholders during document parsing.
+- Added unified markdown directive syntax support for text (`:name`), leaf (`::name`), and block (`:::name`) directives.
 - Updated starter template (`templates/template.md`) with GFM table support, variables table documentation, and sample code variable usage.
 
 ### Changed
+- Replaced block feature module with unified directive document element recognition and unknown directive fallback rendering.
 - Changed default value of `numbered_sections` frontmatter option to `false`.
 - Refactored `Document.header` into `DocumentHeader` struct with strict single-table validation for `:::variables` block directives and automatic code feature activation.
 - Updated image fallback placeholder SVG to remove the outer dashed border and optimize vector size.

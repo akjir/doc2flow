@@ -1,8 +1,5 @@
 //! Central feature registry exposing available vertical slices.
 
-#[path = "block/module.rs"]
-pub mod block;
-
 #[path = "bullet/module.rs"]
 pub mod bullet;
 
@@ -36,7 +33,6 @@ pub mod task;
 #[path = "unknown/module.rs"]
 pub mod unknown;
 
-pub use block::BlockFeature;
 pub use bullet::BulletFeature;
 pub use code::CodeFeature;
 pub use core::CoreFeature;
@@ -50,9 +46,6 @@ pub use task::TaskFeature;
 pub use unknown::UnknownFeature;
 
 use crate::core::feature::FeatureModule;
-
-/// Static instance of the block directive feature to avoid runtime allocations.
-pub static BLOCK_FEATURE: BlockFeature = BlockFeature;
 
 /// Static instance of the bullet list feature to avoid runtime allocations.
 pub static BULLET_FEATURE: BulletFeature = BulletFeature;
@@ -88,10 +81,9 @@ pub static TASK_FEATURE: TaskFeature = TaskFeature;
 pub static UNKNOWN_FEATURE: UnknownFeature = UnknownFeature;
 
 /// Static collection of all standard feature modules for default dispatch and inspection.
-pub static ALL_FEATURE_MODULES: [&'static dyn FeatureModule; 12] = [
+pub static ALL_FEATURE_MODULES: [&'static dyn FeatureModule; 11] = [
     &CORE_FEATURE,
     &HEADER_FEATURE,
-    &BLOCK_FEATURE,
     &BULLET_FEATURE,
     &CODE_FEATURE,
     &IMAGE_FEATURE,
@@ -109,19 +101,18 @@ mod tests {
 
     #[test]
     fn test_all_feature_modules_count_and_registration() {
-        assert_eq!(ALL_FEATURE_MODULES.len(), 12);
+        assert_eq!(ALL_FEATURE_MODULES.len(), 11);
         let names: Vec<&str> = ALL_FEATURE_MODULES.iter().map(|m| m.name()).collect();
         assert_eq!(
             names,
             [
-                "core", "header", "block", "bullet", "code", "image", "input", "ordered", "shoutout", "table", "task", "unknown"
+                "core", "header", "bullet", "code", "image", "input", "ordered", "shoutout", "table", "task", "unknown"
             ]
         );
     }
 
     #[test]
     fn test_static_feature_instances_match_defaults() {
-        assert_eq!(BLOCK_FEATURE, BlockFeature::default());
         assert_eq!(BULLET_FEATURE, BulletFeature::default());
         assert_eq!(CODE_FEATURE, CodeFeature::default());
         assert_eq!(CORE_FEATURE, CoreFeature::default());
