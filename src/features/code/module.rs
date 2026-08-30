@@ -8,6 +8,9 @@ use crate::core::renderer::{DocumentElementRenderer, HtmlRenderer};
 /// Embedded code CSS styles for code blocks.
 pub const CSS: &str = include_str!("code.css");
 
+/// Embedded code JavaScript client script.
+pub const JS: &str = include_str!("code.js");
+
 /// Supported document element identifiers for code blocks and code block variables.
 const CODE_SUPPORTED: [DocumentElementId; 2] = [
     DocumentElementId::CodeBlock,
@@ -126,11 +129,31 @@ impl FeatureModule for CodeFeature {
     fn css(&self) -> Option<&'static str> {
         Some(CSS)
     }
+
+    fn javascript(&self) -> &[&'static str] {
+        &[JS]
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_code_feature_javascript() {
+        let feature = CodeFeature::new();
+        let js_files = feature.javascript();
+        assert_eq!(js_files.len(), 1);
+        let js = js_files[0];
+        assert!(js.contains("copyCode"));
+        assert!(js.contains("updateAllCodeVariables"));
+        assert!(js.contains("resetCodeVariables"));
+        assert!(js.contains("data-raw-code"));
+        assert!(js.contains("code-copy-btn"));
+        assert!(js.contains("copied"));
+        assert!(js.contains("code-table-input"));
+        assert!(js.contains("navigator.clipboard"));
+    }
 
     #[test]
     fn test_code_feature_constructor_new() {
@@ -146,6 +169,8 @@ mod tests {
         assert!(css.contains("--code-line-height:"));
         assert!(css.contains("--code-radius:"));
         assert!(css.contains(".code-default"));
+        assert!(css.contains(".code-copy-btn"));
+        assert!(css.contains(".code-copy-btn.copied"));
         assert!(css.contains("--code-table-bg:"));
         assert!(css.contains(".code-table-wrap"));
         assert!(css.contains(".code-table-default"));

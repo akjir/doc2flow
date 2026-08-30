@@ -34,6 +34,7 @@
   margin: 8px 0 12px;
   overflow-x: auto;
   padding: 12px 16px;
+  position: relative;
   white-space: pre;
 }
 
@@ -45,6 +46,38 @@
   font-family: inherit;
   font-size: inherit;
   padding: 0;
+}
+
+.code-copy-btn {
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--txt-color-muted, #8c959f);
+  cursor: pointer;
+  display: inline-flex;
+  font-family: var(--font-sans, Arial, sans-serif);
+  font-size: 11px;
+  justify-content: center;
+  line-height: 1;
+  padding: 4px 6px;
+  position: absolute;
+  right: 8px;
+  top: 6px;
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+}
+
+.code-copy-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-color: var(--code-border, #d0d7de);
+  color: var(--txt-color-heading, #163a5c);
+}
+
+.code-copy-btn.copied {
+  background-color: rgba(45, 164, 78, 0.08);
+  border-color: rgba(45, 164, 78, 0.4);
+  color: #2da44e;
 }
 
 /* 3. Variables Table Component (.code-table-*) */
@@ -126,6 +159,10 @@
     white-space: pre-wrap;
     word-break: break-all;
     -webkit-print-color-adjust: exact;
+  }
+
+  .code-copy-btn {
+    display: none !important;
   }
 
   .code-table-wrap {
