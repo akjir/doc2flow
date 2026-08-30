@@ -6,6 +6,11 @@
     el.style.height = `${el.scrollHeight}px`;
   };
 
+  const getCommentPlaceholder = () =>
+    document.querySelector('.doc-body')?.dataset?.commentPlaceholder
+    || document.querySelector('.doc-body')?.getAttribute('data-comment-placeholder')
+    || '';
+
   // Creates a comment box or returns the existing one for an item.
   const getOrCreateCommentBox = (item, initialValue) => {
     if (!item) return null;
@@ -16,19 +21,18 @@
       box = document.createElement('div');
       box.className = 'item-comment-box';
 
+      const placeholder = getCommentPlaceholder();
       input = document.createElement('textarea');
       input.rows = 1;
       input.className = 'item-comment-input input-field';
-      const i18n = window.d2f?.lang?.dictionary;
-      const commentLabel = i18n?.comment_placeholder ?? 'Add a comment...';
-      input.placeholder = commentLabel;
-      input.setAttribute('aria-label', commentLabel);
+      if (placeholder) {
+        input.placeholder = placeholder;
+        input.setAttribute('aria-label', placeholder);
+      }
 
       const delBtn = document.createElement('button');
       delBtn.type = 'button';
       delBtn.className = 'item-comment-del';
-      delBtn.title = 'Delete comment';
-      delBtn.setAttribute('aria-label', 'Delete comment');
       delBtn.innerHTML = '&#10006;';
 
       box.appendChild(input);

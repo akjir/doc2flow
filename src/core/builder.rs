@@ -105,6 +105,7 @@ pub fn build(document: &Document) -> String {
     let save_state_label = crate::core::language::localize("save_state");
     let reset_all_label = crate::core::language::localize("reset_all");
     let confirm_reset_msg = crate::core::language::localize("confirm_reset");
+    let comment_placeholder = crate::core::language::localize("comment_placeholder");
 
     let mut active_buffer =
         [&crate::features::CORE_FEATURE as &'static dyn FeatureModule; MAX_ACTIVE_FEATURES];
@@ -127,6 +128,7 @@ pub fn build(document: &Document) -> String {
         .replace("{{L_SAVE_STATE}}", &save_state_label)
         .replace("{{L_RESET_ALL}}", &reset_all_label)
         .replace("{{L_CONFIRM_RESET}}", &confirm_reset_msg)
+        .replace("{{L_COMMENT_PLACEHOLDER}}", &comment_placeholder)
         .replace("{{CSS}}", &css_content)
         .replace("{{JS}}", &js_content)
         .replace("{{CONTENT}}", &html_content)
@@ -170,6 +172,8 @@ mod tests {
         assert!(!content.contains("{{L_SAVE_STATE}}"));
         assert!(!content.contains("{{L_RESET_ALL}}"));
         assert!(!content.contains("{{L_CONFIRM_RESET}}"));
+        assert!(!content.contains("{{L_COMMENT_PLACEHOLDER}}"));
+        assert!(content.contains("data-comment-placeholder=\"Add a comment...\""));
         assert!(!content.contains("{{CSS}}"));
         assert!(!content.contains("{{JS}}"));
         assert!(!content.contains("{{TITLE}}"));
@@ -303,6 +307,8 @@ mod tests {
         assert!(!content.contains("{{L_SAVE_STATE}}"));
         assert!(!content.contains("{{L_RESET_ALL}}"));
         assert!(!content.contains("{{L_CONFIRM_RESET}}"));
+        assert!(!content.contains("{{L_COMMENT_PLACEHOLDER}}"));
+        assert!(content.contains("data-comment-placeholder=\"Kommentar hinzufügen...\""));
     }
 
     #[test]
@@ -323,6 +329,7 @@ mod tests {
         assert!(content.contains("<button type=\"button\" class=\"item-button-pdf\" id=\"item-button-pdf\">{{export_pdf}}</button>"));
         assert!(content.contains("<button type=\"button\" class=\"item-button-save\" id=\"item-button-save\">{{save_state}}</button>"));
         assert!(content.contains("<button type=\"button\" class=\"item-button-reset\" id=\"item-button-reset\" data-confirm=\"{{confirm_reset}}\">{{reset_all}}</button>"));
+        assert!(content.contains("data-comment-placeholder=\"{{comment_placeholder}}\""));
     }
 
     #[test]

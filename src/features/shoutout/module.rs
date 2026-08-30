@@ -256,8 +256,10 @@ mod tests {
         crate::core::language::init("de");
         let feature = ShoutoutFeature::new();
         let renderer = HtmlRenderer::default_renderer();
-        let mut params = DocumentParameters::default();
-        params.language = "de".to_string();
+        let params = DocumentParameters {
+            language: "de".to_string(),
+            ..DocumentParameters::default()
+        };
 
         let kinds = [
             (ShoutoutElementKind::Note, "shoutout-note", "Hinweis"),
@@ -311,8 +313,10 @@ mod tests {
         crate::core::language::init("fr");
         let feature = ShoutoutFeature::new();
         let renderer = HtmlRenderer::default_renderer();
-        let mut params = DocumentParameters::default();
-        params.language = "fr".to_string();
+        let params = DocumentParameters {
+            language: "fr".to_string(),
+            ..DocumentParameters::default()
+        };
         let element = DocumentElement::shoutout(ShoutoutElementKind::Note, "Texte");
         let mut out = String::new();
         feature.render_element(&element, 0, 0, &params, &mut out, &renderer);

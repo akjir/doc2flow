@@ -239,8 +239,6 @@ hr {
 }
 
 .item.checked,
-.item.item-done,
-.item.done,
 .item-selectable.checked {
   background-color: var(--item-done-bg);
 }
@@ -358,8 +356,7 @@ hr {
 }
 
 /* 7. Section Components (section-*) */
-.section,
-.section-container {
+.section {
   background-color: var(--section-bg-surface);
   border-radius: var(--section-radius);
   margin-bottom: 14px;
@@ -411,31 +408,22 @@ hr {
 }
 
 .section-no-toggle,
-.section-header.no-toggle,
-.section-header.section-no-toggle,
-.section>h1.no-toggle,
-.section>h2.no-toggle {
+.section-header.section-no-toggle {
   cursor: default;
 }
 
 .section-no-toggle:hover,
-.section-header.no-toggle:hover,
-.section-header.section-no-toggle:hover,
-.section>h2.no-toggle:hover {
+.section-header.section-no-toggle:hover {
   background-color: var(--section-bg-header);
 }
 
-.section-header-h1.no-toggle:hover,
 .section-header-h1.section-no-toggle:hover,
-.section>h1.no-toggle:hover,
-.section[data-level="1"]>h1.no-toggle:hover {
+.section[data-level="1"]>h1.section-no-toggle:hover {
   background-color: var(--section-bg-header-h1);
 }
 
 .section-no-toggle .section-toggler,
-.section-header.no-toggle .section-toggler,
-.section-header.section-no-toggle .section-toggler,
-.no-toggle .section-toggler {
+.section-header.section-no-toggle .section-toggler {
   display: none !important;
 }
 
@@ -461,8 +449,7 @@ hr {
   display: none;
 }
 
-.section-body.collapsed,
-.section-body.section-collapsed {
+.section-body.collapsed {
   display: none;
 }
 

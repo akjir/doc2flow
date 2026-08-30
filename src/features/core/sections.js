@@ -39,7 +39,7 @@
       header = target.closest('.section-header');
     }
 
-    if (!header || header.classList.contains('section-no-toggle') || header.classList.contains('no-toggle')) {
+    if (!header || header.classList.contains('section-no-toggle')) {
       return;
     }
 
@@ -131,7 +131,7 @@
         const target = e.target;
         if (target instanceof Element) {
           const header = target.closest('.section-header');
-          if (header && !header.classList.contains('section-no-toggle') && !header.classList.contains('no-toggle')) {
+          if (header && !header.classList.contains('section-no-toggle')) {
             e.preventDefault();
             toggleSection(header, () => window.d2f.storage?.saveState?.());
           }
@@ -144,7 +144,7 @@
       if (!(target instanceof Element)) return;
 
       const header = target.closest('.section-header');
-      if (header && !header.classList.contains('section-no-toggle') && !header.classList.contains('no-toggle')) {
+      if (header && !header.classList.contains('section-no-toggle')) {
         toggleSection(header, () => window.d2f.storage?.saveState?.());
       }
     });

@@ -16,7 +16,7 @@
 
     if (type === 'PDF') {
       const collapsed = Array.from(
-        document.querySelectorAll('.section-body.collapsed, .sb.collapsed')
+        document.querySelectorAll('.section-body.collapsed')
       );
       collapsed.forEach((el) => el.classList.remove('collapsed'));
 
@@ -34,7 +34,7 @@
       window.d2f?.storage?.saveState?.();
 
       document.querySelectorAll(
-        'input.input-field, input.code-table-input, input.persistent-field, input[type="text"], input:not([type])'
+        'input.input-field, input.code-table-input, input[type="text"], input:not([type])'
       ).forEach((input) => {
         if (input instanceof HTMLInputElement) {
           input.setAttribute('value', input.value);

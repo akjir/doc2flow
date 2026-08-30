@@ -11,7 +11,6 @@
   const getOrCreateLightbox = () => {
     let lightbox =
       document.getElementById('image-lightbox') ||
-      document.getElementById('lightbox') ||
       document.querySelector('.image-lightbox');
 
     if (!lightbox) {
@@ -39,7 +38,6 @@
     const lightbox = getOrCreateLightbox();
     const lbImg =
       lightbox.querySelector('#image-lightbox-img') ||
-      lightbox.querySelector('#lb-img') ||
       lightbox.querySelector('.image-lightbox-img') ||
       lightbox.querySelector('img');
 
@@ -53,12 +51,10 @@
   const closeLightbox = () => {
     const lightbox =
       document.getElementById('image-lightbox') ||
-      document.getElementById('lightbox') ||
       document.querySelector('.image-lightbox');
 
     if (lightbox) {
       lightbox.classList.remove('active');
-      lightbox.classList.remove('image-lightbox-active');
     }
     document.removeEventListener('keydown', handleLightboxKeydown);
   };
@@ -69,7 +65,6 @@
     }
     img.dataset.d2fFallback = 'true';
     img.classList.add('image-fallback');
-    img.classList.add('img-fallback');
     img.src = PLACEHOLDER_SVG_URI;
   };
 
@@ -86,20 +81,19 @@
       return;
     }
 
-    const lightbox = target.closest('#image-lightbox, #lightbox, .image-lightbox');
+    const lightbox = target.closest('#image-lightbox, .image-lightbox');
     if (lightbox) {
-      const lbImg = target.closest('#image-lightbox-img, #lb-img, .image-lightbox-img');
+      const lbImg = target.closest('#image-lightbox-img, .image-lightbox-img');
       if (!lbImg) {
         closeLightbox();
       }
       return;
     }
 
-    const imgEl = target.closest('.image-item img, .doc-body img, .img-item img');
+    const imgEl = target.closest('.image-item img, .doc-body img');
     if (imgEl instanceof HTMLImageElement) {
       if (
         imgEl.classList.contains('image-fallback') ||
-        imgEl.classList.contains('img-fallback') ||
         imgEl.dataset.d2fFallback === 'true'
       ) {
         return;
@@ -110,7 +104,7 @@
   };
 
   const checkExistingImages = () => {
-    const images = document.querySelectorAll('.image-item img, .doc-body img, .img-item img');
+    const images = document.querySelectorAll('.image-item img, .doc-body img');
     images.forEach((img) => {
       if (img.complete && img.naturalWidth === 0 && img.src !== '') {
         applyImageFallback(img);

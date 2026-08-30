@@ -121,17 +121,17 @@ mod tests {
 
     #[test]
     fn test_static_feature_instances_match_defaults() {
-        assert_eq!(BULLET_FEATURE, BulletFeature::default());
-        assert_eq!(CODE_FEATURE, CodeFeature::default());
-        assert_eq!(COMMENT_FEATURE, CommentFeature::default());
-        assert_eq!(CORE_FEATURE, CoreFeature::default());
-        assert_eq!(HEADER_FEATURE, HeaderFeature::default());
-        assert_eq!(IMAGE_FEATURE, ImageFeature::default());
-        assert_eq!(INPUT_FEATURE, InputFeature::default());
-        assert_eq!(ORDERED_FEATURE, OrderedFeature::default());
-        assert_eq!(SHOUTOUT_FEATURE, ShoutoutFeature::default());
-        assert_eq!(TABLE_FEATURE, TableFeature::default());
-        assert_eq!(TASK_FEATURE, TaskFeature::default());
-        assert_eq!(UNKNOWN_FEATURE, UnknownFeature::default());
+        assert_eq!(BULLET_FEATURE, BulletFeature);
+        assert_eq!(CODE_FEATURE, CodeFeature);
+        assert_eq!(COMMENT_FEATURE, CommentFeature);
+        assert_eq!(CORE_FEATURE, CoreFeature);
+        assert_eq!(HEADER_FEATURE, HeaderFeature);
+        assert_eq!(IMAGE_FEATURE, ImageFeature);
+        assert_eq!(INPUT_FEATURE, InputFeature);
+        assert_eq!(ORDERED_FEATURE, OrderedFeature);
+        assert_eq!(SHOUTOUT_FEATURE, ShoutoutFeature);
+        assert_eq!(TABLE_FEATURE, TableFeature);
+        assert_eq!(TASK_FEATURE, TaskFeature);
+        assert_eq!(UNKNOWN_FEATURE, UnknownFeature);
     }
 }

@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+266.c1ab682.dev">
-  <meta name="version" content="0.9.4+266.c1ab682.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+267.10f7787.dev">
+  <meta name="version" content="0.9.4+267.10f7787.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-30T11:16:33Z">
+  <meta name="dcterms.created" content="2026-08-30T12:21:13Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, header, comment, input, shoutout, table">
   <title>Classic Chocolate Fudge Cake Recipe</title>
@@ -253,8 +253,6 @@
     }
 
     .item.checked,
-    .item.item-done,
-    .item.done,
     .item-selectable.checked {
       background-color: var(--item-done-bg);
     }
@@ -372,8 +370,7 @@
     }
 
     /* 7. Section Components (section-*) */
-    .section,
-    .section-container {
+    .section {
       background-color: var(--section-bg-surface);
       border-radius: var(--section-radius);
       margin-bottom: 14px;
@@ -425,31 +422,22 @@
     }
 
     .section-no-toggle,
-    .section-header.no-toggle,
-    .section-header.section-no-toggle,
-    .section>h1.no-toggle,
-    .section>h2.no-toggle {
+    .section-header.section-no-toggle {
       cursor: default;
     }
 
     .section-no-toggle:hover,
-    .section-header.no-toggle:hover,
-    .section-header.section-no-toggle:hover,
-    .section>h2.no-toggle:hover {
+    .section-header.section-no-toggle:hover {
       background-color: var(--section-bg-header);
     }
 
-    .section-header-h1.no-toggle:hover,
     .section-header-h1.section-no-toggle:hover,
-    .section>h1.no-toggle:hover,
-    .section[data-level="1"]>h1.no-toggle:hover {
+    .section[data-level="1"]>h1.section-no-toggle:hover {
       background-color: var(--section-bg-header-h1);
     }
 
     .section-no-toggle .section-toggler,
-    .section-header.no-toggle .section-toggler,
-    .section-header.section-no-toggle .section-toggler,
-    .no-toggle .section-toggler {
+    .section-header.section-no-toggle .section-toggler {
       display: none !important;
     }
 
@@ -475,8 +463,7 @@
       display: none;
     }
 
-    .section-body.collapsed,
-    .section-body.section-collapsed {
+    .section-body.collapsed {
       display: none;
     }
 
@@ -1332,7 +1319,7 @@
 <body>
   <header class="doc-header">
   </header>
-  <main class="doc-body">
+  <main class="doc-body" data-comment-placeholder="Add a comment...">
     <section class="section header-container" id="header">
       <div class="header-top">
         <div class="header-titles">
@@ -1716,9 +1703,9 @@
           || document.querySelector('.item-button-reset');
         const confirmMsg = resetBtn?.dataset?.confirm
           || resetBtn?.getAttribute('data-confirm')
-          || 'Are you sure you want to reset all inputs and markings and expand all sections?';
+          || '';
 
-        if (!confirm(confirmMsg)) return;
+        if (confirmMsg && !confirm(confirmMsg)) return;
 
         resetHandlers.forEach((handler) => {
           try {
@@ -1775,7 +1762,7 @@
 
         if (type === 'PDF') {
           const collapsed = Array.from(
-            document.querySelectorAll('.section-body.collapsed, .sb.collapsed')
+            document.querySelectorAll('.section-body.collapsed')
           );
           collapsed.forEach((el) => el.classList.remove('collapsed'));
 
@@ -1793,7 +1780,7 @@
           window.d2f?.storage?.saveState?.();
 
           document.querySelectorAll(
-            'input.input-field, input.code-table-input, input.persistent-field, input[type="text"], input:not([type])'
+            'input.input-field, input.code-table-input, input[type="text"], input:not([type])'
           ).forEach((input) => {
             if (input instanceof HTMLInputElement) {
               input.setAttribute('value', input.value);
@@ -1905,7 +1892,7 @@
           header = target.closest('.section-header');
         }
 
-        if (!header || header.classList.contains('section-no-toggle') || header.classList.contains('no-toggle')) {
+        if (!header || header.classList.contains('section-no-toggle')) {
           return;
         }
 
@@ -1997,7 +1984,7 @@
             const target = e.target;
             if (target instanceof Element) {
               const header = target.closest('.section-header');
-              if (header && !header.classList.contains('section-no-toggle') && !header.classList.contains('no-toggle')) {
+              if (header && !header.classList.contains('section-no-toggle')) {
                 e.preventDefault();
                 toggleSection(header, () => window.d2f.storage?.saveState?.());
               }
@@ -2010,7 +1997,7 @@
           if (!(target instanceof Element)) return;
 
           const header = target.closest('.section-header');
-          if (header && !header.classList.contains('section-no-toggle') && !header.classList.contains('no-toggle')) {
+          if (header && !header.classList.contains('section-no-toggle')) {
             toggleSection(header, () => window.d2f.storage?.saveState?.());
           }
         });
@@ -2130,6 +2117,11 @@
         el.style.height = `${el.scrollHeight}px`;
       };
 
+      const getCommentPlaceholder = () =>
+        document.querySelector('.doc-body')?.dataset?.commentPlaceholder
+        || document.querySelector('.doc-body')?.getAttribute('data-comment-placeholder')
+        || '';
+
       // Creates a comment box or returns the existing one for an item.
       const getOrCreateCommentBox = (item, initialValue) => {
         if (!item) return null;
@@ -2140,19 +2132,18 @@
           box = document.createElement('div');
           box.className = 'item-comment-box';
 
+          const placeholder = getCommentPlaceholder();
           input = document.createElement('textarea');
           input.rows = 1;
           input.className = 'item-comment-input input-field';
-          const i18n = window.d2f?.lang?.dictionary;
-          const commentLabel = i18n?.comment_placeholder ?? 'Add a comment...';
-          input.placeholder = commentLabel;
-          input.setAttribute('aria-label', commentLabel);
+          if (placeholder) {
+            input.placeholder = placeholder;
+            input.setAttribute('aria-label', placeholder);
+          }
 
           const delBtn = document.createElement('button');
           delBtn.type = 'button';
           delBtn.className = 'item-comment-del';
-          delBtn.title = 'Delete comment';
-          delBtn.setAttribute('aria-label', 'Delete comment');
           delBtn.innerHTML = '&#10006;';
 
           box.appendChild(input);

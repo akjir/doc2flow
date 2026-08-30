@@ -55,8 +55,7 @@
   z-index: var(--image-lightbox-z-index);
 }
 
-.image-lightbox.active,
-.image-lightbox.image-lightbox-active {
+.image-lightbox.active {
   display: flex;
 }
 
@@ -70,8 +69,7 @@
   max-width: 94vw;
 }
 
-.image-lightbox-close,
-.image-lightbox-x {
+.image-lightbox-close {
   color: var(--image-lightbox-close-color);
   cursor: pointer;
   font-size: var(--image-lightbox-close-size);

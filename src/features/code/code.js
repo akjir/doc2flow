@@ -7,16 +7,23 @@
   const CHECK_SVG =
     '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
 
-  const getCopyLabel = () => window.d2f?.lang?.dictionary?.copy_code ?? 'Copy code';
-  const getCopiedLabel = () => window.d2f?.lang?.dictionary?.copied ?? 'Copied!';
+  const getCopyLabel = (pre) =>
+    pre?.dataset?.labelCopy ?? pre?.getAttribute('data-label-copy') ?? '';
+  const getCopiedLabel = (pre) =>
+    pre?.dataset?.labelCopied ?? pre?.getAttribute('data-label-copied') ?? '';
 
   // 2. 1-Click Copy Engine
   const showCopiedFeedback = (btn) => {
+    const pre = btn.closest('pre');
+    const copyLabel = getCopyLabel(pre);
+    const copiedLabel = getCopiedLabel(pre);
+
     btn.classList.add('copied');
     btn.innerHTML = CHECK_SVG;
-    const copiedLabel = getCopiedLabel();
-    btn.setAttribute('title', copiedLabel);
-    btn.setAttribute('aria-label', copiedLabel);
+    if (copiedLabel) {
+      btn.setAttribute('title', copiedLabel);
+      btn.setAttribute('aria-label', copiedLabel);
+    }
 
     const existingTimer = feedbackTimers.get(btn);
     if (existingTimer !== undefined) {
@@ -26,9 +33,10 @@
     const timer = window.setTimeout(() => {
       btn.classList.remove('copied');
       btn.innerHTML = COPY_SVG;
-      const copyLabel = getCopyLabel();
-      btn.setAttribute('title', copyLabel);
-      btn.setAttribute('aria-label', copyLabel);
+      if (copyLabel) {
+        btn.setAttribute('title', copyLabel);
+        btn.setAttribute('aria-label', copyLabel);
+      }
       feedbackTimers.delete(btn);
     }, 2000);
 
@@ -87,12 +95,14 @@
       const pre = codeEl.parentElement;
       if (!pre || pre.querySelector('.code-copy-btn')) return;
 
-      const copyLabel = getCopyLabel();
+      const copyLabel = getCopyLabel(pre);
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'code-copy-btn';
-      btn.setAttribute('aria-label', copyLabel);
-      btn.setAttribute('title', copyLabel);
+      if (copyLabel) {
+        btn.setAttribute('aria-label', copyLabel);
+        btn.setAttribute('title', copyLabel);
+      }
       btn.innerHTML = COPY_SVG;
 
       btn.addEventListener('click', () => {
@@ -108,7 +118,7 @@
   const getVariableMap = () => {
     const map = {};
     const inputs = document.querySelectorAll(
-      'input.code-table-input, input.item-table-var-input, input[data-var-key]'
+      'input.code-table-input, input[data-var-key]'
     );
     inputs.forEach((input) => {
       if (input instanceof HTMLInputElement) {
@@ -164,7 +174,6 @@
     if (
       target instanceof HTMLInputElement &&
       (target.classList.contains('code-table-input') ||
-        target.classList.contains('item-table-var-input') ||
         target.hasAttribute('data-var-key'))
     ) {
       window.requestAnimationFrame(() => {
@@ -178,7 +187,6 @@
     if (
       target instanceof HTMLInputElement &&
       (target.classList.contains('code-table-input') ||
-        target.classList.contains('item-table-var-input') ||
         target.hasAttribute('data-var-key'))
     ) {
       updateAllCodeVariables();
@@ -197,7 +205,6 @@
   // 5. Module Initialization
   const init = () => {
     window.d2f.core?.registerResetHandler?.(resetCodeVariables);
-    window.d2f.storage?.registerResetHandler?.(resetCodeVariables);
 
     updateAllCodeVariables();
     initCopyButtons();

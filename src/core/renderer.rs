@@ -307,10 +307,11 @@ mod tests {
     #[test]
     fn test_render_element_code_block() {
         let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        crate::core::language::init("en");
         let code_block = DocumentElement::code_block(Some("rust"), "fn main() {}");
         assert_eq!(
             render_element(&code_block, 1, &DocumentParameters::default()),
-            "  <pre class=\"code-default\"><code>fn main() {}</code></pre>\n"
+            "  <pre class=\"code-default\" data-label-copy=\"Copy code\" data-label-copied=\"Copied!\"><code>fn main() {}</code></pre>\n"
         );
     }
 

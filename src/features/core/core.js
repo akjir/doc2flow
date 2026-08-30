@@ -10,9 +10,9 @@
       || document.querySelector('.item-button-reset');
     const confirmMsg = resetBtn?.dataset?.confirm
       || resetBtn?.getAttribute('data-confirm')
-      || 'Are you sure you want to reset all inputs and markings and expand all sections?';
+      || '';
 
-    if (!confirm(confirmMsg)) return;
+    if (confirmMsg && !confirm(confirmMsg)) return;
 
     resetHandlers.forEach((handler) => {
       try {
