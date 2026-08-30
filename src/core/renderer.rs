@@ -176,7 +176,8 @@ pub fn render_element_into(
 /// let element = DocumentElement::text("Hello world");
 /// let params = DocumentParameters::default();
 /// let html = render_element(&element, 1, &params);
-/// assert_eq!(html, "  <div class=\"item text-item item-selectable\">\n    <span class=\"text-content\">\n      Hello world\n    </span>\n  </div>\n");
+/// assert!(html.contains("Hello world"));
+/// assert!(html.contains("item-comment-icon"));
 /// ```
 pub fn render_element(
     element: &DocumentElement,
@@ -191,13 +192,16 @@ pub fn render_element(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::features::core::COMMENT_ICON_SVG;
 
     #[test]
     fn test_render_element_text() {
         let text = DocumentElement::text("Sample paragraph text");
         assert_eq!(
             render_element(&text, 1, &DocumentParameters::default()),
-            "  <div class=\"item text-item item-selectable\">\n    <span class=\"text-content\">\n      Sample paragraph text\n    </span>\n  </div>\n"
+            format!(
+                "  <div class=\"item text-item item-selectable\">\n    <span class=\"text-content\">\n      Sample paragraph text\n    </span>\n    {COMMENT_ICON_SVG}\n  </div>\n"
+            )
         );
     }
 
@@ -220,25 +224,30 @@ mod tests {
                 DocumentElement::text("Second paragraph"),
             ],
         );
-        let expected = concat!(
-            "  <section class=\"section\" data-level=\"2\">\n",
-            "    <h2 class=\"section-header\" role=\"button\" tabindex=\"0\" aria-expanded=\"true\">\n",
-            "      <span class=\"section-title\">Details</span>\n",
-            "      <span class=\"section-toggler\">&#9660;</span>\n",
-            "    </h2>\n",
-            "    <div class=\"section-body\">\n",
-            "      <div class=\"item text-item item-selectable\">\n",
-            "        <span class=\"text-content\">\n",
-            "          First paragraph\n",
-            "        </span>\n",
-            "      </div>\n",
-            "      <div class=\"item text-item item-selectable\">\n",
-            "        <span class=\"text-content\">\n",
-            "          Second paragraph\n",
-            "        </span>\n",
-            "      </div>\n",
-            "    </div>\n",
-            "  </section>\n"
+        let expected = format!(
+            concat!(
+                "  <section class=\"section\" data-level=\"2\">\n",
+                "    <h2 class=\"section-header\" role=\"button\" tabindex=\"0\" aria-expanded=\"true\">\n",
+                "      <span class=\"section-title\">Details</span>\n",
+                "      <span class=\"section-toggler\">&#9660;</span>\n",
+                "    </h2>\n",
+                "    <div class=\"section-body\">\n",
+                "      <div class=\"item text-item item-selectable\">\n",
+                "        <span class=\"text-content\">\n",
+                "          First paragraph\n",
+                "        </span>\n",
+                "        {COMMENT_ICON_SVG}\n",
+                "      </div>\n",
+                "      <div class=\"item text-item item-selectable\">\n",
+                "        <span class=\"text-content\">\n",
+                "          Second paragraph\n",
+                "        </span>\n",
+                "        {COMMENT_ICON_SVG}\n",
+                "      </div>\n",
+                "    </div>\n",
+                "  </section>\n"
+            ),
+            COMMENT_ICON_SVG = COMMENT_ICON_SVG
         );
         assert_eq!(
             render_element(&section, 1, &DocumentParameters::default()),
@@ -251,25 +260,29 @@ mod tests {
         let inner_section =
             DocumentElement::section(3, "Inner", vec![DocumentElement::text("Inner content")]);
         let outer_section = DocumentElement::section(1, "Outer", vec![inner_section]);
-        let expected = concat!(
-            "  <section class=\"section\" data-level=\"1\">\n",
-            "    <h1 class=\"section-header section-header-h1\" role=\"button\" tabindex=\"0\" aria-expanded=\"true\">\n",
-            "      <span class=\"section-title\">Outer</span>\n",
-            "      <span class=\"section-toggler\">&#9660;</span>\n",
-            "    </h1>\n",
-            "    <div class=\"section-body\">\n",
-            "      <section class=\"section\" data-level=\"3\">\n",
-            "        <h3 class=\"section-subheading\">Inner</h3>\n",
-            "        <div class=\"section-body\">\n",
-            "          <div class=\"item text-item item-selectable\">\n",
-            "            <span class=\"text-content\">\n",
-            "              Inner content\n",
-            "            </span>\n",
-            "          </div>\n",
-            "        </div>\n",
-            "      </section>\n",
-            "    </div>\n",
-            "  </section>\n"
+        let expected = format!(
+            concat!(
+                "  <section class=\"section\" data-level=\"1\">\n",
+                "    <h1 class=\"section-header section-header-h1\" role=\"button\" tabindex=\"0\" aria-expanded=\"true\">\n",
+                "      <span class=\"section-title\">Outer</span>\n",
+                "      <span class=\"section-toggler\">&#9660;</span>\n",
+                "    </h1>\n",
+                "    <div class=\"section-body\">\n",
+                "      <section class=\"section\" data-level=\"3\">\n",
+                "        <h3 class=\"section-subheading\">Inner</h3>\n",
+                "        <div class=\"section-body\">\n",
+                "          <div class=\"item text-item item-selectable\">\n",
+                "            <span class=\"text-content\">\n",
+                "              Inner content\n",
+                "            </span>\n",
+                "            {COMMENT_ICON_SVG}\n",
+                "          </div>\n",
+                "        </div>\n",
+                "      </section>\n",
+                "    </div>\n",
+                "  </section>\n"
+            ),
+            COMMENT_ICON_SVG = COMMENT_ICON_SVG
         );
         assert_eq!(
             render_element(&outer_section, 1, &DocumentParameters::default()),

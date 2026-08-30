@@ -20,6 +20,12 @@ pub const JS_SECTIONS: &str = include_str!("sections.js");
 /// Embedded core JavaScript selectable items handlers.
 pub const JS_ITEMS: &str = include_str!("items.js");
 
+/// Embedded core JavaScript comment handlers.
+pub const JS_COMMENTS: &str = include_str!("comments.js");
+
+/// Embedded SVG comment icon for interactive elements.
+pub const COMMENT_ICON_SVG: &str = "<span class=\"item-comment-icon\"></span>";
+
 /// Supported document element identifiers for core elements.
 const CORE_SUPPORTED: [DocumentElementId; 3] = [
     DocumentElementId::HorizontalRule,
@@ -124,6 +130,9 @@ impl DocumentElementRenderer for CoreFeature {
                 }
                 push_indent(out, indent + 1);
                 out.push_str("</span>\n");
+                push_indent(out, indent + 1);
+                out.push_str(COMMENT_ICON_SVG);
+                out.push('\n');
                 push_indent(out, indent);
                 out.push_str("</div>\n");
             }
@@ -142,7 +151,7 @@ impl FeatureModule for CoreFeature {
     }
 
     fn javascript(&self) -> &[&'static str] {
-        &[JS_UTILS, JS_STORAGE, JS_SECTIONS, JS_ITEMS]
+        &[JS_UTILS, JS_STORAGE, JS_SECTIONS, JS_ITEMS, JS_COMMENTS]
     }
 }
 
@@ -164,6 +173,10 @@ mod tests {
         assert!(css.contains(".doc-body"));
         assert!(css.contains(".item"));
         assert!(css.contains(".item-selectable"));
+        assert!(css.contains(".item-comment-icon"));
+        assert!(css.contains(".item-comment-box"));
+        assert!(css.contains(".item-comment-input"));
+        assert!(css.contains(".item-comment-del"));
         assert!(css.contains(".text-content"));
         assert!(css.contains(".text-item"));
         assert!(css.contains(".txt-default"));
@@ -181,7 +194,7 @@ mod tests {
     fn test_core_feature_javascript() {
         let feature = CoreFeature::new();
         let js = feature.javascript();
-        assert_eq!(js.len(), 4);
+        assert_eq!(js.len(), 5);
         assert!(js[0].contains("window.d2f"));
         assert!(js[0].contains("utils"));
         assert!(js[0].contains("debounce"));
@@ -189,12 +202,18 @@ mod tests {
         assert!(!js[0].contains("\nt,") && !js[0].contains(" t,"));
         assert!(js[1].contains("window.d2f"));
         assert!(js[1].contains("storage"));
+        assert!(js[1].contains("resetAll"));
         assert!(js[2].contains("window.d2f"));
         assert!(js[2].contains("sections"));
         assert!(js[3].contains("window.d2f"));
         assert!(js[3].contains("items"));
         assert!(js[3].contains("saveItems"));
         assert!(js[3].contains("loadItems"));
+        assert!(js[4].contains("window.d2f"));
+        assert!(js[4].contains("comments"));
+        assert!(js[4].contains("saveComments"));
+        assert!(js[4].contains("loadComments"));
+        assert!(js[4].contains("resetComments"));
     }
 
     #[test]
@@ -230,7 +249,7 @@ mod tests {
         );
         assert_eq!(
             out,
-            "<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    5 &lt; 10 &amp; 20 &gt; 15 &quot;quoted&quot; &#39;single&#39;\n  </span>\n</div>\n"
+            format!("<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    5 &lt; 10 &amp; 20 &gt; 15 &quot;quoted&quot; &#39;single&#39;\n  </span>\n  {COMMENT_ICON_SVG}\n</div>\n")
         );
     }
 
@@ -251,7 +270,7 @@ mod tests {
         );
         assert_eq!(
             out,
-            "<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    Example <code>&lt;div class=&quot;box&quot;&gt; &amp;&amp; **not bold**&lt;/div&gt;</code> here.\n  </span>\n</div>\n"
+            format!("<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    Example <code>&lt;div class=&quot;box&quot;&gt; &amp;&amp; **not bold**&lt;/div&gt;</code> here.\n  </span>\n  {COMMENT_ICON_SVG}\n</div>\n")
         );
     }
 
@@ -271,7 +290,7 @@ mod tests {
         );
         assert_eq!(
             out,
-            "<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    Formatted <s><strong>bold strikethrough</strong></s> with <code>code</code>.\n  </span>\n</div>\n"
+            format!("<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    Formatted <s><strong>bold strikethrough</strong></s> with <code>code</code>.\n  </span>\n  {COMMENT_ICON_SVG}\n</div>\n")
         );
     }
 
@@ -291,7 +310,7 @@ mod tests {
         );
         assert_eq!(
             out,
-            "<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    Host {{SERVER_NAME}}:{{PORT}} with key {{API_KEY}}.\n  </span>\n</div>\n"
+            format!("<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    Host {{{{SERVER_NAME}}}}:{{{{PORT}}}} with key {{{{API_KEY}}}}.\n  </span>\n  {COMMENT_ICON_SVG}\n</div>\n")
         );
     }
 
@@ -311,7 +330,7 @@ mod tests {
         );
         assert_eq!(
             out,
-            "<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    This is <strong><em>bold and italic</em></strong> text.\n  </span>\n</div>\n"
+            format!("<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    This is <strong><em>bold and italic</em></strong> text.\n  </span>\n  {COMMENT_ICON_SVG}\n</div>\n")
         );
 
         let elem_underscores = DocumentElement::text("This is ___bold and italic___ text.");
@@ -326,7 +345,7 @@ mod tests {
         );
         assert_eq!(
             out_underscores,
-            "<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    This is <strong><em>bold and italic</em></strong> text.\n  </span>\n</div>\n"
+            format!("<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    This is <strong><em>bold and italic</em></strong> text.\n  </span>\n  {COMMENT_ICON_SVG}\n</div>\n")
         );
     }
 
@@ -346,7 +365,7 @@ mod tests {
         );
         assert_eq!(
             out_asterisk,
-            "<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    This is <strong>bold</strong> text.\n  </span>\n</div>\n"
+            format!("<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    This is <strong>bold</strong> text.\n  </span>\n  {COMMENT_ICON_SVG}\n</div>\n")
         );
 
         let elem_underscore = DocumentElement::text("This is __bold__ text.");
@@ -361,7 +380,7 @@ mod tests {
         );
         assert_eq!(
             out_underscore,
-            "<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    This is <strong>bold</strong> text.\n  </span>\n</div>\n"
+            format!("<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    This is <strong>bold</strong> text.\n  </span>\n  {COMMENT_ICON_SVG}\n</div>\n")
         );
     }
 
@@ -421,7 +440,7 @@ mod tests {
         );
         assert_eq!(
             out,
-            "<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    Run <code>cargo test --all</code> now.\n  </span>\n</div>\n"
+            format!("<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    Run <code>cargo test --all</code> now.\n  </span>\n  {COMMENT_ICON_SVG}\n</div>\n")
         );
     }
 
@@ -441,7 +460,7 @@ mod tests {
         );
         assert_eq!(
             out_asterisk,
-            "<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    This is <em>italic</em> text.\n  </span>\n</div>\n"
+            format!("<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    This is <em>italic</em> text.\n  </span>\n  {COMMENT_ICON_SVG}\n</div>\n")
         );
 
         let elem_underscore = DocumentElement::text("This is _italic_ text.");
@@ -456,7 +475,7 @@ mod tests {
         );
         assert_eq!(
             out_underscore,
-            "<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    This is <em>italic</em> text.\n  </span>\n</div>\n"
+            format!("<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    This is <em>italic</em> text.\n  </span>\n  {COMMENT_ICON_SVG}\n</div>\n")
         );
     }
 
@@ -476,7 +495,7 @@ mod tests {
         );
         assert_eq!(
             out,
-            "  <div class=\"item text-item item-selectable\">\n    <span class=\"text-content\">\n      Hello, world!\n    </span>\n  </div>\n"
+            format!("  <div class=\"item text-item item-selectable\">\n    <span class=\"text-content\">\n      Hello, world!\n    </span>\n    {COMMENT_ICON_SVG}\n  </div>\n")
         );
     }
 
@@ -498,20 +517,24 @@ mod tests {
             &mut out,
             &renderer,
         );
-        let expected = concat!(
-            "    <section class=\"section\" data-level=\"1\">\n",
-            "      <h1 class=\"section-header section-header-h1\" role=\"button\" tabindex=\"0\" aria-expanded=\"true\">\n",
-            "        <span class=\"section-title\">Overview</span>\n",
-            "        <span class=\"section-toggler\">&#9660;</span>\n",
-            "      </h1>\n",
-            "      <div class=\"section-body\">\n",
-            "        <div class=\"item text-item item-selectable\">\n",
-            "          <span class=\"text-content\">\n",
-            "            Section body content\n",
-            "          </span>\n",
-            "        </div>\n",
-            "      </div>\n",
-            "    </section>\n"
+        let expected = format!(
+            concat!(
+                "    <section class=\"section\" data-level=\"1\">\n",
+                "      <h1 class=\"section-header section-header-h1\" role=\"button\" tabindex=\"0\" aria-expanded=\"true\">\n",
+                "        <span class=\"section-title\">Overview</span>\n",
+                "        <span class=\"section-toggler\">&#9660;</span>\n",
+                "      </h1>\n",
+                "      <div class=\"section-body\">\n",
+                "        <div class=\"item text-item item-selectable\">\n",
+                "          <span class=\"text-content\">\n",
+                "            Section body content\n",
+                "          </span>\n",
+                "          {COMMENT_ICON_SVG}\n",
+                "        </div>\n",
+                "      </div>\n",
+                "    </section>\n"
+            ),
+            COMMENT_ICON_SVG = COMMENT_ICON_SVG
         );
         assert_eq!(out, expected);
     }
@@ -534,20 +557,24 @@ mod tests {
             &mut out,
             &renderer,
         );
-        let expected = concat!(
-            "  <section class=\"section\" data-level=\"2\">\n",
-            "    <h2 class=\"section-header\" role=\"button\" tabindex=\"0\" aria-expanded=\"true\">\n",
-            "      <span class=\"section-title\">Sub Section</span>\n",
-            "      <span class=\"section-toggler\">&#9660;</span>\n",
-            "    </h2>\n",
-            "    <div class=\"section-body\">\n",
-            "      <div class=\"item text-item item-selectable\">\n",
-            "        <span class=\"text-content\">\n",
-            "          Sub content\n",
-            "        </span>\n",
-            "      </div>\n",
-            "    </div>\n",
-            "  </section>\n"
+        let expected = format!(
+            concat!(
+                "  <section class=\"section\" data-level=\"2\">\n",
+                "    <h2 class=\"section-header\" role=\"button\" tabindex=\"0\" aria-expanded=\"true\">\n",
+                "      <span class=\"section-title\">Sub Section</span>\n",
+                "      <span class=\"section-toggler\">&#9660;</span>\n",
+                "    </h2>\n",
+                "    <div class=\"section-body\">\n",
+                "      <div class=\"item text-item item-selectable\">\n",
+                "        <span class=\"text-content\">\n",
+                "          Sub content\n",
+                "        </span>\n",
+                "        {COMMENT_ICON_SVG}\n",
+                "      </div>\n",
+                "    </div>\n",
+                "  </section>\n"
+            ),
+            COMMENT_ICON_SVG = COMMENT_ICON_SVG
         );
         assert_eq!(out, expected);
     }
@@ -597,17 +624,21 @@ mod tests {
             &mut out,
             &renderer,
         );
-        let expected = concat!(
-            "  <section class=\"section\" data-level=\"3\">\n",
-            "    <h3 class=\"section-subheading\">Deep Header</h3>\n",
-            "    <div class=\"section-body\">\n",
-            "      <div class=\"item text-item item-selectable\">\n",
-            "        <span class=\"text-content\">\n",
-            "          Deep content\n",
-            "        </span>\n",
-            "      </div>\n",
-            "    </div>\n",
-            "  </section>\n"
+        let expected = format!(
+            concat!(
+                "  <section class=\"section\" data-level=\"3\">\n",
+                "    <h3 class=\"section-subheading\">Deep Header</h3>\n",
+                "    <div class=\"section-body\">\n",
+                "      <div class=\"item text-item item-selectable\">\n",
+                "        <span class=\"text-content\">\n",
+                "          Deep content\n",
+                "        </span>\n",
+                "        {COMMENT_ICON_SVG}\n",
+                "      </div>\n",
+                "    </div>\n",
+                "  </section>\n"
+            ),
+            COMMENT_ICON_SVG = COMMENT_ICON_SVG
         );
         assert_eq!(out, expected);
     }
@@ -628,7 +659,7 @@ mod tests {
         );
         assert_eq!(
             out,
-            "<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    Replaces <s>legacy procedures</s> with modern.\n  </span>\n</div>\n"
+            format!("<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    Replaces <s>legacy procedures</s> with modern.\n  </span>\n  {COMMENT_ICON_SVG}\n</div>\n")
         );
     }
 
@@ -648,7 +679,7 @@ mod tests {
         );
         assert_eq!(
             out,
-            "<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    Visit <a href=\"https://doc2flow.dev\">Doc2Flow</a> for guides.\n  </span>\n</div>\n"
+            format!("<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    Visit <a href=\"https://doc2flow.dev\">Doc2Flow</a> for guides.\n  </span>\n  {COMMENT_ICON_SVG}\n</div>\n")
         );
     }
 
@@ -668,7 +699,7 @@ mod tests {
         );
         assert_eq!(
             out,
-            "<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    Unclosed **bold and ~~strike and `code\n  </span>\n</div>\n"
+            format!("<div class=\"item text-item item-selectable\">\n  <span class=\"text-content\">\n    Unclosed **bold and ~~strike and `code\n  </span>\n  {COMMENT_ICON_SVG}\n</div>\n")
         );
     }
 

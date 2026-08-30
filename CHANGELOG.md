@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added interactive item comment functionality for checklist items, list entries, and text paragraphs with local storage persistence and print styling.
 - Added deterministic document ID (`d2f_id`) generation with cryptographic key separation and scoped `localStorage` state keys.
 - Added automatic section numbering (`numbered_sections: true`) and zero-allocation hierarchical ordered list markers (`1.`, `a.`, `i.`).
 - Added interactive item selection for text, bullet, and ordered list items with green highlight and persistent localStorage state.

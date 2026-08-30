@@ -151,6 +151,10 @@ impl DocumentElementRenderer for OrderedFeature {
             push_indent(out, indent + 1);
             out.push_str("</span>\n");
 
+            push_indent(out, indent + 1);
+            out.push_str(crate::features::core::COMMENT_ICON_SVG);
+            out.push('\n');
+
             push_indent(out, indent);
             out.push_str("</div>\n");
 
@@ -172,6 +176,7 @@ impl FeatureModule for OrderedFeature {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::features::core::COMMENT_ICON_SVG;
 
     #[test]
     fn test_ordered_empty_for_unsupported_elements() {
@@ -219,13 +224,17 @@ mod tests {
             &mut out,
             &renderer,
         );
-        let expected = concat!(
-            "  <div class=\"item order-item item-selectable\">\n",
-            "    <span class=\"order-marker\">1.</span>\n",
-            "    <span class=\"order-content\">\n",
-            "      First numbered item\n",
-            "    </span>\n",
-            "  </div>\n"
+        let expected = format!(
+            concat!(
+                "  <div class=\"item order-item item-selectable\">\n",
+                "    <span class=\"order-marker\">1.</span>\n",
+                "    <span class=\"order-content\">\n",
+                "      First numbered item\n",
+                "    </span>\n",
+                "    {COMMENT_ICON_SVG}\n",
+                "  </div>\n"
+            ),
+            COMMENT_ICON_SVG = COMMENT_ICON_SVG
         );
         assert_eq!(out, expected);
     }
@@ -247,13 +256,17 @@ mod tests {
             &mut out,
             &renderer,
         );
-        let expected = concat!(
-            "<div class=\"item order-item item-selectable\">\n",
-            "  <span class=\"order-marker\">2.</span>\n",
-            "  <span class=\"order-content\">\n",
-            "    Step with <strong>bold</strong>, <em>italic</em>, <s>strike</s>, <code>code</code>, <a href=\"https://example.com\">link</a>, and &lt;special&gt; &amp; characters\n",
-            "  </span>\n",
-            "</div>\n"
+        let expected = format!(
+            concat!(
+                "<div class=\"item order-item item-selectable\">\n",
+                "  <span class=\"order-marker\">2.</span>\n",
+                "  <span class=\"order-content\">\n",
+                "    Step with <strong>bold</strong>, <em>italic</em>, <s>strike</s>, <code>code</code>, <a href=\"https://example.com\">link</a>, and &lt;special&gt; &amp; characters\n",
+                "  </span>\n",
+                "  {COMMENT_ICON_SVG}\n",
+                "</div>\n"
+            ),
+            COMMENT_ICON_SVG = COMMENT_ICON_SVG
         );
         assert_eq!(out, expected);
     }
@@ -272,13 +285,17 @@ mod tests {
             &mut out,
             &renderer,
         );
-        let expected = concat!(
-            "    <div class=\"item order-item item-selectable\" style=\"--indent: 1;\">\n",
-            "      <span class=\"order-marker\">a.</span>\n",
-            "      <span class=\"order-content\">\n",
-            "        Sub-step item\n",
-            "      </span>\n",
-            "    </div>\n"
+        let expected = format!(
+            concat!(
+                "    <div class=\"item order-item item-selectable\" style=\"--indent: 1;\">\n",
+                "      <span class=\"order-marker\">a.</span>\n",
+                "      <span class=\"order-content\">\n",
+                "        Sub-step item\n",
+                "      </span>\n",
+                "      {COMMENT_ICON_SVG}\n",
+                "    </div>\n"
+            ),
+            COMMENT_ICON_SVG = COMMENT_ICON_SVG
         );
         assert_eq!(out, expected);
     }
@@ -300,19 +317,24 @@ mod tests {
             &mut out,
             &renderer,
         );
-        let expected = concat!(
-            "  <div class=\"item order-item item-selectable\">\n",
-            "    <span class=\"order-marker\">1.</span>\n",
-            "    <span class=\"order-content\">\n",
-            "      Parent order\n",
-            "    </span>\n",
-            "  </div>\n",
-            "  <div class=\"item order-item item-selectable\" style=\"--indent: 1;\">\n",
-            "    <span class=\"order-marker\">a.</span>\n",
-            "    <span class=\"order-content\">\n",
-            "      Child item\n",
-            "    </span>\n",
-            "  </div>\n",
+        let expected = format!(
+            concat!(
+                "  <div class=\"item order-item item-selectable\">\n",
+                "    <span class=\"order-marker\">1.</span>\n",
+                "    <span class=\"order-content\">\n",
+                "      Parent order\n",
+                "    </span>\n",
+                "    {COMMENT_ICON_SVG}\n",
+                "  </div>\n",
+                "  <div class=\"item order-item item-selectable\" style=\"--indent: 1;\">\n",
+                "    <span class=\"order-marker\">a.</span>\n",
+                "    <span class=\"order-content\">\n",
+                "      Child item\n",
+                "    </span>\n",
+                "    {COMMENT_ICON_SVG}\n",
+                "  </div>\n",
+            ),
+            COMMENT_ICON_SVG = COMMENT_ICON_SVG
         );
         assert_eq!(out, expected);
     }

@@ -70,6 +70,10 @@ impl DocumentElementRenderer for BulletFeature {
             push_indent(out, indent + 1);
             out.push_str("</span>\n");
 
+            push_indent(out, indent + 1);
+            out.push_str(crate::features::core::COMMENT_ICON_SVG);
+            out.push('\n');
+
             push_indent(out, indent);
             out.push_str("</div>\n");
 
@@ -91,6 +95,7 @@ impl FeatureModule for BulletFeature {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::features::core::COMMENT_ICON_SVG;
 
     #[test]
     fn test_bullet_empty_for_unsupported_elements() {
@@ -140,13 +145,17 @@ mod tests {
             &mut out,
             &renderer,
         );
-        let expected = concat!(
-            "<div class=\"item bullet-item item-selectable\">\n",
-            "  <span class=\"bullet-marker\">&bull;</span>\n",
-            "  <span class=\"bullet-content\">\n",
-            "    Item with <strong>bold</strong>, <em>italic</em>, <s>strike</s>, <code>code</code>, and <a href=\"https://example.com\">link</a> span\n",
-            "  </span>\n",
-            "</div>\n"
+        let expected = format!(
+            concat!(
+                "<div class=\"item bullet-item item-selectable\">\n",
+                "  <span class=\"bullet-marker\">&bull;</span>\n",
+                "  <span class=\"bullet-content\">\n",
+                "    Item with <strong>bold</strong>, <em>italic</em>, <s>strike</s>, <code>code</code>, and <a href=\"https://example.com\">link</a> span\n",
+                "  </span>\n",
+                "  {COMMENT_ICON_SVG}\n",
+                "</div>\n"
+            ),
+            COMMENT_ICON_SVG = COMMENT_ICON_SVG
         );
         assert_eq!(out, expected);
     }
@@ -165,13 +174,17 @@ mod tests {
             &mut out,
             &renderer,
         );
-        let expected = concat!(
-            "    <div class=\"item bullet-item item-selectable\">\n",
-            "      <span class=\"bullet-marker\">&bull;</span>\n",
-            "      <span class=\"bullet-content\">\n",
-            "        Nested level 2 item\n",
-            "      </span>\n",
-            "    </div>\n"
+        let expected = format!(
+            concat!(
+                "    <div class=\"item bullet-item item-selectable\">\n",
+                "      <span class=\"bullet-marker\">&bull;</span>\n",
+                "      <span class=\"bullet-content\">\n",
+                "        Nested level 2 item\n",
+                "      </span>\n",
+                "      {COMMENT_ICON_SVG}\n",
+                "    </div>\n"
+            ),
+            COMMENT_ICON_SVG = COMMENT_ICON_SVG
         );
         assert_eq!(out, expected);
     }
@@ -190,13 +203,17 @@ mod tests {
             &mut out,
             &renderer,
         );
-        let expected = concat!(
-            "    <div class=\"item bullet-item item-selectable\" style=\"--indent: 1;\">\n",
-            "      <span class=\"bullet-marker\">&bull;</span>\n",
-            "      <span class=\"bullet-content\">\n",
-            "        Indented child item\n",
-            "      </span>\n",
-            "    </div>\n"
+        let expected = format!(
+            concat!(
+                "    <div class=\"item bullet-item item-selectable\" style=\"--indent: 1;\">\n",
+                "      <span class=\"bullet-marker\">&bull;</span>\n",
+                "      <span class=\"bullet-content\">\n",
+                "        Indented child item\n",
+                "      </span>\n",
+                "      {COMMENT_ICON_SVG}\n",
+                "    </div>\n"
+            ),
+            COMMENT_ICON_SVG = COMMENT_ICON_SVG
         );
         assert_eq!(out, expected);
     }
@@ -218,19 +235,24 @@ mod tests {
             &mut out,
             &renderer,
         );
-        let expected = concat!(
-            "  <div class=\"item bullet-item item-selectable\">\n",
-            "    <span class=\"bullet-marker\">&bull;</span>\n",
-            "    <span class=\"bullet-content\">\n",
-            "      Parent item\n",
-            "    </span>\n",
-            "  </div>\n",
-            "  <div class=\"item bullet-item item-selectable\" style=\"--indent: 1;\">\n",
-            "    <span class=\"bullet-marker\">&bull;</span>\n",
-            "    <span class=\"bullet-content\">\n",
-            "      Child item\n",
-            "    </span>\n",
-            "  </div>\n",
+        let expected = format!(
+            concat!(
+                "  <div class=\"item bullet-item item-selectable\">\n",
+                "    <span class=\"bullet-marker\">&bull;</span>\n",
+                "    <span class=\"bullet-content\">\n",
+                "      Parent item\n",
+                "    </span>\n",
+                "    {COMMENT_ICON_SVG}\n",
+                "  </div>\n",
+                "  <div class=\"item bullet-item item-selectable\" style=\"--indent: 1;\">\n",
+                "    <span class=\"bullet-marker\">&bull;</span>\n",
+                "    <span class=\"bullet-content\">\n",
+                "      Child item\n",
+                "    </span>\n",
+                "    {COMMENT_ICON_SVG}\n",
+                "  </div>\n",
+            ),
+            COMMENT_ICON_SVG = COMMENT_ICON_SVG
         );
         assert_eq!(out, expected);
     }

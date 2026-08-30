@@ -59,7 +59,9 @@
       (target.closest('input') && !(target instanceof HTMLInputElement && target.type === 'checkbox')) ||
       target.closest('textarea') ||
       target.closest('select') ||
-      target.closest('summary')
+      target.closest('summary') ||
+      target.closest('.item-comment-icon') ||
+      target.closest('.item-comment-box')
     ) {
       return;
     }
@@ -98,6 +100,7 @@
   if (typeof window !== 'undefined') {
     window.d2f.storage?.registerSaveHandler?.(saveItems);
     window.d2f.storage?.registerLoadHandler?.(loadItems);
+    window.d2f.core?.registerResetHandler?.(resetItems);
     document.addEventListener('click', handleClick);
   }
 })();

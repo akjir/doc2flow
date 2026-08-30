@@ -88,6 +88,10 @@ impl DocumentElementRenderer for TaskFeature {
             push_indent(out, indent + 1);
             out.push_str("</span>\n");
 
+            push_indent(out, indent + 1);
+            out.push_str(crate::features::core::COMMENT_ICON_SVG);
+            out.push('\n');
+
             push_indent(out, indent);
             out.push_str("</div>\n");
 
@@ -109,6 +113,7 @@ impl FeatureModule for TaskFeature {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::features::core::COMMENT_ICON_SVG;
 
     #[test]
     fn test_task_feature_css() {
@@ -142,15 +147,19 @@ mod tests {
             &mut out,
             &renderer,
         );
-        let expected = concat!(
-            "  <div class=\"item check-item item-selectable\">\n",
-            "    <span class=\"check-marker\">\n",
-            "      <input type=\"checkbox\" class=\"check-box\" />\n",
-            "    </span>\n",
-            "    <span class=\"check-content\">\n",
-            "      Pending task\n",
-            "    </span>\n",
-            "  </div>\n"
+        let expected = format!(
+            concat!(
+                "  <div class=\"item check-item item-selectable\">\n",
+                "    <span class=\"check-marker\">\n",
+                "      <input type=\"checkbox\" class=\"check-box\" />\n",
+                "    </span>\n",
+                "    <span class=\"check-content\">\n",
+                "      Pending task\n",
+                "    </span>\n",
+                "    {COMMENT_ICON_SVG}\n",
+                "  </div>\n"
+            ),
+            COMMENT_ICON_SVG = COMMENT_ICON_SVG
         );
         assert_eq!(out, expected);
     }
@@ -169,15 +178,19 @@ mod tests {
             &mut out,
             &renderer,
         );
-        let expected = concat!(
-            "  <div class=\"item check-item item-selectable checked\">\n",
-            "    <span class=\"check-marker\">\n",
-            "      <input type=\"checkbox\" class=\"check-box\" checked />\n",
-            "    </span>\n",
-            "    <span class=\"check-content\">\n",
-            "      Completed task\n",
-            "    </span>\n",
-            "  </div>\n"
+        let expected = format!(
+            concat!(
+                "  <div class=\"item check-item item-selectable checked\">\n",
+                "    <span class=\"check-marker\">\n",
+                "      <input type=\"checkbox\" class=\"check-box\" checked />\n",
+                "    </span>\n",
+                "    <span class=\"check-content\">\n",
+                "      Completed task\n",
+                "    </span>\n",
+                "    {COMMENT_ICON_SVG}\n",
+                "  </div>\n"
+            ),
+            COMMENT_ICON_SVG = COMMENT_ICON_SVG
         );
         assert_eq!(out, expected);
     }
@@ -199,15 +212,19 @@ mod tests {
             &mut out,
             &renderer,
         );
-        let expected = concat!(
-            "<div class=\"item check-item item-selectable checked\">\n",
-            "  <span class=\"check-marker\">\n",
-            "    <input type=\"checkbox\" class=\"check-box\" checked />\n",
-            "  </span>\n",
-            "  <span class=\"check-content\">\n",
-            "    Item with <strong>bold</strong>, <em>italic</em>, <s>strike</s>, <code>code</code>, and <a href=\"https://example.com\">link</a> span\n",
-            "  </span>\n",
-            "</div>\n"
+        let expected = format!(
+            concat!(
+                "<div class=\"item check-item item-selectable checked\">\n",
+                "  <span class=\"check-marker\">\n",
+                "    <input type=\"checkbox\" class=\"check-box\" checked />\n",
+                "  </span>\n",
+                "  <span class=\"check-content\">\n",
+                "    Item with <strong>bold</strong>, <em>italic</em>, <s>strike</s>, <code>code</code>, and <a href=\"https://example.com\">link</a> span\n",
+                "  </span>\n",
+                "  {COMMENT_ICON_SVG}\n",
+                "</div>\n"
+            ),
+            COMMENT_ICON_SVG = COMMENT_ICON_SVG
         );
         assert_eq!(out, expected);
     }
@@ -226,15 +243,19 @@ mod tests {
             &mut out,
             &renderer,
         );
-        let expected = concat!(
-            "    <div class=\"item check-item item-selectable\" style=\"--indent: 1;\">\n",
-            "      <span class=\"check-marker\">\n",
-            "        <input type=\"checkbox\" class=\"check-box\" />\n",
-            "      </span>\n",
-            "      <span class=\"check-content\">\n",
-            "        Sub task\n",
-            "      </span>\n",
-            "    </div>\n"
+        let expected = format!(
+            concat!(
+                "    <div class=\"item check-item item-selectable\" style=\"--indent: 1;\">\n",
+                "      <span class=\"check-marker\">\n",
+                "        <input type=\"checkbox\" class=\"check-box\" />\n",
+                "      </span>\n",
+                "      <span class=\"check-content\">\n",
+                "        Sub task\n",
+                "      </span>\n",
+                "      {COMMENT_ICON_SVG}\n",
+                "    </div>\n"
+            ),
+            COMMENT_ICON_SVG = COMMENT_ICON_SVG
         );
         assert_eq!(out, expected);
 
@@ -248,15 +269,19 @@ mod tests {
             &mut checked_out,
             &renderer,
         );
-        let checked_expected = concat!(
-            "    <div class=\"item check-item item-selectable checked\" style=\"--indent: 2;\">\n",
-            "      <span class=\"check-marker\">\n",
-            "        <input type=\"checkbox\" class=\"check-box\" checked />\n",
-            "      </span>\n",
-            "      <span class=\"check-content\">\n",
-            "        Checked sub task\n",
-            "      </span>\n",
-            "    </div>\n"
+        let checked_expected = format!(
+            concat!(
+                "    <div class=\"item check-item item-selectable checked\" style=\"--indent: 2;\">\n",
+                "      <span class=\"check-marker\">\n",
+                "        <input type=\"checkbox\" class=\"check-box\" checked />\n",
+                "      </span>\n",
+                "      <span class=\"check-content\">\n",
+                "        Checked sub task\n",
+                "      </span>\n",
+                "      {COMMENT_ICON_SVG}\n",
+                "    </div>\n"
+            ),
+            COMMENT_ICON_SVG = COMMENT_ICON_SVG
         );
         assert_eq!(checked_out, checked_expected);
     }
@@ -278,23 +303,28 @@ mod tests {
             &mut out,
             &renderer,
         );
-        let expected = concat!(
-            "  <div class=\"item check-item item-selectable\">\n",
-            "    <span class=\"check-marker\">\n",
-            "      <input type=\"checkbox\" class=\"check-box\" />\n",
-            "    </span>\n",
-            "    <span class=\"check-content\">\n",
-            "      Parent task\n",
-            "    </span>\n",
-            "  </div>\n",
-            "  <div class=\"item check-item item-selectable\" style=\"--indent: 1;\">\n",
-            "    <span class=\"check-marker\">\n",
-            "      <input type=\"checkbox\" class=\"check-box\" />\n",
-            "    </span>\n",
-            "    <span class=\"check-content\">\n",
-            "      Child task\n",
-            "    </span>\n",
-            "  </div>\n",
+        let expected = format!(
+            concat!(
+                "  <div class=\"item check-item item-selectable\">\n",
+                "    <span class=\"check-marker\">\n",
+                "      <input type=\"checkbox\" class=\"check-box\" />\n",
+                "    </span>\n",
+                "    <span class=\"check-content\">\n",
+                "      Parent task\n",
+                "    </span>\n",
+                "    {COMMENT_ICON_SVG}\n",
+                "  </div>\n",
+                "  <div class=\"item check-item item-selectable\" style=\"--indent: 1;\">\n",
+                "    <span class=\"check-marker\">\n",
+                "      <input type=\"checkbox\" class=\"check-box\" />\n",
+                "    </span>\n",
+                "    <span class=\"check-content\">\n",
+                "      Child task\n",
+                "    </span>\n",
+                "    {COMMENT_ICON_SVG}\n",
+                "  </div>\n",
+            ),
+            COMMENT_ICON_SVG = COMMENT_ICON_SVG
         );
         assert_eq!(out, expected);
     }

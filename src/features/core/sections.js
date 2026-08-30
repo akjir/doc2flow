@@ -114,6 +114,9 @@
     if (window.d2f.storage?.registerLoadHandler) {
       window.d2f.storage.registerLoadHandler(loadSections);
     }
+    if (window.d2f.core?.registerResetHandler) {
+      window.d2f.core.registerResetHandler(resetSections);
+    }
 
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => {

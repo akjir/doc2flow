@@ -35,7 +35,7 @@ pub mod unknown;
 
 pub use bullet::BulletFeature;
 pub use code::CodeFeature;
-pub use core::CoreFeature;
+pub use core::{COMMENT_ICON_SVG, CoreFeature};
 pub use header::HeaderFeature;
 pub use image::{ImageFeature, embed_images_as_base64, embed_images_as_base64_with_source};
 pub use input::InputFeature;

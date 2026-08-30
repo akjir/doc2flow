@@ -1,6 +1,7 @@
 (() => {
   const saveHandlers = new Set();
   const loadHandlers = new Set();
+  const resetHandlers = new Set();
 
   const registerSaveHandler = (handler) => {
     saveHandlers.add(handler);
@@ -8,6 +9,10 @@
 
   const registerLoadHandler = (handler) => {
     loadHandlers.add(handler);
+  };
+
+  const registerResetHandler = (handler) => {
+    resetHandlers.add(handler);
   };
 
   const getStateKey = () => {
@@ -67,6 +72,22 @@
     }
   };
 
+  const resetAll = () => {
+    const i18n = window.d2f?.lang?.dictionary;
+    const confirmMsg = i18n?.confirm_reset;
+    if (confirmMsg && !confirm(confirmMsg)) return;
+
+    resetHandlers.forEach((handler) => {
+      try {
+        handler();
+      } catch (e) {
+        console.warn('Failed to execute reset handler', e);
+      }
+    });
+
+    saveState();
+  };
+
   window.d2f = window.d2f || {};
   window.d2f.storage = {
     registerSaveHandler,
@@ -74,6 +95,9 @@
     loadState,
     saveState,
   };
+  window.d2f.core = window.d2f.core || {};
+  window.d2f.core.registerResetHandler = registerResetHandler;
+  window.d2f.core.resetAll = resetAll;
 
   if (typeof window !== 'undefined') {
     if (document.readyState === 'loading') {

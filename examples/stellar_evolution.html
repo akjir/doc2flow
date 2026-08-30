@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+262.6df8daf.dev">
-  <meta name="version" content="0.9.4+262.6df8daf.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+263.5d18cd0.dev">
+  <meta name="version" content="0.9.4+263.5d18cd0.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-18T08:46:05Z">
+  <meta name="dcterms.created" content="2026-08-30T07:41:55Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, header, bullet">
   <title>Stellar Evolution Overview</title>
@@ -69,6 +69,9 @@
       --txt-size-xs: 11px;
       --txt-size-lg: 16px;
       --txt-line-height: 1.5;
+
+      /* Assets & Icons */
+      --icon-comment-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg transform='translate(-204,-255)'%3E%3Cpath d='M228,267 C226.896,267 226,267.896 226,269 C226,270.104 226.896,271 228,271 C229.104,271 230,270.104 230,269 C230,267.896 229.104,267 228,267 L228,267 Z M220,281 C218.832,281 217.704,280.864 216.62,280.633 L211.912,283.463 L211.975,278.824 C208.366,276.654 206,273.066 206,269 C206,262.373 212.268,257 220,257 C227.732,257 234,262.373 234,269 C234,275.628 227.732,281 220,281 L220,281 Z M220,255 C211.164,255 204,261.269 204,269 C204,273.419 206.345,277.354 210,279.919 L210,287 L217.009,282.747 C217.979,282.907 218.977,283 220,283 C228.836,283 236,276.732 236,269 C236,261.269 228.836,255 220,255 L220,255 Z M212,267 C210.896,267 210,267.896 210,269 C210,270.104 210.896,271 212,271 C213.104,271 214,270.104 214,269 C214,267.896 213.104,267 212,267 L212,267 Z M220,267 C218.896,267 218,267.896 218,269 C218,270.104 218.896,271 220,271 C221.104,271 222,270.104 222,269 C222,267.896 221.104,267 220,267 L220,267 Z'/%3E%3C/g%3E%3C/svg%3E");
     }
 
     /* 2. Global Resets & Defaults */
@@ -371,6 +374,95 @@
       text-decoration: line-through;
     }
 
+    /* Item Comments */
+    .item-comment-icon {
+      margin-left: auto;
+      flex-shrink: 0;
+      display: inline-flex;
+      width: 15px;
+      height: 15px;
+      background-color: var(--txt-color-muted);
+      -webkit-mask: var(--icon-comment-mask) no-repeat center / contain;
+      mask: var(--icon-comment-mask) no-repeat center / contain;
+      opacity: 0;
+      cursor: pointer;
+      transition: opacity 0.15s ease, background-color 0.15s ease;
+      align-self: flex-start;
+      margin-top: 3px;
+    }
+
+    .item-selectable:hover .item-comment-icon,
+    .item:hover .item-comment-icon {
+      opacity: 1;
+    }
+
+    .item-selectable:has(.item-comment-box) .item-comment-icon,
+    .item:has(.item-comment-box) .item-comment-icon {
+      display: none;
+    }
+
+    .item-comment-icon:hover {
+      background-color: var(--txt-color-heading);
+    }
+
+    .item-comment-box {
+      flex-basis: 100%;
+      width: 100%;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      margin-top: 4px;
+      background-color: var(--bg-muted);
+      border: 1px solid var(--code-border);
+      border-radius: var(--item-radius);
+      padding: 4px 8px;
+      box-sizing: border-box;
+      margin-left: 24px;
+    }
+
+    .item-comment-input {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      background: transparent;
+      outline: none;
+      font-family: var(--font-sans);
+      font-size: var(--txt-size-sm);
+      color: var(--txt-color-default);
+      resize: none;
+      overflow: hidden;
+      white-space: pre-wrap;
+      word-break: break-word;
+      padding: 0;
+      margin: 0;
+      line-height: 1.4;
+      min-height: 20px;
+    }
+
+    .item-comment-input::placeholder {
+      color: #94a3b8;
+    }
+
+    .item-comment-del {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: var(--txt-color-muted);
+      font-size: 14px;
+      line-height: 1;
+      padding: 2px 5px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .item-comment-del:hover {
+      color: #c00000;
+      background-color: rgba(192, 0, 0, 0.08);
+    }
+
     /* 7. Section Components (section-*) */
     .section,
     .section-container {
@@ -625,6 +717,31 @@
         print-color-adjust: exact;
       }
 
+      .item-comment-icon,
+      .item-comment-del {
+        display: none !important;
+      }
+
+      .item-comment-box {
+        border: 1px solid var(--code-border) !important;
+        background-color: transparent !important;
+        margin-left: 16px !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+
+      .item-comment-input {
+        color: #000000 !important;
+        overflow: hidden !important;
+        white-space: pre-wrap !important;
+        word-break: break-word !important;
+        resize: none !important;
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        border: none !important;
+        background: transparent !important;
+      }
+
       .text-content,
       .text-item {
         color: #000000 !important;
@@ -869,6 +986,7 @@
           <span class="text-content">
             The term <strong>stellar evolution</strong> describes the continuous astrophysical process by which a star undergoes radical structural changes over its lifetime. Stars are not <s>static, eternal celestial spheres</s>, but dynamic thermodynamic systems spanning lifetimes from a few million years for massive stars to <em>trillions of years</em> for low-mass red dwarfs.
           </span>
+          <span class="item-comment-icon"></span>
         </div>
       </div>
     </section>
@@ -882,6 +1000,7 @@
           <span class="text-content">
             All stars originate inside cold, dense regions known as <em>giant molecular clouds</em> (GMCs) where temperatures drop below <code>T &lt; 20 K</code>.
           </span>
+          <span class="item-comment-icon"></span>
         </div>
         <section class="section" data-level="3">
           <h3 class="section-subheading">Molecular Clouds</h3>
@@ -890,23 +1009,27 @@
               <span class="text-content">
                 Cold interstellar clouds consisting primarily of molecular hydrogen (<code>H2</code>) and helium (<code>He</code>) provide the raw material for stellar birth.
               </span>
+              <span class="item-comment-icon"></span>
             </div>
             <div class="item bullet-item item-selectable">
               <span class="bullet-marker">&bull;</span>
               <span class="bullet-content">
                 Gravitational instability causes fragments to collapse when the <em>Jeans mass</em> (<code>M_J</code>) threshold is exceeded.
               </span>
+              <span class="item-comment-icon"></span>
             </div>
             <div class="item bullet-item item-selectable">
               <span class="bullet-marker">&bull;</span>
               <span class="bullet-content">
                 Core temperatures rise as gravitational potential energy converts into thermal kinetic energy.
               </span>
+              <span class="item-comment-icon"></span>
             </div>
             <div class="item text-item item-selectable">
               <span class="text-content">
                 Dense cloud cores do not remain <s>uniform static nebulae</s>; instead, localized gravitational perturbations trigger runaway contraction.
               </span>
+              <span class="item-comment-icon"></span>
             </div>
           </div>
         </section>
@@ -917,18 +1040,21 @@
               <span class="text-content">
                 As a collapsing core accretes surrounding matter, it forms a central <strong>protostar</strong> surrounded by a circumstellar accretion disk with angular momentum conservation.
               </span>
+              <span class="item-comment-icon"></span>
             </div>
             <div class="item bullet-item item-selectable">
               <span class="bullet-marker">&bull;</span>
               <span class="bullet-content">
                 Core contraction reaches central temperatures exceeding <code>T_core &gt;= 1.0e7 K</code>.
               </span>
+              <span class="item-comment-icon"></span>
             </div>
             <div class="item bullet-item item-selectable">
               <span class="bullet-marker">&bull;</span>
               <span class="bullet-content">
                 Ignition of self-sustaining hydrogen thermonuclear fusion marks the transition into a <em>zero-age main sequence</em> (<code>ZAMS</code>) star.
               </span>
+              <span class="item-comment-icon"></span>
             </div>
           </div>
         </section>
@@ -944,6 +1070,7 @@
           <span class="text-content">
             The <strong>main sequence</strong> represents the longest and most stable phase of a star&#39;s evolutionary journey, fueled by the core conversion of hydrogen into helium via <code>4 ¹H -&gt; ⁴He + 2e⁺ + 2νₑ</code>.
           </span>
+          <span class="item-comment-icon"></span>
         </div>
         <section class="section" data-level="3">
           <h3 class="section-subheading">Nuclear Fusion</h3>
@@ -952,23 +1079,27 @@
               <span class="text-content">
                 Energy generation in main-sequence stars relies on two distinct hydrogen burning mechanisms:
               </span>
+              <span class="item-comment-icon"></span>
             </div>
             <div class="item bullet-item item-selectable">
               <span class="bullet-marker">&bull;</span>
               <span class="bullet-content">
                 <strong>Proton-Proton Chain:</strong> Dominates in low-mass stars like our Sun (<code>M &lt;= 1.3 M_sun</code>) with core temperature around <code>1.5e7 K</code>.
               </span>
+              <span class="item-comment-icon"></span>
             </div>
             <div class="item bullet-item item-selectable">
               <span class="bullet-marker">&bull;</span>
               <span class="bullet-content">
                 <strong>CNO Cycle:</strong> Dominates in higher-mass stars (<code>M &gt; 1.3 M_sun</code>) where carbon, nitrogen, and oxygen catalyze fusion.
               </span>
+              <span class="item-comment-icon"></span>
             </div>
             <div class="item text-item item-selectable">
               <span class="text-content">
                 Energy output scales dramatically with mass according to the mass-luminosity relation <code>L \propto M^{3.5}</code>, meaning high-mass stars exhaust their core fuel at <em>exponentially faster</em> rates than <s>long-lived red dwarfs</s>.
               </span>
+              <span class="item-comment-icon"></span>
             </div>
           </div>
         </section>
@@ -979,11 +1110,13 @@
               <span class="text-content">
                 A star maintains structural stability through <strong>hydrostatic equilibrium</strong>, an exact dynamic balance between the <em>inward pull</em> of gravity and the <em>outward push</em> of radiative and thermal gas pressure.
               </span>
+              <span class="item-comment-icon"></span>
             </div>
             <div class="item text-item item-selectable">
               <span class="text-content">
                 When core hydrogen is exhausted, the core is no longer sustained by <s>thermal radiation pressure</s>, leading directly to core contraction and envelope expansion into a giant branch star.
               </span>
+              <span class="item-comment-icon"></span>
             </div>
           </div>
         </section>
@@ -999,6 +1132,7 @@
           <span class="text-content">
             Final stellar remnants depend fundamentally on the progenitor&#39;s initial mass and whether the core exceeds the <strong><em>Chandrasekhar limit</em></strong> (<code>M_Ch \approx 1.44 M_sun</code>).
           </span>
+          <span class="item-comment-icon"></span>
         </div>
         <section class="section" data-level="3">
           <h3 class="section-subheading">White Dwarfs</h3>
@@ -1007,23 +1141,27 @@
               <span class="text-content">
                 Low- to intermediate-mass progenitors (<code>M &lt;= 8 M_sun</code>) shed their outer gaseous envelopes as picturesque <em>planetary nebulae</em>, leaving behind an ultra-dense <strong>white dwarf</strong> remnant.
               </span>
+              <span class="item-comment-icon"></span>
             </div>
             <div class="item bullet-item item-selectable">
               <span class="bullet-marker">&bull;</span>
               <span class="bullet-content">
                 Composed primarily of degenerate carbon and oxygen ions.
               </span>
+              <span class="item-comment-icon"></span>
             </div>
             <div class="item bullet-item item-selectable">
               <span class="bullet-marker">&bull;</span>
               <span class="bullet-content">
                 Supported against catastrophic gravitational collapse by quantum <strong>electron degeneracy pressure</strong>.
               </span>
+              <span class="item-comment-icon"></span>
             </div>
             <div class="item text-item item-selectable">
               <span class="text-content">
                 White dwarfs contain no <s>active thermonuclear furnace</s>; they radiate residual stored thermal energy until cooling into hypothetical <em>black dwarfs</em>.
               </span>
+              <span class="item-comment-icon"></span>
             </div>
           </div>
         </section>
@@ -1034,23 +1172,27 @@
               <span class="text-content">
                 Massive progenitors (<code>M &gt; 8 M_sun</code>) undergo catastrophic core collapse, culminating in violent <code>Type II</code> <strong>core-collapse supernovae</strong>.
               </span>
+              <span class="item-comment-icon"></span>
             </div>
             <div class="item bullet-item item-selectable">
               <span class="bullet-marker">&bull;</span>
               <span class="bullet-content">
                 <strong>Neutron Stars:</strong> Ultra-dense stellar remnants supported by <strong>neutron degeneracy pressure</strong> up to the <strong><em>Tolman-Oppenheimer-Volkoff (TOV) limit</em></strong> (<code>M_TOV \approx 2.17 M_sun</code>).
               </span>
+              <span class="item-comment-icon"></span>
             </div>
             <div class="item bullet-item item-selectable">
               <span class="bullet-marker">&bull;</span>
               <span class="bullet-content">
                 <strong>Black Holes:</strong> Extreme remnants where gravitational collapse overcomes all degeneracy forces, compressing matter into a gravitational singularity bounded by an event horizon at the Schwarzschild radius <code>R_s = 2GM/c^2</code>.
               </span>
+              <span class="item-comment-icon"></span>
             </div>
             <div class="item text-item item-selectable">
               <span class="text-content">
                 Supernova nucleosynthesis disperses heavy elements across interstellar space, replacing <s>pristine hydrogen-helium gas</s> with enriched matter for future stellar generations.
               </span>
+              <span class="item-comment-icon"></span>
             </div>
           </div>
         </section>
@@ -1084,6 +1226,7 @@
     (() => {
       const saveHandlers = new Set();
       const loadHandlers = new Set();
+      const resetHandlers = new Set();
 
       const registerSaveHandler = (handler) => {
         saveHandlers.add(handler);
@@ -1091,6 +1234,10 @@
 
       const registerLoadHandler = (handler) => {
         loadHandlers.add(handler);
+      };
+
+      const registerResetHandler = (handler) => {
+        resetHandlers.add(handler);
       };
 
       const getStateKey = () => {
@@ -1150,6 +1297,22 @@
         }
       };
 
+      const resetAll = () => {
+        const i18n = window.d2f?.lang?.dictionary;
+        const confirmMsg = i18n?.confirm_reset;
+        if (confirmMsg && !confirm(confirmMsg)) return;
+
+        resetHandlers.forEach((handler) => {
+          try {
+            handler();
+          } catch (e) {
+            console.warn('Failed to execute reset handler', e);
+          }
+        });
+
+        saveState();
+      };
+
       window.d2f = window.d2f || {};
       window.d2f.storage = {
         registerSaveHandler,
@@ -1157,6 +1320,9 @@
         loadState,
         saveState,
       };
+      window.d2f.core = window.d2f.core || {};
+      window.d2f.core.registerResetHandler = registerResetHandler;
+      window.d2f.core.resetAll = resetAll;
 
       if (typeof window !== 'undefined') {
         if (document.readyState === 'loading') {
@@ -1284,6 +1450,9 @@
         if (window.d2f.storage?.registerLoadHandler) {
           window.d2f.storage.registerLoadHandler(loadSections);
         }
+        if (window.d2f.core?.registerResetHandler) {
+          window.d2f.core.registerResetHandler(resetSections);
+        }
 
         if (document.readyState === 'loading') {
           document.addEventListener('DOMContentLoaded', () => {
@@ -1378,7 +1547,9 @@
           (target.closest('input') && !(target instanceof HTMLInputElement && target.type === 'checkbox')) ||
           target.closest('textarea') ||
           target.closest('select') ||
-          target.closest('summary')
+          target.closest('summary') ||
+          target.closest('.item-comment-icon') ||
+          target.closest('.item-comment-box')
         ) {
           return;
         }
@@ -1417,7 +1588,161 @@
       if (typeof window !== 'undefined') {
         window.d2f.storage?.registerSaveHandler?.(saveItems);
         window.d2f.storage?.registerLoadHandler?.(loadItems);
+        window.d2f.core?.registerResetHandler?.(resetItems);
         document.addEventListener('click', handleClick);
+      }
+    })();
+    (() => {
+      // Adjusts textarea height automatically based on its scrollHeight.
+      const autoExpandTextarea = (el) => {
+        if (!el) return;
+        el.style.height = 'auto';
+        el.style.height = `${el.scrollHeight}px`;
+      };
+
+      // Creates a comment box or returns the existing one for an item.
+      const getOrCreateCommentBox = (item, initialValue) => {
+        if (!item) return null;
+        let box = item.querySelector('.item-comment-box');
+        let input = null;
+
+        if (!box) {
+          box = document.createElement('div');
+          box.className = 'item-comment-box';
+
+          input = document.createElement('textarea');
+          input.rows = 1;
+          input.className = 'item-comment-input';
+          const i18n = window.d2f?.lang?.dictionary;
+          const commentLabel = i18n?.comment_placeholder ?? 'Add a comment...';
+          input.placeholder = commentLabel;
+          input.setAttribute('aria-label', commentLabel);
+
+          const delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.className = 'item-comment-del';
+          delBtn.title = 'Delete comment';
+          delBtn.setAttribute('aria-label', 'Delete comment');
+          delBtn.innerHTML = '&#10006;';
+
+          box.appendChild(input);
+          box.appendChild(delBtn);
+          item.appendChild(box);
+        } else {
+          const rawInput = box.querySelector('.item-comment-input');
+          input = rawInput instanceof HTMLTextAreaElement ? rawInput : null;
+        }
+
+        if (!input) return null;
+
+        if (typeof initialValue === 'string') {
+          input.value = initialValue;
+          input.textContent = initialValue;
+          input.setAttribute('value', initialValue);
+        }
+
+        autoExpandTextarea(input);
+        return { box, input };
+      };
+
+      // Collects all active comments across selectable items for storage.
+      const saveComments = () => {
+        const comments = {};
+        document.querySelectorAll('.item-selectable').forEach((item, index) => {
+          const input = item.querySelector('.item-comment-input');
+          if (input && input.value.trim() !== '') {
+            const key = item.id || `item_${index}`;
+            comments[key] = input.value;
+          }
+        });
+        return { comments };
+      };
+
+      // Reconstructs comment boxes from stored comment data.
+      const loadComments = (state) => {
+        const commentsData = state?.comments;
+        const isRecord = window.d2f?.utils?.isRecord;
+        const isValid = typeof isRecord === 'function'
+          ? isRecord(commentsData)
+          : (typeof commentsData === 'object' && commentsData !== null && !Array.isArray(commentsData));
+
+        if (!isValid) return;
+
+        document.querySelectorAll('.item-selectable').forEach((item, index) => {
+          const key = item.id || `item_${index}`;
+          const val = commentsData[key];
+          if (typeof val === 'string' && val.trim() !== '') {
+            getOrCreateCommentBox(item, val);
+          }
+        });
+      };
+
+      // Removes all active comment boxes from the DOM.
+      const resetComments = () => {
+        document.querySelectorAll('.item-comment-box').forEach((box) => {
+          box.remove();
+        });
+      };
+
+      // Expose comment functions to the global Doc2Flow namespace.
+      window.d2f = window.d2f || {};
+      window.d2f.comments = {
+        autoExpandTextarea,
+        getOrCreateCommentBox,
+        saveComments,
+        loadComments,
+        resetComments,
+      };
+
+      // Initialize event bindings, storage hooks, and reset handler.
+      if (typeof window !== 'undefined') {
+        window.d2f.storage?.registerSaveHandler?.(saveComments);
+        window.d2f.storage?.registerLoadHandler?.(loadComments);
+        window.d2f.core?.registerResetHandler?.(resetComments);
+
+        const debounceFn = window.d2f?.utils?.debounce;
+        const saveStateDebounced = typeof debounceFn === 'function'
+          ? debounceFn(() => window.d2f.storage?.saveState?.(), 300)
+          : () => window.d2f.storage?.saveState?.();
+
+        document.addEventListener('click', (e) => {
+          const { target } = e;
+          if (!(target instanceof Element)) return;
+
+          const commentBtn = target.closest('.item-comment-icon');
+          if (commentBtn) {
+            const item = commentBtn.closest('.item-selectable');
+            if (item) {
+              const res = getOrCreateCommentBox(item);
+              if (res?.input) {
+                res.input.focus();
+              }
+            }
+            return;
+          }
+
+          const commentDelBtn = target.closest('.item-comment-del');
+          if (commentDelBtn) {
+            const box = commentDelBtn.closest('.item-comment-box');
+            if (box) {
+              box.remove();
+              window.d2f.storage?.saveState?.();
+            }
+          }
+        });
+
+        const handleCommentInput = (e) => {
+          const { target } = e;
+          if (target instanceof HTMLTextAreaElement && target.classList.contains('item-comment-input')) {
+            target.textContent = target.value;
+            target.setAttribute('value', target.value);
+            autoExpandTextarea(target);
+            saveStateDebounced();
+          }
+        };
+
+        document.addEventListener('input', handleCommentInput);
+        document.addEventListener('change', handleCommentInput);
       }
     })();
   </script>
