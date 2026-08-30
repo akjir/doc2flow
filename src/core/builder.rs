@@ -101,6 +101,11 @@ pub fn build(document: &Document) -> String {
         renderer.mark_feature_active("input");
     }
 
+    let export_pdf_label = crate::core::language::localize("export_pdf");
+    let save_state_label = crate::core::language::localize("save_state");
+    let reset_all_label = crate::core::language::localize("reset_all");
+    let confirm_reset_msg = crate::core::language::localize("confirm_reset");
+
     let mut active_buffer =
         [&crate::features::CORE_FEATURE as &'static dyn FeatureModule; MAX_ACTIVE_FEATURES];
     let active_modules = renderer.active_features(&mut active_buffer);
@@ -118,6 +123,10 @@ pub fn build(document: &Document) -> String {
         .replace("{{TITLE}}", title)
         .replace("{{DOCUMENT_ID}}", &document_id)
         .replace("{{FEATURES}}", &features_str)
+        .replace("{{L_EXPORT_PDF}}", &export_pdf_label)
+        .replace("{{L_SAVE_STATE}}", &save_state_label)
+        .replace("{{L_RESET_ALL}}", &reset_all_label)
+        .replace("{{L_CONFIRM_RESET}}", &confirm_reset_msg)
         .replace("{{CSS}}", &css_content)
         .replace("{{JS}}", &js_content)
         .replace("{{CONTENT}}", &html_content)
@@ -157,10 +166,18 @@ mod tests {
         assert!(!content.contains("{{LANGUAGE_CODE}}"));
         assert!(!content.contains("{{DOCUMENT_ID}}"));
         assert!(!content.contains("{{FEATURES}}"));
+        assert!(!content.contains("{{L_EXPORT_PDF}}"));
+        assert!(!content.contains("{{L_SAVE_STATE}}"));
+        assert!(!content.contains("{{L_RESET_ALL}}"));
+        assert!(!content.contains("{{L_CONFIRM_RESET}}"));
         assert!(!content.contains("{{CSS}}"));
         assert!(!content.contains("{{JS}}"));
         assert!(!content.contains("{{TITLE}}"));
         assert!(content.contains("<title></title>"));
+        assert!(content.contains("<div class=\"doc-body-buttons\">"));
+        assert!(content.contains("<button type=\"button\" class=\"item-button-pdf\" id=\"item-button-pdf\">Export as PDF</button>"));
+        assert!(content.contains("<button type=\"button\" class=\"item-button-save\" id=\"item-button-save\">Save State</button>"));
+        assert!(content.contains("<button type=\"button\" class=\"item-button-reset\" id=\"item-button-reset\" data-confirm=\"Are you sure you want to reset all inputs and markings and expand all sections?\">Reset</button>"));
         assert!(content.contains("--bg-body:"));
         assert!(content.contains("window.d2f"));
         assert!(content.contains("window.d2f.document.id = 'd2f_id_"));
@@ -277,8 +294,15 @@ mod tests {
         assert!(content.contains("<html lang=\"de\">"));
         assert!(content.contains("window.d2f.document.language = 'de';"));
         assert!(content.contains("data-label=\"Hinweis\""));
+        assert!(content.contains("<button type=\"button\" class=\"item-button-pdf\" id=\"item-button-pdf\">Als PDF exportieren</button>"));
+        assert!(content.contains("<button type=\"button\" class=\"item-button-save\" id=\"item-button-save\">Stand sichern</button>"));
+        assert!(content.contains("<button type=\"button\" class=\"item-button-reset\" id=\"item-button-reset\" data-confirm=\"Sind Sie sicher, dass Sie alle Eingaben und Markierungen zurücksetzen und alle Abschnitte ausklappen möchten?\">Zurücksetzen</button>"));
         assert!(!content.contains("{{LANG_CODE}}"));
         assert!(!content.contains("{{LANGUAGE_CODE}}"));
+        assert!(!content.contains("{{L_EXPORT_PDF}}"));
+        assert!(!content.contains("{{L_SAVE_STATE}}"));
+        assert!(!content.contains("{{L_RESET_ALL}}"));
+        assert!(!content.contains("{{L_CONFIRM_RESET}}"));
     }
 
     #[test]
@@ -296,6 +320,9 @@ mod tests {
         assert!(content.contains("<html lang=\"fr\">"));
         assert!(content.contains("window.d2f.document.language = 'fr';"));
         assert!(content.contains("data-label=\"{{callout_note}}\""));
+        assert!(content.contains("<button type=\"button\" class=\"item-button-pdf\" id=\"item-button-pdf\">{{export_pdf}}</button>"));
+        assert!(content.contains("<button type=\"button\" class=\"item-button-save\" id=\"item-button-save\">{{save_state}}</button>"));
+        assert!(content.contains("<button type=\"button\" class=\"item-button-reset\" id=\"item-button-reset\" data-confirm=\"{{confirm_reset}}\">{{reset_all}}</button>"));
     }
 
     #[test]

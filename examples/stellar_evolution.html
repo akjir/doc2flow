@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+265.b54e757.dev">
-  <meta name="version" content="0.9.4+265.b54e757.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+266.c1ab682.dev">
+  <meta name="version" content="0.9.4+266.c1ab682.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-30T08:25:24Z">
+  <meta name="dcterms.created" content="2026-08-30T11:16:33Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
   <meta name="features" content="core, header, bullet, comment, input">
   <title>Stellar Evolution Overview</title>
@@ -533,7 +533,66 @@
       padding: 0;
     }
 
-    /* 7. Print Styles */
+    /* 8. Action Button Components (doc-body-buttons, item-button-*) */
+    .doc-body-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .item-button-pdf {
+      padding: 7px 18px;
+      background-color: var(--section-bg-header-h1, #163a5c);
+      border: 1px solid var(--section-bg-header-h1, #163a5c);
+      border-radius: 6px;
+      color: #ffffff;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+    }
+
+    .item-button-pdf:hover {
+      background-color: #174070;
+      border-color: #174070;
+    }
+
+    .item-button-save {
+      padding: 7px 18px;
+      background-color: var(--txt-color-link, #2e75b6);
+      border: 1px solid var(--txt-color-link, #2e75b6);
+      border-radius: 6px;
+      color: #ffffff;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .item-button-save:hover {
+      background-color: var(--section-bg-header-h1, #163a5c);
+      border-color: var(--section-bg-header-h1, #163a5c);
+    }
+
+    .item-button-reset {
+      padding: 5px 16px;
+      background-color: transparent;
+      border: 1px solid #aaaaaa;
+      border-radius: 6px;
+      color: #666666;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .item-button-reset:hover {
+      background-color: #f0f0f0;
+    }
+
+    /* 9. Print Styles */
     @media print {
       body {
         background-color: #ffffff !important;
@@ -546,6 +605,10 @@
         max-width: 100% !important;
         margin: 0 !important;
         padding: 0 !important;
+      }
+
+      .doc-body-buttons {
+        display: none !important;
       }
 
       .bg-body,
@@ -672,7 +735,7 @@
       }
     }
 
-    /* 8. Responsive Styles */
+    /* 10. Responsive Styles */
     @media (max-width: 600px) {
       .doc-body {
         padding: 0 10px 40px;
@@ -1284,6 +1347,11 @@
         </section>
       </div>
     </section>
+    <div class="doc-body-buttons">
+      <button type="button" class="item-button-pdf" id="item-button-pdf">Export as PDF</button>
+      <button type="button" class="item-button-save" id="item-button-save">Save State</button>
+      <button type="button" class="item-button-reset" id="item-button-reset" data-confirm="Are you sure you want to reset all inputs and markings and expand all sections?">Reset</button>
+    </div>
   </main><!-- doc-body -->
   <script>
     window.d2f = window.d2f || {};
@@ -1312,7 +1380,6 @@
     (() => {
       const saveHandlers = new Set();
       const loadHandlers = new Set();
-      const resetHandlers = new Set();
 
       const registerSaveHandler = (handler) => {
         saveHandlers.add(handler);
@@ -1320,10 +1387,6 @@
 
       const registerLoadHandler = (handler) => {
         loadHandlers.add(handler);
-      };
-
-      const registerResetHandler = (handler) => {
-        resetHandlers.add(handler);
       };
 
       const getStateKey = () => {
@@ -1383,10 +1446,39 @@
         }
       };
 
+      window.d2f = window.d2f || {};
+      window.d2f.storage = {
+        registerSaveHandler,
+        registerLoadHandler,
+        loadState,
+        saveState,
+      };
+
+      if (typeof window !== 'undefined') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => {
+            loadState();
+          });
+        } else {
+          loadState();
+        }
+      }
+    })();
+    (() => {
+      const resetHandlers = new Set();
+
+      const registerResetHandler = (handler) => {
+        resetHandlers.add(handler);
+      };
+
       const resetAll = () => {
-        const i18n = window.d2f?.lang?.dictionary;
-        const confirmMsg = i18n?.confirm_reset;
-        if (confirmMsg && !confirm(confirmMsg)) return;
+        const resetBtn = document.getElementById('item-button-reset')
+          || document.querySelector('.item-button-reset');
+        const confirmMsg = resetBtn?.dataset?.confirm
+          || resetBtn?.getAttribute('data-confirm')
+          || 'Are you sure you want to reset all inputs and markings and expand all sections?';
+
+        if (!confirm(confirmMsg)) return;
 
         resetHandlers.forEach((handler) => {
           try {
@@ -1396,27 +1488,139 @@
           }
         });
 
-        saveState();
+        window.d2f?.storage?.saveState?.();
       };
 
       window.d2f = window.d2f || {};
-      window.d2f.storage = {
-        registerSaveHandler,
-        registerLoadHandler,
-        loadState,
-        saveState,
+      window.d2f.core = {
+        registerResetHandler,
+        resetAll,
       };
-      window.d2f.core = window.d2f.core || {};
-      window.d2f.core.registerResetHandler = registerResetHandler;
-      window.d2f.core.resetAll = resetAll;
+
+      const init = () => {
+        document.addEventListener('click', (e) => {
+          const { target } = e;
+          if (!(target instanceof Element)) return;
+
+          const btn = target.closest('#item-button-reset, .item-button-reset');
+          if (btn) {
+            resetAll();
+          }
+        });
+      };
 
       if (typeof window !== 'undefined') {
         if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', () => {
-            loadState();
-          });
+          document.addEventListener('DOMContentLoaded', init);
         } else {
-          loadState();
+          init();
+        }
+      }
+    })();
+    (() => {
+      const exportHandlers = new Set();
+
+      const registerExportHandler = (handler) => {
+        exportHandlers.add(handler);
+      };
+
+      const performExport = (type) => {
+        exportHandlers.forEach((handler) => {
+          try {
+            handler(type);
+          } catch (e) {
+            console.warn('Failed to execute export handler', e);
+          }
+        });
+
+        if (type === 'PDF') {
+          const collapsed = Array.from(
+            document.querySelectorAll('.section-body.collapsed, .sb.collapsed')
+          );
+          collapsed.forEach((el) => el.classList.remove('collapsed'));
+
+          const restore = () => {
+            collapsed.forEach((el) => el.classList.add('collapsed'));
+            window.removeEventListener('afterprint', restore);
+          };
+
+          window.addEventListener('afterprint', restore);
+          window.setTimeout(() => window.print(), 100);
+          return;
+        }
+
+        if (type === 'DOCUMENT') {
+          window.d2f?.storage?.saveState?.();
+
+          document.querySelectorAll(
+            'input.input-field, input.code-table-input, input.persistent-field, input[type="text"], input:not([type])'
+          ).forEach((input) => {
+            if (input instanceof HTMLInputElement) {
+              input.setAttribute('value', input.value);
+            }
+          });
+
+          document.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+            if (cb instanceof HTMLInputElement) {
+              if (cb.checked) {
+                cb.setAttribute('checked', '');
+              } else {
+                cb.removeAttribute('checked');
+              }
+            }
+          });
+
+          document.querySelectorAll('textarea').forEach((ta) => {
+            if (ta instanceof HTMLTextAreaElement) {
+              ta.textContent = ta.value;
+              ta.setAttribute('value', ta.value);
+            }
+          });
+
+          const rawFilename = window.location.pathname.split('/').pop() || 'index.html';
+          const filename = decodeURIComponent(rawFilename || 'index.html');
+          const htmlContent = `<!DOCTYPE html>\n${document.documentElement.outerHTML}`;
+          const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }
+      };
+
+      window.d2f = window.d2f || {};
+      window.d2f.export = {
+        export: performExport,
+        registerExportHandler,
+      };
+
+      const init = () => {
+        document.addEventListener('click', (e) => {
+          const { target } = e;
+          if (!(target instanceof Element)) return;
+
+          const pdfBtn = target.closest('#item-button-pdf, .item-button-pdf');
+          if (pdfBtn) {
+            performExport('PDF');
+            return;
+          }
+
+          const saveBtn = target.closest('#item-button-save, .item-button-save');
+          if (saveBtn) {
+            performExport('DOCUMENT');
+          }
+        });
+      };
+
+      if (typeof window !== 'undefined') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', init);
+        } else {
+          init();
         }
       }
     })();

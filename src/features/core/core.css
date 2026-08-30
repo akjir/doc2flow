@@ -519,7 +519,66 @@ hr {
   padding: 0;
 }
 
-/* 7. Print Styles */
+/* 8. Action Button Components (doc-body-buttons, item-button-*) */
+.doc-body-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.item-button-pdf {
+  padding: 7px 18px;
+  background-color: var(--section-bg-header-h1, #163a5c);
+  border: 1px solid var(--section-bg-header-h1, #163a5c);
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.item-button-pdf:hover {
+  background-color: #174070;
+  border-color: #174070;
+}
+
+.item-button-save {
+  padding: 7px 18px;
+  background-color: var(--txt-color-link, #2e75b6);
+  border: 1px solid var(--txt-color-link, #2e75b6);
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.item-button-save:hover {
+  background-color: var(--section-bg-header-h1, #163a5c);
+  border-color: var(--section-bg-header-h1, #163a5c);
+}
+
+.item-button-reset {
+  padding: 5px 16px;
+  background-color: transparent;
+  border: 1px solid #aaaaaa;
+  border-radius: 6px;
+  color: #666666;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.item-button-reset:hover {
+  background-color: #f0f0f0;
+}
+
+/* 9. Print Styles */
 @media print {
   body {
     background-color: #ffffff !important;
@@ -532,6 +591,10 @@ hr {
     max-width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
+  }
+
+  .doc-body-buttons {
+    display: none !important;
   }
 
   .bg-body,
@@ -658,7 +721,7 @@ hr {
   }
 }
 
-/* 8. Responsive Styles */
+/* 10. Responsive Styles */
 @media (max-width: 600px) {
   .doc-body {
     padding: 0 10px 40px;

@@ -14,6 +14,12 @@ pub const JS_UTILS: &str = include_str!("utils.js");
 /// Embedded core JavaScript state storage handlers.
 pub const JS_STORAGE: &str = include_str!("storage.js");
 
+/// Embedded core JavaScript core and reset handlers.
+pub const JS_CORE: &str = include_str!("core.js");
+
+/// Embedded core JavaScript export handlers.
+pub const JS_EXPORT: &str = include_str!("export.js");
+
 /// Embedded core JavaScript section collapse handlers.
 pub const JS_SECTIONS: &str = include_str!("sections.js");
 
@@ -147,7 +153,14 @@ impl FeatureModule for CoreFeature {
     }
 
     fn javascript(&self) -> &[&'static str] {
-        &[JS_UTILS, JS_STORAGE, JS_SECTIONS, JS_ITEMS]
+        &[
+            JS_UTILS,
+            JS_STORAGE,
+            JS_CORE,
+            JS_EXPORT,
+            JS_SECTIONS,
+            JS_ITEMS,
+        ]
     }
 }
 
@@ -168,6 +181,10 @@ mod tests {
         assert!(css.contains("--item-hover-bg:"));
         assert!(css.contains("--item-done-bg:"));
         assert!(css.contains(".doc-body"));
+        assert!(css.contains(".doc-body-buttons"));
+        assert!(css.contains(".item-button-pdf"));
+        assert!(css.contains(".item-button-save"));
+        assert!(css.contains(".item-button-reset"));
         assert!(css.contains(".item"));
         assert!(css.contains(".item-selectable"));
         assert!(css.contains(".text-content"));
@@ -187,7 +204,7 @@ mod tests {
     fn test_core_feature_javascript() {
         let feature = CoreFeature::new();
         let js = feature.javascript();
-        assert_eq!(js.len(), 4);
+        assert_eq!(js.len(), 6);
         assert!(js[0].contains("window.d2f"));
         assert!(js[0].contains("utils"));
         assert!(js[0].contains("debounce"));
@@ -195,13 +212,58 @@ mod tests {
         assert!(!js[0].contains("\nt,") && !js[0].contains(" t,"));
         assert!(js[1].contains("window.d2f"));
         assert!(js[1].contains("storage"));
-        assert!(js[1].contains("resetAll"));
+        assert!(js[1].contains("saveState"));
+        assert!(js[1].contains("loadState"));
         assert!(js[2].contains("window.d2f"));
-        assert!(js[2].contains("sections"));
+        assert!(js[2].contains("core"));
+        assert!(js[2].contains("resetAll"));
+        assert!(js[2].contains("registerResetHandler"));
         assert!(js[3].contains("window.d2f"));
-        assert!(js[3].contains("items"));
-        assert!(js[3].contains("saveItems"));
-        assert!(js[3].contains("loadItems"));
+        assert!(js[3].contains("export"));
+        assert!(js[3].contains("performExport"));
+        assert!(js[3].contains("registerExportHandler"));
+        assert!(js[3].contains("afterprint"));
+        assert!(js[3].contains("DOCUMENT"));
+        assert!(js[4].contains("window.d2f"));
+        assert!(js[4].contains("sections"));
+        assert!(js[5].contains("window.d2f"));
+        assert!(js[5].contains("items"));
+        assert!(js[5].contains("loadItems"));
+    }
+
+    #[test]
+    fn test_core_feature_action_buttons_css_print_hidden() {
+        let feature = CoreFeature::new();
+        let css = feature.css().expect("core css should exist");
+        assert!(css.contains(".doc-body-buttons"));
+        assert!(css.contains("display: none !important;"));
+        assert!(css.contains("@media print"));
+    }
+
+    #[test]
+    fn test_core_feature_javascript_core_and_export_details() {
+        let feature = CoreFeature::new();
+        let js = feature.javascript();
+
+        // JS_CORE details
+        let core_script = js[2];
+        assert!(core_script.contains("resetHandlers"));
+        assert!(core_script.contains("registerResetHandler"));
+        assert!(core_script.contains("confirm"));
+        assert!(core_script.contains("data-confirm"));
+        assert!(core_script.contains("window.d2f?.storage?.saveState?.()"));
+
+        // JS_EXPORT details
+        let export_script = js[3];
+        assert!(export_script.contains("exportHandlers"));
+        assert!(export_script.contains("registerExportHandler"));
+        assert!(export_script.contains("window.print()"));
+        assert!(export_script.contains("afterprint"));
+        assert!(export_script.contains("Blob"));
+        assert!(export_script.contains("setAttribute('value'"));
+        assert!(export_script.contains("setAttribute('checked'"));
+        assert!(export_script.contains("URL.createObjectURL"));
+        assert!(export_script.contains("URL.revokeObjectURL"));
     }
 
     #[test]

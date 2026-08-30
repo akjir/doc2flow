@@ -18,7 +18,12 @@
   <header class="doc-header">
   </header>
   <main class="doc-body">
-{{CONTENT}}  </main><!-- doc-body -->
+{{CONTENT}}    <div class="doc-body-buttons">
+      <button type="button" class="item-button-pdf" id="item-button-pdf">{{L_EXPORT_PDF}}</button>
+      <button type="button" class="item-button-save" id="item-button-save">{{L_SAVE_STATE}}</button>
+      <button type="button" class="item-button-reset" id="item-button-reset" data-confirm="{{L_CONFIRM_RESET}}">{{L_RESET_ALL}}</button>
+    </div>
+  </main><!-- doc-body -->
   <script>
     window.d2f = window.d2f || {};
     window.d2f.document = window.d2f.document || {};

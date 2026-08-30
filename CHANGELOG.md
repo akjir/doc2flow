@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added interactive footer action bar with PDF export, state saving, and reset buttons.
 - Added interactive 1-click code copying and live variable synchronization in code blocks.
 - Added standalone comment feature module and frontmatter configuration option (`comments: true/false`).
 - Added persistent client-side input field and code variable table value persistence in localStorage.
