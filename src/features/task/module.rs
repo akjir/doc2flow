@@ -88,9 +88,11 @@ impl DocumentElementRenderer for TaskFeature {
             push_indent(out, indent + 1);
             out.push_str("</span>\n");
 
-            push_indent(out, indent + 1);
-            out.push_str(crate::features::core::COMMENT_ICON_SVG);
-            out.push('\n');
+            if parameters.comments {
+                push_indent(out, indent + 1);
+                out.push_str(crate::features::comment::COMMENT_ICON_SVG);
+                out.push('\n');
+            }
 
             push_indent(out, indent);
             out.push_str("</div>\n");
@@ -113,7 +115,7 @@ impl FeatureModule for TaskFeature {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::features::core::COMMENT_ICON_SVG;
+    use crate::features::comment::COMMENT_ICON_SVG;
 
     #[test]
     fn test_task_feature_css() {

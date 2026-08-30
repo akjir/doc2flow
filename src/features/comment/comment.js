@@ -18,7 +18,7 @@
 
       input = document.createElement('textarea');
       input.rows = 1;
-      input.className = 'item-comment-input';
+      input.className = 'item-comment-input input-field';
       const i18n = window.d2f?.lang?.dictionary;
       const commentLabel = i18n?.comment_placeholder ?? 'Add a comment...';
       input.placeholder = commentLabel;
@@ -83,7 +83,7 @@
     });
   };
 
-  // Removes all active comment boxes from the DOM.
+  // Removes all active comment boxes from the DOM upon reset.
   const resetComments = () => {
     document.querySelectorAll('.item-comment-box').forEach((box) => {
       box.remove();

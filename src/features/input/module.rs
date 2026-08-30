@@ -8,6 +8,9 @@ use crate::core::renderer::{DocumentElementRenderer, HtmlRenderer};
 /// Embedded input CSS stylesheet.
 pub const CSS: &str = include_str!("input.css");
 
+/// Embedded input JavaScript client script.
+pub const JS: &str = include_str!("input.js");
+
 /// Supported document element identifiers for input form field elements.
 const INPUT_SUPPORTED: [DocumentElementId; 1] = [DocumentElementId::Input];
 
@@ -68,11 +71,31 @@ impl FeatureModule for InputFeature {
     fn css(&self) -> Option<&'static str> {
         Some(CSS)
     }
+
+    fn javascript(&self) -> &[&'static str] {
+        &[JS]
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_input_feature_javascript() {
+        let feature = InputFeature::new();
+        let js_files = feature.javascript();
+        assert_eq!(js_files.len(), 1);
+        let js = js_files[0];
+        assert!(js.contains("saveFields"));
+        assert!(js.contains("loadFields"));
+        assert!(js.contains("resetFields"));
+        assert!(js.contains("registerSaveHandler"));
+        assert!(js.contains("registerLoadHandler"));
+        assert!(js.contains("registerResetHandler"));
+        assert!(js.contains("input-field"));
+    }
+
 
     #[test]
     fn test_input_feature_constructor_new() {

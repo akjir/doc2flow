@@ -20,12 +20,6 @@ pub const JS_SECTIONS: &str = include_str!("sections.js");
 /// Embedded core JavaScript selectable items handlers.
 pub const JS_ITEMS: &str = include_str!("items.js");
 
-/// Embedded core JavaScript comment handlers.
-pub const JS_COMMENTS: &str = include_str!("comments.js");
-
-/// Embedded SVG comment icon for interactive elements.
-pub const COMMENT_ICON_SVG: &str = "<span class=\"item-comment-icon\"></span>";
-
 /// Supported document element identifiers for core elements.
 const CORE_SUPPORTED: [DocumentElementId; 3] = [
     DocumentElementId::HorizontalRule,
@@ -130,9 +124,11 @@ impl DocumentElementRenderer for CoreFeature {
                 }
                 push_indent(out, indent + 1);
                 out.push_str("</span>\n");
-                push_indent(out, indent + 1);
-                out.push_str(COMMENT_ICON_SVG);
-                out.push('\n');
+                if parameters.comments {
+                    push_indent(out, indent + 1);
+                    out.push_str(crate::features::comment::COMMENT_ICON_SVG);
+                    out.push('\n');
+                }
                 push_indent(out, indent);
                 out.push_str("</div>\n");
             }
@@ -151,13 +147,14 @@ impl FeatureModule for CoreFeature {
     }
 
     fn javascript(&self) -> &[&'static str] {
-        &[JS_UTILS, JS_STORAGE, JS_SECTIONS, JS_ITEMS, JS_COMMENTS]
+        &[JS_UTILS, JS_STORAGE, JS_SECTIONS, JS_ITEMS]
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::features::comment::COMMENT_ICON_SVG;
 
     #[test]
     fn test_core_feature_css() {
@@ -173,10 +170,6 @@ mod tests {
         assert!(css.contains(".doc-body"));
         assert!(css.contains(".item"));
         assert!(css.contains(".item-selectable"));
-        assert!(css.contains(".item-comment-icon"));
-        assert!(css.contains(".item-comment-box"));
-        assert!(css.contains(".item-comment-input"));
-        assert!(css.contains(".item-comment-del"));
         assert!(css.contains(".text-content"));
         assert!(css.contains(".text-item"));
         assert!(css.contains(".txt-default"));
@@ -194,7 +187,7 @@ mod tests {
     fn test_core_feature_javascript() {
         let feature = CoreFeature::new();
         let js = feature.javascript();
-        assert_eq!(js.len(), 5);
+        assert_eq!(js.len(), 4);
         assert!(js[0].contains("window.d2f"));
         assert!(js[0].contains("utils"));
         assert!(js[0].contains("debounce"));
@@ -209,11 +202,6 @@ mod tests {
         assert!(js[3].contains("items"));
         assert!(js[3].contains("saveItems"));
         assert!(js[3].contains("loadItems"));
-        assert!(js[4].contains("window.d2f"));
-        assert!(js[4].contains("comments"));
-        assert!(js[4].contains("saveComments"));
-        assert!(js[4].contains("loadComments"));
-        assert!(js[4].contains("resetComments"));
     }
 
     #[test]

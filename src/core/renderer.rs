@@ -101,6 +101,16 @@ impl<'a> HtmlRenderer<'a> {
         self.active_mask.set(self.active_mask.get() | (1 << index));
     }
 
+    /// Marks the feature module with the given name as active.
+    pub fn mark_feature_active(&self, name: &str) {
+        for (i, &module) in self.modules.iter().enumerate() {
+            if module.name() == name {
+                self.mark_module_active(i);
+                break;
+            }
+        }
+    }
+
     /// Renders a single document element and its children into the output buffer.
     pub fn render_element(
         &self,
@@ -192,10 +202,11 @@ pub fn render_element(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::features::core::COMMENT_ICON_SVG;
+    use crate::features::comment::COMMENT_ICON_SVG;
 
     #[test]
     fn test_render_element_text() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let text = DocumentElement::text("Sample paragraph text");
         assert_eq!(
             render_element(&text, 1, &DocumentParameters::default()),
@@ -207,6 +218,7 @@ mod tests {
 
     #[test]
     fn test_render_element_unknown() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let unknown = DocumentElement::unknown("Unrecognized markdown");
         assert_eq!(
             render_element(&unknown, 1, &DocumentParameters::default()),
@@ -216,6 +228,7 @@ mod tests {
 
     #[test]
     fn test_render_element_section_with_children() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let section = DocumentElement::section(
             2,
             "Details",
@@ -257,6 +270,7 @@ mod tests {
 
     #[test]
     fn test_render_element_nested_sections() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let inner_section =
             DocumentElement::section(3, "Inner", vec![DocumentElement::text("Inner content")]);
         let outer_section = DocumentElement::section(1, "Outer", vec![inner_section]);
@@ -292,6 +306,7 @@ mod tests {
 
     #[test]
     fn test_render_element_code_block() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let code_block = DocumentElement::code_block(Some("rust"), "fn main() {}");
         assert_eq!(
             render_element(&code_block, 1, &DocumentParameters::default()),
@@ -301,6 +316,7 @@ mod tests {
 
     #[test]
     fn test_render_element_horizontal_rule() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let hr = DocumentElement::horizontal_rule();
         assert_eq!(
             render_element(&hr, 1, &DocumentParameters::default()),
@@ -314,6 +330,7 @@ mod tests {
 
     #[test]
     fn test_render_element_bullet_list_item() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let mut bullet = DocumentElement::bullet_list_item("Parent bullet");
         let child = DocumentElement::bullet_list_item("Child bullet");
         bullet.push_child(child).unwrap();
@@ -329,6 +346,7 @@ mod tests {
 
     #[test]
     fn test_render_element_check_box_item() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let mut check = DocumentElement::check_box_item(true, "Done task");
         let child = DocumentElement::check_box_item(false, "Sub task");
         check.push_child(child).unwrap();
@@ -344,6 +362,7 @@ mod tests {
 
     #[test]
     fn test_render_element_ordered_list_item() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let mut order = DocumentElement::ordered_list_item(1, "First step");
         let child = DocumentElement::ordered_list_item(1, "Sub step");
         order.push_child(child).unwrap();
@@ -361,6 +380,7 @@ mod tests {
 
     #[test]
     fn test_render_element_image() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let image = DocumentElement::image("alt text", "test.png");
         assert_eq!(
             render_element(&image, 1, &DocumentParameters::default()),
@@ -370,6 +390,7 @@ mod tests {
 
     #[test]
     fn test_render_element_input() {
+        let _guard = crate::core::language::TEST_I18N_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let input = DocumentElement::input("test_value");
         assert_eq!(
             render_element(&input, 1, &DocumentParameters::default()),

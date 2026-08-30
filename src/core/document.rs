@@ -469,6 +469,8 @@ impl DocumentHeader {
 /// Document metadata and configuration options extracted from frontmatter.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DocumentParameters {
+    /// Whether interactive comment boxes and icons are enabled.
+    pub comments: bool,
     /// Protocol or document date string.
     pub date: String,
     /// Whether the top header banner is enabled.
@@ -522,6 +524,7 @@ impl DocumentParameters {
 impl Default for DocumentParameters {
     fn default() -> Self {
         Self {
+            comments: true,
             date: String::new(),
             header: true,
             language: "en".to_string(),
@@ -563,8 +566,19 @@ impl From<HashMap<String, String>> for DocumentParameters {
             }
             None => false,
         };
+        let comments = match map.remove("comments") {
+            Some(val) => {
+                const TRUTHY_VALUES: &[&str] = &["true", "yes", "y", "1"];
+                let trimmed = val.trim();
+                TRUTHY_VALUES
+                    .iter()
+                    .any(|&truthy| truthy.eq_ignore_ascii_case(trimmed))
+            }
+            None => true,
+        };
 
         Self {
+            comments,
             date,
             header,
             language,

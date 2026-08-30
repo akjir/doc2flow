@@ -1,0 +1,143 @@
+/* ==========================================================================
+   Doc2Flow - Comment Feature Styles
+   ========================================================================== */
+
+/* 1. Base Variables & Tokens */
+:root {
+  --icon-comment-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg transform='translate(-204,-255)'%3E%3Cpath d='M228,267 C226.896,267 226,267.896 226,269 C226,270.104 226.896,271 228,271 C229.104,271 230,270.104 230,269 C230,267.896 229.104,267 228,267 L228,267 Z M220,281 C218.832,281 217.704,280.864 216.62,280.633 L211.912,283.463 L211.975,278.824 C208.366,276.654 206,273.066 206,269 C206,262.373 212.268,257 220,257 C227.732,257 234,262.373 234,269 C234,275.628 227.732,281 220,281 L220,281 Z M220,255 C211.164,255 204,261.269 204,269 C204,273.419 206.345,277.354 210,279.919 L210,287 L217.009,282.747 C217.979,282.907 218.977,283 220,283 C228.836,283 236,276.732 236,269 C236,261.269 228.836,255 220,255 L220,255 Z M212,267 C210.896,267 210,267.896 210,269 C210,270.104 210.896,271 212,271 C213.104,271 214,270.104 214,269 C214,267.896 213.104,267 212,267 L212,267 Z M220,267 C218.896,267 218,267.896 218,269 C218,270.104 218.896,271 220,271 C221.104,271 222,270.104 222,269 C222,267.896 221.104,267 220,267 L220,267 Z'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* 2. Comment Components (item-comment-*) */
+.item-comment-icon {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  width: 15px;
+  height: 15px;
+  background-color: var(--txt-color-muted);
+  -webkit-mask: var(--icon-comment-mask) no-repeat center / contain;
+  mask: var(--icon-comment-mask) no-repeat center / contain;
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+  align-self: flex-start;
+  margin-top: 3px;
+}
+
+.item-selectable:hover .item-comment-icon,
+.item:hover .item-comment-icon {
+  opacity: 1;
+}
+
+.item-selectable:has(.item-comment-box) .item-comment-icon,
+.item:has(.item-comment-box) .item-comment-icon {
+  display: none;
+}
+
+.item-comment-icon:hover {
+  background-color: var(--txt-color-heading);
+}
+
+.item-comment-box {
+  flex-basis: 100%;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 4px;
+  background-color: var(--bg-muted);
+  border: 1px solid var(--code-border);
+  border-radius: var(--item-radius);
+  padding: 4px 8px;
+  box-sizing: border-box;
+  margin-left: 24px;
+}
+
+.item-comment-box .input-field,
+.item-comment-box .item-comment-input,
+.item-comment-input {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0;
+  box-shadow: none !important;
+  color: var(--txt-color-default, #444444) !important;
+  flex: 1;
+  font-family: var(--font-sans, Arial, sans-serif) !important;
+  font-size: var(--txt-size-sm, 12px) !important;
+  line-height: 1.4;
+  margin: 0;
+  min-height: 20px;
+  min-width: 0;
+  outline: none !important;
+  overflow: hidden;
+  padding: 0;
+  resize: none;
+  white-space: pre-wrap;
+  width: auto;
+  word-break: break-word;
+}
+
+.item-comment-box .input-field:focus,
+.item-comment-box .item-comment-input:focus,
+.item-comment-input:focus {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.item-comment-box .input-field::placeholder,
+.item-comment-input::placeholder {
+  color: #94a3b8;
+}
+
+.item-comment-del {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--txt-color-muted);
+  font-size: 14px;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.item-comment-del:hover {
+  color: #c00000;
+  background-color: rgba(192, 0, 0, 0.08);
+}
+
+/* 3. Print Styles */
+@media print {
+  .item-comment-icon,
+  .item-comment-del {
+    display: none !important;
+  }
+
+  .item-comment-box {
+    border: 1px solid var(--code-border) !important;
+    background-color: transparent !important;
+    margin-left: 16px !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .item-comment-box .input-field,
+  .item-comment-input {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #000000 !important;
+    font-size: var(--txt-size-sm, 12px) !important;
+    overflow: hidden !important;
+    resize: none !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+  }
+}

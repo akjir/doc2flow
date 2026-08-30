@@ -43,6 +43,11 @@
   outline: none;
 }
 
+textarea.input-field {
+  min-height: 48px;
+  resize: vertical;
+}
+
 /* 3. Print Styles */
 @media print {
   .input-field {

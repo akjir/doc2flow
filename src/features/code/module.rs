@@ -92,7 +92,11 @@ impl DocumentElementRenderer for CodeFeature {
                     out.push_str("</td>\n");
 
                     push_indent(out, indent + 4);
-                    out.push_str("<td><input type=\"text\" class=\"code-table-input\" value=\"");
+                    out.push_str("<td><input type=\"text\" class=\"code-table-input input-field\" id=\"f_var_");
+                    escape_html_into(out, key);
+                    out.push_str("\" data-var-key=\"");
+                    escape_html_into(out, key);
+                    out.push_str("\" value=\"");
                     escape_html_into(out, val);
                     out.push_str("\"></td>\n");
 
@@ -218,7 +222,7 @@ mod tests {
             "        <tbody>\n",
             "          <tr>\n",
             "            <td>PORT</td>\n",
-            "            <td><input type=\"text\" class=\"code-table-input\" value=\"8080\"></td>\n",
+            "            <td><input type=\"text\" class=\"code-table-input input-field\" id=\"f_var_PORT\" data-var-key=\"PORT\" value=\"8080\"></td>\n",
             "          </tr>\n",
             "        </tbody>\n",
             "      </table>\n",
@@ -273,11 +277,11 @@ mod tests {
             "      <tbody>\n",
             "        <tr>\n",
             "          <td>A_KEY</td>\n",
-            "          <td><input type=\"text\" class=\"code-table-input\" value=\"value &amp; &quot;quotes&quot;\"></td>\n",
+            "          <td><input type=\"text\" class=\"code-table-input input-field\" id=\"f_var_A_KEY\" data-var-key=\"A_KEY\" value=\"value &amp; &quot;quotes&quot;\"></td>\n",
             "        </tr>\n",
             "        <tr>\n",
             "          <td>Z_KEY</td>\n",
-            "          <td><input type=\"text\" class=\"code-table-input\" value=\"&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;\"></td>\n",
+            "          <td><input type=\"text\" class=\"code-table-input input-field\" id=\"f_var_Z_KEY\" data-var-key=\"Z_KEY\" value=\"&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;\"></td>\n",
             "        </tr>\n",
             "      </tbody>\n",
             "    </table>\n",

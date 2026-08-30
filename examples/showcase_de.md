@@ -5,6 +5,7 @@ date: "25.07.2026"
 version: "1.0.0"
 language: "de"
 numbered_sections: true
+comments: true
 ---
 
 :::variables

@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="generator" content="Doc2Flow v0.9.4+263.5d18cd0.dev">
-  <meta name="version" content="0.9.4+263.5d18cd0.dev">
+  <meta name="generator" content="Doc2Flow v0.9.4+264.3c886bc.dev">
+  <meta name="version" content="0.9.4+264.3c886bc.dev">
   <meta name="repository" content="https://github.com/akjir/doc2flow">
   <meta name="license" content="https://github.com/akjir/doc2flow/blob/main/LICENSE">
-  <meta name="dcterms.created" content="2026-08-30T07:41:55Z">
+  <meta name="dcterms.created" content="2026-08-30T08:16:37Z">
   <meta name="dcterms.source" content="https://github.com/akjir/doc2flow">
-  <meta name="features" content="core, header, code">
+  <meta name="features" content="core, header, code, input">
   <title>Microservice Deployment & Infrastructure Setup</title>
   <style>
     /* ==========================================================================
@@ -69,9 +69,6 @@
       --txt-size-xs: 11px;
       --txt-size-lg: 16px;
       --txt-line-height: 1.5;
-
-      /* Assets & Icons */
-      --icon-comment-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg transform='translate(-204,-255)'%3E%3Cpath d='M228,267 C226.896,267 226,267.896 226,269 C226,270.104 226.896,271 228,271 C229.104,271 230,270.104 230,269 C230,267.896 229.104,267 228,267 L228,267 Z M220,281 C218.832,281 217.704,280.864 216.62,280.633 L211.912,283.463 L211.975,278.824 C208.366,276.654 206,273.066 206,269 C206,262.373 212.268,257 220,257 C227.732,257 234,262.373 234,269 C234,275.628 227.732,281 220,281 L220,281 Z M220,255 C211.164,255 204,261.269 204,269 C204,273.419 206.345,277.354 210,279.919 L210,287 L217.009,282.747 C217.979,282.907 218.977,283 220,283 C228.836,283 236,276.732 236,269 C236,261.269 228.836,255 220,255 L220,255 Z M212,267 C210.896,267 210,267.896 210,269 C210,270.104 210.896,271 212,271 C213.104,271 214,270.104 214,269 C214,267.896 213.104,267 212,267 L212,267 Z M220,267 C218.896,267 218,267.896 218,269 C218,270.104 218.896,271 220,271 C221.104,271 222,270.104 222,269 C222,267.896 221.104,267 220,267 L220,267 Z'/%3E%3C/g%3E%3C/svg%3E");
     }
 
     /* 2. Global Resets & Defaults */
@@ -374,95 +371,6 @@
       text-decoration: line-through;
     }
 
-    /* Item Comments */
-    .item-comment-icon {
-      margin-left: auto;
-      flex-shrink: 0;
-      display: inline-flex;
-      width: 15px;
-      height: 15px;
-      background-color: var(--txt-color-muted);
-      -webkit-mask: var(--icon-comment-mask) no-repeat center / contain;
-      mask: var(--icon-comment-mask) no-repeat center / contain;
-      opacity: 0;
-      cursor: pointer;
-      transition: opacity 0.15s ease, background-color 0.15s ease;
-      align-self: flex-start;
-      margin-top: 3px;
-    }
-
-    .item-selectable:hover .item-comment-icon,
-    .item:hover .item-comment-icon {
-      opacity: 1;
-    }
-
-    .item-selectable:has(.item-comment-box) .item-comment-icon,
-    .item:has(.item-comment-box) .item-comment-icon {
-      display: none;
-    }
-
-    .item-comment-icon:hover {
-      background-color: var(--txt-color-heading);
-    }
-
-    .item-comment-box {
-      flex-basis: 100%;
-      width: 100%;
-      display: flex;
-      align-items: flex-start;
-      gap: 6px;
-      margin-top: 4px;
-      background-color: var(--bg-muted);
-      border: 1px solid var(--code-border);
-      border-radius: var(--item-radius);
-      padding: 4px 8px;
-      box-sizing: border-box;
-      margin-left: 24px;
-    }
-
-    .item-comment-input {
-      flex: 1;
-      min-width: 0;
-      border: none;
-      background: transparent;
-      outline: none;
-      font-family: var(--font-sans);
-      font-size: var(--txt-size-sm);
-      color: var(--txt-color-default);
-      resize: none;
-      overflow: hidden;
-      white-space: pre-wrap;
-      word-break: break-word;
-      padding: 0;
-      margin: 0;
-      line-height: 1.4;
-      min-height: 20px;
-    }
-
-    .item-comment-input::placeholder {
-      color: #94a3b8;
-    }
-
-    .item-comment-del {
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      color: var(--txt-color-muted);
-      font-size: 14px;
-      line-height: 1;
-      padding: 2px 5px;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: color 0.15s ease, background-color 0.15s ease;
-    }
-
-    .item-comment-del:hover {
-      color: #c00000;
-      background-color: rgba(192, 0, 0, 0.08);
-    }
-
     /* 7. Section Components (section-*) */
     .section,
     .section-container {
@@ -715,31 +623,6 @@
         background-color: #cccccc !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
-      }
-
-      .item-comment-icon,
-      .item-comment-del {
-        display: none !important;
-      }
-
-      .item-comment-box {
-        border: 1px solid var(--code-border) !important;
-        background-color: transparent !important;
-        margin-left: 16px !important;
-        page-break-inside: avoid;
-        break-inside: avoid;
-      }
-
-      .item-comment-input {
-        color: #000000 !important;
-        overflow: hidden !important;
-        white-space: pre-wrap !important;
-        word-break: break-word !important;
-        resize: none !important;
-        appearance: none !important;
-        -webkit-appearance: none !important;
-        border: none !important;
-        background: transparent !important;
       }
 
       .text-content,
@@ -1042,6 +925,66 @@
         display: none !important;
       }
     }
+    /* ==========================================================================
+       Doc2Flow - Input Feature Styles
+       ========================================================================== */
+
+    /* 1. Base Variables & Tokens */
+    :root {
+      /* Input Field Tokens */
+      --input-bg: #f1f5f9;
+      --input-border: #cbd5e1;
+      --input-color: #0f172a;
+      --input-radius: 4px;
+      --input-font-size: 11.5px;
+      --input-padding: 4px 8px;
+      --input-focus-border: #2e75b6;
+      --input-focus-ring: rgba(46, 117, 182, 0.2);
+    }
+
+    /* 2. Input Component (input-*) */
+    .input-wrap {
+      box-sizing: border-box;
+      display: flex;
+      margin: 4px 0;
+      width: 100%;
+    }
+
+    .input-field {
+      background-color: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: var(--input-radius);
+      box-sizing: border-box;
+      color: var(--input-color);
+      font-family: var(--font-mono, 'Courier New', monospace);
+      font-size: var(--input-font-size);
+      padding: var(--input-padding);
+      transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+      width: 100%;
+    }
+
+    .input-field:focus {
+      background-color: var(--input-bg);
+      border-color: var(--input-focus-border);
+      box-shadow: 0 0 0 2px var(--input-focus-ring);
+      outline: none;
+    }
+
+    textarea.input-field {
+      min-height: 48px;
+      resize: vertical;
+    }
+
+    /* 3. Print Styles */
+    @media print {
+      .input-field {
+        background-color: transparent !important;
+        border: 1px solid #000000 !important;
+        color: #000000 !important;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1070,27 +1013,27 @@
         <tbody>
           <tr>
             <td>APP_ENV</td>
-            <td><input type="text" class="code-table-input" value="production"></td>
+            <td><input type="text" class="code-table-input input-field" id="f_var_APP_ENV" data-var-key="APP_ENV" value="production"></td>
           </tr>
           <tr>
             <td>AUTH_TOKEN</td>
-            <td><input type="text" class="code-table-input" value=""></td>
+            <td><input type="text" class="code-table-input input-field" id="f_var_AUTH_TOKEN" data-var-key="AUTH_TOKEN" value=""></td>
           </tr>
           <tr>
             <td>DB_HOST</td>
-            <td><input type="text" class="code-table-input" value="db.internal.net"></td>
+            <td><input type="text" class="code-table-input input-field" id="f_var_DB_HOST" data-var-key="DB_HOST" value="db.internal.net"></td>
           </tr>
           <tr>
             <td>PORT</td>
-            <td><input type="text" class="code-table-input" value="8080"></td>
+            <td><input type="text" class="code-table-input input-field" id="f_var_PORT" data-var-key="PORT" value="8080"></td>
           </tr>
           <tr>
             <td>SYSTEM</td>
-            <td><input type="text" class="code-table-input" value="prod-server"></td>
+            <td><input type="text" class="code-table-input input-field" id="f_var_SYSTEM" data-var-key="SYSTEM" value="prod-server"></td>
           </tr>
           <tr>
             <td>UNUSED_METRIC_PORT</td>
-            <td><input type="text" class="code-table-input" value="9090"></td>
+            <td><input type="text" class="code-table-input input-field" id="f_var_UNUSED_METRIC_PORT" data-var-key="UNUSED_METRIC_PORT" value="9090"></td>
           </tr>
         </tbody>
       </table>
@@ -1105,7 +1048,6 @@
           <span class="text-content">
             This document outlines the automated deployment workflow for our cloud microservice stack. Dynamic variable substitution replaces placeholders matching <code>{{VARIABLE_NAME}}</code> when copying code snippets to your clipboard.
           </span>
-          <span class="item-comment-icon"></span>
         </div>
         <section class="section" data-level="3">
           <h3 class="section-subheading">Initial Environment Verification</h3>
@@ -1114,7 +1056,6 @@
               <span class="text-content">
                 Verify connectivity to the primary application server before beginning deployment:
               </span>
-              <span class="item-comment-icon"></span>
             </div>
             <pre class="code-default"><code>ping -c 3 {{SYSTEM}}.local</code></pre>
           </div>
@@ -1131,14 +1072,12 @@
           <span class="text-content">
             Check the readiness of the primary database host:
           </span>
-          <span class="item-comment-icon"></span>
         </div>
         <pre class="code-default"><code>pg_isready -h {{DB_HOST}} -p 5432 -U postgres</code></pre>
         <div class="item text-item item-selectable">
           <span class="text-content">
             Configure the application database instance environment settings:
           </span>
-          <span class="item-comment-icon"></span>
         </div>
         <pre class="code-default"><code>ALTER DATABASE app_db SET configuration.environment = &#39;{{APP_ENV}}&#39;;</code></pre>
       </div>
@@ -1153,14 +1092,12 @@
           <span class="text-content">
             Spin up the API microservice container on the designated port:
           </span>
-          <span class="item-comment-icon"></span>
         </div>
         <pre class="code-default"><code>docker run -d --name api-service -e ENV={{APP_ENV}} -p {{PORT}}:8080 acme/api-service:latest</code></pre>
         <div class="item text-item item-selectable">
           <span class="text-content">
             Perform an automated health check against the newly deployed service:
           </span>
-          <span class="item-comment-icon"></span>
         </div>
         <pre class="code-default"><code>curl -f -H &quot;Authorization: Bearer {{AUTH_TOKEN}}&quot; https://{{SYSTEM}}.local:{{PORT}}/api/v1/health</code></pre>
       </div>
@@ -1560,156 +1497,104 @@
       }
     })();
     (() => {
-      // Adjusts textarea height automatically based on its scrollHeight.
-      const autoExpandTextarea = (el) => {
-        if (!el) return;
-        el.style.height = 'auto';
-        el.style.height = `${el.scrollHeight}px`;
-      };
+      const FIELD_SELECTOR = 'input.input-field, textarea.input-field, input.code-table-input';
 
-      // Creates a comment box or returns the existing one for an item.
-      const getOrCreateCommentBox = (item, initialValue) => {
-        if (!item) return null;
-        let box = item.querySelector('.item-comment-box');
-        let input = null;
-
-        if (!box) {
-          box = document.createElement('div');
-          box.className = 'item-comment-box';
-
-          input = document.createElement('textarea');
-          input.rows = 1;
-          input.className = 'item-comment-input';
-          const i18n = window.d2f?.lang?.dictionary;
-          const commentLabel = i18n?.comment_placeholder ?? 'Add a comment...';
-          input.placeholder = commentLabel;
-          input.setAttribute('aria-label', commentLabel);
-
-          const delBtn = document.createElement('button');
-          delBtn.type = 'button';
-          delBtn.className = 'item-comment-del';
-          delBtn.title = 'Delete comment';
-          delBtn.setAttribute('aria-label', 'Delete comment');
-          delBtn.innerHTML = '&#10006;';
-
-          box.appendChild(input);
-          box.appendChild(delBtn);
-          item.appendChild(box);
-        } else {
-          const rawInput = box.querySelector('.item-comment-input');
-          input = rawInput instanceof HTMLTextAreaElement ? rawInput : null;
-        }
-
-        if (!input) return null;
-
-        if (typeof initialValue === 'string') {
-          input.value = initialValue;
-          input.textContent = initialValue;
-          input.setAttribute('value', initialValue);
-        }
-
-        autoExpandTextarea(input);
-        return { box, input };
-      };
-
-      // Collects all active comments across selectable items for storage.
-      const saveComments = () => {
-        const comments = {};
-        document.querySelectorAll('.item-selectable').forEach((item, index) => {
-          const input = item.querySelector('.item-comment-input');
-          if (input && input.value.trim() !== '') {
-            const key = item.id || `item_${index}`;
-            comments[key] = input.value;
+      // Serializes current input field and textarea values to persistent storage.
+      const saveFields = () => {
+        const fields = {};
+        document.querySelectorAll(FIELD_SELECTOR).forEach((el, index) => {
+          if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+            const key = el.id || `field_${index}`;
+            fields[key] = el.value;
           }
         });
-        return { comments };
+        return { fields };
       };
 
-      // Reconstructs comment boxes from stored comment data.
-      const loadComments = (state) => {
-        const commentsData = state?.comments;
+      // Restores input field and textarea values from persistent storage.
+      const loadFields = (state) => {
+        const fieldsData = state?.fields;
         const isRecord = window.d2f?.utils?.isRecord;
+
+        // Validate schema integrity before DOM manipulation.
         const isValid = typeof isRecord === 'function'
-          ? isRecord(commentsData)
-          : (typeof commentsData === 'object' && commentsData !== null && !Array.isArray(commentsData));
+          ? isRecord(fieldsData)
+          : (typeof fieldsData === 'object' && fieldsData !== null && !Array.isArray(fieldsData));
 
         if (!isValid) return;
 
-        document.querySelectorAll('.item-selectable').forEach((item, index) => {
-          const key = item.id || `item_${index}`;
-          const val = commentsData[key];
-          if (typeof val === 'string' && val.trim() !== '') {
-            getOrCreateCommentBox(item, val);
+        document.querySelectorAll(FIELD_SELECTOR).forEach((el, index) => {
+          if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+            const key = el.id || `field_${index}`;
+            const val = fieldsData[key];
+            if (typeof val === 'string') {
+              el.value = val;
+              if (el instanceof HTMLTextAreaElement) {
+                el.textContent = val;
+              }
+              el.setAttribute('value', val);
+            }
           }
         });
       };
 
-      // Removes all active comment boxes from the DOM.
-      const resetComments = () => {
-        document.querySelectorAll('.item-comment-box').forEach((box) => {
-          box.remove();
+      // Resets all interactive input fields and textareas to empty defaults.
+      const resetFields = () => {
+        document.querySelectorAll(FIELD_SELECTOR).forEach((el) => {
+          if (el instanceof HTMLInputElement) {
+            el.value = '';
+            el.removeAttribute('value');
+          } else if (el instanceof HTMLTextAreaElement) {
+            el.value = '';
+            el.textContent = '';
+            el.removeAttribute('value');
+          }
         });
       };
 
-      // Expose comment functions to the global Doc2Flow namespace.
+      // Debounced state saver for input and change events.
+      const debounceFn = window.d2f?.utils?.debounce;
+      const saveStateDebounced = typeof debounceFn === 'function'
+        ? debounceFn(() => window.d2f?.storage?.saveState?.(), 300)
+        : () => window.d2f?.storage?.saveState?.();
+
+      // Handles input and change events on interactive input fields and textareas.
+      const handleInputOrChange = (e) => {
+        const { target } = e;
+        if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) {
+          return;
+        }
+
+        if (
+          target.classList.contains('input-field') ||
+          target.classList.contains('code-table-input')
+        ) {
+          if (target instanceof HTMLInputElement) {
+            target.setAttribute('value', target.value);
+          } else if (target instanceof HTMLTextAreaElement) {
+            target.textContent = target.value;
+            target.setAttribute('value', target.value);
+          }
+          saveStateDebounced();
+        }
+      };
+
+      // Expose module methods to the global Doc2Flow namespace.
       window.d2f = window.d2f || {};
-      window.d2f.comments = {
-        autoExpandTextarea,
-        getOrCreateCommentBox,
-        saveComments,
-        loadComments,
-        resetComments,
+      window.d2f.input = {
+        saveFields,
+        loadFields,
+        resetFields,
       };
 
       // Initialize event bindings, storage hooks, and reset handler.
       if (typeof window !== 'undefined') {
-        window.d2f.storage?.registerSaveHandler?.(saveComments);
-        window.d2f.storage?.registerLoadHandler?.(loadComments);
-        window.d2f.core?.registerResetHandler?.(resetComments);
+        window.d2f.storage?.registerSaveHandler?.(saveFields);
+        window.d2f.storage?.registerLoadHandler?.(loadFields);
+        window.d2f.core?.registerResetHandler?.(resetFields);
 
-        const debounceFn = window.d2f?.utils?.debounce;
-        const saveStateDebounced = typeof debounceFn === 'function'
-          ? debounceFn(() => window.d2f.storage?.saveState?.(), 300)
-          : () => window.d2f.storage?.saveState?.();
-
-        document.addEventListener('click', (e) => {
-          const { target } = e;
-          if (!(target instanceof Element)) return;
-
-          const commentBtn = target.closest('.item-comment-icon');
-          if (commentBtn) {
-            const item = commentBtn.closest('.item-selectable');
-            if (item) {
-              const res = getOrCreateCommentBox(item);
-              if (res?.input) {
-                res.input.focus();
-              }
-            }
-            return;
-          }
-
-          const commentDelBtn = target.closest('.item-comment-del');
-          if (commentDelBtn) {
-            const box = commentDelBtn.closest('.item-comment-box');
-            if (box) {
-              box.remove();
-              window.d2f.storage?.saveState?.();
-            }
-          }
-        });
-
-        const handleCommentInput = (e) => {
-          const { target } = e;
-          if (target instanceof HTMLTextAreaElement && target.classList.contains('item-comment-input')) {
-            target.textContent = target.value;
-            target.setAttribute('value', target.value);
-            autoExpandTextarea(target);
-            saveStateDebounced();
-          }
-        };
-
-        document.addEventListener('input', handleCommentInput);
-        document.addEventListener('change', handleCommentInput);
+        document.addEventListener('input', handleInputOrChange);
+        document.addEventListener('change', handleInputOrChange);
       }
     })();
   </script>

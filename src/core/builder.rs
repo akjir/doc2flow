@@ -93,6 +93,14 @@ pub fn build(document: &Document) -> String {
         renderer.render_element(element, 2, 0, &document.parameters, &mut html_content);
     }
 
+    if document.parameters.comments {
+        renderer.mark_feature_active("comment");
+        renderer.mark_feature_active("input");
+    }
+    if document.head.variables.is_some() {
+        renderer.mark_feature_active("input");
+    }
+
     let mut active_buffer =
         [&crate::features::CORE_FEATURE as &'static dyn FeatureModule; MAX_ACTIVE_FEATURES];
     let active_modules = renderer.active_features(&mut active_buffer);
@@ -135,7 +143,7 @@ mod tests {
         assert!(content.contains(REPOSITORY_URL));
         assert!(content.contains(LICENSE_URL));
         assert!(content.contains("<html lang=\"en\">"));
-        assert!(content.contains("<meta name=\"features\" content=\"core\">"));
+        assert!(content.contains("<meta name=\"features\" content=\"core, comment, input\">"));
         assert!(
             content.contains("    <div class=\"item text-item item-selectable\">\n      <span class=\"text-content\">\n        Document body text\n      </span>\n      <span class=\"item-comment-icon\">")
         );
@@ -215,6 +223,7 @@ mod tests {
             .lock()
             .unwrap_or_else(|e| e.into_inner());
         let mut doc = Document::new();
+        doc.parameters.comments = false;
         doc.push_body(crate::core::document::DocumentElement::unknown(
             "unrecognized",
         ));
@@ -309,6 +318,7 @@ mod tests {
             .lock()
             .unwrap_or_else(|e| e.into_inner());
         let mut doc = Document::new();
+        doc.parameters.comments = false;
         doc.push_body(DocumentElement::code_block(None::<String>, "test code"));
         let content = build(&doc);
         assert!(content.contains("<meta name=\"features\" content=\"core, code\">"));
@@ -329,6 +339,7 @@ mod tests {
             .lock()
             .unwrap_or_else(|e| e.into_inner());
         let mut doc = Document::new();
+        doc.parameters.comments = false;
         let mut vars = std::collections::HashMap::new();
         vars.insert("PORT".into(), "8080".into());
         doc.head.variables = Some(DocumentElement::table_variables(vars));
@@ -337,7 +348,7 @@ mod tests {
         assert!(content.contains("code-table-wrap"));
         assert!(content.contains("value=\"8080\""));
         assert!(content.contains("Body text"));
-        assert!(content.contains("<meta name=\"features\" content=\"core, code\">"));
+        assert!(content.contains("<meta name=\"features\" content=\"core, code, input\">"));
     }
 
     #[test]
@@ -346,6 +357,7 @@ mod tests {
             .lock()
             .unwrap_or_else(|e| e.into_inner());
         let mut doc = Document::new();
+        doc.parameters.comments = false;
         doc.head.header = Some(DocumentElement::header(
             "Document Header Title",
             Some("Header Subtitle"),
@@ -358,6 +370,21 @@ mod tests {
         assert!(content.contains("<h1 class=\"header-title\">Document Header Title</h1>"));
         assert!(content.contains("<div class=\"header-sub\">Header Subtitle</div>"));
         assert!(content.contains("--header-bg:"));
+    }
+
+    #[test]
+    fn test_builder_build_with_comments_disabled() {
+        let _guard = crate::core::language::TEST_I18N_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        let mut doc = Document::new();
+        doc.parameters.comments = false;
+        doc.push_body(DocumentElement::text("Plain body text"));
+        let content = build(&doc);
+        assert!(content.contains("<meta name=\"features\" content=\"core\">"));
+        assert!(!content.contains("<span class=\"item-comment-icon\">"));
+        assert!(!content.contains("window.d2f.comments"));
+        assert!(!content.contains("window.d2f.input"));
     }
 
     #[test]

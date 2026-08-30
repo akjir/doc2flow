@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added standalone comment feature module and frontmatter configuration option (`comments: true/false`).
+- Added persistent client-side input field and code variable table value persistence in localStorage.
 - Added interactive item comment functionality for checklist items, list entries, and text paragraphs with local storage persistence and print styling.
 - Added deterministic document ID (`d2f_id`) generation with cryptographic key separation and scoped `localStorage` state keys.
 - Added automatic section numbering (`numbered_sections: true`) and zero-allocation hierarchical ordered list markers (`1.`, `a.`, `i.`).
