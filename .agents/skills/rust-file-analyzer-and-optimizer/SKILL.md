@@ -2,98 +2,71 @@
 name: rust-file-analyzer-and-optimizer
 description: Analyzes/optimizes Rust code for memory efficiency, zero-allocation, idiomatic patterns, and performance (Doc2Flow context).
 ---
-
 # Rust Analyzer & Optimizer
-
-**Goal:** Enforce high-performance, zero-copy parsing, minimal heap allocations, and idiomatic Rust for Doc2Flow.
+**Goal:** Enforce high-perf, 0-copy, min-alloc, idiomatic Rust.
 
 ## USE WHEN
-- Auditing `src/*.rs` for bottlenecks/code smells.
-- Refactoring to eliminate heap allocations (`.to_string()`, `.clone()`, `format!`).
-- Optimizing buffer writes (`out.write_str` vs `write!`).
-- Enforcing idioms, zero `unsafe`, and strict `anyhow` error contexts.
+- Auditing `src/*.rs` for bottlenecks.
+- Eliminating heap allocs (`.to_string()`, `format!`).
+- Optimizing I/O buffers.
+- Enforcing 0 `unsafe` & strict errors.
 
-## EXECUTION WORKFLOW
-Follow these 4 steps sequentially, applying the 5 Pillars below:
+## WORKFLOW
+1. Scan (5 Pillars). 2. Trade-Off (Perf > Readability, but no micro-obfuscation). 3. Output Full Module. 4. Summary rationale.
 
-1. **Scan:** Audit code against the 5 Pillars (allocations, macros, loops, error contexts).
-2. **Trade-Off:** Weigh Performance vs. Readability. Reject readability-destroying micro-optimizations.
-3. **Output:** Provide FULL refactored module (NO placeholders). Retain `#[inline]` on hot-paths and all `#[cfg(test)]` modules.
-4. **Summary:** Provide a concise bulleted rationale mapping changes to specific benefits.
+## 5 PILLARS
 
-## THE 5 PILLARS
+### 1: Mem & Alloc
+- **Borrow:** `&str`, `&[u8]`, `Cow<'a, str>`. NO `String` params.
+- **0 Waste:** Drop `.to_string()`, `.to_owned()`, `PathBuf::from()`.
+- **0-Copy:** `.split_once()`, `.strip_prefix()`. NO intermediate `Vec`.
+- **Safe Slice:** Cursor offsets. NO `as_ptr` diffs.
+- **Cap:** ALWAYS `.with_capacity()`. NO magic size `[T;8]`, use named `const MAX_CAPACITY`. Clamp dynamic lengths to prevent OOM (P-BOUND-ALLOC).
+- **Idioms:** `str::repeat()` over iter loops (P-IDIOM-REPEAT).
+- **State:** `bitflags`/arrays over `&&`/`||` bools. Assert mask limits (P-MASK-SAFE).
+- **Lookup:** `HashMap.get()` with borrowed keys. 0 alloc on query (P-ZERO-COST-LOOKUP).
+- **Hash:** Stream `Hasher::update`. NO buffer concat (P-STREAM-HASH).
 
-### 1: Memory & Allocations
-- **Borrowing:** Prefer `&str`, `&[u8]`, `Cow<'a, str>`. Avoid `String` parameters/statics.
-- **No Waste:** Eliminate unnecessary `.to_string()`, `.to_owned()`, `PathBuf::from()`.
-- **Zero-Copy:** Use `.split_once()`, `.strip_prefix()`. AVOID intermediate collections (`.collect::<Vec<_>>()`).
-- **Safe Slicing:** Use safe subslice manipulation (`.split_once()`, `.strip_prefix()`, cursor offsets). Prohibit raw pointer arithmetic (`as_ptr` diffs) for string bounds.
-- **Pre-allocate:** ALWAYS use `.with_capacity()` for dynamic collections in loops.
-- **Bounded Allocations:** Always clamp dynamic `usize` inputs used for memory allocation (e.g. `String::with_capacity`, padding lengths, gutter widths) against hardcoded limits or validated logical bounds to prevent OOM panics (P-BOUND-ALLOC).
-- **Idiomatic Duplication:** Prefer `str::repeat()` over manual `Iterator::extend`/`repeat_n` loops for standard character/string repetition (P-IDIOM-REPEAT).
-- **State Condensation:** When tracking multiple boolean configuration flags, evaluate `bitflags` or array-backed state to minimize memory footprint and avoid brittle `&&`/`||` chains.
-- **Bitmask Safety:** When using integer bitmasks (`u32`, `u64`), assert `len <= bit_width` at initialization to prevent overflow (P-MASK-SAFE).
-- **No Magic Capacities:** Avoid hardcoding array capacities (`[T; 8]`). Define named `const MAX_CAPACITY: usize` with `debug_assert!` checks (P-NO-MAGIC-CAP).
-- **Zero-Cost Lookups:** NEVER unconditionally clone owned keys (`PathBuf`, `String`) querying `HashMap`/`BTreeMap` in loops; query `.get()` with borrowed keys, allocating ONLY on insertion (P-ZERO-COST-LOOKUP).
-- **Streaming Hashing:** Do NOT allocate intermediate `String` or `Vec<u8>` buffers solely to concatenate data for hashing. Stream sequentially via `Hasher::update` / `Sha256::update` (P-STREAM-HASH).
+### 2: Parse & Loops
+- **Regex:** NO chained `.replace()`. Use state machine scanners.
+- **Iterators:** `.filter()`, `.map()`, `.fold()` > imperative loops.
+- **Unified Scanners:** 0 dup forward loops. Reusable generic iterators (P-UNIFIED-PARSER).
+- **Linear:** O(N) strict. 0 redundant scan (P-NO-QUADRATIC).
+- **Modular:** Loop >40 lines -> extract stateless helpers (P-LOOP-MODULARITY).
+- **Compression:** Math-based resize, 1-2 passes max (P-EFFICIENT-IO-LOOPS).
+- **JSON:** Decode UTF-16 surrogates (P-JSON-SURROGATE), strict RFC 8259 primitives (P-JSON-STRICT-PRIMITIVES), 0 deps (P-STDLIB-ONLY).
+- **Case:** `eq_ignore_ascii_case` > alloc `.to_ascii_lowercase()` (P-ZERO-ALLOC-CASE).
 
-### 2: Parsing & Loops
-- **No Chained Regex/Replace:** Replace `.replace().replace()` cascades with single-pass state machines/scanners.
-- **Declarative Iterators:** Prefer `.filter()`, `.map()`, `.fold()` over imperative loops with mutable state.
-- **Unified Forward Parsers:** Never duplicate forward-scanning loops across token handlers. Encapsulate index advancement and token/code skipping into generic higher-order functions or reusable iterators (P-UNIFIED-PARSER).
-- **Linear Parsing & No O(N²):** Ensure token parsers and recursive descent routines parse strictly linearly (O(N)). Avoid repetitive scanning of identical byte slices on unclosed/nested tokens (P-NO-QUADRATIC).
-- **Loop Modularity:** String-processing loops (>40 lines) MUST extract core logic into stateless, isolated processor functions; orchestrators remain purely structural (P-LOOP-MODULARITY).
-- **Efficient Compression Loops:** Never use iterative scaling loops for compression targets (e.g. shrinking image by 10% repeatedly). Calculate target dimensions mathematically (area-to-byte ratio) to limit heavy encoding operations to 1-2 passes maximum (P-EFFICIENT-IO-LOOPS).
-- **Zero-Dep JSON Compliance:** Custom JSON parsers MUST explicitly support UTF-16 surrogate pair decoding (`\uD800..\uDBFF` + `\uDC00..\uDFFF`). Relying solely on `char::from_u32` for 4-digit hex escapes is strictly prohibited (fails outside BMP/emojis) (P-JSON-SURROGATE).
-- **Strict Primitive Validation:** Unquoted JSON values MUST strictly validate against RFC 8259 (`true`, `false`, `null`, numbers). Permissive "read until delimiter" accepting arbitrary bare words or malformed floats is strictly prohibited; emit explicit error (P-JSON-STRICT-PRIMITIVES).
-- **Stdlib Only:** ZERO external dependencies (`serde_json`, `nom`) in zero-dependency core engine components. String manipulation and validation must utilize standard library functionality exclusively (`str::from_utf8`) (P-STDLIB-ONLY).
-- **Zero-Alloc Case Insensitivity:** When case-insensitive string matching is required without heap allocations, strictly use `eq_ignore_ascii_case` inside match guards instead of allocating via `.to_ascii_lowercase()` (P-ZERO-ALLOC-CASE).
+### 3: Formatting & Buffers
+- **Static:** `out.write_str("...")`.
+- **Dynamic:** `write!(out, "...", vars)`. NO fragmentation to avoid `write!`.
+- **Errors:** `format!` > manual alloc micro-opts.
 
-### 3: Formatting & Buffer Directives
-- **Static:** `out.write_str("...")` STRICTLY for static literals (no variables).
-- **Dynamic:** `write!(out, "...", vars)` for HTML fragments with variables.
-- **Anti-Pattern:** NEVER fragment single HTML strings into multiple `write_str` calls solely to avoid `write!`. Maintain readability.
-- **Error Paths:** Do NOT micro-optimize error paths with manual buffer allocs/`write!`. Use `format!` or static strings for clarity.
+### 4: Idioms & Arch
+- **Traits:** standard (`Display`). NO custom dup fns.
+- **Constructors:** `Default` for ZSTs. `new()` MUST delegate to `Default`. Enforce `#[must_use]`.
+- **Regs:** `[&'static dyn Trait; N]` static arrays. O(1) routing via masks/indices. NO `ptr::eq` or loops (P-O1-DISPATCH).
+- **Tripwire Tests:** Explicit lengths on static arrays.
+- **Dispatchers:** Flat (<50 lines). Delegate `try_parse_*` (P-FLATTEN-DISPATCH).
+- **UTF-8:** Encapsulate lookarounds (`is_alphanumeric_at`) (P-UTF8-LOOKAROUND).
+- **Layer:** `src/utils/` -> `src/core/`/`src/features/`.
+- **Err:** `Doc2FlowError`, typed enums, `#[source]` chaining (P-ERR-PRESERVE). `unwrap()` for invariants only. NO `unsafe`.
+- **Consts:** Local in `module.rs`.
+- **CLI:** Pure iter/`OsString`, handle `=`, reject empty (P-CLI-PURE).
+- **Attrs:** `#[inline]` on hot-path only (P-ATTR-USAGE).
+- **Docs:** Inline domain quirks. Truthy bool matrix (`true,yes,1`).
+- **Tests:** Semantic asserts. Fallback `_ =>` (M-FALLBACK-TESTS), extreme bounds (M-EXTREME-BOUND-TESTS), path edges (M-PATH-EDGE-TESTS), delimiter inject (M-DELIM-INJECT-TESTS), temp dir I/O (M-IO-TESTS).
+- **Crypto:** Delimit with length-prefix or `\x00` (P-CRYPTO-KEY-SEP).
+- **Combinators:** `.filter()`. NO if/else in closures (P-FUNCTIONAL-COMBINATORS).
 
-### 4: Idioms & Architecture
-- **Standard Traits:** Rely on standard traits (`std::fmt::Display` -> `.to_string()`). NEVER create custom methods (e.g., `to_string_custom()`) or standalone functions duplicating std traits.
-- **Default over New:** Strictly implement `std::default::Default` for all parameter-less structs and Zero-Sized Types (ZSTs).
-- **Constructor Delegation:** BANNED: Implementing a standalone `new()` method that duplicates field initialization. IF `new()` is required for API ergonomics, it MUST strictly delegate to `Self::default()`.
-- **Zero-Allocation Registries:** Enforce static array definitions (`[&'static dyn Trait; N]`) for central registries (e.g., feature modules) to guarantee O(1) startup and zero runtime heap allocation.
-- **Tripwire Testing:** Use explicit lengths and hardcoded arrays in registry tests to force manual verification when expanding system features (e.g., adding a new module).
-- **O(1) Hot-Path Routing:** Precompute array indices, state masks, and routing lookups during initialization. Never use for-loops, string matching, or pointer comparisons (`std::ptr::eq`) to resolve modules/AST handlers during active parsing/rendering loops (P-O1-DISPATCH).
-- **Flatten Monolithic Dispatchers:** Avoid massive `if/else` or loop dispatchers (>50 lines). Dispatch token parsing to discrete, strongly-typed functions (e.g., `try_parse_* -> Option<usize>`) (P-FLATTEN-DISPATCH).
-- **Encapsulate UTF-8 Lookarounds:** Abstract UTF-8 boundary checks and char lookahead/lookbehind (`slice[idx..].chars().next()`) into semantic helper functions (`is_alphanumeric_at`, `is_alphanumeric_before`, `is_alphanumeric_after`) (P-UTF8-LOOKAROUND).
-- **Layering:** `src/utils/` = generic project-agnostic library (NO domain logic). `src/core/` & `src/features/` consume it via `src/utils/mod.rs` API.
-- **Errors:** Stdlib + `Doc2FlowError` (`src/utils/error.rs`). Strongly typed error enums for modules/parsing (NO `Result<T, String>`). Retain error context via `#[source]` chaining; wrap external library errors in enum variants, never flatten into `Error::Message(format!(...))` (P-ERR-PRESERVE).
-- **Panics:** `unwrap()`/`expect()` ONLY for true invariants with descriptive msgs. NEVER for runtime/user I/O.
-- **Safety:** ZERO `unsafe` blocks.
-- **Consts:** Feature constants local in `src/features/<name>/module.rs` (NO central dumpster). App metadata/limits ONLY in `src/core/constants.rs`.
-- **Logic:** Prefer `match` or lookup tables over `if-else` chains.
-- **CLI Parsing:** Pure parser inputs (callers strip binary with `args_os().skip(1)`). OS-agnostic paths via `std::ffi::OsStr`/`OsString` (no UTF-8 assumption). Identical validation for space (`-o ""`) vs equals (`-o=`) syntax; reject empty values uniformly (`val.as_ref().is_empty()`). Avoid fragile flag peeking: require explicit `=` or strict bounds for optional values/hyphenated args (P-CLI-PURE).
-- **Attributes:** Enforce `#[must_use]` on all constructors, factories, and pure builder methods (`new`, `with_capacity`). Reserve `#[inline]` strictly for trivial getters/wrappers and hot-path trait implementations/loops. BANNED: `#[inline]` on internal utilities, large/branching functions, large `match` blocks, complex string operations, heap allocs (`String::with_capacity`), I/O, multi-branch logic, setup, init, parser helpers, or CLI parsing without cross-crate profiling (P-ATTR-USAGE). Rely on LTO and compiler heuristics.
-- **Domain Quirks:** Explicitly document intentional domain deviations inline (e.g. strict H1/H2->H3 AST nesting for UI layout) to protect against accidental refactoring.
-- **Boolean Parsing:** Account for multiple case-insensitive truthy variants (`true`, `yes`, `y`, `1`) when deserializing boolean parameters from maps/frontmatter/headers.
-- **Pipelines & Parity:** DRY template contexts (`build_template_vars`), render conditional components identically across entry points, and single-predicate feature dispatch (`is_feature_active`).
-- **Resilient Test Assertions:** Assert specific semantic tokens (e.g., `.contains("bullet")`) on formatted string outputs (like `Display`) rather than brittle exact full-string matches.
-- **Fallback Testing:** Always write explicit `#[test]` cases for fallback or default `_ => {}` match arms (M-FALLBACK-TESTS).
-- **Extreme Boundary Testing:** Mandate extreme edge-case unit tests (`usize::MAX`, `0`, overflow bounds) for functions performing length/padding math (M-EXTREME-BOUND-TESTS).
-- **Path Edge-Case Testing:** All functions analyzing `std::path::Path`/`PathBuf` components (extensions, filenames) MUST include unit tests for filesystem edge cases: hidden files (`.env`), missing filenames/trailing slashes (`/`), empty extensions/trailing dots (`file.`), and compound extensions (`.tar.gz`) (M-PATH-EDGE-TESTS).
-- **Cryptographic Key Separation:** When combining multiple strings or byte arrays to generate a hash or composite key, never rely on naive printable delimiters (`:`, `|`) without escaping. Standardize on length-prefixing or strict null-byte (`\x00`) delimiters + input sanitization (P-CRYPTO-KEY-SEP).
-- **Delimiter Injection Testing:** Mandate boundary bleeding and delimiter injection unit tests (e.g., `A:`+`B` vs `A`+`:B`) for all composite ID and hash generators (M-DELIM-INJECT-TESTS).
-- **Functional Combinators:** BANNED: imperative `if/else` inside `Option`/`Result` closures (`.or_else(|| ...)`). Mandate declarative chaining (`.filter()`, `.map()`, `.and_then()`). Standardize optional string emptiness filtering on `.as_deref().filter(|s| !s.trim().is_empty())` (P-FUNCTIONAL-COMBINATORS).
-- **I/O Test Obligation:** Mandatory temporary filesystem tests (`std::env::temp_dir()`) or memory cursors for I/O-bound functions, file resolvers, and image encoders (M-IO-TESTS).
-
-### 5: HTML, XML & Asset Processing
-- **Scanners:** Zero-alloc single-pass tokenizers (O(N) forward cursor). Avoid redundant scanning passes over attribute names/values.
-- **Quote-Aware:** Robustly handle single quotes (`'`), double quotes (`"`), multiline values, and escaped quotes (`\"`/`\'`).
-- **Sub-parsers:** Decompose complex parsers into single-responsibility sub-parsers (processing instructions `<?`, DOCTYPE, comments `<!--`, CDATA `<![CDATA[`, tags).
-- **Robust XML/SVG Detection:** BANNED: naive `.starts_with("<svg")` prefix-only matching for raw XML/SVG payloads. Payload detection MUST account for `<?xml ... ?>`, `<!DOCTYPE ... >`, and comment headers (`<!--`) before `<svg` (P-ROBUST-XML-DETECT).
-- **Defensive HTML Parsing:** Manual string parsing of HTML MUST tolerate arbitrary whitespace, case-insensitivity, and single/double quote boundaries (`'`,`"`) (P-DEFENSIVE-HTML).
-- **Decoupled DOM Assumptions:** Structural HTML modifications (unwrapping tags) MUST NOT rely on exact byte-for-byte matches; use flexible attribute & tag parsing with whitespace trimming (P-DECOUPLED-DOM).
-- **Base64 Data URIs:** Standardize with unified `to_base64_data_uri`/`to_base64_data_uri_into` with exact pre-allocation.
-- **No println!:** Never use `println!` in core processing routines; reserve `stdout` for CLI output and route progress/warnings to `stderr`/`eprintln!`.
+### 5: HTML, XML, Assets
+- **Scanners:** O(N) 0-alloc single-pass. Quote-aware (`'`,`"`).
+- **Sub-parsers:** Isolate tag/comment/cdata parsers.
+- **XML:** Robust detect `<?xml`, `<!--`, `<!DOCTYPE` before `<svg` (P-ROBUST-XML-DETECT).
+- **HTML:** Tolerant whitespace/quotes (P-DEFENSIVE-HTML), flexible unwrapping (P-DECOUPLED-DOM).
+- **Base64:** Exact pre-alloc `to_base64_data_uri`.
+- **Print:** NO `println!` in core logic. Use stderr.
 
 > [!NOTE]
-> **[BRANCH EXPERIMENT: feature/modular-building - REVERT ON MERGE]**
-> Optimization work on this branch targets `src/exp/`. Production code (`src/core/`, `src/features/`, `src/utils/`) is frozen. When duplicating functions into `src/exp/`, apply all 5 Pillars immediately.
+> **[BRANCH EXP: feature/modular-building - REVERT ON MERGE]**
+> Exp `src/exp/` ONLY. Prod frozen. Apply pillars to duplicated code.

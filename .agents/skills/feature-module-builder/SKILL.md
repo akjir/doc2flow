@@ -2,40 +2,30 @@
 name: feature-module-builder
 description: Scaffolds, implements, and registers vertical slice feature modules adhering to Doc2Flow architecture.
 ---
-
-# Feature Module Builder
-
-**Goal:** Scaffold, implement, and register vertical slice feature modules (`src/features/<name>/`) with zero-alloc Rust traits, isolated BEM CSS, vanilla JS client logic, and tests.
+# Feature Builder
+**Goal:** Scaffold/impl/reg vertical slices (`src/features/<name>/`): zero-alloc Rust, BEM CSS, vanilla JS, tests.
 
 ## USE WHEN
-- Creating/scaffolding a new vertical slice feature (e.g., search, zoom, tabs, outline).
-- Adding `module.rs`, `<name>.js`, and `<name>.css` under `src/features/<name>/`.
-- Registering features in `src/features/mod.rs` (`get_all_features`) and syncing `SPECIFICATION.md`.
+- New feature (search, tabs).
+- Add `module.rs`,`<name>.js`,`<name>.css` in `src/features/<name>/`.
+- Reg in `src/features/mod.rs` & `SPECIFICATION.md`.
 
-## EXECUTION WORKFLOW
-Follow these 5 steps sequentially:
-
-1. **Scaffold Slice:** Create `src/features/<name>/` directory:
-   - `module.rs`: Feature struct `<Name>Feature` deriving `Default` (ZST), implementing `FeatureModule` / `DocumentElementRenderer`, `#[must_use] new()` delegating strictly to `Self::default()`, local feature constants (CSS classes, selectors, keys, defaults), and unit tests. Prohibit central constant dumpster files.
-   - `<name>.js` *(if interactive)*: Vanilla JS logic attached to `window.d2f` namespace.
-   - `<name>.css` *(if styled)*: Scoped CSS using BEM classes and `:root` variables.
-2. **Implement `FeatureModule` Trait:**
-   - `name(&self) -> &'static str`: Return unique feature ID (e.g., `"code"`).
-   - `javascript(&self) -> &[&'static str]`: `&[include_str!("<name>.js")]` or `&[]`.
-   - `css(&self) -> Option<&'static str>`: `Some(include_str!("<name>.css"))` or `None`.
-3. **Register in Engine:**
-   - In `src/features/mod.rs`: Add `#[path = "<name>/module.rs"] pub mod <name>;`, export `pub use <name>::<Name>Feature;`, define static instance `pub static <NAME>_FEATURE: <Name>Feature = <Name>Feature;`.
-   - Register in static zero-allocation array `pub static ALL_FEATURE_MODULES: [&'static dyn FeatureModule; N]`.
-   - Update tripwire tests `tests::test_all_feature_modules_count_and_registration` with updated count and feature name.
-4. **Enforce Directives (`AGENTS.md`):**
-   - **Rust:** Zero `unsafe`, zero-alloc hot path, canonical doc headers, Stdlib+`Doc2FlowError` (`src/utils/error.rs`), strongly typed error enums (NO `Result<T, String>`), local constants in `module.rs`. Derive/implement `Default` for parameter-less structs; `#[must_use] new()` MUST strictly delegate to `Self::default()`. Static registries (`[&'static dyn Trait; N]`) for zero heap allocations. Rely on standard traits (`Display` -> `.to_string()`), NO duplicate custom methods. `bitflags`/array state for multi-boolean flags. Inline docs for intentional domain quirks. Case-insensitive truthy matrix (`true`, `yes`, `y`, `1`) for boolean flags. DRY template contexts (`build_template_vars`), assembly pipeline parity (conditional components identical across pathways), NO `#[inline]` on heap allocs/IO/large match blocks without profiling. Zero-alloc case insensitivity (`eq_ignore_ascii_case`), zero-cost lookups (`.get()` on borrowed map keys), defensive HTML string parsing, decoupled DOM structural modifications, loop modularity (>40 lines split into helpers). Tripwire tests, path edge-case tests, and resilient semantic token assertions.
-   - **JS:** Vanilla JS, `window.d2f` namespace (`window.d2f.<module>`). NO build step. BANNED: `export`/`import`.
-   - **CSS:** BEM classes, `:root` vars, ZERO external fonts/assets, print styles (`display:block!important`, natural page breaks, exact colors).
-   - **Spec:** Sync `SPECIFICATION.md` tree and module description.
-5. **Verify:**
-   - `./MAKE.sh --tests` (cargo tests).
-   - `./MAKE.sh --examples` (validate generated HTML showcases).
-
-> [!NOTE]
-> **[BRANCH EXPERIMENT: feature/modular-building - REVERT ON MERGE]**
-> Do NOT create/modify `src/features/` slices on this branch. Experimental modules reside strictly under `src/exp/`. Production slices remain frozen. Duplicate logic into `src/exp/` when needed.
+## WORKFLOW
+1. **Scaffold:** `src/features/<name>/`:
+   - `module.rs`: `struct <Name>Feature` (ZST), impl `Default`, `FeatureModule`, `DocumentElementRenderer`. `#[must_use] new()` -> `Self::default()`. Local consts/CSS classes/tests. NO global const dump.
+   - `<name>.js` (opt): Vanilla JS on `window.d2f`.
+   - `<name>.css` (opt): BEM + `:root` vars.
+2. **Impl `FeatureModule`:**
+   - `name()->&'static str`: (e.g. `"code"`).
+   - `javascript()->&[&'static str]`: `&[include_str!("<name>.js")]` or `&[]`.
+   - `css()->Option<&'static str>`: `Some(include_str!("<name>.css"))` or `None`.
+3. **Register:**
+   - `src/features/mod.rs`: `#[path="<name>/module.rs"] pub mod <name>; pub use <name>::<Name>Feature; pub static <NAME>_FEATURE: <Name>Feature = <Name>Feature;`.
+   - Add to `pub static ALL_FEATURE_MODULES: [&'static dyn FeatureModule; N]`.
+   - Update `test_all_feature_modules_count_and_registration`.
+4. **Enforce `AGENTS.md`:**
+   - **Rust:** 0 `unsafe`/alloc hot paths, Stdlib+`Doc2FlowError` (NO `Result<T,String>`). Local consts. Default/new delegation. Static arrays `[_; N]`. No custom dup traits. `bitflags` arrays. Inline domain docs. Truthy bools (`true,yes,y,1`). DRY templates. O(1) case-insensitive `eq_ignore_ascii_case`. Borrowed map lookups. Loop split >40 lines. Tripwire/path-edge tests. Resilient semantic asserts.
+   - **JS:** Vanilla, `window.d2f.<module>`. NO build/export/import.
+   - **CSS:** BEM, `:root`, 0 deps, print block/colors.
+   - **Spec:** Sync `SPECIFICATION.md`.
+5. **Verify:** `./MAKE.sh --tests` & `--examples`.

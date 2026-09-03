@@ -2,20 +2,19 @@
 name: run-build-workflows
 description: Executes MAKE.sh for builds, cross-compilation, tests, and HTML example generation.
 ---
-
 # Build Workflows (`MAKE.sh`)
 
-## When to use
-Triggers: build (standard/optimized), cross-compile (Win/Linux), run cargo tests, generate HTML examples.
+## Use
+Triggers build, cross-compile, tests, HTML examples.
 
-## How to use
-Execute in project root: `./MAKE.sh [FLAGS]`
+## How
+Root: `./MAKE.sh [FLAGS]`
 
 **Flags:**
-- `-h`, `--help`: Show help.
-- `--release`: Optimized build (LTO/size).
-- `--release-windows`: Build Windows executable.
-- `--release-linux`: Build Linux executable.
-- `--tests`: Run cargo tests.
-- `--examples`: Build project AND generate HTML examples.
-- `--examples-only`: Generate HTML examples ONLY (no build).
+- `-h`, `--help`: Help
+- `--release`: Opt build
+- `--release-windows`: Win exe
+- `--release-linux`: Lin exe
+- `--tests`: Cargo tests
+- `--examples`: Build + HTML examples
+- `--examples-only`: HTML examples ONLY

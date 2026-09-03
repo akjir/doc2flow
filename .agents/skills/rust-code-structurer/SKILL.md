@@ -2,86 +2,61 @@
 name: rust-code-structurer
 description: Reorganizes Rust source code to adhere to strict formatting and vertical layout rules without altering any business logic, runtime behavior, or test semantics. Use when formatting or restructuring Rust files.
 ---
-
-# Rust Code Structurer
-
-**Goal:** Establish deterministic, standardized code layout across Rust (`.rs`) files with zero logic or behavior changes.
+# Rust Structurer
+**Goal:** Deterministic `.rs` layout. 0 logic changes.
 
 ## USE WHEN
-- Reorganizing Rust source files for clean code hygiene.
-- Standardizing imports, struct/impl groupings, and function ordering.
-- Formatting code before committing or code reviews.
+- Reorganizing/formatting `.rs` code.
 
-## NON-NEGOTIABLE DIRECTIVE
-**ZERO LOGIC CHANGE:** NEVER modify, add, or remove functional logic, algorithms, variable bindings, signatures, error handling, or test assertions. ONLY reorder, group, and format existing code items.
+## 0 LOGIC CHANGE
+NEVER modify logic/sigs/errors/tests. ONLY reorder/format.
 
-## 1. FILE LAYOUT & VERTICAL ORDER
-Every `.rs` file must strictly follow this top-to-bottom sequence:
+## 1. FILE LAYOUT
+1. **Docs:** `//! ...`
+2. **Attrs:** `#![...]`
+3. **Imports:** 3 groups separated by blank line: `std::`, 3rd-party, `crate::`/`super::`. Alphabetize lines & braced items.
+4. **Consts/Statics:** Alphabetized.
+5. **Types & Impls:** Struct/Enum/Alias (alphabetized). `impl` MUST immediately follow Type.
+6. **Free Fns:** Alphabetized.
+7. **Tests:** `#[cfg(test)] mod tests { ... }` at bottom.
 
-1. **Inner Module Docs:** Module rustdocs (`//! ...`).
-2. **File Attributes:** Outer attributes (`#![allow(...)]`, `#![deny(...)]`).
-3. **Grouped & Sorted Imports (`use`):**
-   - 3 blank-line-separated groups:
-     1. `std::...` (Standard library)
-     2. Third-party crates (`image`)
-     3. Internal crate items (`crate::...`, `super::...`)
-   - Alphabetize lines within each group.
-   - Alphabetize merged curly-brace imports (e.g., `use std::collections::{BTreeMap, HashMap};`).
-4. **Global Constants & Statics:** Module `const` and `static` items (alphabetized).
-5. **Type Definitions & Implementations:**
-   - Structs, Enums, Type Aliases (sorted alphabetically by type name).
-   - **Impl Placement:** Every `impl` block MUST immediately follow its associated Struct/Enum definition.
-6. **Standalone / Free Functions:** Alphabetized by function name.
-7. **Test Module:** `#[cfg(test)] mod tests { ... }` MUST always be the last item at the file bottom.
+## 2. STRUCTURAL RULES
+**A. Structs/Enums:**
+- Visibility: `pub` > private. Alphabetize within tier.
+- Macros: Alphabetize `#[derive(...)]`.
+- `Default`: Impl for all ZSTs/parameter-less types.
+- Errors: Strongly typed `enum` (NO `Result<T,String>`).
+- State: `bitflags`/array for bools.
 
-## 2. STRUCTURAL ORDERING RULES
+**B. Impls (`impl Type`):**
+1. Inherent: Constructors top (`new`,`default`,`with_capacity`). Enforce `#[must_use]`. `new` MUST delegate to `Default` if impl'd. Methods alphabetized below.
+2. Traits: standard traits (`Display`), sorted alphabetically by trait below inherent impl. NO custom dup fns.
 
-### A. Structs & Enums
-- **Field Visibility:** `pub` fields first, then private fields.
-- **Field Sorting:** Alphabetical order within the same visibility tier.
-- **Derives:** Alphabetize macros inside `#[derive(...)]` (e.g., `#[derive(Clone, Debug, PartialEq)]`).
-- **Default over New:** Strictly derive/implement `Default` for all parameter-less structs and Zero-Sized Types (ZSTs).
-- **Strongly Typed Errors:** Define descriptive Error enums (implementing `Display` and `std::error::Error`) for modules and parsing logic; never use `Result<T, String>`.
-- **State Condensation:** Evaluate `bitflags` or array-backed state representation for multiple boolean configuration flags.
+**C. Control Flow / Parsing:**
+- Match: Order arms by enum decl. `_ =>` last.
+- Dispatchers: Flat (<50 lines). Delegate to `try_parse_*`.
+- UTF-8: Encapsulate boundaries to helpers.
+- CLI/Paths: Pure iterators, OS-agnostic (`OsStr`/`OsString`).
+- JSON: Decode UTF-16 surrogate pairs, RFC 8259 validation, NO deps.
+- Case: `eq_ignore_ascii_case` in guards (0-alloc).
+- Attrs: `#[inline]` ONLY on trivial/hot-paths (P-ATTR-USAGE).
+- Err: `#[source]` chain (P-ERR-PRESERVE).
 
-### B. Implementation (`impl`) Blocks
-For type `MyType`:
-1. **Primary/Inherent `impl MyType`:**
-   - **Constructors First:** `new()`, `default()`, `with_capacity()`, or custom constructors at the top (enforce `#[must_use]`). If struct implements `Default`, `new()` MUST strictly delegate to `Self::default()`. Standalone `new()` duplicating field inits is BANNED.
-   - **Inherent Methods:** Sorted alphabetically after constructors.
-2. **Trait Implementations (`impl Trait for MyType`):**
-   - Implement standard library traits (e.g., `impl Display for MyType` with `.to_string()`); never create custom duplicate methods (e.g., `to_string_custom()`) or standalone functions.
-   - Directly below primary `impl MyType`.
-   - Sorted alphabetically by Trait name (e.g., `impl Display` before `impl From<T>`).
+**D. Tests:**
+- Asserts: Semantic tokens (`.contains()`) vs exact string.
+- Edge: Path logic -> hidden, dot, multi-ext, empty tests (M-PATH-EDGE-TESTS).
+- I/O: Mandatory temp dir/mem cursor tests for I/O functions (M-IO-TESTS).
 
-### C. Control Flow & Match Sorting
-- **Match Arms:** Order `enum` variants in `match` expressions matching declaration order in `enum` definition.
-- **Catch-all Arm:** Fallback (`_ => ...`) MUST always be the last arm.
-- **Flattened Dispatchers:** Keep token dispatch loops flat (<50 lines) by delegating parsing to discrete, strongly-typed helper functions (`try_parse_*`).
-- **Encapsulated Lookarounds:** Abstract UTF-8 boundary checks and char inspection into semantic helper functions rather than inline pointer/char math.
-- **Pure CLI & OS-Agnostic Paths:** Parser functions must accept pure argument iterators (caller strips binary via `args_os().skip(1)`), use `std::ffi::OsStr`/`OsString` for filesystem paths without assuming UTF-8, and avoid fragile flag peeking.
-- **Zero-Dep JSON Compliance:** Custom JSON parsers MUST decode UTF-16 surrogate pairs (`\uD800..\uDBFF` + `\uDC00..\uDFFF`) into scalar chars; never rely solely on `char::from_u32` for 4-digit hex escapes.
-- **Strict Primitive Validation:** Unquoted JSON values must strictly validate against RFC 8259 (`true`, `false`, `null`, numbers). Permissive "read until delimiter" logic is strictly prohibited.
-- **Stdlib Only:** Core engine modules must use standard library functionality exclusively without third-party crates (`serde_json`, `nom`).
-- **Zero-Alloc Case Insensitivity:** Use `eq_ignore_ascii_case` inside match guards for case-insensitive string matching without allocations.
-- **Attribute Boundaries:** Reserve `#[inline]` strictly for trivial getters or hot-path trait implementations; never inline internal utilities, large match blocks, complex branching, or parser helpers without cross-crate profiling (P-ATTR-USAGE).
-- **Error Preservation:** Retain error context via `#[source]` chaining; wrap external library errors in enum variants, never flatten into string messages (P-ERR-PRESERVE).
+## 3. DOCS/VISIBILITY
+- Keep `///` above items.
+- Keep `//` domain quirks docs.
+- Prefer named exports (`pub use x::{A, B};`).
 
-### D. Tests & Assertions
-- **Resilient Assertions:** Assert specific semantic tokens (e.g., `.contains("bullet")`) on formatted string outputs (like `Display`) instead of brittle exact full-string matches.
-- **Path Edge-Case Testing:** Mandate filesystem edge-case tests (hidden files, trailing dots, compound extensions, missing filenames) for any `std::path::Path` inspection logic (M-PATH-EDGE-TESTS).
-- **I/O Test Obligation:** Mandatory temporary filesystem tests (`std::env::temp_dir()`) or memory cursors for I/O-bound functions, file resolvers, and image encoders (M-IO-TESTS).
-
-## 3. DOCUMENTATION & VISIBILITY STANDARDS
-- **Rustdoc Comments:** Retain `/// ...` comments directly above items/attributes with no blank lines.
-- **Domain Quirks:** Retain and enforce `// ...` inline documentation explaining intentional structural deviations (e.g. AST nesting constraints).
-- **Export Hygiene:** Prefer explicit named imports/exports (`pub use module::{A, B};`) over wildcards (`pub use module::*`).
-
-## EXECUTION WORKFLOW
-1. **Parse:** Scan target file and inventory items (imports, types, impls, free functions, tests).
-2. **Imports:** Partition into `std`, external, and internal groups; alphabetize groups and inner braces.
-3. **Types & Impls:** Group each struct/enum with its inherent `impl` and trait `impl`s (alphabetized by trait).
-4. **Methods:** Sort constructors to top of inherent `impl`, alphabetize remaining methods.
-5. **Functions:** Alphabetize standalone free functions.
-6. **Tests:** Anchor `#[cfg(test)] mod tests` at bottom of file.
-7. **Verify:** Ensure zero expressions, logic, comments, or tests were dropped or mutated.
+## WORKFLOW
+1. Parse/inventory items.
+2. Sort imports (3 groups).
+3. Group Type+Impls, alphabetize traits.
+4. Sort methods (constructors top, rest alpha).
+5. Sort free fns.
+6. Tests at bottom.
+7. Verify 0 logic drop.
