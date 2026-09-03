@@ -20,6 +20,7 @@ use std::time::SystemTime;
 /// let timestamp = UNIX_EPOCH + Duration::from_secs(1_700_000_000);
 /// assert_eq!(format_iso8601_utc(timestamp), "2023-11-14T22:13:20Z");
 /// ```
+#[must_use]
 pub fn format_iso8601_utc(time: SystemTime) -> String {
     let mut out = String::with_capacity(20);
     format_iso8601_utc_into(time, &mut out);

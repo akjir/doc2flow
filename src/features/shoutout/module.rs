@@ -30,7 +30,7 @@ impl ShoutoutFeature {
     /// ```
     #[must_use]
     pub fn new() -> Self {
-        Self::default()
+        Self
     }
 }
 
@@ -239,8 +239,10 @@ mod tests {
         let element = DocumentElement::shoutout(ShoutoutElementKind::Tip, "Ein nützlicher Tipp");
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
-        let mut params = DocumentParameters::default();
-        params.language = "de".to_string();
+        let params = DocumentParameters {
+            language: "de".to_string(),
+            ..Default::default()
+        };
         feature.render_element(&element, 2, 0, &params, &mut out, &renderer);
         let expected = concat!(
             "    <div class=\"shoutout shoutout-tip\" data-label=\"Tipp\">\n",

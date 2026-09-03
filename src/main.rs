@@ -1,5 +1,7 @@
 //! Doc2Flow CLI entry point.
 
+#![forbid(unsafe_code)]
+
 use std::env;
 use std::process::ExitCode;
 

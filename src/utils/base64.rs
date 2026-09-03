@@ -13,6 +13,7 @@ const BASE64_CHARS: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrst
 ///
 /// assert_eq!(base64_encode(b"foo"), "Zm9v");
 /// ```
+#[must_use]
 pub fn base64_encode(data: &[u8]) -> String {
     let capacity = data.len().div_ceil(3) * 4;
     let mut out = String::with_capacity(capacity);
@@ -34,7 +35,6 @@ pub fn base64_encode(data: &[u8]) -> String {
 /// base64_encode_into(b"foo", &mut buf);
 /// assert_eq!(buf, "data:text/plain;base64,Zm9v");
 /// ```
-#[inline]
 pub fn base64_encode_into(data: &[u8], out: &mut String) {
     if data.is_empty() {
         return;

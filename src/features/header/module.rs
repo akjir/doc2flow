@@ -256,8 +256,10 @@ mod tests {
     fn test_header_feature_falls_back_to_parameter_logo() {
         let feature = HeaderFeature::new();
         let element = DocumentElement::header("Param Logo", None::<String>, None::<String>);
-        let mut params = DocumentParameters::default();
-        params.logo = "images/param_logo.svg".into();
+        let params = DocumentParameters {
+            logo: "images/param_logo.svg".into(),
+            ..Default::default()
+        };
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
         feature.render_element(&element, 1, 0, &params, &mut out, &renderer);
@@ -292,8 +294,10 @@ mod tests {
     fn test_header_feature_parameter_logo_whitespace_fallback() {
         let feature = HeaderFeature::new();
         let element = DocumentElement::header("Blank Logo", None::<String>, None::<String>);
-        let mut params = DocumentParameters::default();
-        params.logo = "   \t\n  ".into();
+        let params = DocumentParameters {
+            logo: "   \t\n  ".into(),
+            ..Default::default()
+        };
         let mut out = String::new();
         let renderer = HtmlRenderer::default_renderer();
         feature.render_element(&element, 1, 0, &params, &mut out, &renderer);

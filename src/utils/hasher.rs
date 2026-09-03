@@ -1,7 +1,5 @@
 //! Pure-Rust zero-dependency implementation of the SHA-256 cryptographic hash algorithm.
 
-use std::fmt::Write;
-
 const H0: [u32; 8] = [
     0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
 ];
@@ -159,6 +157,8 @@ impl Sha256 {
     }
 }
 
+const HEX_CHARS: &[u8; 16] = b"0123456789abcdef";
+
 /// Computes the SHA-256 hash of input bytes and returns a 64-character hexadecimal string.
 ///
 /// Uses streaming computation with zero intermediate heap allocations.
@@ -175,8 +175,9 @@ impl Sha256 {
 pub fn sha256(data: &[u8]) -> String {
     let digest = sha256_bytes(data);
     let mut s = String::with_capacity(64);
-    for b in digest {
-        let _ = write!(s, "{b:02x}");
+    for &b in &digest {
+        s.push(HEX_CHARS[(b >> 4) as usize] as char);
+        s.push(HEX_CHARS[(b & 0x0f) as usize] as char);
     }
     s
 }

@@ -81,10 +81,10 @@ impl DocumentElementRenderer for CodeFeature {
                 out.push_str("<tr>\n");
 
                 push_indent(out, indent + 4);
-                let _ = write!(out, "<th>{var_header}</th>\n");
+                let _ = writeln!(out, "<th>{var_header}</th>");
 
                 push_indent(out, indent + 4);
-                let _ = write!(out, "<th>{val_header}</th>\n");
+                let _ = writeln!(out, "<th>{val_header}</th>");
 
                 push_indent(out, indent + 3);
                 out.push_str("</tr>\n");

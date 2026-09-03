@@ -86,9 +86,9 @@ impl DocumentElementRenderer for CoreFeature {
                         ("", " role=\"button\" tabindex=\"0\" aria-expanded=\"true\"")
                     };
 
-                    let _ = write!(
+                    let _ = writeln!(
                         out,
-                        "<h{level} class=\"section-header{h1_class}{empty_class}\"{a11y_attrs}>\n"
+                        "<h{level} class=\"section-header{h1_class}{empty_class}\"{a11y_attrs}>"
                     );
                     push_indent(out, indent + 2);
                     out.push_str("<span class=\"section-title\">");
@@ -756,8 +756,10 @@ mod tests {
     #[test]
     fn test_core_feature_numbered_sections_enabled() {
         let renderer = HtmlRenderer::default_renderer();
-        let mut params = DocumentParameters::default();
-        params.numbered_sections = true;
+        let params = DocumentParameters {
+            numbered_sections: true,
+            ..Default::default()
+        };
 
         let elements = vec![
             DocumentElement::section(1, "First Top", vec![]),
@@ -783,8 +785,10 @@ mod tests {
     #[test]
     fn test_core_feature_numbered_sections_disabled() {
         let renderer = HtmlRenderer::default_renderer();
-        let mut params = DocumentParameters::default();
-        params.numbered_sections = false;
+        let params = DocumentParameters {
+            numbered_sections: false,
+            ..Default::default()
+        };
 
         let elements = vec![
             DocumentElement::section(1, "First Top", vec![]),

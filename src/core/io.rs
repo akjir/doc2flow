@@ -66,7 +66,7 @@ pub fn prompt_user_yes_no(prompt_msg: &str) -> bool {
     #[cfg(test)]
     {
         let _ = prompt_msg;
-        return false;
+        false
     }
 
     #[cfg(not(test))]

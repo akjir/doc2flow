@@ -43,6 +43,7 @@ pub fn file_to_data_uri(path: &Path) -> Result<String> {
 /// let uri = to_base64_data_uri("image/png", b"foo");
 /// assert_eq!(uri, "data:image/png;base64,Zm9v");
 /// ```
+#[must_use]
 pub fn to_base64_data_uri(mime: &str, bytes: &[u8]) -> String {
     let b64_len = bytes.len().div_ceil(3) * 4;
     let prefix = "data:";
@@ -56,9 +57,9 @@ pub fn to_base64_data_uri(mime: &str, bytes: &[u8]) -> String {
     out
 }
 
-/// Formats binary data as a Base64 `data:` URI directly into the provided [`String`] buffer.
+/// Formats binary data as a Base64 Data URI, appending directly into the provided [`String`] buffer.
 ///
-/// Pre-allocates buffer capacity for the `data:<mime>;base64,<encoded>` payload without
+/// Pre-allocates buffer capacity and writes prefixes and base64 chunks directly without
 /// intermediate string allocations.
 ///
 /// # Examples
@@ -70,7 +71,6 @@ pub fn to_base64_data_uri(mime: &str, bytes: &[u8]) -> String {
 /// to_base64_data_uri_into("image/png", b"foo", &mut buf);
 /// assert_eq!(buf, "data:image/png;base64,Zm9v");
 /// ```
-#[inline]
 pub fn to_base64_data_uri_into(mime: &str, bytes: &[u8], out: &mut String) {
     let b64_len = bytes.len().div_ceil(3) * 4;
     let prefix = "data:";

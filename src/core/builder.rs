@@ -113,25 +113,54 @@ pub fn build(document: &Document) -> String {
     let features_str = format_features_str(active_modules);
     let (css_content, js_content) = assemble_assets(active_modules);
 
-    TEMPLATE_HTML
-        .replace("{{APP_VERSION}}", APP_VERSION)
-        .replace("{{APP_VERSION_RAW}}", app_version_raw)
-        .replace("{{REPOSITORY_URL}}", REPOSITORY_URL)
-        .replace("{{LICENSE_URL}}", LICENSE_URL)
-        .replace("{{CREATED_AT}}", &created_at)
-        .replace("{{LANG_CODE}}", lang_code)
-        .replace("{{LANGUAGE_CODE}}", lang_code)
-        .replace("{{TITLE}}", title)
-        .replace("{{DOCUMENT_ID}}", &document_id)
-        .replace("{{FEATURES}}", &features_str)
-        .replace("{{L_EXPORT_PDF}}", &export_pdf_label)
-        .replace("{{L_SAVE_STATE}}", &save_state_label)
-        .replace("{{L_RESET_ALL}}", &reset_all_label)
-        .replace("{{L_CONFIRM_RESET}}", &confirm_reset_msg)
-        .replace("{{L_COMMENT_PLACEHOLDER}}", &comment_placeholder)
-        .replace("{{CSS}}", &css_content)
-        .replace("{{JS}}", &js_content)
-        .replace("{{CONTENT}}", &html_content)
+    let mut out = String::with_capacity(
+        TEMPLATE_HTML.len()
+            + html_content.len()
+            + css_content.len()
+            + js_content.len()
+            + 2048,
+    );
+    let mut cursor = TEMPLATE_HTML;
+
+    while let Some(start_idx) = cursor.find("{{") {
+        out.push_str(&cursor[..start_idx]);
+        cursor = &cursor[start_idx + 2..];
+
+        if let Some(end_idx) = cursor.find("}}") {
+            let key = &cursor[..end_idx];
+            match key {
+                "APP_VERSION" => out.push_str(APP_VERSION),
+                "APP_VERSION_RAW" => out.push_str(app_version_raw),
+                "REPOSITORY_URL" => out.push_str(REPOSITORY_URL),
+                "LICENSE_URL" => out.push_str(LICENSE_URL),
+                "CREATED_AT" => out.push_str(&created_at),
+                "LANG_CODE" | "LANGUAGE_CODE" => out.push_str(lang_code),
+                "TITLE" => out.push_str(title),
+                "DOCUMENT_ID" => out.push_str(&document_id),
+                "FEATURES" => out.push_str(&features_str),
+                "L_EXPORT_PDF" => out.push_str(&export_pdf_label),
+                "L_SAVE_STATE" => out.push_str(&save_state_label),
+                "L_RESET_ALL" => out.push_str(&reset_all_label),
+                "L_CONFIRM_RESET" => out.push_str(&confirm_reset_msg),
+                "L_COMMENT_PLACEHOLDER" => out.push_str(&comment_placeholder),
+                "CSS" => out.push_str(&css_content),
+                "JS" => out.push_str(&js_content),
+                "CONTENT" => out.push_str(&html_content),
+                _ => {
+                    out.push_str("{{");
+                    out.push_str(key);
+                    out.push_str("}}");
+                }
+            }
+            cursor = &cursor[end_idx + 2..];
+        } else {
+            out.push_str("{{");
+            break;
+        }
+    }
+    out.push_str(cursor);
+
+    out
 }
 
 #[cfg(test)]

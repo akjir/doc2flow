@@ -13,7 +13,7 @@ NEVER modify logic/sigs/errors/tests. ONLY reorder/format.
 
 ## 1. FILE LAYOUT
 1. **Docs:** `//! ...`
-2. **Attrs:** `#![...]`
+2. **Attrs:** `#![...]` (mandatory `#![forbid(unsafe_code)]` in crate roots).
 3. **Imports:** 3 groups separated by blank line: `std::`, 3rd-party, `crate::`/`super::`. Alphabetize lines & braced items.
 4. **Consts/Statics:** Alphabetized.
 5. **Types & Impls:** Struct/Enum/Alias (alphabetized). `impl` MUST immediately follow Type.
@@ -29,7 +29,7 @@ NEVER modify logic/sigs/errors/tests. ONLY reorder/format.
 - State: `bitflags`/array for bools.
 
 **B. Impls (`impl Type`):**
-1. Inherent: Constructors top (`new`,`default`,`with_capacity`). Enforce `#[must_use]`. `new` MUST delegate to `Default` if impl'd. Methods alphabetized below.
+1. Inherent: Constructors top (`new`,`default`,`with_capacity`). Enforce `#[must_use]`. `new` MUST delegate to `Default` if impl'd (or `Self` for ZSTs). Methods alphabetized below.
 2. Traits: standard traits (`Display`), sorted alphabetically by trait below inherent impl. NO custom dup fns.
 
 **C. Control Flow / Parsing:**
@@ -37,9 +37,10 @@ NEVER modify logic/sigs/errors/tests. ONLY reorder/format.
 - Dispatchers: Flat (<50 lines). Delegate to `try_parse_*`.
 - UTF-8: Encapsulate boundaries to helpers.
 - CLI/Paths: Pure iterators, OS-agnostic (`OsStr`/`OsString`).
+- I/O: Direct `std::fs` isolated to `src/core/io.rs` (P-IO-ISOLATION).
 - JSON: Decode UTF-16 surrogate pairs, RFC 8259 validation, NO deps.
 - Case: `eq_ignore_ascii_case` in guards (0-alloc).
-- Attrs: `#[inline]` ONLY on trivial/hot-paths (P-ATTR-USAGE).
+- Attrs: `#[inline]` ONLY on trivial/hot-paths. BANNED on allocs, I/O, CLI, large match (P-ATTR-USAGE).
 - Err: `#[source]` chain (P-ERR-PRESERVE).
 
 **D. Tests:**

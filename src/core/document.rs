@@ -20,11 +20,7 @@ impl Document {
     /// Creates an empty document.
     #[must_use]
     pub fn new() -> Self {
-        Self {
-            body: Vec::new(),
-            head: DocumentHeader::new(),
-            parameters: DocumentParameters::default(),
-        }
+        Self::default()
     }
 
     /// Creates an empty document with pre-allocated capacities.
@@ -32,8 +28,7 @@ impl Document {
     pub fn with_capacity(body_capacity: usize) -> Self {
         Self {
             body: Vec::with_capacity(body_capacity),
-            head: DocumentHeader::new(),
-            parameters: DocumentParameters::default(),
+            ..Default::default()
         }
     }
 
@@ -430,10 +425,7 @@ impl DocumentHeader {
     /// Creates a new empty document header.
     #[must_use]
     pub fn new() -> Self {
-        Self {
-            header: None,
-            variables: None,
-        }
+        Self::default()
     }
 
     /// Returns a mutable reference to the underlying variables map, initializing it lazily if empty.

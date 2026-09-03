@@ -71,6 +71,15 @@ impl<'a> HtmlRenderer<'a> {
     pub fn default_renderer() -> HtmlRenderer<'static> {
         HtmlRenderer::new(&crate::features::ALL_FEATURE_MODULES)
     }
+}
+
+impl Default for HtmlRenderer<'static> {
+    fn default() -> Self {
+        Self::default_renderer()
+    }
+}
+
+impl<'a> HtmlRenderer<'a> {
 
     /// Populates a fixed-size buffer with active feature module references and returns the slice.
     pub fn active_features<'b>(

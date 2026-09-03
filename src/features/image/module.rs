@@ -7,11 +7,11 @@ use crate::core::document::{DocumentElement, DocumentElementId, DocumentParamete
 use crate::core::error::Result;
 use crate::core::feature::FeatureModule;
 use crate::core::format::{escape_html_into, push_indent};
-use crate::core::image::{
-    extract_attribute, is_image_source, is_remote_or_data_uri, resolve_or_encode_image,
-};
 use crate::core::io;
 use crate::core::renderer::{DocumentElementRenderer, HtmlRenderer};
+use crate::utils::{
+    extract_attribute, is_image_source, is_remote_or_data_uri, resolve_or_encode_image,
+};
 
 /// Embedded image CSS stylesheet.
 pub const CSS: &str = include_str!("image.css");
@@ -104,13 +104,22 @@ pub fn embed_images_as_base64(html: &str, base_dir: Option<&Path>) -> Result<Str
 }
 
 /// Embeds local image references in HTML as Base64 `data:` URIs with Markdown source context.
+/// Context parameters for batch image tag processing.
+struct ImageProcessContext<'a> {
+    auto_scale: bool,
+    base_dir: Option<&'a Path>,
+    cache: &'a mut HashMap<PathBuf, String>,
+    file_name: Option<&'a str>,
+    md_content: Option<&'a str>,
+}
+
+/// Post-processes rendered HTML, identifying local `<img>` tags and embedding them as Base64.
 ///
-/// Scans `<img ... src="..." ...>` tags in the input HTML. Checks image sizes against `MAX_IMAGE_SIZE_BYTES` (250 KB).
-/// If an image exceeds this limit, offers interactive scaling/conversion to WebP or returns a compiler-style [`DiagnosticError`](crate::core::error::DiagnosticError).
+/// Converts large images exceeding 250 KB to WebP when `auto_scale` is true or prompts interactively.
 ///
 /// # Errors
 ///
-/// Returns a compiler-style [`DiagnosticError`](crate::core::error::DiagnosticError) if a local image exceeds the 250 KB size limit and is not scaled.
+/// Returns an [`Error`] if an image exceeds the size limit and is not scaled, or if encoding fails.
 pub fn embed_images_as_base64_with_source(
     html: &str,
     md_content: Option<&str>,
@@ -121,20 +130,17 @@ pub fn embed_images_as_base64_with_source(
     let mut out = String::with_capacity(html.len());
     let mut cache: HashMap<PathBuf, String> = HashMap::new();
     let mut cursor = 0;
+    let mut ctx = ImageProcessContext {
+        auto_scale,
+        base_dir,
+        cache: &mut cache,
+        file_name,
+        md_content,
+    };
 
     while let Some((img_start, img_end)) = find_next_img_tag(html, cursor) {
         out.push_str(&html[cursor..img_start]);
-        cursor = process_single_image_tag(
-            &mut out,
-            html,
-            img_start,
-            img_end,
-            &mut cache,
-            md_content,
-            file_name,
-            base_dir,
-            auto_scale,
-        )?;
+        cursor = process_single_image_tag(&mut out, html, img_start, img_end, &mut ctx)?;
     }
 
     out.push_str(&html[cursor..]);
@@ -147,11 +153,7 @@ fn process_single_image_tag(
     html: &str,
     img_start: usize,
     img_end: usize,
-    cache: &mut HashMap<PathBuf, String>,
-    md_content: Option<&str>,
-    file_name: Option<&str>,
-    base_dir: Option<&Path>,
-    auto_scale: bool,
+    ctx: &mut ImageProcessContext<'_>,
 ) -> Result<usize> {
     let tag_slice = &html[img_start..img_end];
     let Some((attr_start, attr_end, src_val)) = extract_attribute(tag_slice, "src") else {
@@ -159,7 +161,7 @@ fn process_single_image_tag(
         return Ok(img_end);
     };
 
-    if !is_image_source(src_val, base_dir) {
+    if !is_image_source(src_val, ctx.base_dir) {
         let alt_text = extract_attribute(tag_slice, "alt")
             .map(|(_, _, val)| val)
             .unwrap_or(src_val);
@@ -172,22 +174,17 @@ fn process_single_image_tag(
     }
 
     let path = Path::new(src_val);
-    let Some(resolved_path) = io::resolve_path(path, base_dir) else {
+    let Some(resolved_path) = io::resolve_path(path, ctx.base_dir) else {
         out.push_str(tag_slice);
         return Ok(img_end);
     };
 
-    let data_uri = if let Some(cached) = cache.get(&resolved_path) {
+    let data_uri = if let Some(cached) = ctx.cache.get(&resolved_path) {
         cached.clone()
     } else {
-        let uri = resolve_or_encode_image(
-            &resolved_path,
-            src_val,
-            auto_scale,
-            md_content,
-            file_name,
-        )?;
-        cache.insert(resolved_path, uri.clone());
+        let uri =
+            resolve_or_encode_image(&resolved_path, src_val, ctx.auto_scale, ctx.md_content, ctx.file_name)?;
+        ctx.cache.insert(resolved_path, uri.clone());
         uri
     };
 
@@ -224,11 +221,8 @@ fn find_next_img_tag(html: &str, mut cursor: usize) -> Option<(usize, usize)> {
         let rest = &html[tag_start..];
 
         if rest.starts_with("<!--") {
-            if let Some(comment_end) = rest.find("-->") {
-                cursor = tag_start + comment_end + 3;
-            } else {
-                return None;
-            }
+            let comment_end = rest.find("-->")?;
+            cursor = tag_start + comment_end + 3;
             continue;
         }
 
@@ -272,19 +266,18 @@ fn find_closing_tag(html: &str, tag_name: &str) -> Option<usize> {
             let trimmed = after_slash.trim_start();
             let ws_before = after_slash.len() - trimmed.len();
 
-            if let Some(name_slice) = trimmed.get(..tag_name.len()) {
-                if name_slice.eq_ignore_ascii_case(tag_name) {
-                    if let Some(after_name) = trimmed.get(tag_name.len()..) {
-                        let after_trimmed = after_name.trim_start();
-                        if after_trimmed.starts_with('>') {
-                            let end_pos = after_slash_idx
-                                + ws_before
-                                + tag_name.len()
-                                + (after_name.len() - after_trimmed.len())
-                                + 1;
-                            return Some(end_pos);
-                        }
-                    }
+            if let Some(name_slice) = trimmed.get(..tag_name.len())
+                && name_slice.eq_ignore_ascii_case(tag_name)
+                && let Some(after_name) = trimmed.get(tag_name.len()..)
+            {
+                let after_trimmed = after_name.trim_start();
+                if after_trimmed.starts_with('>') {
+                    let end_pos = after_slash_idx
+                        + ws_before
+                        + tag_name.len()
+                        + (after_name.len() - after_trimmed.len())
+                        + 1;
+                    return Some(end_pos);
                 }
             }
             i = after_slash_idx;
@@ -393,7 +386,7 @@ fn parse_closing_div(s: &str) -> Option<usize> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::image::MAX_IMAGE_SIZE_BYTES;
+    use crate::utils::MAX_IMAGE_SIZE_BYTES;
 
     #[test]
     fn test_image_feature_constructor_new() {
@@ -579,8 +572,7 @@ mod tests {
 
     #[test]
     fn test_auto_scale_large_image_to_webp() {
-        let dir =
-            std::env::temp_dir().join(format!("d2f_test_auto_scale_{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("d2f_test_auto_scale_{}", std::process::id()));
         let _ = io::create_dir_all(&dir);
         let img_path = dir.join("big_photo.png");
 
@@ -632,7 +624,9 @@ mod tests {
     fn test_embed_images_skips_script_and_style_whitespace_variations() {
         let html = "<script type=\"text/javascript\" >var s = '<img src=\"bad.pdf\">';</ script  ><style  >/* <img src='fail.pdf'> */</  style ><img src=\"https://example.com/pic.png\">";
         let result = embed_images_as_base64(html, None).unwrap();
-        assert!(result.contains("<script type=\"text/javascript\" >var s = '<img src=\"bad.pdf\">';</ script  >"));
+        assert!(result.contains(
+            "<script type=\"text/javascript\" >var s = '<img src=\"bad.pdf\">';</ script  >"
+        ));
         assert!(result.contains("<style  >/* <img src='fail.pdf'> */</  style >"));
         assert!(result.contains("<img src=\"https://example.com/pic.png\">"));
     }

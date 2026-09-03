@@ -320,10 +320,10 @@ fn test_image_embedding_pipeline_large_image_auto_scale() {
         .unwrap();
 
     let file_size = doc2flow::core::io::get_file_size(&pic_path).unwrap();
-    if file_size <= doc2flow::core::image::MAX_IMAGE_SIZE_BYTES {
+    if file_size <= doc2flow::utils::MAX_IMAGE_SIZE_BYTES {
         let mut existing = doc2flow::core::io::read_file_bytes(&pic_path).unwrap();
         existing.resize(
-            (doc2flow::core::image::MAX_IMAGE_SIZE_BYTES + 40 * 1024) as usize,
+            (doc2flow::utils::MAX_IMAGE_SIZE_BYTES + 40 * 1024) as usize,
             0,
         );
         doc2flow::core::io::write_file(&pic_path, &existing).unwrap();
@@ -361,7 +361,7 @@ fn test_image_embedding_pipeline_large_image_diagnostic_error() {
 
     let mut existing = doc2flow::core::io::read_file_bytes(&pic_path).unwrap();
     existing.resize(
-        (doc2flow::core::image::MAX_IMAGE_SIZE_BYTES + 20 * 1024) as usize,
+        (doc2flow::utils::MAX_IMAGE_SIZE_BYTES + 20 * 1024) as usize,
         0,
     );
     doc2flow::core::io::write_file(&pic_path, &existing).unwrap();

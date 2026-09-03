@@ -24,4 +24,4 @@ description: Manage compile-time i18n injection (HTML/CSS/JS). NO runtime dictio
 1. **Add:** Key to `de.json` & `en.json`.
 2. **Inject:** `{{L_KEY}}` in `template.html` -> `.replace` in `builder.rs` OR `localize("key")` in `module.rs`.
 3. **Consume:** Read from DOM attrs in JS/CSS.
-4. **Test:** Unit tests in `language.rs`, `builder.rs`, `module.rs`.
+4. **Test:** Run tests using `./MAKE.sh --tests` (unit tests in `language.rs`, `builder.rs`, `module.rs`).

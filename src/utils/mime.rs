@@ -15,6 +15,7 @@ use std::path::Path;
 /// assert_eq!(guess_mime_type(Path::new("image.png")), "image/png");
 /// assert_eq!(guess_mime_type(Path::new("file.unknown")), "application/octet-stream");
 /// ```
+#[must_use]
 pub fn guess_mime_type(path: &Path) -> &'static str {
     let Some(ext) = path.extension().and_then(|e| e.to_str()) else {
         return "application/octet-stream";

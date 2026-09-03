@@ -41,19 +41,20 @@ description: Analyzes/optimizes Rust code for memory efficiency, zero-allocation
 - **Static:** `out.write_str("...")`.
 - **Dynamic:** `write!(out, "...", vars)`. NO fragmentation to avoid `write!`.
 - **Errors:** `format!` > manual alloc micro-opts.
+- **Templates:** BANNED: Chained `.replace()`. Mandate 1-pass sequential streaming.
 
 ### 4: Idioms & Arch
 - **Traits:** standard (`Display`). NO custom dup fns.
-- **Constructors:** `Default` for ZSTs. `new()` MUST delegate to `Default`. Enforce `#[must_use]`.
+- **Constructors:** `Default` for ZSTs/parameterless. `new()` MUST delegate to `Default` (or `Self` for ZSTs). Enforce `#[must_use]`.
 - **Regs:** `[&'static dyn Trait; N]` static arrays. O(1) routing via masks/indices. NO `ptr::eq` or loops (P-O1-DISPATCH).
 - **Tripwire Tests:** Explicit lengths on static arrays.
 - **Dispatchers:** Flat (<50 lines). Delegate `try_parse_*` (P-FLATTEN-DISPATCH).
 - **UTF-8:** Encapsulate lookarounds (`is_alphanumeric_at`) (P-UTF8-LOOKAROUND).
-- **Layer:** `src/utils/` -> `src/core/`/`src/features/`.
+- **Layer & I/O:** `src/utils/` -> `src/core/`/`src/features/`. Direct `std::fs` outside `src/core/io.rs` is BANNED (P-IO-ISOLATION).
 - **Err:** `Doc2FlowError`, typed enums, `#[source]` chaining (P-ERR-PRESERVE). `unwrap()` for invariants only. NO `unsafe`.
 - **Consts:** Local in `module.rs`.
 - **CLI:** Pure iter/`OsString`, handle `=`, reject empty (P-CLI-PURE).
-- **Attrs:** `#[inline]` on hot-path only (P-ATTR-USAGE).
+- **Attrs:** `#[inline]` trivial/hot-paths only. BANNED on allocs, I/O, CLI, large match (P-ATTR-USAGE).
 - **Docs:** Inline domain quirks. Truthy bool matrix (`true,yes,1`).
 - **Tests:** Semantic asserts. Fallback `_ =>` (M-FALLBACK-TESTS), extreme bounds (M-EXTREME-BOUND-TESTS), path edges (M-PATH-EDGE-TESTS), delimiter inject (M-DELIM-INJECT-TESTS), temp dir I/O (M-IO-TESTS).
 - **Crypto:** Delimit with length-prefix or `\x00` (P-CRYPTO-KEY-SEP).
